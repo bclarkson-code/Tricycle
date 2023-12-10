@@ -10,6 +10,7 @@ readme = "README.md"
 python = "^3.10"
 numpy = "^1.26.2"
 pytest = "^7.4.3"
+flake8 = "^6.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"

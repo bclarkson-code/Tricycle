@@ -33,7 +33,10 @@ class Tensor(np.ndarray):
             current_node = stack.pop()
 
             # At intermediate node
-            if current_node.back_fn is not None and current_node.args is not None:
+            if (
+                current_node.back_fn is not None
+                and current_node.args is not None  # noqa: E501
+            ):
                 # Get gradient functions for the operation
                 grad_fn = current_node.grad_fn
 
