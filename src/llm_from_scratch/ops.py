@@ -1,12 +1,10 @@
 from functools import partial
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
 
-from llm_from_scratch.tensor import Tensor
-
 # Type signature for Tensor operation
-Op = Callable[..., Tensor]
+Op = Callable[..., "Tensor"]
 
 
 class Tensor(np.ndarray):
@@ -15,10 +13,10 @@ class Tensor(np.ndarray):
     of a standard numpy array
     """
 
-    args: tuple[Tensor, ...] | None = None
+    args: tuple["Tensor", ...] | None = None
     back_fn: tuple[Op, ...] | None = None
     grad_fn: list[Op] = []
-    grad: Tensor | None = None
+    grad: Optional["Tensor"] = None
     requires_grad: bool = True
 
     def backward(self):
