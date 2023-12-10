@@ -11,6 +11,7 @@ python = "^3.10"
 numpy = "^1.26.2"
 pytest = "^7.4.3"
 flake8 = "^6.1.0"
+coverage = "^7.3.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
