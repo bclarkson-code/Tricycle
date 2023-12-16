@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 from llm_from_scratch.ops import (
-    add, cos, div, dot, exp, log,
+    add, cos, div, matmul, exp, log,
     max, min, mul, negate, nothing,
     pow, reduce_sum, sin, sqrt, sub
 )
@@ -123,7 +123,7 @@ def test_can_min():
     assert np.allclose(min(a), 1)
 
 
-def test_can_dot_product():
+def test_can_matrix_multiply():
     a = np.array([1, 2, 3])
     b = np.array([4, 5, 6])
-    assert np.allclose(dot(a, b), 32)
+    assert np.allclose(matmul(a, b), 32)
