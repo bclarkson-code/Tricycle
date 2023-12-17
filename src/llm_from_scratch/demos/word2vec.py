@@ -1,12 +1,12 @@
+import os
 from pathlib import Path
 
 import mlflow
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
-from ray import tune
-from ray.air import Checkpoint, session
-from ray.tune.schedulers import ASHAScheduler
+from ray import train, tune
+from ray.train import Checkpoint
 from tiktoken import get_encoding
 from torch.nn import Linear, Module, ReLU, Sequential
 from tqdm import tqdm
@@ -200,21 +200,25 @@ def objective_function(config):
     test_ds = WindowDataset(test_text)
 
     train_dl = torch.utils.data.DataLoader(
-        train_ds, batch_size=config.dataset.batch_size, shuffle=True
+        train_ds,
+        batch_size=config.dataset.batch_size,
+        shuffle=True,
+        num_workers=os.cpu_count() - 1,
     )
-    test_dl = torch.utils.data.DataLoader(test_ds, batch_size=config.dataset.batch_size)
+    test_dl = torch.utils.data.DataLoader(
+        test_ds, batch_size=config.dataset.batch_size, num_workers=os.cpu_count() - 1
+    )
 
     model = Model(train_ds.encoding.n_vocab, **config.model)
     optimiser = load_optimiser(config, model)
 
-    checkpoint = session.get_checkpoint()
-
-    start_epoch = 0
-    if checkpoint:
-        checkpoint_state = checkpoint.to_dict()
-        start_epoch = checkpoint_state["epoch"]
-        model.load_state_dict(checkpoint_state["model_state_dict"])
-        optimiser.load_state_dict(checkpoint_state["optimizer_state_dict"])
+    if loaded_checkpoint := train.get_checkpoint():
+        with loaded_checkpoint.as_directory() as loaded_checkpoint_dir:
+            model_state, optimizer_state = torch.load(
+                os.path.join(loaded_checkpoint_dir, "checkpoint.pt")
+            )
+        model.load_state_dict(model_state)
+        optimiser.load_state_dict(optimizer_state)
 
     loss_fn = load_loss_fn(config)
 
@@ -223,23 +227,19 @@ def objective_function(config):
 
     with mlflow.start_run():
         model = model.to(device)
-        for epoch in tqdm(
-            range(start_epoch, config.training.epochs), leave=False, desc="Epochs"
-        ):
+        for epoch in tqdm(range(config.training.epochs), leave=False, desc="epochs"):
             train_loss = train(
                 model, train_dl, optimiser, loss_fn, config, epoch, device
             )
             test_loss = test(
                 model, test_dl, loss_fn, config, epoch, steps_per_epoch, device
             )
-            checkpoint_data = {
-                "epoch": epoch,
-                "net_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimiser.state_dict(),
-            }
-            checkpoint = Checkpoint.from_dict(checkpoint_data)
-
-            session.report(
+            os.makedirs("word2vec", exist_ok=True)
+            torch.save(
+                (model.state_dict(), optimiser.state_dict()), "word2vec/checkpoint.pt"
+            )
+            checkpoint = Checkpoint.from_directory("word2vec")
+            train.report(
                 {"test_loss": test_loss, "train_loss": train_loss, "epoch": epoch},
                 checkpoint=checkpoint,
             )
@@ -269,9 +269,13 @@ if __name__ == "__main__":
 
     result = tune.run(
         objective_function,
-        resources_per_trial={"cpu": 16, "gpu": 1},
+        resources_per_trial={"cpu": 8, "gpu": 0.5},
         config=base_config,
         num_samples=16,
-        scheduler=ASHAScheduler(metric="test_loss", mode="min"),
     )
 
+    best_result = result.get_best_result("test_loss", "min")
+
+    print(f"Best trial config: {best_result.config}")
+    print(f'Best trial final train loss: {best_result.metrics["train_loss"]}')
+    print(f'Best trial final validation loss: {best_result.metrics["test_loss"]}')
