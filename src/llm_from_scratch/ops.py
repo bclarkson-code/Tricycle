@@ -100,10 +100,6 @@ class Tensor(np.ndarray):
         return matmul(self, other)
 
     @to_tensor
-    def sum(self) -> "Tensor":
-        return reduce_sum(self)
-
-    @to_tensor
     def mean(self) -> "Tensor":
         return mean(self)
 
@@ -241,7 +237,7 @@ def reduce_sum(x: Tensor, grad=True) -> Tensor:
     """
     Sum the elements of a tensor into a single scalar
     """
-    result = tensor(x.sum())
+    result = tensor(np.sum(x))
     if grad:
         result.back_fn = (_no_grad(reduce_sum),)
         result.args = (x,)
@@ -428,3 +424,19 @@ def mean(x: Tensor):
     Compute the mean of a tensor
     """
     return reduce_sum(x) / x.shape[0]
+
+
+@to_tensor
+def softmax(x: Tensor):
+    """
+    Compute the softmax of a tensor
+    """
+    return exp(x) / reduce_sum(exp(x))
+
+
+@to_tensor
+def sigmoid(x: Tensor) -> Tensor:
+    """
+    Compute the sigmoid of a tensor
+    """
+    return tensor(1) / (exp(-x) + 1)
