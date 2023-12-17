@@ -134,7 +134,7 @@ def init_logger(config: DictConfig):
     mlflow.set_experiment(config.logger.project)
 
 
-def train(
+def train_fn(
     model: Module,
     train_dl: torch.utils.data.DataLoader,
     optimiser,
@@ -228,7 +228,7 @@ def objective_function(config):
     with mlflow.start_run():
         model = model.to(device)
         for epoch in tqdm(range(config.training.epochs), leave=False, desc="epochs"):
-            train_loss = train(
+            train_loss = train_fn(
                 model, train_dl, optimiser, loss_fn, config, epoch, device
             )
             test_loss = test(
