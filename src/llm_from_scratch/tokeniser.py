@@ -45,6 +45,7 @@ class Tokeniser:
         # initialise vocab with individual characters
         self.vocab = Counter()
         for word in tqdm(self.corpus):
+            tokenised
             for char in word:
                 token = Token(None, None, char)
                 self.vocab[token] += 1

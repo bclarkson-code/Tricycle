@@ -138,10 +138,13 @@ def train(
     loss_fn,
     config: OmegaConf,
     epoch: int,
+    device: torch.device
 ):
     for idx, (inputs, labels) in tqdm(
         enumerate(train_dl), leave=False, desc="Training", total=len(train_dl)
     ):
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         optimiser.zero_grad()
         outputs = model(inputs)
         loss = loss_fn(outputs, labels)
@@ -161,10 +164,13 @@ def test(
     config: OmegaConf,
     epoch: int,
     steps_per_epoch: int,
+    device: torch.device
 ):
     losses = []
     with torch.no_grad():
         for inputs, labels in tqdm(test_dl, leave=False, desc="Testing"):
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             outputs = model(inputs)
             loss = loss_fn(outputs, labels)
             losses.append(loss.item() / config.dataset.batch_size)
@@ -196,6 +202,7 @@ if __name__ == "__main__":
     test_start_idx = int(len(text) * config.dataset.train_fraction)
     train_text = text[:test_start_idx]
     test_text = text[test_start_idx:]
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     train_ds = WindowDataset(train_text)
     test_ds = WindowDataset(test_text)
@@ -213,7 +220,9 @@ if __name__ == "__main__":
     init_logger(config)
     steps_per_epoch = len(train_dl)
 
+
     with mlflow.start_run():
+        model = model.to(device)
         for epoch in tqdm(range(config.training.epochs), leave=False, desc="Epochs"):
-            train(model, train_dl, optimiser, loss_fn, config, epoch)
-            test(model, test_dl, loss_fn, config, epoch, steps_per_epoch)
+            train(model, train_dl, optimiser, loss_fn, config, epoch, device)
+            test(model, test_dl, loss_fn, config, epoch, steps_per_epoch, device)

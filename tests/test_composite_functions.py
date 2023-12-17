@@ -1,6 +1,6 @@
 import numpy as np
 
-from llm_from_scratch.ops import mean, softmax, tensor, sigmoid
+from llm_from_scratch.ops import mean, sigmoid, softmax, tensor
 
 
 def test_can_mean():
