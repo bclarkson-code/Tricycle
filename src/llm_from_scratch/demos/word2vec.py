@@ -3,7 +3,10 @@ from pathlib import Path
 import mlflow
 import numpy as np
 import torch
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
+from ray import tune
+from ray.air import Checkpoint, session
+from ray.tune.schedulers import ASHAScheduler
 from tiktoken import get_encoding
 from torch.nn import Linear, Module, ReLU, Sequential
 from tqdm import tqdm
@@ -102,7 +105,7 @@ class Model(Module):
         weight_init_fn(layer.weight)
 
 
-def load_optimiser(config: OmegaConf, model: Module) -> None:
+def load_optimiser(config: DictConfig, model: Module) -> torch.optim.Optimizer:
     match config.optimiser.type:
         case "SGD":
             optimiser = torch.optim.SGD
@@ -114,7 +117,7 @@ def load_optimiser(config: OmegaConf, model: Module) -> None:
     return optimiser(model.parameters(), **optimiser_config)
 
 
-def load_loss_fn(config: OmegaConf) -> Module:
+def load_loss_fn(config: DictConfig) -> Module:
     match config.loss.type:
         case "cross_entropy":
             loss_fn = torch.nn.CrossEntropyLoss
@@ -126,7 +129,7 @@ def load_loss_fn(config: OmegaConf) -> Module:
     return loss_fn(**loss_fn_config)
 
 
-def init_logger(config: OmegaConf):
+def init_logger(config: DictConfig):
     mlflow.set_tracking_uri(config.logger.tracking_url)
     mlflow.set_experiment(config.logger.project)
 
@@ -136,10 +139,11 @@ def train(
     train_dl: torch.utils.data.DataLoader,
     optimiser,
     loss_fn,
-    config: OmegaConf,
+    config: DictConfig,
     epoch: int,
-    device: torch.device
-):
+    device: torch.device,
+) -> float:
+    losses = []
     for idx, (inputs, labels) in tqdm(
         enumerate(train_dl), leave=False, desc="Training", total=len(train_dl)
     ):
@@ -154,17 +158,19 @@ def train(
             loss.item() / config.dataset.batch_size,
             step=epoch * len(train_dl) + idx,
         )
+        losses.append(loss.item() / config.dataset.batch_size)
         optimiser.step()
+    return np.mean(losses)
 
 
 def test(
     model: Module,
     test_dl: torch.utils.data.DataLoader,
     loss_fn,
-    config: OmegaConf,
+    config: DictConfig,
     epoch: int,
     steps_per_epoch: int,
-    device: torch.device
+    device: torch.device,
 ):
     losses = []
     with torch.no_grad():
@@ -175,27 +181,13 @@ def test(
             loss = loss_fn(outputs, labels)
             losses.append(loss.item() / config.dataset.batch_size)
     mlflow.log_metric("test_loss", np.mean(losses), step=(epoch + 1) * steps_per_epoch)
+    return np.mean(losses)
 
 
-if __name__ == "__main__":
-    config = OmegaConf.create(
-        {
-            "model": {"embedding_size": 256, "weight_init": "xavier_norm"},
-            "dataset": {
-                "window_size": 5,
-                "encoding": "p50k_base",
-                "train_fraction": 0.8,
-                "batch_size": 32,
-            },
-            "optimiser": {"type": "SGD", "lr": 1e-3, "momentum": 0.9},
-            "loss": {"type": "cross_entropy"},
-            "logger": {
-                "project": "llm_from_scratch/word2vec",
-                "tracking_url": "http://localhost:8080",
-            },
-            "training": {"epochs": 10},
-        }
-    )
+def objective_function(config):
+    config = OmegaConf.create(config)
+    assert isinstance(config, DictConfig)
+
     with open("bee-movie.txt", "r") as f:
         text = f.read()
 
@@ -213,16 +205,73 @@ if __name__ == "__main__":
     test_dl = torch.utils.data.DataLoader(test_ds, batch_size=config.dataset.batch_size)
 
     model = Model(train_ds.encoding.n_vocab, **config.model)
-
     optimiser = load_optimiser(config, model)
+
+    checkpoint = session.get_checkpoint()
+
+    start_epoch = 0
+    if checkpoint:
+        checkpoint_state = checkpoint.to_dict()
+        start_epoch = checkpoint_state["epoch"]
+        model.load_state_dict(checkpoint_state["model_state_dict"])
+        optimiser.load_state_dict(checkpoint_state["optimizer_state_dict"])
+
     loss_fn = load_loss_fn(config)
 
     init_logger(config)
     steps_per_epoch = len(train_dl)
 
-
     with mlflow.start_run():
         model = model.to(device)
-        for epoch in tqdm(range(config.training.epochs), leave=False, desc="Epochs"):
-            train(model, train_dl, optimiser, loss_fn, config, epoch, device)
-            test(model, test_dl, loss_fn, config, epoch, steps_per_epoch, device)
+        for epoch in tqdm(
+            range(start_epoch, config.training.epochs), leave=False, desc="Epochs"
+        ):
+            train_loss = train(
+                model, train_dl, optimiser, loss_fn, config, epoch, device
+            )
+            test_loss = test(
+                model, test_dl, loss_fn, config, epoch, steps_per_epoch, device
+            )
+            checkpoint_data = {
+                "epoch": epoch,
+                "net_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimiser.state_dict(),
+            }
+            checkpoint = Checkpoint.from_dict(checkpoint_data)
+
+            session.report(
+                {"test_loss": test_loss, "train_loss": train_loss, "epoch": epoch},
+                checkpoint=checkpoint,
+            )
+
+
+if __name__ == "__main__":
+    base_config = {
+        "model": {"embedding_size": 256, "weight_init": "xavier_norm"},
+        "dataset": {
+            "window_size": 5,
+            "encoding": "p50k_base",
+            "train_fraction": 0.8,
+            "batch_size": 32,
+        },
+        "optimiser": {
+            "type": "SGD",
+            "lr": tune.loguniform(1e-4, 1e-2),
+            "momentum": tune.uniform(0.8, 0.999),
+        },
+        "loss": {"type": "cross_entropy"},
+        "logger": {
+            "project": "llm_from_scratch/word2vec",
+            "tracking_url": "http://localhost:8080",
+        },
+        "training": {"epochs": 10},
+    }
+
+    result = tune.run(
+        objective_function,
+        resources_per_trial={"cpu": 16, "gpu": 1},
+        config=base_config,
+        num_samples=16,
+        scheduler=ASHAScheduler(metric="test_loss", mode="min"),
+    )
+
