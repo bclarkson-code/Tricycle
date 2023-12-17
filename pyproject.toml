@@ -12,6 +12,10 @@ numpy = "^1.26.2"
 pytest = "^7.4.3"
 flake8 = "^6.1.0"
 coverage = "^7.3.2"
+tiktoken = "^0.5.2"
+torch = "^2.1.2"
+mlflow = "^2.9.2"
+omegaconf = "^2.3.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
