@@ -190,7 +190,7 @@ if __name__ == "__main__":
             "training": {"epochs": 10},
         }
     )
-    with open("/Users/benedictclarkson/Downloads/bee_movie.txt", "r") as f:
+    with open("bee-movie.txt", "r") as f:
         text = f.read()
 
     test_start_idx = int(len(text) * config.dataset.train_fraction)
