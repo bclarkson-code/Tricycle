@@ -2,11 +2,9 @@ import math
 
 import numpy as np
 
-from llm_from_scratch.ops import (
-    add, cos, div, matmul, exp, log,
-    max, min, mul, negate, nothing,
-    pow, reduce_sum, sin, sqrt, sub
-)
+from llm_from_scratch.ops import (add, cos, div, exp, log, matmul, max, min,
+                                  mul, negate, nothing, pow, reduce_sum, sin,
+                                  sqrt, sub)
 
 
 def test_can_negate():
