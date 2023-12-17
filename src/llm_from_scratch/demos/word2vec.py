@@ -269,7 +269,7 @@ if __name__ == "__main__":
 
     result = tune.run(
         objective_function,
-        resources_per_trial={"cpu": 8, "gpu": 0.5},
+        resources_per_trial={"cpu": 16, "gpu": 1},
         config=base_config,
         num_samples=16,
     )
