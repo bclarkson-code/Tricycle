@@ -25,5 +25,3 @@ def categorical_crossentropy(y_pred: Tensor, y_true: Tensor) -> Tensor:
     loss -= y_pred * y_true
 
     return mean(loss)
-
-

@@ -2,9 +2,26 @@ from functools import partial
 
 import numpy as np
 
-from llm_from_scratch.ops import (_no_grad, add, cos, div, exp, log, matmul,
-                                  max, min, mul, negate, nothing, pow,
-                                  reduce_sum, sin, sqrt, sub, tensor)
+from llm_from_scratch.ops import (
+    _no_grad,
+    add,
+    cos,
+    div,
+    exp,
+    log,
+    matmul,
+    max,
+    min,
+    mul,
+    negate,
+    nothing,
+    pow,
+    reduce_sum,
+    sin,
+    sqrt,
+    sub,
+    tensor,
+)
 
 
 def partial_func_equals(a, b):

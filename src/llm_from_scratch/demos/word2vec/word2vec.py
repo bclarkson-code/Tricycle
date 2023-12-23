@@ -1,9 +1,12 @@
 import os
+import ray
+from collections.abc import MutableMapping
 from pathlib import Path
 
 import mlflow
 import numpy as np
 import torch
+from flatdict import FlatDict
 from omegaconf import DictConfig, OmegaConf
 from ray import train, tune
 from ray.train import Checkpoint
@@ -33,11 +36,11 @@ class WindowDataset(torch.utils.data.Dataset):
         self.tokens = self.load_tokens(text)
 
     def load_tokens(self, text: str):
-        if self.save_path.exists():
-            return np.load(self.save_path)
-
+        # if self.save_path.exists():
+        #     return np.load(self.save_path)
+        #
         tokens = self.encoding.encode(text)
-        np.save(self.save_path, tokens)
+        # np.save(self.save_path, tokens)
         return tokens
 
     def __getitem__(self, idx: int) -> tuple[np.ndarray, int]:
@@ -184,11 +187,24 @@ def test(
     return np.mean(losses)
 
 
+def _flatten_dict_gen(d, parent_key, sep):
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, MutableMapping):
+            yield from flatten_dict(v, new_key, sep=sep).items()
+        else:
+            yield new_key, v
+
+
+def flatten_dict(d: MutableMapping, parent_key: str = "", sep: str = "."):
+    return dict(_flatten_dict_gen(d, parent_key, sep))
+
+
 def objective_function(config):
     config = OmegaConf.create(config)
     assert isinstance(config, DictConfig)
 
-    with open("bee-movie.txt", "r") as f:
+    with open("/home/ben/Documents/llm-from-scratch/bee-movie.txt", "r") as f:
         text = f.read()
 
     test_start_idx = int(len(text) * config.dataset.train_fraction)
@@ -210,6 +226,7 @@ def objective_function(config):
     )
 
     model = Model(train_ds.encoding.n_vocab, **config.model)
+    model = torch.compile(model)
     optimiser = load_optimiser(config, model)
 
     if loaded_checkpoint := train.get_checkpoint():
@@ -226,6 +243,8 @@ def objective_function(config):
     steps_per_epoch = len(train_dl)
 
     with mlflow.start_run():
+        params = flatten_dict(dict(config))
+        mlflow.log_params(params)
         model = model.to(device)
         for epoch in tqdm(range(config.training.epochs), leave=False, desc="epochs"):
             train_loss = train_fn(
@@ -243,11 +262,15 @@ def objective_function(config):
                 {"test_loss": test_loss, "train_loss": train_loss, "epoch": epoch},
                 checkpoint=checkpoint,
             )
+            mlflow.log_metrics(
+                {"test_loss": test_loss, "train_loss": train_loss, "epoch": epoch},
+                step=epoch,
+            )
 
 
 if __name__ == "__main__":
     base_config = {
-        "model": {"embedding_size": 256, "weight_init": "xavier_norm"},
+        "model": {"embedding_size": 32, "weight_init": "xavier_norm"},
         "dataset": {
             "window_size": 5,
             "encoding": "p50k_base",
@@ -256,26 +279,29 @@ if __name__ == "__main__":
         },
         "optimiser": {
             "type": "SGD",
-            "lr": tune.loguniform(1e-4, 1e-2),
-            "momentum": tune.uniform(0.8, 0.999),
+            "lr": tune.loguniform(1e-4, 1e-1),
+            "momentum": 0.99,
         },
         "loss": {"type": "cross_entropy"},
         "logger": {
             "project": "llm_from_scratch/word2vec",
             "tracking_url": "http://localhost:8080",
         },
-        "training": {"epochs": 10},
+        "training": {"epochs": tune.lograndint(5, 100)},
     }
-
+    ray.init(dashboard_host="0.0.0.0")
     result = tune.run(
         objective_function,
         resources_per_trial={"cpu": 16, "gpu": 1},
         config=base_config,
-        num_samples=16,
+        num_samples=64,
+        metric="test_loss",
+        mode="min",
     )
 
-    best_result = result.get_best_result("test_loss", "min")
+    best_result = result.best_result
 
+    print(f"Best trial: {best_result}")
     print(f"Best trial config: {best_result.config}")
     print(f'Best trial final train loss: {best_result.metrics["train_loss"]}')
     print(f'Best trial final validation loss: {best_result.metrics["test_loss"]}')
