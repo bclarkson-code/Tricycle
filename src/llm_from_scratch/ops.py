@@ -419,6 +419,36 @@ def matmul(x: Tensor, y: Tensor, grad=True) -> Tensor:
 
 
 @to_tensor
+def einsum(*tensors: Tensor, subscripts: str, grad=True) -> Tensor:
+    """
+    Compute the matrix multiplication of two tensors
+    """
+    result = tensor(np.einsum(subscripts, *tensors))
+
+    if not grad:
+        return result
+
+    back_fn = []
+    for idx in range(len(tensors)):
+        left = tensors[:idx]
+        right = tensors[idx + 1 :]
+
+        def diff_einsum(arg: Tensor) -> Tensor:
+            """
+            Derivative of einsum wrt a single input tensor
+            """
+            args = left + (arg,) + right
+            return einsum(*args, subscripts, grad=False)
+
+        back_fn.append(diff_einsum)
+
+    result.args = tuple(tensors)
+    result.back_fn = tuple(back_fn)
+
+    return result
+
+
+@to_tensor
 def mean(x: Tensor):
     """
     Compute the mean of a tensor
