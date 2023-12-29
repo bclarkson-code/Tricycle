@@ -2,8 +2,8 @@ from functools import partial
 
 import numpy as np
 
-from llm_from_scratch.ops import (_no_grad, add, cos, div, einsum, exp, log,
-                                  matmul, max, min, mul, negate, nothing, pow,
+from llm_from_scratch.ops import (add, cos, div, einsum, exp, log, matmul, max,
+                                  min, mul, negate, no_grad, nothing, pow,
                                   reduce_sum, sin, sqrt, sub, tensor)
 
 
@@ -16,8 +16,10 @@ def grad_fn_equal(tensor_, ops):
     assert len(tensor_.grad_fn) == len(ops)
 
     for fn, op in zip(tensor_.grad_fn, ops):
-        assert fn.func == _no_grad(op).func
-        assert fn.args == _no_grad(op).args
+        if isinstance(op, partial):
+            partial_func_equals(fn, op)
+        else:
+            assert fn == op
 
 
 def test_can_differentiate_subtract():
@@ -254,7 +256,7 @@ def test_can_differentiate_matmul():
 
     assert np.allclose(np.array(a.grad), np.array([[12.0, 14.0], [12.0, 14.0]]))
 
-    assert np.allclose(np.array(b.grad), np.array([[3., 3.0], [7.0, 7.0]]))
+    assert np.allclose(np.array(b.grad), np.array([[3.0, 3.0], [7.0, 7.0]]))
 
 
 def test_can_differentiate_einsum():
@@ -281,7 +283,7 @@ def test_can_combine_ops_correctly():
     x = tensor([1.0, 2.0, 3.0])
     y = tensor([4.0, 5.0, 6.0])
 
-    z = ((x + y) * tensor(0.3)) ** tensor(2)
+    z = ((x + y) * 0.3) ** 2
 
     assert np.allclose(z, tensor([2.25, 4.41, 7.29]))
 
@@ -312,13 +314,13 @@ def test_can_do_linear_regression_backprop():
         # Make sure loss is decreasing
         assert prev_loss > loss
         prev_loss = loss
-        print(loss)
 
         # Do backprop
         loss.backward()
 
-        slope = sub(slope, slope.grad * learning_rate, grad=False)
-        intercept = sub(intercept, intercept.grad * learning_rate, grad=False)
+        with no_grad():
+            slope = slope - slope.grad * learning_rate
+            intercept = intercept - intercept.grad * learning_rate
 
     # Make sure we are close to the true slope and intercept
     assert np.allclose(slope, 2.0, rtol=0.1)
