@@ -7,6 +7,8 @@ import numpy as np
 # Type signature for Tensor operation
 Op = Callable[..., "Tensor"]
 
+grad: bool = True
+
 
 def to_tensor(fn: Op) -> Op:
     """
@@ -18,6 +20,19 @@ def to_tensor(fn: Op) -> Op:
         return fn(*args, **kwargs)
 
     return wrapped
+
+
+class no_grad():
+    """
+    A context manager to disable gradient calculation
+    """
+    def __enter__(self):
+        global grad
+        grad = False
+
+    def __exit__(self, *args):
+        global grad
+        grad = True
 
 
 class Tensor(np.ndarray):
@@ -138,144 +153,124 @@ def to_tensor(fn: Op) -> Op:
     return wrapped
 
 
-def _no_grad(fn: Op) -> Op:
-    """
-    A helper function to mark an operation as not requiring gradient
-    calculations
-    """
-    return partial(fn, grad=False)
-
-
 @to_tensor
-def sub(x: Tensor, y: Tensor, grad=True) -> Tensor:
+def sub(x: Tensor, y: Tensor) -> Tensor:
     """
     Subtract two tensors
     """
+    global grad
     result = tensor(np.subtract(x, y))
     if grad:
-        result.back_fn = (_no_grad(nothing), _no_grad(negate))
+        result.back_fn = (nothing, negate)
         result.args = (x, y)
     return result
 
 
 @to_tensor
-def negate(x: Tensor, grad=True) -> Tensor:
+def negate(x: Tensor) -> Tensor:
     """
     Swap the sign of every element of a tensor
     """
+    global grad
+
     result = tensor(np.multiply(x, -1))
     if grad:
-        result.back_fn = (_no_grad(negate),)
+        result.back_fn = (negate,)
         result.args = (x,)
     return result
 
 
 @to_tensor
-def nothing(x: Tensor, grad=True) -> Tensor:
+def nothing(x: Tensor) -> Tensor:
     """
     Do nothing
     """
+    global grad
     result = tensor(x)
     if grad:
-        result.back_fn = (_no_grad(nothing),)
+        result.back_fn = (nothing,)
         result.args = (x,)
     return result
 
 
 @to_tensor
-def add(x: Tensor, y: Tensor, grad=True) -> Tensor:
+def add(x: Tensor, y: Tensor) -> Tensor:
     """
     Add two tensors
     """
+    global grad
     result = tensor(np.add(x, y))
     if grad:
-        result.back_fn = (_no_grad(nothing), _no_grad(nothing))
+        result.back_fn = (nothing, nothing)
         result.args = (x, y)
     return result
 
 
 @to_tensor
-def mul(x: Tensor, y: Tensor, grad=True) -> Tensor:
+def mul(x: Tensor, y: Tensor) -> Tensor:
     """
     Multiply two tensors
     """
+    global grad
     result = tensor(np.multiply(x, y))
     if grad:
         result.back_fn = (
-            partial(_no_grad(mul), y=y),
-            partial(_no_grad(mul), y=x),
+            partial(mul, y=y),
+            partial(mul, y=x),
         )
         result.args = (x, y)
     return result
 
 
 @to_tensor
-def div(x: Tensor, y: Tensor, grad=True) -> Tensor:
+def div(x: Tensor, y: Tensor) -> Tensor:
     """
     Divide two tensors
     """
+    global grad
     result = tensor(np.divide(x, y))
 
     if not grad:
         return result
 
     def diff_div(arg: Tensor) -> Tensor:
-        no_grad_mul = _no_grad(mul)
-        no_grad_negate = _no_grad(negate)
-        no_grad_div = _no_grad(div)
+        y_squared = mul(y, y)
+        numerator = mul(negate(arg), x)
+        return div(numerator, y_squared)
 
-        y_squared = no_grad_mul(y, y)
-        numerator = no_grad_mul(no_grad_negate(arg), x)
-        return no_grad_div(numerator, y_squared)
-
-    result.back_fn = (partial(_no_grad(div), y=y), diff_div)
+    result.back_fn = (partial(div, y=y), diff_div)
     result.args = (x, y)
     return result
 
 
 @to_tensor
-def reduce_sum(x: Tensor, grad=True) -> Tensor:
+def reduce_sum(x: Tensor) -> Tensor:
     """
     Sum the elements of a tensor into a single scalar
     """
+    global grad
     result = tensor(np.sum(x))
     if grad:
-        result.back_fn = (_no_grad(reduce_sum),)
+        result.back_fn = (reduce_sum,)
         result.args = (x,)
     return result
 
 
 @to_tensor
-def pow(x: Tensor, y: Tensor, grad=True) -> Tensor:
+def pow(x: Tensor, y: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of another tensor
     """
+    global grad
     result = tensor(np.power(x, y))
     if not grad:
         return result
 
     def diff_power_arg_1(arg: Tensor) -> Tensor:
-        no_grad_pow = _no_grad(pow)
-        no_grad_mul = _no_grad(mul)
-        no_grad_sub = _no_grad(sub)
-        ONE = tensor(1)
-
-        coef = no_grad_pow(x, no_grad_sub(y, ONE))
-        coef = no_grad_mul(coef, y)
-        result = no_grad_mul(arg, coef)
-
-        return result
+        return (pow(x, y - 1) * y) * arg
 
     def diff_power_arg_2(arg: Tensor) -> Tensor:
-        no_grad_pow = _no_grad(pow)
-        no_grad_mul = _no_grad(mul)
-        no_grad_log = _no_grad(log)
-
-        coef = no_grad_pow(x, y)
-        coef = no_grad_mul(coef, no_grad_log(x))
-        result = no_grad_mul(arg, coef)
-
-        return result
+        return pow(x, y) * log(x) * arg
 
     result.back_fn = (
         diff_power_arg_1,
@@ -286,48 +281,46 @@ def pow(x: Tensor, y: Tensor, grad=True) -> Tensor:
 
 
 @to_tensor
-def exp(x: Tensor, grad=True) -> Tensor:
+def exp(x: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
+    global grad
     result = tensor(np.exp(x))
     if not grad:
         return result
-    result.back_fn = (_no_grad(exp),)
+    result.back_fn = (exp,)
     result.args = (x,)
     return result
 
 
 @to_tensor
-def log(x: Tensor, grad=True) -> Tensor:
+def log(x: Tensor) -> Tensor:
     """
     Find the natural log of every element of a tensor
     """
+    global grad
     result = tensor(np.log(x))
     if not grad:
         return result
 
-    result.back_fn = (bind(_no_grad(div), 1, ...),)
+    result.back_fn = (bind(div, 1, ...),)
     result.args = (x,)
     return result
 
 
 @to_tensor
-def sqrt(x: Tensor, grad=True) -> Tensor:
+def sqrt(x: Tensor) -> Tensor:
     """
     Find the square root of every element of a tensor
     """
+    global grad
     result = tensor(np.sqrt(x))
     if not grad:
         return result
 
     def diff_sqrt(arg: Tensor) -> Tensor:
-        no_grad_pow = _no_grad(pow)
-        no_grad_mul = _no_grad(mul)
-
-        POWER = tensor(-1 / 2)
-        ONE_HALF = tensor(1 / 2)
-        return no_grad_mul(no_grad_pow(arg, POWER), ONE_HALF)
+        return pow(arg, -0.5) * 0.5
 
     result.back_fn = (diff_sqrt,)
     result.args = (x,)
@@ -335,32 +328,32 @@ def sqrt(x: Tensor, grad=True) -> Tensor:
 
 
 @to_tensor
-def sin(x: Tensor, grad=True) -> Tensor:
+def sin(x: Tensor) -> Tensor:
     """
     Find the sine of every element of a tensor
     """
+    global grad
     result = tensor(np.sin(x))
     if not grad:
         return result
 
-    result.back_fn = (_no_grad(cos),)
+    result.back_fn = (cos,)
     result.args = (x,)
     return result
 
 
 @to_tensor
-def cos(x: Tensor, grad=True) -> Tensor:
+def cos(x: Tensor) -> Tensor:
     """
     Find the cosine of every element of a tensor
     """
+    global grad
     result = tensor(np.cos(x))
     if not grad:
         return result
 
     def diff_cos(arg: Tensor) -> Tensor:
-        no_grad_sin = _no_grad(sin)
-        no_grad_negate = _no_grad(negate)
-        return no_grad_negate(no_grad_sin(arg))
+        return -sin(arg)
 
     result.back_fn = (diff_cos,)
     result.args = (x,)
@@ -368,10 +361,11 @@ def cos(x: Tensor, grad=True) -> Tensor:
 
 
 @to_tensor
-def max(x: Tensor, grad=True) -> Tensor:
+def max(x: Tensor) -> Tensor:
     """
     Find the largest element of a tensor
     """
+    global grad
     result = tensor(x.max())
     if not grad:
         return result
@@ -385,10 +379,11 @@ def max(x: Tensor, grad=True) -> Tensor:
 
 
 @to_tensor
-def min(x: Tensor, grad=True) -> Tensor:
+def min(x: Tensor) -> Tensor:
     """
     Find the smallest element of a tensor
     """
+    global grad
     result = tensor(x.min())
     if not grad:
         return result
@@ -402,10 +397,12 @@ def min(x: Tensor, grad=True) -> Tensor:
 
 
 @to_tensor
-def einsum(*tensors: Tensor, subscripts: str, grad=True) -> Tensor:
+def einsum(*tensors: Tensor, subscripts: str) -> Tensor:
     """
-    Compute the matrix multiplication of two tensors
+    Use einstein summation notation to perform tensor operations on
+    some tensors
     """
+    global grad
     result = tensor(np.einsum(subscripts, *tensors))
 
     if not grad:
@@ -421,7 +418,7 @@ def einsum(*tensors: Tensor, subscripts: str, grad=True) -> Tensor:
             Derivative of einsum wrt a single input tensor
             """
             args = left + (arg,) + right
-            return einsum(*args, subscripts=subscripts, grad=False)
+            return einsum(*args, subscripts=subscripts)
 
         back_fn.append(diff_einsum)
 
@@ -432,7 +429,7 @@ def einsum(*tensors: Tensor, subscripts: str, grad=True) -> Tensor:
 
 
 @to_tensor
-def matmul(x: Tensor, y: Tensor, grad=True) -> Tensor:
+def matmul(x: Tensor, y: Tensor) -> Tensor:
     """
     Compute the matrix multiplication of two tensors
     """
@@ -443,7 +440,7 @@ def matmul(x: Tensor, y: Tensor, grad=True) -> Tensor:
     left_indices = alphabet[: len(x.shape) - 1]
     right_indices = alphabet[-len(x.shape) + 1 :]
     subscripts = f"{left_indices}i,i{right_indices}->{left_indices}{right_indices}"
-    return einsum(x, y, subscripts=subscripts, grad=grad)
+    return einsum(x, y, subscripts=subscripts)
 
 
 @to_tensor
