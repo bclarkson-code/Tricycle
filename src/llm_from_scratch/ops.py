@@ -1,3 +1,4 @@
+import inspect
 from functools import partial
 from typing import Callable, Optional
 
@@ -401,24 +402,6 @@ def min(x: Tensor, grad=True) -> Tensor:
 
 
 @to_tensor
-def matmul(x: Tensor, y: Tensor, grad=True) -> Tensor:
-    """
-    Compute the matrix multiplication of two tensors
-    """
-    result = tensor(np.matmul(x, y))
-
-    if not grad:
-        return result
-
-    result.back_fn = (
-        partial(_no_grad(matmul), y=y),
-        partial(_no_grad(matmul), y=x),
-    )
-    result.args = (x, y)
-    return result
-
-
-@to_tensor
 def einsum(*tensors: Tensor, subscripts: str, grad=True) -> Tensor:
     """
     Compute the matrix multiplication of two tensors
@@ -433,12 +416,12 @@ def einsum(*tensors: Tensor, subscripts: str, grad=True) -> Tensor:
         left = tensors[:idx]
         right = tensors[idx + 1 :]
 
-        def diff_einsum(arg: Tensor) -> Tensor:
+        def diff_einsum(arg: Tensor, left=left, right=right) -> Tensor:
             """
             Derivative of einsum wrt a single input tensor
             """
             args = left + (arg,) + right
-            return einsum(*args, subscripts, grad=False)
+            return einsum(*args, subscripts=subscripts, grad=False)
 
         back_fn.append(diff_einsum)
 
@@ -446,6 +429,21 @@ def einsum(*tensors: Tensor, subscripts: str, grad=True) -> Tensor:
     result.back_fn = tuple(back_fn)
 
     return result
+
+
+@to_tensor
+def matmul(x: Tensor, y: Tensor, grad=True) -> Tensor:
+    """
+    Compute the matrix multiplication of two tensors
+    """
+    alphabet = "abcdefghjklmnopqrstuvwxyz"
+    assert len(x.shape) + len(y.shape) <= len(
+        alphabet
+    ), "Cannot perform matmul on tensors with more than 26 dimensions in total"
+    left_indices = alphabet[: len(x.shape) - 1]
+    right_indices = alphabet[-len(x.shape) + 1 :]
+    subscripts = f"{left_indices}i,i{right_indices}->{left_indices}{right_indices}"
+    return einsum(x, y, subscripts=subscripts, grad=grad)
 
 
 @to_tensor

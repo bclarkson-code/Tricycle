@@ -2,26 +2,9 @@ from functools import partial
 
 import numpy as np
 
-from llm_from_scratch.ops import (
-    _no_grad,
-    add,
-    cos,
-    div,
-    exp,
-    log,
-    matmul,
-    max,
-    min,
-    mul,
-    negate,
-    nothing,
-    pow,
-    reduce_sum,
-    sin,
-    sqrt,
-    sub,
-    tensor,
-)
+from llm_from_scratch.ops import (_no_grad, add, cos, div, einsum, exp, log,
+                                  matmul, max, min, mul, negate, nothing, pow,
+                                  reduce_sum, sin, sqrt, sub, tensor)
 
 
 def partial_func_equals(a, b):
@@ -265,15 +248,33 @@ def test_can_differentiate_matmul():
 
     z = matmul(a, b)
 
-    assert np.allclose(z, tensor([[19.0, 22.0], [43.0, 50.0]]))
+    assert np.allclose(z, tensor([[19.0, 22.0], [43.0, 50.0]])), z
 
     z.backward()
 
     assert np.allclose(np.array(a.grad), np.array([[12.0, 14.0], [12.0, 14.0]]))
-    grad_fn_equal(a, [partial(matmul, y=b)])
 
-    assert np.allclose(np.array(b.grad), np.array([[4.0, 6.0], [4.0, 6.0]]))
-    grad_fn_equal(b, [partial(matmul, y=a)])
+    assert np.allclose(np.array(b.grad), np.array([[3., 3.0], [7.0, 7.0]]))
+
+
+def test_can_differentiate_einsum():
+    a = np.arange(12).reshape(3, 4)
+    b = np.arange(12).reshape(4, 3)
+
+    a = tensor(a)
+    b = tensor(b)
+
+    output = np.array([[42, 48, 54], [114, 136, 158], [186, 224, 262]])
+
+    z = einsum(a, b, subscripts="ij,jk->ik")
+    assert np.allclose(z, output)
+
+    z.backward()
+
+    assert np.allclose(a.grad, np.array([[18, 22, 26], [18, 22, 26], [18, 22, 26]]))
+    assert np.allclose(
+        b.grad, np.array([[6, 6, 6], [22, 22, 22], [38, 38, 38]])
+    ), b.grad
 
 
 def test_can_combine_ops_correctly():

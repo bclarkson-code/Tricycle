@@ -2,24 +2,9 @@ import math
 
 import numpy as np
 
-from llm_from_scratch.ops import (
-    add,
-    cos,
-    div,
-    exp,
-    log,
-    matmul,
-    max,
-    min,
-    mul,
-    negate,
-    nothing,
-    pow,
-    reduce_sum,
-    sin,
-    sqrt,
-    sub,
-)
+from llm_from_scratch.ops import (add, cos, div, einsum, exp, log, matmul, max,
+                                  min, mul, negate, nothing, pow, reduce_sum,
+                                  sin, sqrt, sub)
 
 
 def test_can_negate():
@@ -140,3 +125,24 @@ def test_can_matrix_multiply():
     a = np.array([1, 2, 3])
     b = np.array([4, 5, 6])
     assert np.allclose(matmul(a, b), 32)
+
+
+def test_can_einsum():
+    a = np.arange(25).reshape(5, 5)
+    b = np.arange(25).reshape(5, 5)
+    v = np.arange(5)
+
+    answer = np.einsum("ij,jk->ik", a, b)
+    assert np.allclose(einsum(a, b, subscripts="ij,jk->ik"), answer)
+
+    answer = np.einsum("i,i->", v, v)
+    assert np.allclose(einsum(v, v, subscripts="i,i->"), answer)
+
+    answer = np.einsum("i->", v)
+    assert np.allclose(einsum(v, subscripts="i->"), answer)
+
+    answer = np.einsum("ij->j", a)
+    assert np.allclose(einsum(a, subscripts="ij->j"), answer)
+
+    answer = np.einsum("ij,j->i", a, v)
+    assert np.allclose(einsum(a, v, subscripts="ij,j->i"), answer)
