@@ -1,4 +1,4 @@
-from llm_from_scratch.ops import Tensor, log, mean, reduce_sum, softmax
+from llm_from_scratch.ops import Tensor, log, mean, reduce_sum, exp, einsum
 
 
 def mean_square_error(y_pred: Tensor, y_true: Tensor) -> Tensor:
@@ -7,7 +7,7 @@ def mean_square_error(y_pred: Tensor, y_true: Tensor) -> Tensor:
     """
     assert y_pred.shape == y_true.shape
     square_errors = (y_pred - y_true) ** 2
-    return reduce_sum(square_errors) / y_pred.shape[0]
+    return mean(square_errors)
 
 
 def categorical_crossentropy(y_pred: Tensor, y_true: Tensor) -> Tensor:
@@ -18,10 +18,8 @@ def categorical_crossentropy(y_pred: Tensor, y_true: Tensor) -> Tensor:
     Usually this is a one-hor encoding of a single categorical output
     but sharing labels across multiple outputs is possible.
     """
-    y_pred = softmax(y_pred)
-    y_pred = log(y_pred)
-
-    loss = 0
-    loss -= y_pred * y_true
-
+    coef = 1 / einsum(exp(y_pred), subscripts="ij->i")
+    normalised_pred = einsum(coef, exp(y_pred), subscripts="i,ij->ij")
+    log_probs = log(normalised_pred)
+    loss = -einsum(log_probs, y_true, subscripts="ij,ij->i")
     return mean(loss)
