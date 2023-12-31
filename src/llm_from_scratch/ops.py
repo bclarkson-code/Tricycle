@@ -1,6 +1,6 @@
 import inspect
-from functools import partial
-from typing import Callable, Optional
+from functools import partial, wraps
+from typing import Callable, Optional, Tuple
 
 import numpy as np
 
@@ -15,6 +15,7 @@ def to_tensor(fn: Op) -> Op:
     A decorator to convert non-tensor arguments to tensors
     """
 
+    @wraps(fn)
     def wrapped(*args, **kwargs):
         args = [arg if isinstance(arg, Tensor) else tensor(arg) for arg in args]
         return fn(*args, **kwargs)
@@ -22,15 +23,16 @@ def to_tensor(fn: Op) -> Op:
     return wrapped
 
 
-class no_grad():
+class no_grad:
     """
     A context manager to disable gradient calculation
     """
+
     def __enter__(self):
         global grad
         grad = False
 
-    def __exit__(self, *args):
+    def __exit__(self, *_):
         global grad
         grad = True
 
@@ -45,7 +47,7 @@ class Tensor(np.ndarray):
     back_fn: tuple[Op, ...] | None = None
     grad_fn: list[Op] = []
     grad: Optional["Tensor"] = None
-    requires_grad: bool = True
+    name: Optional[str] = None
 
     def backward(self):
         """
@@ -75,8 +77,13 @@ class Tensor(np.ndarray):
 
             # At leaf node
             else:
-                grad = tensor(np.ones_like(current_node))
-                for op in current_node.grad_fn[::-1]:
+                grad = tensor(np.ones_like(self))
+                # if current_node.name == "layer_1_weights":
+                #     for fn in current_node.grad_fn:
+                #         print(f"-> {fn}")
+                #     raise Exception
+                for op in current_node.grad_fn:
+                    # print(f"-> {op}: {grad}")
                     # Actually calculate the gradient for a node
                     grad = op(grad)
 
@@ -115,9 +122,20 @@ class Tensor(np.ndarray):
     def __matmul__(self, other: "Tensor") -> "Tensor":
         return matmul(self, other)
 
-    @to_tensor
     def mean(self) -> "Tensor":
         return mean(self)
+
+    @property
+    def T(self) -> "Tensor":
+        return transpose(self)
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def __repr__(self) -> str:
+        if self.name is None:
+            return f"{super().__repr__()}"
+        return f"Tensor({super().__repr__()}, {self.name=})"
 
 
 class bind(partial):
@@ -133,24 +151,14 @@ class bind(partial):
         return self.func(*args, *iargs, **keywords)
 
 
-def tensor(*args, **kwargs):
+def tensor(*args, name: Optional[str] = None, **kwargs) -> Tensor:
     """
     Create a new Tensor instance. This is pretty much a copy of the np.array
     constructor that most numpy users use to create an array
     """
-    return np.asarray(*args, **kwargs).view(Tensor)
-
-
-def to_tensor(fn: Op) -> Op:
-    """
-    A decorator to convert non-tensor arguments to tensors
-    """
-
-    def wrapped(*args, **kwargs):
-        args = [arg if isinstance(arg, Tensor) else tensor(arg) for arg in args]
-        return fn(*args, **kwargs)
-
-    return wrapped
+    result = np.asarray(*args, **kwargs).view(Tensor)
+    result.name = name
+    return result
 
 
 @to_tensor
@@ -248,12 +256,10 @@ def reduce_sum(x: Tensor) -> Tensor:
     """
     Sum the elements of a tensor into a single scalar
     """
-    global grad
-    result = tensor(np.sum(x))
-    if grad:
-        result.back_fn = (reduce_sum,)
-        result.args = (x,)
-    return result
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    indices = alphabet[: len(x.shape)]
+    subscripts = f"{indices}->"
+    return einsum(x, subscripts=subscripts)
 
 
 @to_tensor
@@ -396,34 +402,73 @@ def min(x: Tensor) -> Tensor:
     return result
 
 
+def _parse_subscripts(subscripts: str) -> tuple[list[str], str]:
+    indices, result = subscripts.split("->")
+    indices = indices.split(",")
+    return indices, result
+
+
+def _to_binary(tensors: list[Tensor], subscripts: str) -> tuple[list[Tensor], str]:
+    """
+    If a singular operation is passed, (e.g add along an index)
+    we need some way o figuring out how much to expand in the back operation
+    We can do this by converting the singular operation to a binary operation
+    by multiplying elementwise by a matrix of ones
+    """
+    assert len(tensors) == 1, "Operation is already binary"
+    [index], result = _parse_subscripts(subscripts)
+    if not result:
+        result = "..."
+    subscripts = f"{index},{index}->{result}"
+
+    tensors = (tensor(np.ones_like(tensors[0])), tensors[0])
+    return tensors, subscripts
+
+
 @to_tensor
 def einsum(*tensors: Tensor, subscripts: str) -> Tensor:
     """
     Use einstein summation notation to perform tensor operations on
-    some tensors
-    """
+    some tensors"""
     global grad
+    if len(tensors) == 1:
+        tensors, subscripts = _to_binary(tensors, subscripts)
+
     result = tensor(np.einsum(subscripts, *tensors))
 
     if not grad:
         return result
 
-    back_fn = []
+    back_fns = []
+
+
+    indices, output = _parse_subscripts(subscripts)
+    if not output:
+        output = "..."
+
+
     for idx in range(len(tensors)):
         left = tensors[:idx]
         right = tensors[idx + 1 :]
 
-        def diff_einsum(arg: Tensor, left=left, right=right) -> Tensor:
+        indices, output = _parse_subscripts(subscripts)
+        output, indices[idx] = indices[idx], output
+        indices = ",".join(indices)
+        diff_subscripts = f"{indices}->{output}"
+
+        def diff_einsum(
+            arg: Tensor, left=left, right=right, subscripts=diff_subscripts
+        ) -> Tensor:
             """
             Derivative of einsum wrt a single input tensor
             """
             args = left + (arg,) + right
             return einsum(*args, subscripts=subscripts)
 
-        back_fn.append(diff_einsum)
+        back_fns.append(diff_einsum)
 
     result.args = tuple(tensors)
-    result.back_fn = tuple(back_fn)
+    result.back_fn = tuple(back_fns)
 
     return result
 
@@ -437,10 +482,24 @@ def matmul(x: Tensor, y: Tensor) -> Tensor:
     assert len(x.shape) + len(y.shape) <= len(
         alphabet
     ), "Cannot perform matmul on tensors with more than 26 dimensions in total"
-    left_indices = alphabet[: len(x.shape) - 1]
-    right_indices = alphabet[-len(x.shape) + 1 :]
+    assert len(x.shape), "Cannot perform matmul on a 0D tensor"
+    assert len(y.shape), "Cannot perform matmul on a 0D tensor"
+
+    left_indices = alphabet[: len(x.shape) - 1] if len(x.shape) > 1 else ""
+    right_indices = alphabet[-len(y.shape) + 1 :] if len(y.shape) > 1 else ""
     subscripts = f"{left_indices}i,i{right_indices}->{left_indices}{right_indices}"
     return einsum(x, y, subscripts=subscripts)
+
+
+@to_tensor
+def transpose(x: Tensor) -> Tensor:
+    """
+    Compute the transpose of a tensor
+    """
+    assert (
+        len(x.shape) <= 2
+    ), "Can only perform transpose on 2D tensors. Use einsum for more complex cases."
+    return einsum(x, subscripts="ij->ji")
 
 
 @to_tensor
@@ -465,3 +524,20 @@ def sigmoid(x: Tensor) -> Tensor:
     Compute the sigmoid of a tensor
     """
     return tensor(1) / (exp(-x) + 1)
+
+
+@to_tensor
+def relu(x: Tensor) -> Tensor:
+    """
+    Compute the relu of a tensor
+    """
+    result = tensor(np.maximum(x, 0))
+
+    def diff_relu(arg: Tensor) -> Tensor:
+        weight = (x > 0).astype(x.dtype)
+        return einsum(weight, arg, subscripts="ij,ij->ij")
+
+    result.back_fn = (diff_relu,)
+    result.args = (x,)
+
+    return result

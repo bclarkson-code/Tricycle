@@ -125,7 +125,6 @@ def test_can_differentiate_reduce_sum():
     z.backward()
 
     assert x.grad == 3.0
-    grad_fn_equal(x, [reduce_sum])
 
 
 def test_can_differentiate_power():

@@ -1,7 +1,7 @@
 import numpy as np
 
 from llm_from_scratch.loss import categorical_crossentropy, mean_square_error
-from llm_from_scratch.ops import sigmoid, sub, tensor
+from llm_from_scratch.ops import einsum, no_grad, sigmoid, tensor
 
 
 def test_mean_square_error():
@@ -16,8 +16,13 @@ def test_mean_square_error():
     learning_rate = tensor(0.1)
 
     prev_loss = np.inf
+    # sourcery skip: no-loop-in-tests
     for _ in range(100):
-        z = slope * x + intercept
+        expanded_intercept = einsum(
+            intercept, np.ones_like(x), subscripts=",a->a"
+        )
+
+        z = einsum(x, slope, subscripts="a,->a") + expanded_intercept
 
         # Calculate mean squared error
         loss = mean_square_error(z, y)
@@ -25,13 +30,13 @@ def test_mean_square_error():
         # Make sure loss is decreasing
         assert prev_loss > loss
         prev_loss = loss
-        print(loss)
 
         # Do backprop
         loss.backward()
 
-        slope = sub(slope, slope.grad * learning_rate, grad=False)
-        intercept = sub(intercept, intercept.grad * learning_rate, grad=False)
+        with no_grad():
+            slope = slope - slope.grad * learning_rate
+            intercept = intercept - intercept.grad * learning_rate
 
     # Make sure we are close to the true slope and intercept
     assert np.allclose(slope, 2.0, rtol=0.1)
@@ -47,41 +52,53 @@ def test_cross_entropy():
     else:
         return 0
     """
-
-    x = np.expand_dims(np.linspace(-1.0, 1.0, 5), 0).T
-    y = np.array([(x < 0).astype(int), (x > 0).astype(int)])
-    y = np.squeeze(y).T
+    x = [
+        0.50,
+        0.75,
+        1.00,
+        1.25,
+        1.50,
+        1.75,
+        1.75,
+        2.00,
+        2.25,
+        2.50,
+        2.75,
+        3.00,
+        3.25,
+        3.50,
+        4.00,
+        4.25,
+        4.50,
+        4.75,
+        5.00,
+        5.5,
+    ]
+    y = [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1]
+    y = [[v, 1 - v] for v in y]
 
     x = tensor(x)
     y = tensor(y)
 
-    slope = tensor(
-        np.expand_dims(np.array([0.01, 0.01]), 1)
-    )  # start off with a small slope
-    intercept = tensor(0.0)  # start off with a small intercept
+    slope = tensor([-0.05, 0.1])  # start off with a small slope
+    intercept = tensor(0.01)  # start off with a small intercept
 
-    learning_rate = tensor(0.01)
+    learning_rate = tensor(1e-2)
 
     prev_loss = np.inf
+    # sourcery skip: no-loop-in-tests
     for _ in range(100):
-        z = sigmoid(slope @ x.T).T
+        z = sigmoid(einsum(slope, x, subscripts="i,j->ji") + intercept)
 
         # Calculate cross entropy
         loss = categorical_crossentropy(z, y)
 
-        # Make sure loss is decreasing
-        # assert prev_loss > loss
-        prev_loss = loss
-
-        print(loss)
-        print(slope)
-        print(slope.grad)
-
         # Do backprop
         loss.backward()
 
-        slope = sub(slope, slope.grad * learning_rate, grad=False)
-        intercept = sub(intercept, intercept.grad * learning_rate, grad=False)
+        with no_grad():
+            slope = slope - slope.grad * learning_rate
+            intercept = intercept - intercept.grad * learning_rate
 
     # Make sure we are close to the true slope and intercept
     assert np.allclose(slope, 2.0, rtol=0.1)
