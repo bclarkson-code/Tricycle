@@ -41,10 +41,3 @@ Tricycle is tested using [pytest](https://docs.pytest.org/en/latest/)
 poetry run pytest
 ```
 
-## TODO:
-- Write an explanation of how Tricycle works
-- Get cross-entropy loss working
-- Build some layers
-- Build some optimisers
-- Implement GPU support
-- Optimise the autograd algorithm (caching, operation fusing etc) 
