@@ -20,7 +20,7 @@ Here are some things you can do with Tricycle:
 - Successfully train a simple neural network
 
 Here are some things you can't do with Tricycle (yet):
-- Use loss function that is not mean squared error
+- Use a loss function that is not mean squared error
 - Do anything efficiently
 - Use any built in layers, optimisers, regularisation techniques etc
 - Use a GPU
