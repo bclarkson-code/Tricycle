@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from llm_from_scratch.ops import tensor
+from tricycle.ops import tensor
 
 
 def test_can_handle_scalar():

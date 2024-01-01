@@ -1,6 +1,6 @@
 import numpy as np
 
-from llm_from_scratch.ops import mean, sigmoid, softmax, tensor
+from tricycle.ops import mean, sigmoid, softmax, tensor
 
 
 def test_can_mean():
@@ -8,8 +8,16 @@ def test_can_mean():
 
 
 def test_can_softmax():
+    # Single row
     result = softmax(tensor([0, 1, 0]))
     expected = tensor([0.21194156, 0.57611688, 0.21194156])
+    assert np.allclose(result, expected)
+
+    # Multiple rows
+    result = softmax(tensor([[0, 1, 0], [1, 0, 0]]))
+    expected = tensor(
+        [[0.21194156, 0.57611688, 0.21194156], [0.57611688, 0.21194156, 0.21194156]]
+    )
     assert np.allclose(result, expected)
 
 

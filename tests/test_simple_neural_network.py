@@ -1,55 +1,25 @@
-import inspect
-
 import numpy as np
-from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes
 from sklearn.preprocessing import StandardScaler
 
-from llm_from_scratch.loss import categorical_crossentropy, mean_square_error
-from llm_from_scratch.ops import einsum, no_grad, relu, tensor
-
-np.random.seed(42)
-
-
-class Dataset:
-    """
-    Iterator that generates batches from the dataset
-    """
-
-    def __init__(self, X, y, batch_size=32):
-        self.X = X
-        self.y = y
-        self.batch_size = batch_size
-
-    def __iter__(self):
-        while True:
-            indices = np.random.choice(len(self.X), self.batch_size)
-            yield self.X[indices], self.y[indices]
-
-    def __len__(self):
-        return len(self.X)
-
-
-def init_normal(shape, name: str = "", loc=0.0, scale=0.01):
-    return tensor(np.random.normal(size=shape, loc=loc, scale=scale), name=name)
-
-
-def init_zero(shape, name: str = ""):
-    return tensor(np.zeros(shape), name=name)
-
-
-def init_xavier(shape, name: str = ""):
-    f_in, f_out = shape
-    bound = np.sqrt(6) / np.sqrt(f_in + f_out)
-    return tensor(np.random.uniform(low=-bound, high=bound, size=shape), name=name)
+from tricycle.activation import relu
+from tricycle.dataset import InfiniteDataset
+from tricycle.experiments import smooth
+from tricycle.initialisers import init_xavier, init_zero
+from tricycle.loss import mean_square_error
+from tricycle.ops import einsum, no_grad
 
 
 def test_simple_neural_network():
     """
-    Train a simple neural network on the iris dataset
+    Train a simple regression network on the diabetes dataset
     """
+    # Make sure our results are reproducible
+    np.random.seed(42)
+
     batch_size = 64
     learning_rate = 1e-0
+    n_epochs = 1000
     n_labels = 1
     n_features = 10
     layer_1_size = 16
@@ -58,13 +28,12 @@ def test_simple_neural_network():
     diabetes = load_diabetes(scaled=True)
     x = diabetes.data
 
-    # one_hot encode the labels
+    # We need to scale the target to avoid giant grads
     y = diabetes.target.reshape(-1, 1)
-    scaler = StandardScaler()
-    y = scaler.fit_transform(y)
+    y = StandardScaler().fit_transform(y)
 
     # Build an iterator that generates random mini-batches.
-    ds = Dataset(x, y, batch_size=batch_size)
+    ds = InfiniteDataset(x, y, batch_size=batch_size)
 
     # define a model
     layer_1_weights = init_xavier((n_features, layer_1_size), name="layer_1_weights")
@@ -118,14 +87,11 @@ def test_simple_neural_network():
             for idx, param in enumerate(params):
                 params[idx] = param - (param.grad * learning_rate)
 
-        if batch_idx >= 1000:
+        # sourcery skip: no-conditionals-in-tests
+        if batch_idx >= n_epochs:
             break
 
-
-    _, ax = plt.subplots(figsize=(16, 9))
-    ax.plot(losses)
-    plt.show()
-
-
-if __name__ == "__main__":
-    test_simple_neural_network()
+    # Check that our loss has actually decreased
+    # It starts at about 0.9 and drops to around 0.5
+    # if the model actually learns
+    assert list(smooth(losses))[-1] < 0.6

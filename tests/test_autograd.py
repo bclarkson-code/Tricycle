@@ -2,9 +2,9 @@ from functools import partial
 
 import numpy as np
 
-from llm_from_scratch.ops import (add, cos, div, einsum, exp, log, matmul, max,
-                                  min, mul, negate, no_grad, nothing, pow,
-                                  reduce_sum, sin, sqrt, sub, tensor)
+from tricycle.ops import (add, cos, div, einsum, exp, log, matmul, max, min,
+                          mul, negate, no_grad, nothing, pow, reduce_sum, sin,
+                          sqrt, sub, tensor)
 
 
 def partial_func_equals(a, b):
@@ -124,7 +124,7 @@ def test_can_differentiate_reduce_sum():
 
     z.backward()
 
-    assert x.grad == 3.0
+    assert np.allclose(x.grad, [1, 1, 1])
 
 
 def test_can_differentiate_power():
@@ -253,9 +253,9 @@ def test_can_differentiate_matmul():
 
     z.backward()
 
-    assert np.allclose(np.array(a.grad), np.array([[12.0, 14.0], [12.0, 14.0]]))
+    assert np.allclose(np.array(a.grad), np.array([[11, 15], [11, 15]]))
 
-    assert np.allclose(np.array(b.grad), np.array([[3.0, 3.0], [7.0, 7.0]]))
+    assert np.allclose(np.array(b.grad), np.array([[4, 4], [6, 6]]))
 
 
 def test_can_differentiate_einsum():
@@ -266,15 +266,18 @@ def test_can_differentiate_einsum():
     b = tensor(b)
 
     output = np.array([[42, 48, 54], [114, 136, 158], [186, 224, 262]])
+    print(a, b)
 
     z = einsum(a, b, subscripts="ij,jk->ik")
     assert np.allclose(z, output)
 
     z.backward()
 
-    assert np.allclose(a.grad, np.array([[18, 22, 26], [18, 22, 26], [18, 22, 26]]))
     assert np.allclose(
-        b.grad, np.array([[6, 6, 6], [22, 22, 22], [38, 38, 38]])
+        a.grad, np.array([[3, 12, 21, 30], [3, 12, 21, 30], [3, 12, 21, 30]])
+    )
+    assert np.allclose(
+        b.grad, np.array([[12, 12, 12], [15, 15, 15], [18, 18, 18], [21, 21, 21]])
     ), b.grad
 
 
@@ -301,14 +304,16 @@ def test_can_do_linear_regression_backprop():
     slope = tensor(0.01)  # start off with a small slope
     intercept = tensor(0.0)  # start off with a small intercept
 
-    learning_rate = tensor(0.1)
+    # This feels a bit high, and im not sure why
+    learning_rate = tensor(1e-1)
 
     prev_loss = np.inf
     for _ in range(100):
-        z = slope * x + intercept
+        z = einsum(slope, x, subscripts=",i->i")
+        z += einsum(intercept, np.ones_like(x), subscripts=",i->i")
 
-        # Calculate mean squared error
-        loss = reduce_sum(((z - y) ** 2) / 100)
+        square_error = (z - y) ** 2
+        loss = einsum(square_error, subscripts="i->") / square_error.shape[0]
 
         # Make sure loss is decreasing
         assert prev_loss > loss
