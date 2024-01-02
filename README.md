@@ -1,5 +1,5 @@
 # Tricycle
-> She don't go fast but she do be goin'
+> It don't go fast but it do be goin'
 
 Ever wanted to learn how a deep learning framework *actually* works under the hood? Tricycle might be for you.
 
