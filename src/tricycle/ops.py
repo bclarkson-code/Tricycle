@@ -48,6 +48,7 @@ class Tensor(np.ndarray):
     grad_fn: list[Op] = []
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
+    requires_grad: bool = False
 
     def backward(self):
         """
@@ -80,7 +81,7 @@ class Tensor(np.ndarray):
                     stack.append(arg)  # type: ignore
 
             # At leaf node
-            else:
+            elif current_node.requires_grad:
                 grad = tensor(np.ones_like(self))
                 for op in current_node.grad_fn:
                     # Follow the path from root to leaf, applying
@@ -97,6 +98,7 @@ class Tensor(np.ndarray):
                     # - We should also probably ignore leaves that we don't
                     # need the gradient for (e.g the inputs)
                     grad = op(grad)
+                    breakpoint()
 
                 if current_node.grad is None:
                     current_node.grad = grad
@@ -166,13 +168,16 @@ class bind(partial):
         return self.func(*args, *iargs, **keywords)
 
 
-def tensor(*args, name: Optional[str] = None, **kwargs) -> Tensor:
+def tensor(
+    *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
+) -> Tensor:
     """
     Create a new Tensor instance. First, we convert the argument to a numpy
     array and then to a tensor
     """
     result = np.asarray(*args, **kwargs).view(Tensor)
     result.name = name
+    result.requires_grad = requires_grad
     return result
 
 
@@ -462,16 +467,27 @@ def einsum(*tensors: Tensor, subscripts: str) -> Tensor:
     """
     global grad
 
-    # We need to handle ops that have a single input or single value output
-    # carefully
     indices, output = _parse_subscripts(subscripts)
 
+    # Every single input tensor is equivalent to a dual input where
+    # the second input is a 1 tensor with the indices that dont appear in the
+    # output
     if len(tensors) == 1:
-        indices = [indices[0], indices[0]]
-        tensors = (tensor(np.ones_like(tensors[0])), tensors[0])
+        one_indices = ""
+        one_shape = []
+        for size, idx in zip(tensors[0].shape, indices[0]):
+            if idx not in output:
+                one_indices += idx
+                one_shape.append(size)
 
-    if output == "":
-        output = "..."
+        indices = [indices[0], one_indices]
+        ones = tensor(np.ones(one_shape), requires_grad=False)
+        tensors = (tensors[0], ones)
+
+    if not tensors or len(tensors) > 2:
+        raise NotImplementedError(
+            f"Einsum is only implemented for 1 or 2 inputs. Found {len(tensors)}"
+        )
 
     indices = ",".join(indices)
     subscripts = f"{indices}->{output}"
@@ -482,11 +498,21 @@ def einsum(*tensors: Tensor, subscripts: str) -> Tensor:
         return result
 
     back_fns = []
-
     indices, output = _parse_subscripts(subscripts)
-    if not output:
-        output = "..."
 
+    # The rule for differentiating einsum wrt one of its arguments is:
+    # Swap the indices of the output and the argument being differentiated
+    # in the subscripts. Then pass the current gradient as an argument in
+    # place of the argument being differentiated.
+    # for example:
+    # >>> a = np.arange(12).reshape(3, 4)
+    # >>> b = np.arange(12).reshape(4, 3)
+    # >>> c = np.einsum('ij,jk->ik', a, b)
+    #
+    # >>> c.backward()
+    # >>> assert a.grad == np.einsum('ik,jk->ij', np.ones_like(c), b)
+    # Notice that the indices have swapped and a has been replaced with
+    # the gradient of c (the current gradient)
     for idx in range(len(tensors)):
         left = tensors[:idx]
         right = tensors[idx + 1 :]
@@ -564,7 +590,6 @@ def softmax(x: Tensor):
     assert len(x.shape) < len(
         ascii_letters
     ), f"Cannot perform softmax on tensors with more than {len(ascii_letters)} dimensions"
-
 
     if len(x.shape) == 1:
         denom = 1 / einsum(x, subscripts="i->")

@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 
 from tricycle.activation import relu
 from tricycle.dataset import InfiniteDataset
-from tricycle.experiments import smooth
+from tricycle.experiments import smooth, plot_loss
 from tricycle.initialisers import init_xavier, init_zero
 from tricycle.loss import mean_square_error
 from tricycle.ops import einsum, no_grad
@@ -86,6 +86,8 @@ def test_simple_neural_network():
         with no_grad():
             for idx, param in enumerate(params):
                 params[idx] = param - (param.grad * learning_rate)
+                param.grad = None
+                
 
         # sourcery skip: no-conditionals-in-tests
         if batch_idx >= n_epochs:
@@ -94,4 +96,5 @@ def test_simple_neural_network():
     # Check that our loss has actually decreased
     # It starts at about 0.9 and drops to around 0.5
     # if the model actually learns
+    plot_loss(losses)
     assert list(smooth(losses))[-1] < 0.6

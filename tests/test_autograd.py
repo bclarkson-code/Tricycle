@@ -258,7 +258,7 @@ def test_can_differentiate_matmul():
     assert np.allclose(np.array(b.grad), np.array([[4, 4], [6, 6]]))
 
 
-def test_can_differentiate_einsum():
+def test_can_differentiate_einsum_two_tensors():
     a = np.arange(12).reshape(3, 4)
     b = np.arange(12).reshape(4, 3)
 
@@ -266,19 +266,32 @@ def test_can_differentiate_einsum():
     b = tensor(b)
 
     output = np.array([[42, 48, 54], [114, 136, 158], [186, 224, 262]])
-    print(a, b)
 
     z = einsum(a, b, subscripts="ij,jk->ik")
     assert np.allclose(z, output)
 
     z.backward()
 
+    # einsum(np.ones_like(z), b, subscripts="ik,jk->ij")
     assert np.allclose(
         a.grad, np.array([[3, 12, 21, 30], [3, 12, 21, 30], [3, 12, 21, 30]])
     )
+    # einsum(a, np.ones_like(z), subscripts="ij,ij->jk")
     assert np.allclose(
         b.grad, np.array([[12, 12, 12], [15, 15, 15], [18, 18, 18], [21, 21, 21]])
-    ), b.grad
+    )
+
+
+def test_can_differentiate_einsum_one_tensor():
+    a = tensor(np.arange(12).reshape(3, 4))
+
+    z = einsum(a, subscripts="ij->i")
+    assert np.allclose(z, np.array([6, 22, 38]))
+
+    z.backward()
+
+    # einsum(1, ones, subscripts="i,j->ij")
+    assert np.allclose(a.grad, np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]]))
 
 
 def test_can_combine_ops_correctly():
