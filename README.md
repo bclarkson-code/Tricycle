@@ -1,7 +1,8 @@
 # Tricycle
-> A (very) minimal deep learning framework
+> It don't go fast but it do be goin'
 
 Ever wanted to learn how a deep learning framework *actually* works under the hood? Tricycle might be for you.
+
 Want to do anything else? Check out [pytorch](https://pytorch.org/)
 
 ## Overview
@@ -20,7 +21,7 @@ Here are some things you can do with Tricycle:
 - Successfully train a simple neural network
 
 Here are some things you can't do with Tricycle (yet):
-- Use loss function that is not mean squared error
+- Use a loss function that is not mean squared error
 - Do anything efficiently
 - Use any built in layers, optimisers, regularisation techniques etc
 - Use a GPU
@@ -41,10 +42,3 @@ Tricycle is tested using [pytest](https://docs.pytest.org/en/latest/)
 poetry run pytest
 ```
 
-## TODO:
-- Write an explanation of how Tricycle works
-- Get cross-entropy loss working
-- Build some layers
-- Build some optimisers
-- Implement GPU support
-- Optimise the autograd algorithm (caching, operation fusing etc) 
