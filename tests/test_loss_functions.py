@@ -65,19 +65,17 @@ def test_cross_entropy():
         [-0.05, 0.01, 0.05], name="intercept"
     )  # start off with a small intercept
 
-    learning_rate = tensor(1e0)
+    learning_rate = tensor(1e-2)
     learning_rate.requires_grad = False
 
     prev_loss = np.inf
     losses = []
     # sourcery skip: no-loop-in-tests
-    for _ in range(10):
+    for _ in range(100):
         print(f"{slope.shape=}, {x.shape=}, {y.shape=}")
         z = einsum(x, slope, subscripts="ij,jk->ik")
         ones = tensor(np.ones_like(z), requires_grad=False)
-        broadcasted_intercept = einsum(
-            intercept, ones, subscripts="k,jk->jk"
-        )
+        broadcasted_intercept = einsum(intercept, ones, subscripts="k,jk->jk")
         z += broadcasted_intercept
         z.name = "z"
 
@@ -92,7 +90,6 @@ def test_cross_entropy():
         loss.backward()
 
         with no_grad():
-            raise Exception(slope.grad)
             slope = slope - slope.grad * learning_rate
             slope.grad = None
             intercept = intercept - intercept.grad * learning_rate

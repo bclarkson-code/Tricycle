@@ -170,7 +170,7 @@ def test_can_differentiate_log():
 
     z.backward()
 
-    assert x.grad == 1.0
+    assert x.grad == 0.5
     assert len(x.grad_fn) == 1
 
 

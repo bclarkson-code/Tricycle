@@ -98,7 +98,7 @@ class Tensor(np.ndarray):
                     # - We should also probably ignore leaves that we don't
                     # need the gradient for (e.g the inputs)
                     grad = op(grad)
-                    breakpoint()
+                    # breakpoint()
 
                 if current_node.grad is None:
                     current_node.grad = grad
@@ -329,7 +329,7 @@ def log(x: Tensor) -> Tensor:
     if not grad:
         return result
 
-    result.back_fn = (bind(div, 1, ...),)
+    result.back_fn = (partial(div, y=x),)
     result.args = (x,)
     return result
 
@@ -395,8 +395,12 @@ def max(x: Tensor) -> Tensor:
     if not grad:
         return result
 
+    zeros = np.zeros_like(x)
+    zeros[x == x.max()] = 1
+    indices = ascii_letters[: len(x.shape)]
+
     def diff_max(arg: Tensor) -> Tensor:
-        return tensor(arg == x.max())
+        return einsum(arg, zeros, subscripts=f"{indices},{indices}->{indices}")
 
     result.back_fn = (diff_max,)
     result.args = (x,)
