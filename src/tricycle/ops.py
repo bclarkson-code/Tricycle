@@ -98,7 +98,7 @@ class Tensor(np.ndarray):
                     # - We should also probably ignore leaves that we don't
                     # need the gradient for (e.g the inputs)
                     grad = op(grad)
-                    # breakpoint()
+                    breakpoint()
 
                 if current_node.grad is None:
                     current_node.grad = grad
@@ -396,6 +396,7 @@ def max(x: Tensor) -> Tensor:
         return result
 
     zeros = np.zeros_like(x)
+    raise Exception(f"{x=}, {x.max()=}, {x==x.max()=}")
     zeros[x == x.max()] = 1
     indices = ascii_letters[: len(x.shape)]
 
@@ -590,7 +591,9 @@ def softmax(x: Tensor):
     Compute the softmax of a tensor
     """
     # For numeric stability we'll subtract the max of the tensor
-    x = exp(x - max(x))
+    with no_grad():
+        largest_x = max(x)
+    x = exp(x - largest_x)
     assert len(x.shape) < len(
         ascii_letters
     ), f"Cannot perform softmax on tensors with more than {len(ascii_letters)} dimensions"
