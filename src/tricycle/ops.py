@@ -1,7 +1,7 @@
 from functools import partial, wraps
-from string import ascii_letters
-from typing import Callable, Optional
-
+from string import ascii_letters, ascii_lowercase
+from typing import Callable, Optional, Tuple, Union
+import logging
 import numpy as np
 
 # Type signature for Tensor operation
@@ -9,6 +9,7 @@ Op = Callable[..., "Tensor"]
 
 grad: bool = True
 
+logger = logging.getLogger(__name__)
 
 def to_tensor(fn: Op) -> Op:
     """
@@ -75,6 +76,7 @@ class Tensor(np.ndarray):
 
                 # Update gradient functions for each parent node
                 for arg, op in zip(current_node.args, current_node.back_fn):
+                    logger.info(str(current_node.args) + str(current_node.back_fn))
                     arg.grad_fn = grad_fn + [op]
 
                     # Add each arg to the stack for further processing
@@ -98,7 +100,7 @@ class Tensor(np.ndarray):
                     # - We should also probably ignore leaves that we don't
                     # need the gradient for (e.g the inputs)
                     grad = op(grad)
-                    breakpoint()
+                    # breakpoint()
 
                 if current_node.grad is None:
                     current_node.grad = grad
@@ -152,7 +154,7 @@ class Tensor(np.ndarray):
     def __repr__(self) -> str:
         if self.name is None:
             return f"{super().__repr__()}"
-        return f"Tensor({super().__repr__()}, {self.name=})"
+        return (f"Tensor({super().__repr__()}, {self.name=})",)
 
 
 class bind(partial):
@@ -385,29 +387,47 @@ def cos(x: Tensor) -> Tensor:
     return result
 
 
+def reduce(x: Tensor, method: Op, subscripts: str) -> Tensor:
+    """
+    Reduce a tensor along some dimensions by applying a reduction function
+    to those indices. A reduction function generates a binary tensor which
+    is multiplied by the input and reduces according to the subscripts
+    """
+    indices, output = _parse_subscripts(subscripts)
+    assert (
+        len(indices) == 1
+    ), f"Can only reduce a single tensor at a time. Indices suggeststed: {len(indices)} tensors: {indices}"
+
+    [idx] = indices
+    axis = tuple(i for i, char in enumerate(idx) if char not in output)
+    assert axis, "Tensor must be reduced along at least one axis"
+    binary_tensor = method(x, axis)
+    binary_tensor.requires_grad = False
+
+    subscripts = f"{idx},{idx}->{output}"
+
+    return einsum(x, binary_tensor, subscripts=subscripts)
+
+
+def bmax(x: Tensor, axis: Union[int, Tuple[int]]) -> Tensor:
+    """
+    Return a binary tensor where each element is 1 if the corresponding element
+    is that largest along an axis that is being reduced along
+    """
+    return (x == np.max(x, axis=axis, keepdims=True)).astype(int)
+
+
+# TODO: Implement this as a universal function that works with reduce
 @to_tensor
 def max(x: Tensor) -> Tensor:
     """
     Find the largest element of a tensor
     """
-    global grad
-    result = tensor(x.max())
-    if not grad:
-        return result
-
-    zeros = np.zeros_like(x)
-    raise Exception(f"{x=}, {x.max()=}, {x==x.max()=}")
-    zeros[x == x.max()] = 1
-    indices = ascii_letters[: len(x.shape)]
-
-    def diff_max(arg: Tensor) -> Tensor:
-        return einsum(arg, zeros, subscripts=f"{indices},{indices}->{indices}")
-
-    result.back_fn = (diff_max,)
-    result.args = (x,)
-    return result
+    indices = ascii_lowercase[: len(x.shape)]
+    return reduce(x, bmax, f"{indices}->")
 
 
+# TODO: Implement this as a universal function that works with reduce
 @to_tensor
 def min(x: Tensor) -> Tensor:
     """
@@ -442,7 +462,7 @@ def einsum(*tensors: Tensor, subscripts: str) -> Tensor:
     numpy. This uses a version of einstein summation notation to do tensor
     operations. It takes a bit of getting used to but ends up being a really
     powerful way to do tensor operations. It feels like the natural way to
-    do deep learning
+    do deep learningbinary_tensor, 
 
     Examples
     --------
@@ -591,23 +611,31 @@ def softmax(x: Tensor):
     Compute the softmax of a tensor
     """
     # For numeric stability we'll subtract the max of the tensor
-    with no_grad():
-        largest_x = max(x)
-    x = exp(x - largest_x)
-    assert len(x.shape) < len(
+    indices = ascii_letters[: len(x.shape)]
+    largest_x = reduce(x, bmax, subscripts=f"{indices}->{indices[:-1]}")
+    ones = tensor(np.ones_like(x), requires_grad=False)
+
+    largest_x = einsum(
+        largest_x, ones, subscripts=f"{indices[:-1]},{indices}->{indices}"
+    )
+    normalised_x = sub(x, largest_x)
+    normalised_x = exp(normalised_x)
+    assert len(normalised_x.shape) < len(
         ascii_letters
     ), f"Cannot perform softmax on tensors with more than {len(ascii_letters)} dimensions"
 
     if len(x.shape) == 1:
-        denom = 1 / einsum(x, subscripts="i->")
-        return einsum(denom, x, subscripts=",i->i")
+        denom = 1 / einsum(normalised_x, subscripts="i->")
+        return einsum(denom, normalised_x, subscripts=",i->i")
 
     indices = ascii_letters[: len(x.shape) - 1]
     final_letter = ascii_letters[-1]
-    denom = 1 / einsum(x, subscripts=f"{final_letter}{indices}->{final_letter}")
+    denom = 1 / einsum(
+        normalised_x, subscripts=f"{final_letter}{indices}->{final_letter}"
+    )
     return einsum(
         denom,
-        x,
+        normalised_x,
         subscripts=f"{final_letter},{final_letter}{indices}->{final_letter}{indices}",
     )
 

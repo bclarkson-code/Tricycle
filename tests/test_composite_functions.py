@@ -20,6 +20,13 @@ def test_can_softmax():
     )
     assert np.allclose(result, expected)
 
+def test_can_differentiate_softmax():
+    x = tensor([1, 2, 3])
+    z = softmax(x)
+    z.backward()
+
+    # breakpoint()
+
 
 def test_can_sigmoid():
     result = sigmoid(tensor([1, 2, 3]))

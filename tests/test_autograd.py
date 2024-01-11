@@ -2,9 +2,9 @@ from functools import partial
 
 import numpy as np
 
-from tricycle.ops import (add, cos, div, einsum, exp, log, matmul, max, min,
-                          mul, negate, no_grad, nothing, pow, reduce_sum, sin,
-                          sqrt, sub, tensor)
+from tricycle.ops import (add, bmax, cos, div, einsum, exp, log, matmul, max,
+                          min, mul, negate, no_grad, nothing, pow, reduce,
+                          reduce_sum, sin, sqrt, sub, tensor)
 
 
 def partial_func_equals(a, b):
@@ -218,16 +218,25 @@ def test_can_differentiate_cos():
 
 
 def test_can_differentiate_max():
-    x = tensor([1.0, 2.0, 3.0])
+    x = tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
 
     z = max(x)
 
-    assert z == 3.0
+    assert np.allclose(z, [6.0])
     z.backward()
 
-    assert len(x.grad_fn) == 1
-    grad_fn = x.grad_fn[0]
-    assert grad_fn.__name__ == "diff_max"
+    assert np.allclose(x.grad, [[0, 0, 0], [0, 0, 1.0]])
+
+
+def test_can_reduce_max():
+    x = tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+
+    z = reduce(x, bmax, "ij->i")
+
+    assert np.allclose(z, [3.0, 6.0])
+    z.backward()
+
+    assert np.allclose(x.grad, [[0, 0, 1.0], [0, 0, 1.0]])
 
 
 def test_can_differentiate_min():
