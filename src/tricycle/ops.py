@@ -1,8 +1,14 @@
+import logging
+import uuid
 from functools import partial, wraps
 from string import ascii_letters, ascii_lowercase
-from typing import Callable, Optional, Tuple, Union
-import logging
+from typing import Callable, List, Optional, Tuple, Union
+
+import networkx as nx
 import numpy as np
+import pydot
+from matplotlib import pyplot as plt
+from networkx.drawing.nx_pydot import graphviz_layout
 
 # Type signature for Tensor operation
 Op = Callable[..., "Tensor"]
@@ -10,6 +16,7 @@ Op = Callable[..., "Tensor"]
 grad: bool = True
 
 logger = logging.getLogger(__name__)
+
 
 def to_tensor(fn: Op) -> Op:
     """
@@ -44,9 +51,10 @@ class Tensor(np.ndarray):
     of a standard numpy array
     """
 
+    _id: int
     args: tuple["Tensor", ...] | None = None
     back_fn: tuple[Op, ...] | None = None
-    grad_fn: list[Op] = []
+    grad_fn: List[List[Op]] = []
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
@@ -61,10 +69,18 @@ class Tensor(np.ndarray):
         path
         """
 
-        stack = [self]
+        queue = [self]
+        labels = {}
+        edge_labels = {}
 
-        while stack:
-            current_node = stack.pop()
+        G = nx.DiGraph()
+        G.add_node(str(self))
+        labels[str(self)] = self.name or ""
+
+        logger.info("\n\n")
+        while queue:
+            logger.info(f"stack: {queue}")
+            current_node = queue.pop()
 
             # At intermediate node
             if (
@@ -74,17 +90,30 @@ class Tensor(np.ndarray):
                 # Get gradient functions for the operation
                 grad_fn = current_node.grad_fn
 
+                logger.info(
+                    f"{current_node.args=} {current_node.back_fn=} { current_node=}"
+                )
                 # Update gradient functions for each parent node
                 for arg, op in zip(current_node.args, current_node.back_fn):
-                    logger.info(str(current_node.args) + str(current_node.back_fn))
+                    if str(arg) not in G.nodes:
+                        G.add_node(str(arg))
+                        labels[str(arg)] = arg.name or ""
+                    G.add_edge(str(arg), str(current_node))
+
+                    try:
+                        edge_labels[(str(arg), str(current_node))] = op.__name__
+                    except AttributeError:
+                        edge_labels[(str(arg), str(current_node))] = op.func.__name__
+
                     arg.grad_fn = grad_fn + [op]
 
                     # Add each arg to the stack for further processing
-                    stack.append(arg)  # type: ignore
+                    queue = [arg] + queue
 
             # At leaf node
             elif current_node.requires_grad:
                 grad = tensor(np.ones_like(self))
+                logger.warning(current_node.grad_fn)
                 for op in current_node.grad_fn:
                     # Follow the path from root to leaf, applying
                     # each function to get the gradient for the leaf
@@ -100,7 +129,6 @@ class Tensor(np.ndarray):
                     # - We should also probably ignore leaves that we don't
                     # need the gradient for (e.g the inputs)
                     grad = op(grad)
-                    # breakpoint()
 
                 if current_node.grad is None:
                     current_node.grad = grad
@@ -108,6 +136,12 @@ class Tensor(np.ndarray):
                     # If there are multiple paths to this node, we
                     # need to add all of the gradients together
                     current_node.grad += grad
+
+        fig, ax = plt.subplots(figsize=(10, 10))
+        pos = graphviz_layout(G, prog="dot")
+        nx.draw(G, labels=labels, pos=pos, ax=ax)
+        nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels, ax=ax)
+        plt.show()
 
     @to_tensor
     def __add__(self, other: "Tensor") -> "Tensor":
@@ -154,7 +188,7 @@ class Tensor(np.ndarray):
     def __repr__(self) -> str:
         if self.name is None:
             return f"{super().__repr__()}"
-        return (f"Tensor({super().__repr__()}, {self.name=})",)
+        return f"{super().__repr__()[:-1]}, {self.name=})"
 
 
 class bind(partial):
@@ -257,20 +291,20 @@ def div(x: Tensor, y: Tensor) -> Tensor:
     """
     Divide two tensors
     """
-    global grad
-    result = tensor(np.divide(x, y))
+    # scalar / tensor or tensor / scalar
+    if len(x.shape) == 0 or len(y.shape) == 0:
+        minus_one = tensor(-1.0, requires_grad=False, name="minus_one")
+        return mul(x, pow(y, minus_one))
 
-    if not grad:
-        return result
-
-    def diff_div(arg: Tensor) -> Tensor:
-        y_squared = mul(y, y)
-        numerator = mul(negate(arg), x)
-        return div(numerator, y_squared)
-
-    result.back_fn = (partial(div, y=y), diff_div)
-    result.args = (x, y)
-    return result
+    # tensor / tensor
+    elif len(x.shape) == len(y.shape):
+        one = tensor(1.0, requires_grad=False, name="one")
+        indices = ascii_lowercase[: len(x.shape)]
+        einsum(x, one / y, subscripts=f"{indices},{indices}->{indices}")
+    else:
+        raise ValueError(
+            "Division between two tensors is of different shapes is not supported."
+        )
 
 
 @to_tensor
@@ -293,15 +327,9 @@ def pow(x: Tensor, y: Tensor) -> Tensor:
     if not grad:
         return result
 
-    def diff_power_arg_1(arg: Tensor) -> Tensor:
-        return (pow(x, y - 1) * y) * arg
-
-    def diff_power_arg_2(arg: Tensor) -> Tensor:
-        return pow(x, y) * log(x) * arg
-
     result.back_fn = (
-        diff_power_arg_1,
-        diff_power_arg_2,
+        partial(mul, y=tensor(np.power(x, y - 1)) * y),
+        partial(mul, y=result * log(x)),
     )
     result.args = (x, y)
     return result
@@ -316,7 +344,7 @@ def exp(x: Tensor) -> Tensor:
     result = tensor(np.exp(x))
     if not grad:
         return result
-    result.back_fn = (exp,)
+    result.back_fn = (partial(mul, y=result),)
     result.args = (x,)
     return result
 
@@ -403,6 +431,7 @@ def reduce(x: Tensor, method: Op, subscripts: str) -> Tensor:
     assert axis, "Tensor must be reduced along at least one axis"
     binary_tensor = method(x, axis)
     binary_tensor.requires_grad = False
+    binary_tensor.name = "binary"
 
     subscripts = f"{idx},{idx}->{output}"
 
@@ -462,7 +491,7 @@ def einsum(*tensors: Tensor, subscripts: str) -> Tensor:
     numpy. This uses a version of einstein summation notation to do tensor
     operations. It takes a bit of getting used to but ends up being a really
     powerful way to do tensor operations. It feels like the natural way to
-    do deep learningbinary_tensor, 
+    do deep learningbinary_tensor,
 
     Examples
     --------
@@ -506,7 +535,7 @@ def einsum(*tensors: Tensor, subscripts: str) -> Tensor:
                 one_shape.append(size)
 
         indices = [indices[0], one_indices]
-        ones = tensor(np.ones(one_shape), requires_grad=False)
+        ones = tensor(np.ones(one_shape), requires_grad=False, name="ones")
         tensors = (tensors[0], ones)
 
     if not tensors or len(tensors) > 2:
@@ -613,19 +642,21 @@ def softmax(x: Tensor):
     # For numeric stability we'll subtract the max of the tensor
     indices = ascii_letters[: len(x.shape)]
     largest_x = reduce(x, bmax, subscripts=f"{indices}->{indices[:-1]}")
-    ones = tensor(np.ones_like(x), requires_grad=False)
+    ones = tensor(np.ones_like(x), requires_grad=False, name="ones")
 
     largest_x = einsum(
         largest_x, ones, subscripts=f"{indices[:-1]},{indices}->{indices}"
     )
-    normalised_x = sub(x, largest_x)
+    normalised_x = x - largest_x
+
     normalised_x = exp(normalised_x)
     assert len(normalised_x.shape) < len(
         ascii_letters
     ), f"Cannot perform softmax on tensors with more than {len(ascii_letters)} dimensions"
 
     if len(x.shape) == 1:
-        denom = 1 / einsum(normalised_x, subscripts="i->")
+        one = tensor(1, name="one", requires_grad=False)
+        denom = one / einsum(normalised_x, subscripts="i->")
         return einsum(denom, normalised_x, subscripts=",i->i")
 
     indices = ascii_letters[: len(x.shape) - 1]

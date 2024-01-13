@@ -22,10 +22,13 @@ def test_can_softmax():
 
 def test_can_differentiate_softmax():
     x = tensor([1, 2, 3])
+    x.name = "x"
     z = softmax(x)
+    z.name = "z"
     z.backward()
 
-    # breakpoint()
+    assert np.allclose(x.grad, [-0.09003057, -0.24472847,  0.33475904])
+
 
 
 def test_can_sigmoid():

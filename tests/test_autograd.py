@@ -109,12 +109,10 @@ def test_can_differentiate_divide():
     z.backward()
 
     assert x.grad == 0.5
-    grad_fn_equal(x, [partial(div, y=x)])
+    grad_fn_equal(x, [partial(mul, y=1/y)])
 
     assert y.grad == -0.25
-    assert len(y.grad_fn) == 1
-    grad_fn = y.grad_fn[0]
-    assert grad_fn.__name__ == "diff_div"
+    assert grad_fn_equal(y, [partial(mul, y=1/x), partial(mul, y=1/y)])
 
 
 def test_can_differentiate_reduce_sum():
@@ -157,8 +155,8 @@ def test_can_differentiate_exp():
 
     z.backward()
 
-    assert x.grad == np.exp(1.0)
-    grad_fn_equal(x, [exp])
+    assert x.grad == np.exp(2.0)
+    grad_fn_equal(x, [partial(mul, y=np.exp(2.0))])
 
 
 def test_can_differentiate_log():
