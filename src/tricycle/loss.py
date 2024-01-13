@@ -1,6 +1,6 @@
 from string import ascii_letters
 
-from tricycle.ops import Tensor, einsum, tensor, log, mean, softmax
+from tricycle.ops import Tensor, einsum, log, mean, softmax, tensor
 
 
 def mean_square_error(y_pred: Tensor, y_true: Tensor) -> Tensor:

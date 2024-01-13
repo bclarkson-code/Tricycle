@@ -204,6 +204,9 @@ class bind(partial):
         return self.func(*args, *iargs, **keywords)
 
 
+# -----------------utility functions--------
+
+
 def tensor(
     *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
 ) -> Tensor:
@@ -215,6 +218,22 @@ def tensor(
     result.name = name
     result.requires_grad = requires_grad
     return result
+
+
+@to_tensor
+def nothing(x: Tensor) -> Tensor:
+    """
+    Do nothing
+    """
+    global grad
+    result = tensor(x)
+    if grad:
+        result.back_fn = (nothing,)
+        result.args = (x,)
+    return result
+
+
+# ----------binary functions----------------
 
 
 @to_tensor
@@ -240,19 +259,6 @@ def negate(x: Tensor) -> Tensor:
     result = tensor(np.multiply(x, -1))
     if grad:
         result.back_fn = (negate,)
-        result.args = (x,)
-    return result
-
-
-@to_tensor
-def nothing(x: Tensor) -> Tensor:
-    """
-    Do nothing
-    """
-    global grad
-    result = tensor(x)
-    if grad:
-        result.back_fn = (nothing,)
         result.args = (x,)
     return result
 
@@ -307,14 +313,7 @@ def div(x: Tensor, y: Tensor) -> Tensor:
         )
 
 
-@to_tensor
-def reduce_sum(x: Tensor) -> Tensor:
-    """
-    Sum the elements of a tensor into a single scalar
-    """
-    indices = ascii_letters[: len(x.shape)]
-    subscripts = f"{indices}->"
-    return einsum(x, subscripts=subscripts)
+# -----------elementwise unary functions----------------
 
 
 @to_tensor
@@ -415,6 +414,9 @@ def cos(x: Tensor) -> Tensor:
     return result
 
 
+# ------------------reduce functions----------------
+
+
 def reduce(x: Tensor, method: Op, subscripts: str) -> Tensor:
     """
     Reduce a tensor along some dimensions by applying a reduction function
@@ -438,6 +440,7 @@ def reduce(x: Tensor, method: Op, subscripts: str) -> Tensor:
     return einsum(x, binary_tensor, subscripts=subscripts)
 
 
+# --------------------indicator functions---------------------
 def bmax(x: Tensor, axis: Union[int, Tuple[int]]) -> Tensor:
     """
     Return a binary tensor where each element is 1 if the corresponding element
@@ -446,7 +449,14 @@ def bmax(x: Tensor, axis: Union[int, Tuple[int]]) -> Tensor:
     return (x == np.max(x, axis=axis, keepdims=True)).astype(int)
 
 
-# TODO: Implement this as a universal function that works with reduce
+def bmin(x: Tensor, axis: Union[int, Tuple[int]]) -> Tensor:
+    """
+    Return a binary tensor where each element is 1 if the corresponding element
+    is that smallest along an axis that is being reduced along
+    """
+    return (x == np.min(x, axis=axis, keepdims=True)).astype(int)
+
+
 @to_tensor
 def max(x: Tensor) -> Tensor:
     """
@@ -456,23 +466,13 @@ def max(x: Tensor) -> Tensor:
     return reduce(x, bmax, f"{indices}->")
 
 
-# TODO: Implement this as a universal function that works with reduce
 @to_tensor
 def min(x: Tensor) -> Tensor:
     """
     Find the smallest element of a tensor
     """
-    global grad
-    result = tensor(x.min())
-    if not grad:
-        return result
-
-    def diff_min(arg: Tensor) -> Tensor:
-        return tensor(arg == x.min())
-
-    result.back_fn = (diff_min,)
-    result.args = (x,)
-    return result
+    indices = ascii_lowercase[: len(x.shape)]
+    return reduce(x, bmin, f"{indices}->")
 
 
 def _parse_subscripts(subscripts: str) -> tuple[list[str], str]:
