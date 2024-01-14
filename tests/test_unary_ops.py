@@ -1,7 +1,7 @@
 import numpy as np
 
 from tricycle_v2.ops import einsum, to_tensor
-from tricycle_v2.unary import uadd, umul, usub
+from tricycle_v2.unary import uadd, umul, upow, usub
 
 
 def test_can_add():
@@ -65,6 +65,7 @@ def test_can_usub():
     )
 
     # one subtract each element
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
     out_tensor = usub(1, in_tensor)
 
     assert out_tensor.shape == (3, 4)
@@ -76,4 +77,20 @@ def test_can_usub():
 
     assert np.allclose(
         in_tensor.grad, np.array([[-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1]])
+    )
+
+
+def test_can_upow():
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
+    out_tensor = upow(in_tensor, 2)
+
+    assert out_tensor.shape == (3, 4)
+    assert np.allclose(
+        out_tensor, np.array([[0, 1, 4, 9], [16, 25, 36, 49], [64, 81, 100, 121]])
+    )
+
+    out_tensor.backward()
+
+    assert np.allclose(
+        in_tensor.grad, np.array([[0, 2, 4, 6], [8, 10, 12, 14], [16, 18, 20, 22]])
     )

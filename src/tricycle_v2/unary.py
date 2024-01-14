@@ -1,4 +1,6 @@
-from string import ascii_letters, ascii_lowercase
+from functools import partial
+from string import ascii_letters
+from typing import Union
 
 import numpy as np
 
@@ -8,41 +10,66 @@ from tricycle_v2.tensor import Tensor
 grad = False
 
 
-def uadd(tensor, constant):
+def uadd(tensor: Tensor, constant: float) -> Tensor:
     """
     Add a constant, elementwise, to a tensor. The constant is not
     differentiable.
     """
+    assert isinstance(tensor, Tensor)
+    assert np.isscalar(constant)
+
     result = to_tensor(np.add(tensor, constant))
     result.args = (tensor,)
     result.back_fn = (nothing,)
     return result
 
 
-def umul(tensor, constant):
+def umul(tensor: Tensor, constant: float) -> Tensor:
     """
     Multiply a constant, elementwise, to a tensor. The constant is not
     differentiable.
     """
+    assert isinstance(tensor, Tensor)
+    assert np.isscalar(constant)
+
     constant_tensor = to_tensor(np.full_like(tensor, constant), requires_grad=False)
     indices = ascii_letters[: len(tensor.shape)]
     subscripts = f"{indices},{indices}->{indices}"
     return einsum(subscripts, tensor, constant_tensor)
 
 
-def usub(arg_1, arg_2):
+def usub(arg_1: Union[Tensor, float], arg_2: Union[Tensor, float]) -> Tensor:
     """
     Subtract a constant, elementwise, from a tensor. The constant is not
     differentiable.
     """
-    if isinstance(arg_1, Tensor) and np.isscalar(arg_2):
-        return uadd(arg_1, -to_tensor(arg_2, requires_grad=False))
-    elif isinstance(arg_2, Tensor) and np.isscalar(arg_1):
-        return uadd(
-            to_tensor(arg_1, requires_grad=False),
-            umul(arg_2, -1),
-        )
+    if isinstance(arg_1, Tensor) and isinstance(arg_2, float):
+        return uadd(arg_1, -arg_2)
+    elif isinstance(arg_2, Tensor) and isinstance(arg_1, float):
+        return uadd(umul(arg_2, -1), arg_1)
     else:
         raise NotImplementedError(
             f"Subtraction between {type(arg_1)} and {type(arg_2)}"
         )
+
+
+def upow(tensor: Tensor, constant: float) -> Tensor:
+    """
+    Raise a tensor to a constant, elementwise. The constant is not
+    differentiable.
+    """
+    assert isinstance(tensor, Tensor)
+    assert isinstance(constant, float)
+
+    result = to_tensor(np.power(tensor, constant))
+    result.args = (tensor,)
+
+    coeff = to_tensor(np.power(tensor, constant - 1))
+    coeff = umul(coeff, constant)
+
+    assert coeff.shape == tensor.shape
+    indices = ascii_letters[: len(tensor.shape)]
+    subscripts = f"{indices},{indices}->{indices}"
+
+    result.back_fn = (partial(einsum, subscripts, coeff),)
+    return result
