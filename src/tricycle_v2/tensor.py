@@ -1,4 +1,3 @@
-import importlib
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -63,6 +62,8 @@ class Tensor(np.ndarray):
         return id(self)
 
     def __add__(self, other):
+        if isinstance(other, np.ndarray):
+            other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import uadd
 
@@ -74,7 +75,13 @@ class Tensor(np.ndarray):
         else:
             raise NotImplementedError(f"Cannot add {type(self)} and {type(other)}")
 
+    def __iadd__(self, other):
+        self = self + other
+        return self
+
     def __sub__(self, other):
+        if isinstance(other, np.ndarray):
+            other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import usub
 
@@ -87,7 +94,13 @@ class Tensor(np.ndarray):
         else:
             raise NotImplementedError(f"Cannot sub {type(self)} and {type(other)}")
 
+    def __isub__(self, other):
+        self = self - other
+        return self
+
     def __mul__(self, other):
+        if isinstance(other, np.ndarray):
+            other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import umul
 
@@ -101,7 +114,13 @@ class Tensor(np.ndarray):
         else:
             raise NotImplementedError(f"Cannot mul {type(self)} and {type(other)}")
 
+    def __imul__(self, other):
+        self = self * other
+        return self
+
     def __truediv__(self, other):
+        if isinstance(other, np.ndarray):
+            other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import udiv
 
@@ -121,6 +140,8 @@ class Tensor(np.ndarray):
         raise NotImplementedError("Cannot mod")
 
     def __pow__(self, other):
+        if isinstance(other, np.ndarray):
+            other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import upow
 
@@ -129,7 +150,18 @@ class Tensor(np.ndarray):
             raise NotImplementedError("Cannot power")
 
     def __repr__(self):
-        name = ''
-        if self.name is not None:
-            name = f", name={self.name}"
+        name = f", name={self.name}" if self.name is not None else ""
         return f"Tensor({self.__str__()}{name})"
+
+
+def to_tensor(
+    *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
+) -> Tensor:
+    """
+    Create a new Tensor instance. First, we convert the argument to a numpy
+    array and then to a tensor
+    """
+    result = np.asarray(*args, **kwargs).view(Tensor)
+    result.name = name
+    result.requires_grad = requires_grad
+    return result
