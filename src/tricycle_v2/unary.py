@@ -32,7 +32,9 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
 
-    constant_tensor = to_tensor(np.full_like(tensor, constant), requires_grad=False)
+    constant_tensor = to_tensor(
+        np.full_like(tensor, constant, dtype=float), requires_grad=False
+    )
     indices = ascii_letters[: len(tensor.shape)]
     subscripts = f"{indices},{indices}->{indices}"
     return einsum(subscripts, tensor, constant_tensor)
@@ -43,9 +45,9 @@ def usub(arg_1: Union[Tensor, float], arg_2: Union[Tensor, float]) -> Tensor:
     Subtract a constant, elementwise, from a tensor. The constant is not
     differentiable.
     """
-    if isinstance(arg_1, Tensor) and isinstance(arg_2, float):
+    if isinstance(arg_1, Tensor) and np.isscalar(arg_2):
         return uadd(arg_1, -arg_2)
-    elif isinstance(arg_2, Tensor) and isinstance(arg_1, float):
+    elif isinstance(arg_2, Tensor) and np.isscalar(arg_1):
         return uadd(umul(arg_2, -1), arg_1)
     else:
         raise NotImplementedError(
@@ -59,7 +61,7 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     differentiable.
     """
     assert isinstance(tensor, Tensor)
-    assert isinstance(constant, float)
+    assert np.isscalar(constant)
 
     result = to_tensor(np.power(tensor, constant))
     result.args = (tensor,)
@@ -72,4 +74,56 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     subscripts = f"{indices},{indices}->{indices}"
 
     result.back_fn = (partial(einsum, subscripts, coeff),)
+    return result
+
+
+def udiv(arg_1: Union[Tensor, float], arg_2: Union[Tensor, float]) -> Tensor:
+    """
+    Divide a tensor by a constant, elementwise. The constant is not
+    differentiable.
+    """
+    if isinstance(arg_1, Tensor) and np.isscalar(arg_2):
+        return umul(arg_1, 1 / arg_2)
+
+    elif isinstance(arg_2, Tensor) and np.isscalar(arg_1):
+        return umul(upow(arg_2, -1.0), arg_1)
+    else:
+        raise NotImplementedError(f"Division between {type(arg_1)} and {type(arg_2)}")
+
+
+def umax(tensor: Tensor, constant: float) -> Tensor:
+    """
+    Max a tensor by a constant, elementwise. The constant is not
+    differentiable.
+    """
+    assert isinstance(tensor, Tensor)
+    assert np.isscalar(constant)
+
+    result = to_tensor(np.maximum(tensor, constant))
+
+    indicator = to_tensor((tensor > constant).astype(float))
+    indices = ascii_letters[: len(tensor.shape)]
+    subscripts = f"{indices},{indices}->{indices}"
+
+    result.args = (tensor,)
+    result.back_fn = (partial(einsum, subscripts, indicator),)
+    return result
+
+
+def umin(tensor: Tensor, constant: float) -> Tensor:
+    """
+    Min a tensor by a constant, elementwise. The constant is not
+    differentiable.
+    """
+    assert isinstance(tensor, Tensor)
+    assert np.isscalar(constant)
+
+    result = to_tensor(np.minimum(tensor, constant))
+
+    indicator = to_tensor((tensor <= constant).astype(float))
+    indices = ascii_letters[: len(tensor.shape)]
+    subscripts = f"{indices},{indices}->{indices}"
+
+    result.args = (tensor,)
+    result.back_fn = (partial(einsum, subscripts, indicator),)
     return result
