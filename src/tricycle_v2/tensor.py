@@ -1,3 +1,4 @@
+import importlib
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -60,3 +61,69 @@ class Tensor(np.ndarray):
 
     def __hash__(self) -> int:
         return id(self)
+
+    def __add__(self, other):
+        if np.isscalar(other):
+            from tricycle_v2.unary import uadd
+
+            return uadd(self, other)
+        elif isinstance(other, Tensor):
+            from tricycle_v2.binary import badd
+
+            return badd(self, other)
+        else:
+            raise NotImplementedError(f"Cannot add {type(self)} and {type(other)}")
+
+    def __sub__(self, other):
+        if np.isscalar(other):
+            from tricycle_v2.unary import usub
+
+            return usub(self, other)
+        elif isinstance(other, Tensor):
+            from tricycle_v2.binary import bsub
+
+            return bsub(self, other)
+
+        else:
+            raise NotImplementedError(f"Cannot sub {type(self)} and {type(other)}")
+
+    def __mul__(self, other):
+        if np.isscalar(other):
+            from tricycle_v2.unary import umul
+
+            return umul(self, other)
+
+        elif isinstance(other, Tensor):
+            from tricycle_v2.binary import bmul
+
+            return bmul(self, other)
+
+        else:
+            raise NotImplementedError(f"Cannot mul {type(self)} and {type(other)}")
+
+    def __truediv__(self, other):
+        if np.isscalar(other):
+            from tricycle_v2.unary import udiv
+
+            return udiv(self, other)
+        elif isinstance(other, Tensor):
+            from tricycle_v2.binary import bdiv
+
+            return bdiv(self, other)
+
+        else:
+            raise NotImplementedError(f"Cannot divide {type(self)} and {type(other)}")
+
+    def __floordiv__(self, _):
+        raise NotImplementedError("Cannot floor divide")
+
+    def __mod__(self, _):
+        raise NotImplementedError("Cannot mod")
+
+    def __pow__(self, other):
+        if np.isscalar(other):
+            from tricycle_v2.unary import upow
+
+            return upow(self, other)
+        elif isinstance(other, Tensor):
+            raise NotImplementedError("Cannot power")
