@@ -1,7 +1,7 @@
 import numpy as np
 
 from tricycle_v2.ops import einsum, to_tensor
-from tricycle_v2.unary import uadd, udiv, umax, umul, upow, usub, umin
+from tricycle_v2.unary import uadd, udiv, uexp, umax, umin, umul, upow, usub
 
 
 def test_can_add():
@@ -153,13 +153,41 @@ def test_can_umin():
     out_tensor = umin(in_tensor, 4)
 
     assert out_tensor.shape == (3, 4)
-    assert np.allclose(
-        out_tensor, np.array([[0, 1, 2, 3], [4, 4, 4, 4], [4, 4, 4, 4]])
-    )
+    assert np.allclose(out_tensor, np.array([[0, 1, 2, 3], [4, 4, 4, 4], [4, 4, 4, 4]]))
 
     out_tensor.backward()
 
     assert np.allclose(
         in_tensor.grad,
         np.array([[1.0, 1.0, 1.0, 1.0], [1.0, 0, 0, 0], [0, 0, 0, 0]]),
+    )
+
+
+def test_can_uexp():
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
+    out_tensor = uexp(in_tensor)
+
+    assert out_tensor.shape == (3, 4)
+    assert np.allclose(
+        out_tensor,
+        np.array(
+            [
+                [1.0, np.exp(1), np.exp(2), np.exp(3)],
+                [np.exp(4), np.exp(5), np.exp(6), np.exp(7)],
+                [np.exp(8), np.exp(9), np.exp(10), np.exp(11)],
+            ]
+        ),
+    )
+
+    out_tensor.backward()
+
+    assert np.allclose(
+        in_tensor.grad,
+        np.array(
+            [
+                [np.exp(0), np.exp(1), np.exp(2), np.exp(3)],
+                [np.exp(4), np.exp(5), np.exp(6), np.exp(7)],
+                [np.exp(8), np.exp(9), np.exp(10), np.exp(11)],
+            ]
+        ),
     )

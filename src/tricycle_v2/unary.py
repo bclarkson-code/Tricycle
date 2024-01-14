@@ -127,3 +127,17 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     result.args = (tensor,)
     result.back_fn = (partial(einsum, subscripts, indicator),)
     return result
+
+
+def uexp(tensor: Tensor) -> Tensor:
+    """
+    Raise every element of a tensor to the power of e
+    """
+    result = to_tensor(np.exp(tensor))
+
+    indices = ascii_letters[: len(tensor.shape)]
+    subscripts = f"{indices},{indices}->{indices}"
+
+    result.back_fn = (partial(einsum, subscripts, result),)
+    result.args = (tensor,)
+    return result
