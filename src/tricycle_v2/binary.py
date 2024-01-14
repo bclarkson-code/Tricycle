@@ -3,8 +3,8 @@ from string import ascii_letters
 
 import numpy as np
 
-from tricycle_v2.ops import einsum, nothing, to_tensor
-from tricycle_v2.tensor import Tensor
+from tricycle_v2.ops import einsum, nothing
+from tricycle_v2.tensor import Tensor, to_tensor
 from tricycle_v2.unary import udiv, umul
 
 
