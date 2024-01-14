@@ -32,8 +32,7 @@ def bsub(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     """
     assert tensor_1.shape == tensor_2.shape
 
-    tensor_2_neg = umul(tensor_2, -1)
-    return badd(tensor_1, tensor_2_neg)
+    return badd(tensor_1, umul(tensor_2, -1))
 
 
 def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:

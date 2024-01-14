@@ -66,7 +66,7 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     result = to_tensor(np.power(tensor, constant))
     result.args = (tensor,)
 
-    coeff = to_tensor(np.power(tensor, constant - 1))
+    coeff = to_tensor(np.power(tensor, constant - 1), requires_grad=False)
     coeff = umul(coeff, constant)
 
     assert coeff.shape == tensor.shape
@@ -101,7 +101,7 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.maximum(tensor, constant))
 
-    indicator = to_tensor((tensor > constant).astype(float))
+    indicator = to_tensor((tensor > constant).astype(float), requires_grad=False)
     indices = ascii_letters[: len(tensor.shape)]
     subscripts = f"{indices},{indices}->{indices}"
 

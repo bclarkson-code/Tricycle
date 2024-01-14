@@ -1,6 +1,10 @@
+import logging
+from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 Op = Callable[..., "Tensor"]
 
@@ -22,6 +26,7 @@ class Tensor(np.ndarray):
     def backward(self):
         stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
         leaves: Dict[int, Tensor] = {}
+        adjecency_matrix = defaultdict(list)
 
         # Find every route to a differentiable parameter
         while stack:
@@ -38,11 +43,13 @@ class Tensor(np.ndarray):
 
             else:
                 for arg, op in zip(current_node.args, current_node.back_fn):
+                    logger.info(f"{hash(current_node)=} {hash(arg)=} {op=}")
                     if not arg.requires_grad:
                         continue
 
                     new_gradient = current_gradient + [op]
                     stack.append((arg, new_gradient))
+                    adjecency_matrix[(hash(current_node))].append(hash(arg))
 
         # calculate the gradient for each parameter
         for leaf in leaves.values():
@@ -62,7 +69,7 @@ class Tensor(np.ndarray):
         return id(self)
 
     def __add__(self, other):
-        if isinstance(other, np.ndarray):
+        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import uadd
@@ -76,11 +83,10 @@ class Tensor(np.ndarray):
             raise NotImplementedError(f"Cannot add {type(self)} and {type(other)}")
 
     def __iadd__(self, other):
-        self = self + other
-        return self
+        return self + other
 
     def __sub__(self, other):
-        if isinstance(other, np.ndarray):
+        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import usub
@@ -95,11 +101,10 @@ class Tensor(np.ndarray):
             raise NotImplementedError(f"Cannot sub {type(self)} and {type(other)}")
 
     def __isub__(self, other):
-        self = self - other
-        return self
+        return self - other
 
     def __mul__(self, other):
-        if isinstance(other, np.ndarray):
+        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import umul
@@ -115,11 +120,10 @@ class Tensor(np.ndarray):
             raise NotImplementedError(f"Cannot mul {type(self)} and {type(other)}")
 
     def __imul__(self, other):
-        self = self * other
-        return self
+        return self * other
 
     def __truediv__(self, other):
-        if isinstance(other, np.ndarray):
+        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import udiv
@@ -133,6 +137,9 @@ class Tensor(np.ndarray):
         else:
             raise NotImplementedError(f"Cannot divide {type(self)} and {type(other)}")
 
+    def __itruediv__(self, other):
+        return self / other
+
     def __floordiv__(self, _):
         raise NotImplementedError("Cannot floor divide")
 
@@ -140,7 +147,7 @@ class Tensor(np.ndarray):
         raise NotImplementedError("Cannot mod")
 
     def __pow__(self, other):
-        if isinstance(other, np.ndarray):
+        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
             from tricycle_v2.unary import upow

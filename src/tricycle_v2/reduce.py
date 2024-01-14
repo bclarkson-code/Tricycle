@@ -1,7 +1,7 @@
 import numpy as np
 
-from tricycle_v2.ops import _parse_subscripts, einsum, to_tensor
-from tricycle_v2.tensor import Tensor
+from tricycle_v2.ops import _parse_subscripts, einsum
+from tricycle_v2.tensor import Tensor, to_tensor
 
 
 def radd(tensor: Tensor, subscript: str):
@@ -53,6 +53,7 @@ def rmax(tensor: Tensor, subscript: str):
     indicator = (
         tensor == np.max(tensor, axis=tuple(reduce_along_axes), keepdims=True)
     ).astype(int)
+    indicator = to_tensor(indicator, requires_grad=False)
 
     new_subscript = f"{idx},{idx}->{output}"
 
@@ -79,6 +80,7 @@ def rmin(tensor: Tensor, subscript: str):
     indicator = (
         tensor == np.min(tensor, axis=tuple(reduce_along_axes), keepdims=True)
     ).astype(int)
+    indicator = to_tensor(indicator, requires_grad=False)
 
     new_subscript = f"{idx},{idx}->{output}"
 

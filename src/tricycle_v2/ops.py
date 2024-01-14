@@ -42,12 +42,12 @@ def repeat(subscripts, tensor, out_shape):
 
     one_indices = ""
     one_shape = []
-    for i, out_idx in enumerate(output):
+    for size, out_idx in zip(out_shape, output):
         if out_idx not in index:
             one_indices += out_idx
-            one_shape.append(out_shape[i])
+            one_shape.append(size)
 
-    ones = to_tensor(np.ones(one_shape))
+    ones = to_tensor(np.ones(one_shape), requires_grad=False)
     new_subscript = f"{one_indices},{index}->{output}"
     return einsum(new_subscript, ones, tensor)
 
