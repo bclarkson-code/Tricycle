@@ -43,7 +43,7 @@ class Tensor(np.ndarray):
 
             else:
                 for arg, op in zip(current_node.args, current_node.back_fn):
-                    logger.info(f"{hash(current_node)=} {hash(arg)=} {op=}")
+                    # logger.info(f"{hash(current_node)=} {hash(arg)=} {op=}")
                     if not arg.requires_grad:
                         continue
 
@@ -53,6 +53,7 @@ class Tensor(np.ndarray):
 
         # calculate the gradient for each parameter
         for leaf in leaves.values():
+            logger.info(f"leaf: {leaf}")
             if leaf.grad_fn is None:
                 continue
 
@@ -60,8 +61,10 @@ class Tensor(np.ndarray):
                 grad = np.ones_like(self).view(Tensor)
                 grad.requires_grad = False
 
+                logger.info(grad)
                 for op in path:
                     grad = op(grad)
+                    logger.info(grad)
 
                 leaf.grad = grad if leaf.grad is None else leaf.grad + grad
 

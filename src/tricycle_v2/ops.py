@@ -1,4 +1,5 @@
 from functools import partial
+from string import ascii_lowercase
 
 import numpy as np
 
@@ -66,3 +67,26 @@ def nothing(tensor):
     Return a tensor
     """
     return tensor
+
+
+def softmax(tensor):
+    """
+    Apply softmax. The softmax is only applied to the final
+    dimension of the tensor
+    Note: the tensor is normalised for numeric stability
+    """
+    from tricycle_v2.reduce import radd, rmax
+    from tricycle_v2.unary import uexp
+
+    indices = ascii_lowercase[: len(tensor.shape)]
+    reduce_subscript = f"{indices}->{indices[:-1]}"
+    # largest = rmax(tensor, reduce_subscript)
+
+    expand_subscript = f"{indices[:-1]}->{indices}"
+    # largest = repeat(expand_subscript, largest, tensor.shape)
+    normalised = tensor#  - largest
+    exponentiated = uexp(normalised)
+
+    denom = radd(exponentiated, reduce_subscript)
+    denom = repeat(expand_subscript, denom, tensor.shape)
+    return exponentiated / denom

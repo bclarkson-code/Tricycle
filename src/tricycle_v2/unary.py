@@ -93,8 +93,8 @@ def udiv(arg_1: Union[Tensor, float], arg_2: Union[Tensor, float]) -> Tensor:
 
 def umax(tensor: Tensor, constant: float) -> Tensor:
     """
-    Max a tensor by a constant, elementwise. The constant is not
-    differentiable.
+    If only a tensor is passed, find the max of the tensor.
+    If a constant is passed, find the max of the tensor and the constant, elementwise. The constant is not differentiable.
     """
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
@@ -120,7 +120,7 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.minimum(tensor, constant))
 
-    indicator = to_tensor((tensor <= constant).astype(float))
+    indicator = to_tensor((tensor <= constant).astype(float), requires_grad=False)
     indices = ascii_letters[: len(tensor.shape)]
     subscripts = f"{indices},{indices}->{indices}"
 

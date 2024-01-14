@@ -149,6 +149,7 @@ def test_can_umax():
     )
 
 
+
 def test_can_umin():
     in_tensor = to_tensor(np.arange(12).reshape(3, 4))
     out_tensor = umin(in_tensor, 4)
