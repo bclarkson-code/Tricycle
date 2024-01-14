@@ -141,3 +141,54 @@ def uexp(tensor: Tensor) -> Tensor:
     result.back_fn = (partial(einsum, subscripts, result),)
     result.args = (tensor,)
     return result
+
+
+def ulog(tensor: Tensor) -> Tensor:
+    """
+    Raise every element of a tensor to the power of e
+    """
+    result = to_tensor(np.log(tensor))
+
+    indices = ascii_letters[: len(tensor.shape)]
+    subscripts = f"{indices},{indices}->{indices}"
+
+    coeff = udiv(1, tensor)
+
+    result.back_fn = (partial(einsum, subscripts, coeff),)
+    result.args = (tensor,)
+
+    return result
+
+
+def usin(tensor: Tensor) -> Tensor:
+    """
+    Raise every element of a tensor to the power of e
+    """
+    result = to_tensor(np.sin(tensor))
+
+    indices = ascii_letters[: len(tensor.shape)]
+    subscripts = f"{indices},{indices}->{indices}"
+
+    coef = to_tensor(np.cos(tensor))
+
+    result.back_fn = (partial(einsum, subscripts, coef),)
+    result.args = (tensor,)
+
+    return result
+
+
+def ucos(tensor: Tensor) -> Tensor:
+    """
+    Raise every element of a tensor to the power of e
+    """
+    result = to_tensor(np.cos(tensor))
+
+    indices = ascii_letters[: len(tensor.shape)]
+    subscripts = f"{indices},{indices}->{indices}"
+
+    coef = to_tensor(-np.sin(tensor))
+
+    result.back_fn = (partial(einsum, subscripts, coef),)
+    result.args = (tensor,)
+
+    return result

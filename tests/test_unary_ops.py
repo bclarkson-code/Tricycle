@@ -1,7 +1,8 @@
 import numpy as np
 
 from tricycle_v2.ops import einsum, to_tensor
-from tricycle_v2.unary import uadd, udiv, uexp, umax, umin, umul, upow, usub
+from tricycle_v2.unary import (uadd, ucos, udiv, uexp, ulog, umax, umin, umul,
+                               upow, usin, usub)
 
 
 def test_can_add():
@@ -188,6 +189,96 @@ def test_can_uexp():
                 [np.exp(0), np.exp(1), np.exp(2), np.exp(3)],
                 [np.exp(4), np.exp(5), np.exp(6), np.exp(7)],
                 [np.exp(8), np.exp(9), np.exp(10), np.exp(11)],
+            ]
+        ),
+    )
+
+
+def test_can_ulog():
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
+    out_tensor = ulog(in_tensor)
+
+    assert out_tensor.shape == (3, 4)
+    assert np.allclose(
+        out_tensor,
+        np.array(
+            [
+                [-np.inf, np.log(1), np.log(2), np.log(3)],
+                [np.log(4), np.log(5), np.log(6), np.log(7)],
+                [np.log(8), np.log(9), np.log(10), np.log(11)],
+            ]
+        ),
+    )
+
+    out_tensor.backward()
+
+    assert np.allclose(
+        in_tensor.grad,
+        np.array(
+            [
+                [np.inf, 1, 1 / 2, 1 / 3],
+                [1 / 4, 1 / 5, 1 / 6, 1 / 7],
+                [1 / 8, 1 / 9, 1 / 10, 1 / 11],
+            ]
+        ),
+    )
+
+
+def test_can_usin():
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
+    out_tensor = usin(in_tensor)
+
+    assert out_tensor.shape == (3, 4)
+    assert np.allclose(
+        out_tensor,
+        np.array(
+            [
+                [np.sin(0), np.sin(1), np.sin(2), np.sin(3)],
+                [np.sin(4), np.sin(5), np.sin(6), np.sin(7)],
+                [np.sin(8), np.sin(9), np.sin(10), np.sin(11)],
+            ]
+        ),
+    )
+
+    out_tensor.backward()
+
+    assert np.allclose(
+        in_tensor.grad,
+        np.array(
+            [
+                [np.cos(0), np.cos(1), np.cos(2), np.cos(3)],
+                [np.cos(4), np.cos(5), np.cos(6), np.cos(7)],
+                [np.cos(8), np.cos(9), np.cos(10), np.cos(11)],
+            ]
+        ),
+    )
+
+
+def test_can_ucos():
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
+    out_tensor = ucos(in_tensor)
+
+    assert out_tensor.shape == (3, 4)
+    assert np.allclose(
+        out_tensor,
+        np.array(
+            [
+                [np.cos(0), np.cos(1), np.cos(2), np.cos(3)],
+                [np.cos(4), np.cos(5), np.cos(6), np.cos(7)],
+                [np.cos(8), np.cos(9), np.cos(10), np.cos(11)],
+            ]
+        ),
+    )
+
+    out_tensor.backward()
+
+    assert np.allclose(
+        in_tensor.grad,
+        np.array(
+            [
+                [-np.sin(0), -np.sin(1), -np.sin(2), -np.sin(3)],
+                [-np.sin(4), -np.sin(5), -np.sin(6), -np.sin(7)],
+                [-np.sin(8), -np.sin(9), -np.sin(10), -np.sin(11)],
             ]
         ),
     )
