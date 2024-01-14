@@ -1,44 +1,8 @@
 from functools import partial
-from typing import Optional
 
 import numpy as np
 
-from tricycle_v2.tensor import Tensor
-
-
-def to_tensor(
-    *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
-) -> Tensor:
-    """
-    Create a new Tensor instance. First, we convert the argument to a numpy
-    array and then to a tensor
-    """
-    result = np.asarray(*args, **kwargs).view(Tensor)
-    result.name = name
-    result.requires_grad = requires_grad
-    return result
-
-
-def apply(tensor, op, *args, **kwargs):
-    """
-    Apply a unary operation elementwise to a tensor
-    """
-    return op(tensor, *args, **kwargs)
-
-
-def apply_binary(tensor_1, tensor_2, op, *args, **kwargs):
-    """
-    Apply a binary operation elementwise to a tensor
-    """
-    return op(tensor_1, tensor_2, *args, **kwargs)
-
-
-def reduce(tensor, indices, op, *args, **kwargs):
-    """
-    Reduce a tensor along some dimensions by applying a reduction function
-    to those indices. A reduction function
-    """
-    return op(tensor, indices, *args, **kwargs)
+from tricycle_v2.tensor import to_tensor
 
 
 def einsum(subscripts, tensor_1, tensor_2):
@@ -62,6 +26,30 @@ def einsum(subscripts, tensor_1, tensor_2):
     result.back_fn = (left_back_fn, right_back_fn)
 
     return result
+
+
+def repeat(subscripts, tensor, out_shape):
+    """
+    Repeat a tensor along some indices, according to the subscript.
+    Note: This is mathematically equivalent to einsumming the tensor
+    with a one tensor
+    """
+    indices, output = _parse_subscripts(subscripts)
+    assert len(indices) == 1
+    [index] = indices
+
+    assert len(output) == len(out_shape), "Output shape does not match subscripts"
+
+    one_indices = ""
+    one_shape = []
+    for i, out_idx in enumerate(output):
+        if out_idx not in index:
+            one_indices += out_idx
+            one_shape.append(out_shape[i])
+
+    ones = to_tensor(np.ones(one_shape))
+    new_subscript = f"{one_indices},{index}->{output}"
+    return einsum(new_subscript, ones, tensor)
 
 
 def _parse_subscripts(subscripts: str) -> tuple[list[str], str]:
