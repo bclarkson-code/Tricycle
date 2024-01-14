@@ -127,3 +127,9 @@ class Tensor(np.ndarray):
             return upow(self, other)
         elif isinstance(other, Tensor):
             raise NotImplementedError("Cannot power")
+
+    def __repr__(self):
+        name = ''
+        if self.name is not None:
+            name = f", name={self.name}"
+        return f"Tensor({self.__str__()}{name})"
