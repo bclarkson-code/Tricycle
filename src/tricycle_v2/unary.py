@@ -4,7 +4,7 @@ from typing import Union
 
 import numpy as np
 
-from tricycle_v2.ops import einsum, nothing
+from tricycle_v2.ops import einsum
 from tricycle_v2.tensor import Tensor, to_tensor
 
 grad = False
@@ -20,7 +20,13 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.add(tensor, constant))
     result.args = (tensor,)
-    result.back_fn = (nothing,)
+
+    indices = ascii_letters[: len(tensor.shape)]
+    assert len(indices) < 25
+    diag = np.eye(*tensor.shape, dtype=float)
+    subscripts = f"{indices},{indices}z->{indices}z"
+
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
     return result
 
 
@@ -66,14 +72,17 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     result = to_tensor(np.power(tensor, constant))
     result.args = (tensor,)
 
-    coeff = to_tensor(np.power(tensor, constant - 1), requires_grad=False)
-    coeff = umul(coeff, constant)
-
-    assert coeff.shape == tensor.shape
     indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
+    assert len(indices) < 25
+    diag = (
+        np.eye(*tensor.shape, dtype=float)
+        * constant
+        * to_tensor(np.power(tensor, constant - 1))
+    )
+    subscripts = f"{indices},{indices}z->{indices}z"
 
-    result.back_fn = (partial(einsum, subscripts, coeff),)
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+
     return result
 
 
@@ -101,12 +110,15 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.maximum(tensor, constant))
 
-    indicator = to_tensor((tensor > constant).astype(float), requires_grad=False)
-    indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-
     result.args = (tensor,)
-    result.back_fn = (partial(einsum, subscripts, indicator),)
+
+    indices = ascii_letters[: len(tensor.shape)]
+    is_bigger = to_tensor((tensor > constant).astype(float))
+    assert len(indices) < 25
+    diag = np.eye(*tensor.shape, dtype=float) * is_bigger
+    subscripts = f"{indices},{indices}z->{indices}z"
+
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
     return result
 
 
@@ -120,12 +132,15 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.minimum(tensor, constant))
 
-    indicator = to_tensor((tensor <= constant).astype(float), requires_grad=False)
-    indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-
     result.args = (tensor,)
-    result.back_fn = (partial(einsum, subscripts, indicator),)
+
+    indices = ascii_letters[: len(tensor.shape)]
+    is_bigger = to_tensor((tensor < constant).astype(float))
+    assert len(indices) < 25
+    diag = np.eye(*tensor.shape, dtype=float) * is_bigger
+    subscripts = f"{indices},{indices}z->{indices}z"
+
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
     return result
 
 
@@ -135,11 +150,14 @@ def uexp(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.exp(tensor))
 
-    indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-
-    result.back_fn = (partial(einsum, subscripts, result),)
     result.args = (tensor,)
+
+    indices = ascii_letters[: len(tensor.shape)]
+    assert len(indices) < 25
+    diag = np.eye(*tensor.shape, dtype=float) * result
+    subscripts = f"{indices},{indices}z->{indices}z"
+
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
     return result
 
 
@@ -149,14 +167,14 @@ def ulog(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.log(tensor))
 
-    indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-
-    coeff = udiv(1, tensor)
-
-    result.back_fn = (partial(einsum, subscripts, coeff),)
     result.args = (tensor,)
 
+    indices = ascii_letters[: len(tensor.shape)]
+    assert len(indices) < 25
+    diag = np.eye(*tensor.shape, dtype=float) * udiv(1.0, tensor)
+    subscripts = f"{indices},{indices}z->{indices}z"
+
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
     return result
 
 
@@ -166,14 +184,14 @@ def usin(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.sin(tensor))
 
-    indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-
-    coef = to_tensor(np.cos(tensor))
-
-    result.back_fn = (partial(einsum, subscripts, coef),)
     result.args = (tensor,)
 
+    indices = ascii_letters[: len(tensor.shape)]
+    assert len(indices) < 25
+    diag = np.eye(*tensor.shape, dtype=float) * to_tensor(np.cos(tensor))
+    subscripts = f"{indices},{indices}z->{indices}z"
+
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
     return result
 
 
@@ -183,12 +201,12 @@ def ucos(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.cos(tensor))
 
-    indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-
-    coef = to_tensor(-np.sin(tensor))
-
-    result.back_fn = (partial(einsum, subscripts, coef),)
     result.args = (tensor,)
 
+    indices = ascii_letters[: len(tensor.shape)]
+    assert len(indices) < 25
+    diag = np.eye(*tensor.shape, dtype=float) * to_tensor(-np.sin(tensor))
+    subscripts = f"{indices},{indices}z->{indices}z"
+
+    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
     return result
