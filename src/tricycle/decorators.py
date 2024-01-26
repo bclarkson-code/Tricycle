@@ -1,6 +1,6 @@
-from tricycle_v2.tensor import Op, Tensor
+from tricycle.tensor import Op, Tensor
 from functools import wraps
-from tricycle_v2.ops import to_tensor as to_tensor_op
+from tricycle.ops import to_tensor as to_tensor_op
 
 
 def to_tensor(fn: Op) -> Op:

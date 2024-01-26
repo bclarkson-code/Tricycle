@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle_v2.ops import to_tensor
+from tricycle.ops import to_tensor
 
 
 def init_xavier(shape, name: str = ""):

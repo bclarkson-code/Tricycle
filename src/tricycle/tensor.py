@@ -81,11 +81,11 @@ class Tensor(np.ndarray):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
-            from tricycle_v2.unary import uadd
+            from tricycle.unary import uadd
 
             return uadd(self, other)
         elif isinstance(other, Tensor):
-            from tricycle_v2.binary import badd
+            from tricycle.binary import badd
 
             return badd(self, other)
         else:
@@ -98,11 +98,11 @@ class Tensor(np.ndarray):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
-            from tricycle_v2.unary import usub
+            from tricycle.unary import usub
 
             return usub(self, other)
         elif isinstance(other, Tensor):
-            from tricycle_v2.binary import bsub
+            from tricycle.binary import bsub
 
             return bsub(self, other)
 
@@ -116,12 +116,12 @@ class Tensor(np.ndarray):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
-            from tricycle_v2.unary import umul
+            from tricycle.unary import umul
 
             return umul(self, other)
 
         elif isinstance(other, Tensor):
-            from tricycle_v2.binary import bmul
+            from tricycle.binary import bmul
 
             return bmul(self, other)
 
@@ -135,11 +135,11 @@ class Tensor(np.ndarray):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
-            from tricycle_v2.unary import udiv
+            from tricycle.unary import udiv
 
             return udiv(self, other)
         elif isinstance(other, Tensor):
-            from tricycle_v2.binary import bdiv
+            from tricycle.binary import bdiv
 
             return bdiv(self, other)
 
@@ -159,7 +159,7 @@ class Tensor(np.ndarray):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
-            from tricycle_v2.unary import upow
+            from tricycle.unary import upow
 
             return upow(self, other)
         elif isinstance(other, Tensor):

@@ -1,7 +1,7 @@
 import numpy as np
 
-from tricycle_v2.ops import _parse_subscripts, einsum
-from tricycle_v2.tensor import Tensor, to_tensor
+from tricycle.ops import _parse_subscripts, einsum
+from tricycle.tensor import Tensor, to_tensor
 
 
 def radd(tensor: Tensor, subscript: str):

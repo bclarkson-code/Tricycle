@@ -1,7 +1,7 @@
 import numpy as np
 
-from tricycle_v2.binary import badd, bdiv, bmax, bmin, bmul, bsub
-from tricycle_v2.ops import to_tensor
+from tricycle.binary import badd, bdiv, bmax, bmin, bmul, bsub
+from tricycle.ops import to_tensor
 
 
 def test_can_badd():

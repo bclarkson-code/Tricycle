@@ -3,7 +3,7 @@ from string import ascii_lowercase
 
 import numpy as np
 
-from tricycle_v2.tensor import to_tensor
+from tricycle.tensor import to_tensor
 
 
 def einsum(subscripts, tensor_1, tensor_2):
@@ -75,9 +75,9 @@ def softmax(tensor):
     dimension of the tensor
     Note: the tensor is normalised for numeric stability
     """
-    from tricycle_v2.reduce import radd
-    from tricycle_v2.binary import bdiv
-    from tricycle_v2.unary import uexp
+    from tricycle.reduce import radd
+    from tricycle.binary import bdiv
+    from tricycle.unary import uexp
 
     indices = ascii_lowercase[: len(tensor.shape)]
     reduce_subscript = f"{indices}->{indices[:-1]}"

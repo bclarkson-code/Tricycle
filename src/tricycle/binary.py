@@ -3,9 +3,9 @@ from string import ascii_letters
 
 import numpy as np
 
-from tricycle_v2.ops import einsum, nothing
-from tricycle_v2.tensor import Tensor, to_tensor
-from tricycle_v2.unary import udiv, umul
+from tricycle.ops import einsum, nothing
+from tricycle.tensor import Tensor, to_tensor
+from tricycle.unary import udiv, umul
 
 
 def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:

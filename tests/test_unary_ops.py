@@ -1,8 +1,19 @@
 import numpy as np
 
-from tricycle_v2.ops import einsum, to_tensor
-from tricycle_v2.unary import (uadd, ucos, udiv, uexp, ulog, umax, umin, umul,
-                               upow, usin, usub)
+from tricycle.ops import einsum, to_tensor
+from tricycle.unary import (
+    uadd,
+    ucos,
+    udiv,
+    uexp,
+    ulog,
+    umax,
+    umin,
+    umul,
+    upow,
+    usin,
+    usub,
+)
 
 
 def test_can_add():

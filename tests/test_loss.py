@@ -4,11 +4,11 @@ from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes, load_linnerud
 from sklearn.preprocessing import RobustScaler
 
-from tricycle_v2.initialisers import init_xavier
-from tricycle_v2.loss import mean_squared_error
-from tricycle_v2.ops import einsum, repeat
-from tricycle_v2.reduce import radd
-from tricycle_v2.tensor import to_tensor
+from tricycle.initialisers import init_xavier
+from tricycle.loss import mean_squared_error
+from tricycle.ops import einsum, repeat
+from tricycle.reduce import radd
+from tricycle.tensor import to_tensor
 
 
 def test_can_mean_square_error():

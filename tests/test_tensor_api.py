@@ -2,9 +2,9 @@ from copy import deepcopy
 
 import numpy as np
 
-from tricycle_v2.binary import badd, bdiv, bmul, bsub
-from tricycle_v2.ops import to_tensor
-from tricycle_v2.unary import uadd, udiv, umul, usub
+from tricycle.binary import badd, bdiv, bmul, bsub
+from tricycle.ops import to_tensor
+from tricycle.unary import uadd, udiv, umul, usub
 
 
 def test_can_add_tensors():

@@ -1,12 +1,12 @@
 import numpy as np
 
-from tricycle_v2.ops import softmax
-from tricycle_v2.reduce import radd
-from tricycle_v2.tensor import to_tensor
+from tricycle.ops import softmax
+from tricycle.reduce import radd
+from tricycle.tensor import to_tensor
 
 
 def test_softmax():
-    in_tensor = to_tensor(np.arange(12).reshape(3, 4), name='in_tensor')
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4), name="in_tensor")
 
     out_tensor = softmax(in_tensor)
 

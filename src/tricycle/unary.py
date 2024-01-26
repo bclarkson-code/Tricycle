@@ -4,8 +4,8 @@ from typing import Union
 
 import numpy as np
 
-from tricycle_v2.ops import einsum
-from tricycle_v2.tensor import Tensor, to_tensor
+from tricycle.ops import einsum
+from tricycle.tensor import Tensor, to_tensor
 
 grad = False
 
