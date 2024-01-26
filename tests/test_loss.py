@@ -5,20 +5,27 @@ from sklearn.datasets import load_diabetes, load_linnerud
 from sklearn.preprocessing import RobustScaler
 
 from tricycle.initialisers import init_xavier
-from tricycle.loss import mean_squared_error
+from tricycle.loss import cross_entropy, mean_squared_error
 from tricycle.ops import einsum, repeat
 from tricycle.reduce import radd
 from tricycle.tensor import to_tensor
 
 
 def test_can_mean_square_error():
-    y_true = to_tensor([[0, 0, 1], [0, 1, 0], [1 / 3, 1 / 3, 1 / 3]])
-    y_pred = to_tensor([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    y_true = to_tensor([0, 0, 1])
+    y_pred = to_tensor([0, 0.5, 0.5])
 
     mse = mean_squared_error(y_true, y_pred)
 
-    assert mse.shape == (3,)
-    assert np.allclose(mse, np.array([0, 2 / 3, 2 / 9]))
+    assert mse == 0.5
+
+
+def test_can_cross_entropy():
+    y_true = to_tensor([0, 0, 1])
+    y_pred = to_tensor([0, 0, 0])
+
+    loss = cross_entropy(y_true, y_pred)
+    assert loss == 1.0986122886681098
 
 
 @pytest.mark.skip

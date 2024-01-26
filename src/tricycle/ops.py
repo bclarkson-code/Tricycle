@@ -81,7 +81,6 @@ def softmax(tensor):
 
     indices = ascii_lowercase[: len(tensor.shape)]
     reduce_subscript = f"{indices}->{indices[:-1]}"
-    # largest = rmax(tensor, reduce_subscript)
 
     expand_subscript = f"{indices[:-1]}->{indices}"
     # largest = repeat(expand_subscript, largest, tensor.shape)
