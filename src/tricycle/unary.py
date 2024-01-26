@@ -1,10 +1,10 @@
+from copy import copy
 from functools import partial
 from string import ascii_letters
-from typing import Union
 
 import numpy as np
 
-from tricycle.ops import einsum
+from tricycle.ops import einsum, nothing
 from tricycle.tensor import Tensor, to_tensor
 
 grad = False
@@ -20,13 +20,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.add(tensor, constant))
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
-    assert len(indices) < 25
-    diag = np.eye(*tensor.shape, dtype=float)
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    result.back_fn = (nothing,)
     return result
 
 
@@ -46,19 +40,12 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     return einsum(subscripts, tensor, constant_tensor)
 
 
-def usub(arg_1: Union[Tensor, float], arg_2: Union[Tensor, float]) -> Tensor:
+def usub(tensor: Tensor, constant: float) -> Tensor:
     """
     Subtract a constant, elementwise, from a tensor. The constant is not
     differentiable.
     """
-    if isinstance(arg_1, Tensor) and np.isscalar(arg_2):
-        return uadd(arg_1, -arg_2)
-    elif isinstance(arg_2, Tensor) and np.isscalar(arg_1):
-        return uadd(umul(arg_2, -1), arg_1)
-    else:
-        raise NotImplementedError(
-            f"Subtraction between {type(arg_1)} and {type(arg_2)}"
-        )
+    return uadd(tensor, -constant)
 
 
 def upow(tensor: Tensor, constant: float) -> Tensor:
@@ -66,38 +53,25 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     Raise a tensor to a constant, elementwise. The constant is not
     differentiable.
     """
+    from tricycle.binary import bmul
+
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
 
     result = to_tensor(np.power(tensor, constant))
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
-    assert len(indices) < 25
-    diag = (
-        np.eye(*tensor.shape, dtype=float)
-        * constant
-        * to_tensor(np.power(tensor, constant - 1))
-    )
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    coef = to_tensor(np.power(tensor, constant - 1))
+    result.back_fn = (partial(bmul, umul(coef, constant)),)
 
     return result
 
 
-def udiv(arg_1: Union[Tensor, float], arg_2: Union[Tensor, float]) -> Tensor:
+def udiv(constant: float, tensor: Tensor) -> Tensor:
     """
-    Divide a tensor by a constant, elementwise. The constant is not
+    Divide a constant by a tensor, elementwise. The constant is not
     differentiable.
     """
-    if isinstance(arg_1, Tensor) and np.isscalar(arg_2):
-        return umul(arg_1, 1 / arg_2)
-
-    elif isinstance(arg_2, Tensor) and np.isscalar(arg_1):
-        return umul(upow(arg_2, -1.0), arg_1)
-    else:
-        raise NotImplementedError(f"Division between {type(arg_1)} and {type(arg_2)}")
+    return umul(upow(tensor, -1.0), constant)
 
 
 def umax(tensor: Tensor, constant: float) -> Tensor:
@@ -110,15 +84,11 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.maximum(tensor, constant))
 
+    from tricycle.binary import bmul
+
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
     is_bigger = to_tensor((tensor > constant).astype(float))
-    assert len(indices) < 25
-    diag = np.eye(*tensor.shape, dtype=float) * is_bigger
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    result.back_fn = (partial(bmul, is_bigger),)
     return result
 
 
@@ -132,15 +102,11 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.minimum(tensor, constant))
 
+    from tricycle.binary import bmul
+
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
-    is_bigger = to_tensor((tensor < constant).astype(float))
-    assert len(indices) < 25
-    diag = np.eye(*tensor.shape, dtype=float) * is_bigger
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    is_smaller = to_tensor((tensor < constant).astype(float))
+    result.back_fn = (partial(bmul, is_smaller),)
     return result
 
 
@@ -150,14 +116,10 @@ def uexp(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.exp(tensor))
 
+    from tricycle.binary import bmul
+
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
-    assert len(indices) < 25
-    diag = np.eye(*tensor.shape, dtype=float) * result
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    result.back_fn = (partial(bmul, copy(result)),)
     return result
 
 
@@ -167,14 +129,15 @@ def ulog(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.log(tensor))
 
+    from tricycle.binary import bmul
+
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
-    assert len(indices) < 25
-    diag = np.eye(*tensor.shape, dtype=float) * udiv(1.0, tensor)
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    result.back_fn = (
+        partial(
+            bmul,
+            udiv(1, tensor),
+        ),
+    )
     return result
 
 
@@ -184,14 +147,11 @@ def usin(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.sin(tensor))
 
+    from tricycle.binary import bmul
+
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
-    assert len(indices) < 25
-    diag = np.eye(*tensor.shape, dtype=float) * to_tensor(np.cos(tensor))
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    coef = to_tensor(np.cos(tensor))
+    result.back_fn = (partial(bmul, coef),)
     return result
 
 
@@ -201,12 +161,9 @@ def ucos(tensor: Tensor) -> Tensor:
     """
     result = to_tensor(np.cos(tensor))
 
+    from tricycle.binary import bmul
+
     result.args = (tensor,)
-
-    indices = ascii_letters[: len(tensor.shape)]
-    assert len(indices) < 25
-    diag = np.eye(*tensor.shape, dtype=float) * to_tensor(-np.sin(tensor))
-    subscripts = f"{indices},{indices}z->{indices}z"
-
-    result.back_fn = (partial(einsum, subscripts, tensor_2=diag),)
+    coef = to_tensor(-np.sin(tensor))
+    result.back_fn = (partial(bmul, coef),)
     return result

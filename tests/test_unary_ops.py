@@ -1,19 +1,10 @@
+from copy import copy
+
 import numpy as np
 
 from tricycle.ops import einsum, to_tensor
-from tricycle.unary import (
-    uadd,
-    ucos,
-    udiv,
-    uexp,
-    ulog,
-    umax,
-    umin,
-    umul,
-    upow,
-    usin,
-    usub,
-)
+from tricycle.unary import (uadd, ucos, udiv, uexp, ulog, umax, umin, umul,
+                            upow, usin, usub)
 
 
 def test_can_add():
@@ -26,7 +17,7 @@ def test_can_add():
 
     out_tensor.backward()
 
-    correct = np.eye(4, 4)
+    correct = np.ones_like(correct)
     assert np.allclose(in_tensor.grad, correct), in_tensor.grad
 
 
@@ -65,56 +56,27 @@ def test_can_usub():
     assert np.allclose(out_tensor, np.array([0, 1, 2, 3]))
 
     out_tensor.backward()
-    correct = np.eye(4, 4)
-
-    assert np.allclose(in_tensor.grad, correct)
-
-    # one subtract each element
-    in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = usub(1, in_tensor)
-
-    assert out_tensor.shape == (4,)
-    assert np.allclose(out_tensor, np.array([0, -1, -2, -3]))
-
-    out_tensor.backward()
-    correct = -np.eye(4, 4)
+    correct = np.ones_like(in_tensor)
 
     assert np.allclose(in_tensor.grad, correct)
 
 
 def test_can_upow():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = upow(in_tensor, 2)
+    out_tensor = upow(in_tensor, 3)
 
     assert out_tensor.shape == (4,)
-    assert np.allclose(out_tensor, np.array([1, 4, 9, 16]))
+    assert np.allclose(out_tensor, np.array([1, 8, 27, 64]))
 
     out_tensor.backward()
-    correct = np.array([2, 4, 6, 8]) * np.eye(4, 4)
+    correct = np.array([3, 12, 27, 48])
 
     assert np.allclose(in_tensor.grad, correct)
 
 
 def test_can_udiv():
-    # each element divided by 2
-    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
-    out_tensor = udiv(in_tensor, 2)
-
-    assert out_tensor.shape == (3, 4)
-    assert np.allclose(
-        out_tensor,
-        np.array([[0.0, 0.5, 1.0, 1.5], [2.0, 2.5, 3.0, 3.5], [4.0, 4.5, 5.0, 5.5]]),
-    )
-
-    out_tensor.backward()
-
-    assert np.allclose(
-        in_tensor.grad,
-        np.array([[0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]]),
-    )
-
     # 2 divided by each element
-    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
+    in_tensor = to_tensor(np.arange(12, dtype=float).reshape(3, 4))
     out_tensor = udiv(2, in_tensor)
 
     assert out_tensor.shape == (3, 4)
@@ -128,6 +90,10 @@ def test_can_udiv():
             ]
         ),
     )
+    out_tensor.backward()
+    correct = -np.power(copy(in_tensor), -2) * 2
+
+    assert np.allclose(in_tensor.grad, correct)
 
 
 def test_can_umax():
@@ -139,23 +105,21 @@ def test_can_umax():
 
     out_tensor.backward()
 
-    correct = np.eye(4, 4) * [0, 0, 1, 1]
+    correct = [0, 0, 1, 1]
     assert np.allclose(in_tensor.grad, correct)
 
 
 def test_can_umin():
-    in_tensor = to_tensor(np.arange(12).reshape(3, 4))
-    out_tensor = umin(in_tensor, 4)
+    in_tensor = to_tensor([1, 2, 3, 4])
+    out_tensor = umin(in_tensor, 3)
 
-    assert out_tensor.shape == (3, 4)
-    assert np.allclose(out_tensor, np.array([[0, 1, 2, 3], [4, 4, 4, 4], [4, 4, 4, 4]]))
+    assert out_tensor.shape == (4,)
+    assert np.allclose(out_tensor, [1, 2, 3, 3])
 
     out_tensor.backward()
 
-    assert np.allclose(
-        in_tensor.grad,
-        np.array([[1.0, 1.0, 1.0, 1.0], [1.0, 0, 0, 0], [0, 0, 0, 0]]),
-    )
+    correct = [1, 1, 0, 0]
+    assert np.allclose(in_tensor.grad, correct)
 
 
 def test_can_uexp():
@@ -169,7 +133,7 @@ def test_can_uexp():
 
     out_tensor.backward()
 
-    correct = np.exp([1, 2, 3, 4]) * np.eye(4, 4)
+    correct = np.exp([1, 2, 3, 4])
     assert np.allclose(in_tensor.grad, correct)
 
 
@@ -182,7 +146,7 @@ def test_can_ulog():
 
     out_tensor.backward()
 
-    correct = np.eye(4, 4) * [1, 1 / 2, 1 / 3, 1 / 4]
+    correct = [1, 1 / 2, 1 / 3, 1 / 4]
     assert np.allclose(in_tensor.grad, correct)
 
 
@@ -197,7 +161,7 @@ def test_can_usin():
 
     out_tensor.backward()
 
-    correct = np.eye(4, 4) * [np.cos(1), np.cos(2), np.cos(3), np.cos(4)]
+    correct = [np.cos(1), np.cos(2), np.cos(3), np.cos(4)]
 
     assert np.allclose(in_tensor.grad, correct)
 
@@ -213,6 +177,6 @@ def test_can_ucos():
 
     out_tensor.backward()
 
-    correct = np.eye(4, 4) * [-np.sin(1), -np.sin(2), -np.sin(3), -np.sin(4)]
+    correct = [-np.sin(1), -np.sin(2), -np.sin(3), -np.sin(4)]
 
     assert np.allclose(in_tensor.grad, correct)
