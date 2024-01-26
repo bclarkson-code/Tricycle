@@ -20,6 +20,7 @@ def test_can_softmax():
     )
     assert np.allclose(result, expected)
 
+
 def test_can_differentiate_softmax():
     x = tensor([1, 2, 3])
     x.name = "x"
@@ -27,8 +28,7 @@ def test_can_differentiate_softmax():
     z.name = "z"
     z.backward()
 
-    assert np.allclose(x.grad, [-0.09003057, -0.24472847,  0.33475904])
-
+    assert np.allclose(x.grad, [-0.09003057, -0.24472847, 0.33475904])
 
 
 def test_can_sigmoid():
