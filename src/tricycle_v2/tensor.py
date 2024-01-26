@@ -49,11 +49,12 @@ class Tensor(np.ndarray):
 
                     new_gradient = current_gradient + [op]
                     stack.append((arg, new_gradient))
-                    adjecency_matrix[(hash(current_node))].append(hash(arg))
+                    if hash(arg) not in leaves:
+                        adjecency_matrix[(hash(current_node))].append(hash(arg))
 
         # calculate the gradient for each parameter
         for leaf in leaves.values():
-            logger.info(f"leaf: {leaf}")
+            logger.info("------------------finding leaf------------------")
             if leaf.grad_fn is None:
                 continue
 
@@ -67,6 +68,11 @@ class Tensor(np.ndarray):
                     logger.info(grad)
 
                 leaf.grad = grad if leaf.grad is None else leaf.grad + grad
+
+            logger.info("------------------reached leaf------------------")
+
+        logger.info(adjecency_matrix)
+        logger.info(leaves)
 
     def __hash__(self) -> int:
         return id(self)

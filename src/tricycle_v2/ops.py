@@ -75,7 +75,8 @@ def softmax(tensor):
     dimension of the tensor
     Note: the tensor is normalised for numeric stability
     """
-    from tricycle_v2.reduce import radd, rmax
+    from tricycle_v2.reduce import radd
+    from tricycle_v2.binary import bdiv
     from tricycle_v2.unary import uexp
 
     indices = ascii_lowercase[: len(tensor.shape)]
@@ -84,9 +85,9 @@ def softmax(tensor):
 
     expand_subscript = f"{indices[:-1]}->{indices}"
     # largest = repeat(expand_subscript, largest, tensor.shape)
-    normalised = tensor#  - largest
+    normalised = tensor  #  - largest
     exponentiated = uexp(normalised)
 
     denom = radd(exponentiated, reduce_subscript)
     denom = repeat(expand_subscript, denom, tensor.shape)
-    return exponentiated / denom
+    return bdiv(exponentiated, denom)
