@@ -2,7 +2,10 @@ import logging
 from collections import defaultdict
 from typing import Callable, Dict, List, Optional, Tuple
 
+import networkx as nx
 import numpy as np
+from matplotlib import pyplot as plt
+from networkx.drawing.nx_pydot import graphviz_layout
 
 logger = logging.getLogger(__name__)
 
@@ -22,18 +25,27 @@ class Tensor(np.ndarray):
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
+    show_graph = False
 
     def backward(self):
         stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
         leaves: Dict[int, Tensor] = {}
         # this is for plotting a graph, not needed for autodiff
-        adjecency_matrix = defaultdict(list)
+        edges = defaultdict(list)
+        nodes = {}
+        labels = {}
+        graph = nx.DiGraph()
 
         # Find every route to a differentiable parameter
         while stack:
             current_node, current_gradient = stack.pop()
+            nodes[hash(current_node)] = current_node
+            if current_node.name:
+                labels[hash(current_node)] = current_node.name
+            else:
+                labels[hash(current_node)] = str(current_node)
 
-            # At intermediate node
+            # At leaf node
             if current_node.args is None:
                 if current_node.grad_fn is None:
                     current_node.grad_fn = [current_gradient]
@@ -44,17 +56,19 @@ class Tensor(np.ndarray):
 
             else:
                 for arg, op in zip(current_node.args, current_node.back_fn):
+                    if hash(arg) not in edges:
+                        edges[(hash(current_node))].append(hash(arg))
+
                     if not arg.requires_grad:
+                        nodes[hash(arg)] = arg
+                        labels[hash(arg)] = arg.name if arg.name else str(arg)
                         continue
 
                     new_gradient = current_gradient + [op]
                     stack.append((arg, new_gradient))
-                    if hash(arg) not in leaves:
-                        adjecency_matrix[(hash(current_node))].append(hash(arg))
 
         # calculate the gradient for each parameter
         for leaf in leaves.values():
-            logger.info("------------------finding leaf------------------")
             if leaf.grad_fn is None:
                 continue
 
@@ -62,17 +76,25 @@ class Tensor(np.ndarray):
                 grad = np.ones_like(self).view(Tensor)
                 grad.requires_grad = False
 
-                logger.info(grad)
                 for op in path:
                     grad = op(grad)
-                    logger.info(grad)
 
                 leaf.grad = grad if leaf.grad is None else leaf.grad + grad
 
-            logger.info("------------------reached leaf------------------")
-
-        logger.info(adjecency_matrix)
-        logger.info(leaves)
+        if self.show_graph:
+            graph.add_nodes_from(nodes)
+            for node, connections in edges.items():
+                for c in connections:
+                    graph.add_edge(c, node)
+            nx.draw(
+                graph,
+                pos=graphviz_layout(graph, prog="dot"),
+                labels=labels,
+                with_labels=True,
+                node_size=1000,
+            )
+            plt.savefig("graph.png")
+            plt.show()
 
     def __hash__(self) -> int:
         return id(self)
@@ -132,12 +154,10 @@ class Tensor(np.ndarray):
         return self * other
 
     def __truediv__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
-            other = to_tensor(other)
         if np.isscalar(other):
-            from tricycle.unary import udiv
+            from tricycle.unary import umul
 
-            return udiv(other, self)
+            return umul(self, 1 / other)
         elif isinstance(other, Tensor):
             from tricycle.binary import bdiv
 

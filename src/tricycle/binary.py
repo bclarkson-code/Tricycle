@@ -20,6 +20,7 @@ def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     result.args = (tensor_1, tensor_2)
     result.back_fn = (nothing, nothing)
+    result.name = "badd"
 
     return result
 
@@ -46,7 +47,9 @@ def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     indices = ascii_letters[: len(tensor_1.shape)]
     subscripts = f"{indices},{indices}->{indices}"
 
-    return einsum(subscripts, tensor_1, tensor_2)
+    result = einsum(subscripts, tensor_1, tensor_2)
+    result.name = "bmul"
+    return result
 
 
 def bdiv(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
@@ -74,6 +77,7 @@ def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     indicator_2 = to_tensor((tensor_1 <= tensor_2).astype(float))
     result.args = (tensor_1, tensor_2)
     result.back_fn = (partial(bmul, indicator_1), partial(bmul, indicator_2))
+    result.name = "bmax"
 
     return result
 
@@ -94,5 +98,6 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     indicator_2 = to_tensor((tensor_1 >= tensor_2).astype(float))
     result.args = (tensor_1, tensor_2)
     result.back_fn = (partial(bmul, indicator_1), partial(bmul, indicator_2))
+    result.name = "bmin"
 
     return result

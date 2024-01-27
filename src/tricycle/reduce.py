@@ -30,7 +30,10 @@ def radd(tensor: Tensor, subscript: str):
     indicator = to_tensor(np.ones(indicator_shape, dtype=np.bool_), requires_grad=False)
 
     new_subscript = f"{idx},{indicator_indices}->{output}"
-    return einsum(new_subscript, tensor, indicator)
+    result = einsum(new_subscript, tensor, indicator)
+    result.name = f"sum({new_subscript})"
+
+    return result
 
 
 def rmax(tensor: Tensor, subscript: str):
@@ -57,7 +60,10 @@ def rmax(tensor: Tensor, subscript: str):
 
     new_subscript = f"{idx},{idx}->{output}"
 
-    return einsum(new_subscript, tensor, indicator)
+    result = einsum(new_subscript, tensor, indicator)
+    result.name = f"min({new_subscript})"
+
+    return result
 
 
 def rmin(tensor: Tensor, subscript: str):
@@ -84,4 +90,7 @@ def rmin(tensor: Tensor, subscript: str):
 
     new_subscript = f"{idx},{idx}->{output}"
 
-    return einsum(new_subscript, tensor, indicator)
+    result = einsum(new_subscript, tensor, indicator)
+    result.name = f"min({new_subscript})"
+
+    return result

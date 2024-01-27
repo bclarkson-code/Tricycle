@@ -21,6 +21,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
     result = to_tensor(np.add(tensor, constant))
     result.args = (tensor,)
     result.back_fn = (nothing,)
+    result.name = f"+ {constant}"
     return result
 
 
@@ -37,7 +38,9 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     )
     indices = ascii_letters[: len(tensor.shape)]
     subscripts = f"{indices},{indices}->{indices}"
-    return einsum(subscripts, tensor, constant_tensor)
+    result = einsum(subscripts, tensor, constant_tensor)
+    result.name = f"* {constant}"
+    return result
 
 
 def usub(tensor: Tensor, constant: float) -> Tensor:
@@ -62,6 +65,7 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     result.args = (tensor,)
     coef = to_tensor(np.power(tensor, constant - 1))
     result.back_fn = (partial(bmul, umul(coef, constant)),)
+    result.name = f"^ {constant}"
 
     return result
 
@@ -89,6 +93,7 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
     result.args = (tensor,)
     is_bigger = to_tensor((tensor > constant).astype(float))
     result.back_fn = (partial(bmul, is_bigger),)
+    result.name = f"> {constant}"
     return result
 
 
@@ -107,6 +112,7 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     result.args = (tensor,)
     is_smaller = to_tensor((tensor < constant).astype(float))
     result.back_fn = (partial(bmul, is_smaller),)
+    result.name = f"< {constant}"
     return result
 
 
@@ -120,6 +126,7 @@ def uexp(tensor: Tensor) -> Tensor:
 
     result.args = (tensor,)
     result.back_fn = (partial(bmul, copy(result)),)
+    result.name = "exp"
     return result
 
 
@@ -138,6 +145,7 @@ def ulog(tensor: Tensor) -> Tensor:
             udiv(1, tensor),
         ),
     )
+    result.name = "log"
     return result
 
 
@@ -152,6 +160,7 @@ def usin(tensor: Tensor) -> Tensor:
     result.args = (tensor,)
     coef = to_tensor(np.cos(tensor))
     result.back_fn = (partial(bmul, coef),)
+    result.name = "sin"
     return result
 
 
@@ -166,4 +175,5 @@ def ucos(tensor: Tensor) -> Tensor:
     result.args = (tensor,)
     coef = to_tensor(-np.sin(tensor))
     result.back_fn = (partial(bmul, coef),)
+    result.name = "cos"
     return result
