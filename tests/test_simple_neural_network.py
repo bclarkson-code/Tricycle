@@ -49,5 +49,5 @@ def test_can_train_simple_neural_network():
             model.update(LEARNING_RATE)
             model.zero_grad()
 
-    plt.plot(losses)
-    plt.show()
+    # plt.plot(losses)
+    # plt.show()
