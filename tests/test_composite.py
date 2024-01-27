@@ -16,6 +16,5 @@ def test_softmax():
     left = np.einsum("i,ij->ij", out_tensor, np.eye(4, 4))
     right = np.einsum("i,j->ij", out_tensor, out_tensor)
     correct = (left - right) @ np.ones_like(in_tensor)
-    breakpoint()
 
     assert np.allclose(in_tensor.grad, correct)

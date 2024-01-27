@@ -12,7 +12,6 @@ def mean_squared_error(y_true: Tensor, y_pred: Tensor) -> Tensor:
     Calcuate the mean square error along the final index of a tensor
     """
     square_error = (y_true - y_pred) ** 2
-    breakpoint()
     return radd(square_error, "i->")
 
 

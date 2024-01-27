@@ -26,6 +26,7 @@ class Tensor(np.ndarray):
     def backward(self):
         stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
         leaves: Dict[int, Tensor] = {}
+        # this is for plotting a graph, not needed for autodiff
         adjecency_matrix = defaultdict(list)
 
         # Find every route to a differentiable parameter
@@ -43,7 +44,6 @@ class Tensor(np.ndarray):
 
             else:
                 for arg, op in zip(current_node.args, current_node.back_fn):
-                    # logger.info(f"{hash(current_node)=} {hash(arg)=} {op=}")
                     if not arg.requires_grad:
                         continue
 
@@ -110,7 +110,7 @@ class Tensor(np.ndarray):
             raise NotImplementedError(f"Cannot sub {type(self)} and {type(other)}")
 
     def __isub__(self, other):
-        return self - other
+        return -1 * (other - self)
 
     def __mul__(self, other):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
@@ -137,7 +137,7 @@ class Tensor(np.ndarray):
         if np.isscalar(other):
             from tricycle.unary import udiv
 
-            return udiv(self, other)
+            return udiv(other, self)
         elif isinstance(other, Tensor):
             from tricycle.binary import bdiv
 

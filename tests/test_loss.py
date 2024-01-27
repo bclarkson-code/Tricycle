@@ -28,7 +28,6 @@ def test_can_cross_entropy():
     assert loss == 1.0986122886681098
 
 
-@pytest.mark.skip
 def test_can_linear_regression():
     np.random.seed(42)
 
@@ -43,18 +42,15 @@ def test_can_linear_regression():
     slope = to_tensor([0.01], name="slope")
     intercept = to_tensor([0.01], name="intercept")
 
-    losses = []
-    for _ in range(100):
-        repeated_slope = repeat("j->ij", slope, x.shape)
-        repeated_intercept = repeat("j->ij", intercept, x.shape)
+    losses = [0] * 100
+    for idx in range(100):
+        for x_input, y_input in zip(x, y):
+            y_pred = x_input * slope + intercept
+            loss = mean_squared_error(y_input, y_pred) / len(y)
+            losses[idx] += loss
+            loss.backward()
 
-        y_pred = x * repeated_slope + repeated_intercept
-        mse = mean_squared_error(y, y_pred)
-        loss = radd(mse, "i->") / y.shape[0]
-
-        losses.append(loss)
-
-        loss.backward()
+            breakpoint()
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
         intercept = to_tensor(
