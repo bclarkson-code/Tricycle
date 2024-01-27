@@ -70,8 +70,6 @@ def test_single_lr_step_with_multiple_datapoints():
 
         old_slope = copy(slope.grad) if slope.grad is not None else 0
         loss.backward()
-        slope.grad_fn = None
-        intercept.grad_fn = None
 
         logger.info(f"{slope.grad}, {slope.grad - old_slope}")
     assert np.allclose(slope.grad, [-5.94 - 19.8])
@@ -113,8 +111,6 @@ def test_can_linear_regression():
             losses[idx] += loss
 
             loss.backward()
-            slope.grad_fn = None
-            intercept.grad_fn = None
 
             slope_grad = slope_derivative(x_input, y_input, slope, intercept)
             intercept_grad = intercept_derivative(x_input, y_input, slope, intercept)
@@ -165,8 +161,6 @@ def test_linear_regression_real_data():
             y_pred = einsum("i,ij->j", x_in, slope) + intercept
             loss = mean_squared_error(y_in, y_pred)
             loss.backward()
-            slope.grad_fn = None
-            intercept.grad_fn = None
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
         intercept = to_tensor(
@@ -203,8 +197,6 @@ def test_linear_regression_multi_input_output():
             loss = mean_squared_error(y_in, y_pred)
             losses[idx] += loss
             loss.backward()
-            slope.grad_fn = None
-            intercept.grad_fn = None
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
         intercept = to_tensor(
@@ -240,8 +232,6 @@ def test_cross_entropy():
             loss = cross_entropy(y_in, y_pred)
             losses[idx] += loss
             loss.backward()
-            slope.grad_fn = None
-            intercept.grad_fn = None
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
         intercept = to_tensor(
@@ -285,8 +275,7 @@ def test_cross_entropy_minibatch():
             loss = cross_entropy(y_in, y_pred)
             batch_loss += loss
             loss.backward()
-            slope.grad_fn = None
-            intercept.grad_fn = None
+
         losses.append(batch_loss)
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")

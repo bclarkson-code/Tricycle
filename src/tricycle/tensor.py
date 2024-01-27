@@ -19,14 +19,15 @@ class Tensor(np.ndarray):
     """
 
     _id: int
+    _grad_fn: Optional[List[List[Op]]] = None
     args: tuple["Tensor", ...] | None = None
     back_fn: tuple[Op, ...] | None = None
-    grad_fn: Optional[List[List[Op]]] = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
     show_graph = False
 
+    # TODO: clean up this unholy mess
     def backward(self):
         stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
         leaves: Dict[int, Tensor] = {}
@@ -47,10 +48,10 @@ class Tensor(np.ndarray):
 
             # At leaf node
             if current_node.args is None:
-                if current_node.grad_fn is None:
-                    current_node.grad_fn = [current_gradient]
+                if current_node._grad_fn is None:
+                    current_node._grad_fn = [current_gradient]
                 else:
-                    current_node.grad_fn.append(current_gradient)
+                    current_node._grad_fn.append(current_gradient)
                 if hash(current_node) not in leaves:
                     leaves[hash(current_node)] = current_node
 
@@ -61,7 +62,7 @@ class Tensor(np.ndarray):
 
                     if not arg.requires_grad:
                         nodes[hash(arg)] = arg
-                        labels[hash(arg)] = arg.name if arg.name else str(arg)
+                        labels[hash(arg)] = arg.name or str(arg)
                         continue
 
                     new_gradient = current_gradient + [op]
@@ -69,10 +70,10 @@ class Tensor(np.ndarray):
 
         # calculate the gradient for each parameter
         for leaf in leaves.values():
-            if leaf.grad_fn is None:
+            if leaf._grad_fn is None:
                 continue
 
-            for path in leaf.grad_fn:
+            for path in leaf._grad_fn:
                 grad = np.ones_like(self).view(Tensor)
                 grad.requires_grad = False
 
@@ -80,6 +81,7 @@ class Tensor(np.ndarray):
                     grad = op(grad)
 
                 leaf.grad = grad if leaf.grad is None else leaf.grad + grad
+            leaf._grad_fn = None
 
         if self.show_graph:
             graph.add_nodes_from(nodes)

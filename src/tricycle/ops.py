@@ -25,6 +25,7 @@ def einsum(subscripts, tensor_1, tensor_2):
     left_back_fn = partial(einsum, left_subscript, tensor_2=tensor_2)
     right_back_fn = partial(einsum, right_subscript, tensor_1)
     result.back_fn = (left_back_fn, right_back_fn)
+    result.name = f"einsum {subscripts}"
 
     return result
 
