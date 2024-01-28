@@ -47,7 +47,7 @@ def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     indices = ascii_letters[: len(tensor_1.shape)]
     subscripts = f"{indices},{indices}->{indices}"
 
-    result = einsum(subscripts, tensor_1, tensor_2)
+    result = einsum(subscripts)(tensor_1, tensor_2)
     result.name = "bmul"
     return result
 

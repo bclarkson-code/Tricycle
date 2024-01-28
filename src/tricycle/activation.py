@@ -12,3 +12,6 @@ class ReLU(Layer):
 
     def zero_grad(self):
         pass
+
+    def vectorise(self):
+        return self

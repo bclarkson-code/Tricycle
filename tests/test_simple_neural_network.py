@@ -1,11 +1,13 @@
 import numpy as np
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 from sklearn.datasets import load_iris
 
 from tricycle.activation import ReLU
+from tricycle.tensor import to_tensor
 from tricycle.dataset import Dataset
 from tricycle.layers import Dense, Sequential
-from tricycle.loss import cross_entropy
+from tricycle.loss import CrossEntropy
+from tricycle.reduce import radd
 
 
 def test_can_train_simple_neural_network():
@@ -24,28 +26,26 @@ def test_can_train_simple_neural_network():
     layer_1 = Dense(4, 16)
     layer_2 = Dense(16, 3)
     relu = ReLU()
-    model = Sequential(layer_1, relu, layer_2)
+    model = Sequential(layer_1, relu, layer_2).vectorise()
+    loss_fn = CrossEntropy().vectorise()
 
     BATCH_SIZE = 16
-    LEARNING_RATE = 1e-2 / BATCH_SIZE
+    LEARNING_RATE = 1e-2
     N_EPOCHS = 10
 
     losses = []
     for _ in range(N_EPOCHS):
         batches = ds.copy().to_tensor().shuffle().batch(BATCH_SIZE)
-        for batch in batches:
-            if not batch or len(batch[0]) != BATCH_SIZE:
-                continue
-            total_loss = 0
-            for x, y in zip(*batch):
-                x.name = "x"
-                y.name = "y"
-                y_pred = model(x)
-                loss = cross_entropy(y, y_pred)
-                # loss.show_graph = True
-                loss.backward()
-                total_loss += loss
-            losses.append(total_loss / BATCH_SIZE)
+        for x, y in batches:
+            x = to_tensor(x)
+            y = to_tensor(y)
+
+            y_pred = model(x)
+            loss = loss_fn(y, y_pred)
+            loss = radd(loss / len(x), "i->")
+            loss.backward()
+            losses.append(loss)
+
             model.update(LEARNING_RATE)
             model.zero_grad()
 

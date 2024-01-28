@@ -22,22 +22,25 @@ class Layer:
     def zero_grad(self):
         raise NotImplementedError
 
+    @abstractmethod
+    def vectorise(self) -> "Layer":
+        raise NotImplementedError
+
 
 class Dense(Layer):
     weights: Tensor
     in_features: int
     out_features: int
+    _forward_op: einsum
 
     def __init__(self, in_features: int, out_features: int, initialiser=init_xavier):
-        self.weights = initialiser((in_features, out_features), name='weights')
+        self.weights = initialiser((in_features, out_features), name="weights")
         self.in_features = in_features
         self.out_features = out_features
+        self._forward_op = einsum("a,ab->b")
 
     def forward(self, x: Tensor):
-        assert len(x.shape) == 1
-        assert x.shape[0] == self.in_features
-
-        return einsum("i,ij->j", x, self.weights)
+        return self._forward_op(x, self.weights)
 
     def update(self, learning_rate: float):
         self.weights = self.weights - self.weights.grad * learning_rate
@@ -47,6 +50,10 @@ class Dense(Layer):
 
     def zero_grad(self):
         self.weights.grad = None
+
+    def vectorise(self) -> "Dense":
+        self._forward_op = einsum("za,ab->zb")
+        return self
 
 
 class Sequential(Layer):
@@ -70,3 +77,7 @@ class Sequential(Layer):
     def zero_grad(self):
         for layer in self.layers:
             layer.zero_grad()
+
+    def vectorise(self) -> "Sequential":
+        self.layers = [layer.vectorise() for layer in self.layers]
+        return self

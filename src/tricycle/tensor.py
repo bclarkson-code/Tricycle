@@ -28,6 +28,11 @@ class Tensor(np.ndarray):
     show_graph = False
 
     def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
+        """
+        Find every path backward through the computational graph from the current tensor
+        to every differentiable parameter and attach them to the corresponding
+        differentiable_params
+        """
         stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
         differentiable_params: Dict[int, Tensor] = {}
 
@@ -44,6 +49,7 @@ class Tensor(np.ndarray):
                 if hash(current_node) not in differentiable_params:
                     differentiable_params[hash(current_node)] = current_node
 
+            # At non-leaf node
             else:
                 for arg, op in zip(current_node.args, current_node.back_fn):
                     if not arg.requires_grad:
