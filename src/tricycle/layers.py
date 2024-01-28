@@ -3,6 +3,7 @@ from typing import Sequence
 
 from tricycle.initialisers import init_xavier
 from tricycle.ops import einsum
+from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
 
@@ -15,7 +16,7 @@ class Layer:
         return self.forward(x)
 
     @abstractmethod
-    def update(self, learning_rate: float):
+    def update(self, optimiser: Optimiser):
         raise NotImplementedError
 
     @abstractmethod
@@ -42,11 +43,8 @@ class Dense(Layer):
     def forward(self, x: Tensor):
         return self._forward_op(x, self.weights)
 
-    def update(self, learning_rate: float):
-        self.weights = self.weights - self.weights.grad * learning_rate
-        self.weights.grad = None
-        self.weights.args = None
-        self.weights.back_fn = None
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
 
     def zero_grad(self):
         self.weights.grad = None
@@ -70,9 +68,9 @@ class Sequential(Layer):
             x = layer(x)
         return x
 
-    def update(self, learning_rate: float):
+    def update(self, optimiser: Optimiser):
         for layer in self.layers:
-            layer.update(learning_rate)
+            layer.update(optimiser)
 
     def zero_grad(self):
         for layer in self.layers:
