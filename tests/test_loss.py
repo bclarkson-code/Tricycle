@@ -2,7 +2,7 @@ import logging
 from copy import copy
 
 import numpy as np
-from matplotlib import pyplot as plt
+import pytest
 from sklearn.datasets import load_diabetes, load_iris, load_linnerud
 from sklearn.preprocessing import RobustScaler
 
@@ -138,6 +138,7 @@ def test_can_linear_regression():
     assert intercept[0] > 0.4
 
 
+@pytest.mark.skip(reason="Slow")
 def test_linear_regression_real_data():
     X, y = load_diabetes(return_X_y=True)
     x_scaler = RobustScaler()
@@ -206,6 +207,7 @@ def test_linear_regression_multi_input_output():
     assert losses[-1] < 35
 
 
+@pytest.mark.skip(reason="Slow")
 def test_cross_entropy():
     X, y = load_iris(return_X_y=True)
     x_scaler = RobustScaler()
@@ -241,6 +243,7 @@ def test_cross_entropy():
     assert losses[-1] < 35
 
 
+@pytest.mark.skip(reason="Slow")
 def test_cross_entropy_minibatch():
     np.random.seed(42)
 

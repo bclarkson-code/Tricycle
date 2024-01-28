@@ -1,9 +1,10 @@
+import uuid
 from copy import deepcopy
 
 import numpy as np
 
 from tricycle.binary import badd, bdiv, bmul, bsub
-from tricycle.ops import to_tensor
+from tricycle.ops import Tensor, to_tensor
 from tricycle.unary import uadd, udiv, umul, usub
 
 
@@ -62,3 +63,13 @@ def test_can_pow_tensors():
     tensor_1 = to_tensor(np.arange(12).reshape(3, 4))
 
     assert np.allclose(tensor_1**2, pow(tensor_1, 2))
+
+
+def test_tensors_have_uuid():
+    tensor_1 = Tensor([1, 2, 3])
+    assert tensor_1.uuid
+    assert isinstance(tensor_1.uuid, uuid.UUID)
+
+    tensor_2 = to_tensor([1, 2, 3])
+    assert tensor_2.uuid
+    assert isinstance(tensor_2.uuid, uuid.UUID)

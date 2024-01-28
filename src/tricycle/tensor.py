@@ -1,11 +1,8 @@
 import logging
-from collections import defaultdict
+import uuid
 from typing import Callable, Dict, List, Optional, Tuple
 
-import networkx as nx
 import numpy as np
-from matplotlib import pyplot as plt
-from networkx.drawing.nx_pydot import graphviz_layout
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +176,18 @@ class Tensor(np.ndarray):
         name = f", name={self.name}" if self.name is not None else ""
         return f"Tensor({self.__str__()}{name})"
 
+    def __new__(
+        cls, shape, dtype=float, buffer=None, offset=0, strides=None, order=None
+    ):
+        obj = super().__new__(cls, shape, dtype, buffer, offset, strides, order)
+        obj.uuid = uuid.uuid4()
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self.uuid = getattr(obj, "uuid", None)
+
 
 def to_tensor(
     *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
@@ -190,4 +199,5 @@ def to_tensor(
     result = np.asarray(*args, **kwargs).view(Tensor)
     result.name = name
     result.requires_grad = requires_grad
+    result.uuid = uuid.uuid4()
     return result
