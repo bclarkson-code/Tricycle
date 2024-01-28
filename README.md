@@ -15,17 +15,15 @@ Python and Numpy.
 
 Here are some things you can do with Tricycle:
 - Create a tensor object
-- Simple operations (addition, exponentiation, cosine, ...) on tensors
+- Perform operations (addition, exponentiation, cosine, ...) on tensors
 - Automatic differentiation of tensors
 - Manipulate tensors with [einstein notation](https://en.wikipedia.org/wiki/Einstein_notation)
-- Successfully train a simple neural network
+- Successfully train deep learning models
 
 Here are some things you can't do with Tricycle (yet):
-- Use a loss function that is not mean squared error
-- Do anything efficiently
+- Do anything at the speed of pytorch
 - Use any built in layers, optimisers, regularisation techniques etc
 - Use a GPU
-- Do anything actually useful
 
 If you want to do these things, you should check out [pytorch](https://pytorch.org/)
 
