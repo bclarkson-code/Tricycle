@@ -27,24 +27,13 @@ class Tensor(np.ndarray):
     requires_grad: bool = False
     show_graph = False
 
-    # TODO: clean up this unholy mess
-    def backward(self):
+    def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
         stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
-        leaves: Dict[int, Tensor] = {}
-        # this is for plotting a graph, not needed for autodiff
-        edges = defaultdict(list)
-        nodes = {}
-        labels = {}
-        graph = nx.DiGraph()
+        differentiable_params: Dict[int, Tensor] = {}
 
         # Find every route to a differentiable parameter
         while stack:
             current_node, current_gradient = stack.pop()
-            nodes[hash(current_node)] = current_node
-            if current_node.name:
-                labels[hash(current_node)] = current_node.name
-            else:
-                labels[hash(current_node)] = str(current_node)
 
             # At leaf node
             if current_node.args is None:
@@ -52,51 +41,44 @@ class Tensor(np.ndarray):
                     current_node._grad_fn = [current_gradient]
                 else:
                     current_node._grad_fn.append(current_gradient)
-                if hash(current_node) not in leaves:
-                    leaves[hash(current_node)] = current_node
+                if hash(current_node) not in differentiable_params:
+                    differentiable_params[hash(current_node)] = current_node
 
             else:
                 for arg, op in zip(current_node.args, current_node.back_fn):
-                    if hash(arg) not in edges:
-                        edges[(hash(current_node))].append(hash(arg))
-
                     if not arg.requires_grad:
-                        nodes[hash(arg)] = arg
-                        labels[hash(arg)] = arg.name or str(arg)
                         continue
 
                     new_gradient = current_gradient + [op]
                     stack.append((arg, new_gradient))
+        return differentiable_params
 
-        # calculate the gradient for each parameter
-        for leaf in leaves.values():
-            if leaf._grad_fn is None:
-                continue
+    def _calculate_gradient(self, param: "Tensor") -> None:
+        """
+        Calculate the gradient for a single parameter in the computational
+        graph
+        """
+        if param._grad_fn is None:
+            return
 
-            for path in leaf._grad_fn:
-                grad = np.ones_like(self).view(Tensor)
-                grad.requires_grad = False
+        for path in param._grad_fn:
+            grad = np.ones_like(self).view(Tensor)
+            grad.requires_grad = False
 
-                for op in path:
-                    grad = op(grad)
+            for op in path:
+                grad = op(grad)
 
-                leaf.grad = grad if leaf.grad is None else leaf.grad + grad
-            leaf._grad_fn = None
+            param.grad = grad if param.grad is None else param.grad + grad
+        param._grad_fn = None
 
-        if self.show_graph:
-            graph.add_nodes_from(nodes)
-            for node, connections in edges.items():
-                for c in connections:
-                    graph.add_edge(c, node)
-            nx.draw(
-                graph,
-                pos=graphviz_layout(graph, prog="dot"),
-                labels=labels,
-                with_labels=True,
-                node_size=1000,
-            )
-            plt.savefig("graph.png")
-            plt.show()
+    def backward(self):
+        """
+        Perform a backward pass through the graph, calculating the gradient
+        for each parameter
+        """
+        params = self._find_differentiable_params()
+        for param in params.values():
+            self._calculate_gradient(param)
 
     def __hash__(self) -> int:
         return id(self)
