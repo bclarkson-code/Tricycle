@@ -38,7 +38,7 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     )
     indices = ascii_letters[: len(tensor.shape)]
     subscripts = f"{indices},{indices}->{indices}"
-    result = einsum(subscripts, tensor, constant_tensor)
+    result = einsum(subscripts)(tensor, constant_tensor)
     result.name = f"* {constant}"
     return result
 

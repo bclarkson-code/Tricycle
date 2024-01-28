@@ -58,8 +58,8 @@ class Dataset:
                 input_batch.append(inp)
                 output_batch.append(out)
                 idx += 1
-            batched_inputs.append(input_batch)
-            batched_outputs.append(output_batch)
+            batched_inputs.append(np.vstack(input_batch))
+            batched_outputs.append(np.vstack(output_batch))
         self.inputs = batched_inputs
         self.outputs = batched_outputs
         self._indices = list(range(len(batched_inputs)))

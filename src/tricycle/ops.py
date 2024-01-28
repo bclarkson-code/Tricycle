@@ -1,33 +1,51 @@
 from functools import partial
 from string import ascii_lowercase
+from typing import Sequence
 
 import numpy as np
 
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor, to_tensor
 
 
-def einsum(subscripts, tensor_1, tensor_2):
-    """
-    Use einstein notation to combine two tensors
-    """
-    indices, output = _parse_subscripts(subscripts)
-    if len(indices) != 2:
-        raise NotImplementedError("Can only perform einsum on two tensors")
+class AlreadyVectorised(Exception):
+    pass
 
-    result = to_tensor(np.einsum(subscripts, tensor_1, tensor_2))
 
-    # The rule for differentiating einsum is to swap the indices
-    # of the output and input being differentiated
-    left_subscript = f"{output},{indices[1]}->{indices[0]}"
-    right_subscript = f"{indices[0]},{output}->{indices[1]}"
-    result.args = (tensor_1, tensor_2)
+class einsum:
+    def __init__(self, subscript: str):
+        self.subscript = subscript
+        self.indices, self.output = _parse_subscripts(subscript)
 
-    left_back_fn = partial(einsum, left_subscript, tensor_2=tensor_2)
-    right_back_fn = partial(einsum, right_subscript, tensor_1)
-    result.back_fn = (left_back_fn, right_back_fn)
-    result.name = f"einsum {subscripts}"
+    def _generate_back_fns(self, tensors: Sequence[Tensor]):
+        assert len(tensors) == len(self.indices)
+        back_functions = []
+        for idx in range(len(tensors)):
 
-    return result
+            def back_fn(tensor: Tensor, idx: int = idx):
+                left_tensors = tensors[:idx]
+                left_subscript = self.indices[:idx]
+
+                right_tensors = tensors[idx + 1 :] if idx < len(tensors) - 1 else []
+                right_subscript = (
+                    self.indices[idx + 1 :] if idx < len(tensors) - 1 else []
+                )
+
+                subscript = left_subscript + [self.output] + right_subscript
+                subscript = ",".join(subscript) + "->" + self.indices[idx]
+
+                fn_args = [*left_tensors, tensor, *right_tensors]
+                return einsum(subscript)(*fn_args)
+
+            back_functions.append(back_fn)
+
+        return back_functions
+
+    def __call__(self, *tensors: Tensor):
+        result = to_tensor(np.einsum(self.subscript, *tensors))
+        result.args = tuple(tensors)
+        result.back_fn = tuple(self._generate_back_fns(tensors))
+        result.name = f"einsum {self.subscript}"
+        return result
 
 
 def repeat(subscripts, tensor, out_shape):
@@ -51,7 +69,7 @@ def repeat(subscripts, tensor, out_shape):
 
     ones = to_tensor(np.ones(one_shape), requires_grad=False)
     new_subscript = f"{one_indices},{index}->{output}"
-    return einsum(new_subscript, ones, tensor)
+    return einsum(new_subscript)(ones, tensor)
 
 
 def _parse_subscripts(subscripts: str) -> tuple[list[str], str]:
@@ -76,16 +94,15 @@ def softmax(tensor):
     dimension of the tensor
     Note: the tensor is normalised for numeric stability
     """
-    from tricycle.reduce import radd
     from tricycle.binary import bdiv
+    from tricycle.reduce import radd
     from tricycle.unary import uexp
 
     indices = ascii_lowercase[: len(tensor.shape)]
     reduce_subscript = f"{indices}->{indices[:-1]}"
 
     expand_subscript = f"{indices[:-1]}->{indices}"
-    # largest = repeat(expand_subscript, largest, tensor.shape)
-    normalised = tensor  #  - largest
+    normalised = tensor 
     exponentiated = uexp(normalised)
 
     denom = radd(exponentiated, reduce_subscript)
