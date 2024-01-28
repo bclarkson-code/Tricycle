@@ -80,8 +80,8 @@ def udiv(constant: float, tensor: Tensor) -> Tensor:
 
 def umax(tensor: Tensor, constant: float) -> Tensor:
     """
-    If only a tensor is passed, find the max of the tensor.
-    If a constant is passed, find the max of the tensor and the constant, elementwise. The constant is not differentiable.
+    Return the max of the tensor and the constant,
+    elementwise. The constant is not differentiable.
     """
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
@@ -99,8 +99,8 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
 
 def umin(tensor: Tensor, constant: float) -> Tensor:
     """
-    Min a tensor by a constant, elementwise. The constant is not
-    differentiable.
+    Return the max of the tensor and the constant,
+    elementwise. The constant is not differentiable.
     """
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
