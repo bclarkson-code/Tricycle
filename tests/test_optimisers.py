@@ -138,3 +138,6 @@ def test_can_train_simple_neural_network_momentum():
             assert layer_2.weights.uuid in optimiser.momentum_store
 
     assert losses[-1] < 0.3
+
+    plt.plot(losses)
+    plt.show()

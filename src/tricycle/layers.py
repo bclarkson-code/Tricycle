@@ -53,6 +53,33 @@ class Dense(Layer):
         self._forward_op = einsum("za,ab->zb")
         return self
 
+class Attention(Layer):
+    """
+    Basic (non-self) attention
+    """
+    weights: Tensor
+    in_features: int
+    out_features: int
+    _forward_op: einsum
+
+    def __init__(self, in_features: int, out_features: int, initialiser=init_xavier):
+        self.weights = initialiser((in_features, out_features), name="weights")
+        self.in_features = in_features
+        self.out_features = out_features
+        self._forward_op = einsum("a,ab->b")
+
+    def forward(self, x: Tensor):
+        return self._forward_op(x, self.weights)
+
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
+
+    def zero_grad(self):
+        self.weights.grad = None
+
+    def vectorise(self) -> "Dense":
+        self._forward_op = einsum("za,ab->zb")
+        return self
 
 class Sequential(Layer):
     layers: Sequence[Layer]
