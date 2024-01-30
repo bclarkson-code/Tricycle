@@ -43,7 +43,7 @@ class einsum:
     def __call__(self, *tensors: Tensor):
         result = to_tensor(np.einsum(self.subscript, *tensors))
         result.args = tuple(tensors)
-        result.back_fn = tuple(self._generate_back_fns(tensors))
+        result.back_fns = tuple(self._generate_back_fns(tensors))
         result.name = f"einsum {self.subscript}"
         return result
 

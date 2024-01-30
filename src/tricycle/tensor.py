@@ -18,7 +18,7 @@ class Tensor(np.ndarray):
     _id: int
     _grad_fn: Optional[List[List[Op]]] = None
     args: tuple["Tensor", ...] | None = None
-    back_fn: tuple[Op, ...] | None = None
+    back_fns: tuple[Op, ...] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
@@ -48,7 +48,7 @@ class Tensor(np.ndarray):
 
             # At non-leaf node
             else:
-                for arg, op in zip(current_node.args, current_node.back_fn):
+                for arg, op in zip(current_node.args, current_node.back_fns):
                     if not arg.requires_grad:
                         continue
 
