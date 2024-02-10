@@ -40,3 +40,5 @@ Tricycle is tested using [pytest](https://docs.pytest.org/en/latest/)
 poetry run pytest
 ```
 
+## Contact
+To get in touch, you can send an email to: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
