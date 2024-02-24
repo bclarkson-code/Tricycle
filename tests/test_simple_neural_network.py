@@ -1,5 +1,5 @@
 import numpy as np
-from tricycle.optimisers import StochasticGradientDescent
+import pytest
 from matplotlib import pyplot as plt
 from sklearn.datasets import load_iris
 
@@ -7,9 +7,9 @@ from tricycle.activation import ReLU
 from tricycle.dataset import Dataset
 from tricycle.layers import Dense, Sequential
 from tricycle.loss import CrossEntropy
+from tricycle.optimisers import StochasticGradientDescent
 from tricycle.reduce import radd
 from tricycle.tensor import to_tensor
-import pytest
 
 
 @pytest.mark.skip

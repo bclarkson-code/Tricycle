@@ -20,10 +20,14 @@ pydot = "^2.0.0"
 graphviz = "^0.20.1"
 pytest-xdist = "^3.5.0"
 ipython = "^8.20.0"
+pre-commit = "^3.6.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
 isort = "^5.13.0"
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core"]

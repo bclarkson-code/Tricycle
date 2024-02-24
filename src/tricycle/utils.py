@@ -31,7 +31,6 @@ def smooth(iterable: Iterable, factor: float):
         prev = val
 
 
-
 def r_squared(actual_values, predicted_values):
     """
     calculate R-squared metric.
@@ -44,4 +43,3 @@ def r_squared(actual_values, predicted_values):
     rss = np.sum((actual_values - predicted_values) ** 2)
 
     return 1 - (rss / tss)
-
