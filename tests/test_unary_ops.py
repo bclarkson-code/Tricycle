@@ -3,8 +3,19 @@ from copy import copy
 import numpy as np
 
 from tricycle.ops import einsum, to_tensor
-from tricycle.unary import (uadd, ucos, udiv, uexp, ulog, umax, umin, umul,
-                            upow, usin, usub)
+from tricycle.unary import (
+    uadd,
+    ucos,
+    udiv,
+    uexp,
+    ulog,
+    umax,
+    umin,
+    umul,
+    upow,
+    usin,
+    usub,
+)
 
 
 def test_can_add():
@@ -25,7 +36,7 @@ def test_can_differentiate_einsum():
     left = to_tensor(np.arange(12).reshape(3, 4))
     right = to_tensor(np.arange(12).reshape(4, 3))
 
-    out_tensor = einsum("ij,jk->ik")( left, right)
+    out_tensor = einsum("ij,jk->ik")(left, right)
 
     assert out_tensor.shape == (3, 3)
     assert np.allclose(
