@@ -54,34 +54,55 @@ class Dense(Layer):
         return self
 
 
-class Attention(Layer):
+class SelfAttention(Layer):
     """
-    Basic (non-self) attention
+    Multi-head self-attention
     """
 
-    weights: Tensor
-    in_features: int
-    out_features: int
-    _forward_op: einsum
+    embedding_dim: int
+    n_heads: int
+    dropout: float
 
-    def __init__(self, in_features: int, out_features: int, initialiser=init_xavier):
-        self.weights = initialiser((in_features, out_features), name="weights")
-        self.in_features = in_features
-        self.out_features = out_features
-        self._forward_op = einsum("a,ab->b")
+    def __init__(
+        self, embedding_dim: int, n_heads: int, dropout: float, initialiser=init_xavier
+    ):
+        # set the constants
+        self.embedding_dim = embedding_dim
+        self.n_heads = n_heads
+        self.dropout = dropout
+
+        # Initialise the weights before and after the actual attention
+        # mechanism. There aren't actually any weights in the attention bit
+        # only before and after
+
+        # Project the embedding into 3 embeddings. One for each of key, query
+        # and value
+        self.in_projection = Dense(
+            in_features=self.embedding_dim,
+            out_features=self.embedding_dim * 3,
+            initialiser=initialiser,
+        )
+
+        # Pass the final embedding through a linear layer
+        self.out_projection = Dense(
+            in_features=self.embedding_dim,
+            out_features=self.embedding_dim,
+            initialiser=initialiser,
+        )
 
     def forward(self, x: Tensor):
-        return self._forward_op(x, self.weights)
+        # use the projection layer to expand the inoput embedding
+        x = self.in_projection(x)
+
+        # split the embedding into key, query and value
+        # TODO: implement split
+        key, query, value = split(x, 3)
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)
 
     def zero_grad(self):
         self.weights.grad = None
-
-    def vectorise(self) -> "Dense":
-        self._forward_op = einsum("za,ab->zb")
-        return self
 
 
 class Sequential(Layer):

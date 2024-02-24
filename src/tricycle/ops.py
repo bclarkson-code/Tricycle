@@ -108,3 +108,20 @@ def softmax(tensor):
     denom = radd(exponentiated, reduce_subscript)
     denom = repeat(expand_subscript, denom, tensor.shape)
     return bdiv(exponentiated, denom)
+
+
+def split(tensor, n_splits: int) -> list[Tensor]:
+    """
+    Split a tensor along an axis into n_splits pieces
+    """
+    assert len(tensor.shape) == 1, "Tensor must be a vector"
+    zeros = np.zeros(tensor.shape, dtype=tensor.dtype)
+    [ones_shape] = tensor.shape
+    ones_shape /= n_splits
+    assert ones_shape.is_integer()
+
+    splits = []
+    for split_idx in range(n_splits):
+        offset = split_idx * ones_shape
+        indicator = zeros.copy()
+        indicator[offset : offset + ones_shape] = 1
