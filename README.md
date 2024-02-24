@@ -6,11 +6,11 @@ Ever wanted to learn how a deep learning framework *actually* works under the ho
 Want to do anything else? Check out [pytorch](https://pytorch.org/)
 
 ## Overview
-Tricycle is a minimal framework for deep learning. The goal of this library is 
-not to build anything useful, but instead to get a good understanding of how 
-deep learning works at every level. It is built using nothing but standard 
+Tricycle is a minimal framework for deep learning. The goal of this library is
+not to build anything useful, but instead to get a good understanding of how
+deep learning works at every level. It is built using nothing but standard
 Python and Numpy which means that everything from automatic differentiation
-to loss functions should (theoretically) be understandable to anyone who knows 
+to loss functions should (theoretically) be understandable to anyone who knows
 Python and Numpy.
 
 Here are some things you can do with Tricycle:
@@ -22,13 +22,13 @@ Here are some things you can do with Tricycle:
 
 Here are some things you can't do with Tricycle (yet):
 - Do anything at the speed of pytorch
-- Use any built in layers, optimisers, regularisation techniques etc
+- Perform more advanced operations like Attention
 - Use a GPU
 
 If you want to do these things, you should check out [pytorch](https://pytorch.org/)
 
 ## Installation
-Tricycle uses [poetry](https://python-poetry.org/) to manage dependencies. Assuming it is installed, you 
+Tricycle uses [poetry](https://python-poetry.org/) to manage dependencies. Assuming it is installed, you
 can install Tricycle by running:
 ```bash
 poetry install
@@ -40,3 +40,5 @@ Tricycle is tested using [pytest](https://docs.pytest.org/en/latest/)
 poetry run pytest
 ```
 
+## Contact
+To get in touch, you can send an email to: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)

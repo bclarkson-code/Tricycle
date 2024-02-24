@@ -102,7 +102,7 @@ def softmax(tensor):
     reduce_subscript = f"{indices}->{indices[:-1]}"
 
     expand_subscript = f"{indices[:-1]}->{indices}"
-    normalised = tensor 
+    normalised = tensor
     exponentiated = uexp(normalised)
 
     denom = radd(exponentiated, reduce_subscript)
