@@ -1,3 +1,5 @@
+import functools
+import operator
 from functools import partial
 from string import ascii_lowercase
 from typing import Sequence
@@ -110,25 +112,44 @@ def softmax(tensor):
     return bdiv(exponentiated, denom)
 
 
-def split(tensor, n_splits: int) -> list[Tensor]:
+def split(tensor: Tensor, n_splits: int) -> list[Tensor]:
     # sourcery skip: remove-unnecessary-cast
     """
-    Split a tensor along an axis into n_splits pieces
+    Split a tensor along its final axis into n_splits pieces
     """
-    assert len(tensor.shape) == 1, "Tensor must be a vector"
-    [out_dim] = tensor.shape
-    out_dim /= n_splits
-    assert out_dim.is_integer()
-    out_dim = int(out_dim)
-    zeros = np.zeros((tensor.shape[0], out_dim), dtype=tensor.dtype)
+    assert tensor.shape[-1] % n_splits == 0
+
+    # figure out the shape of the indicator
+    out_shape = list(tensor.shape)
+    out_dim = out_shape[-1] // n_splits
+    zeros_shape = list(tensor.shape) + [out_dim]
+    zeros = np.zeros(shape=tuple(zeros_shape), dtype=tensor.dtype)
 
     splits = []
     for split_idx in range(n_splits):
-        offset = split_idx * out_dim
         indicator = zeros.copy()
-        indicator[offset : offset + out_dim] = np.eye(out_dim)
+        start = split_idx * out_dim
+        end = start + out_dim
+        indicator[..., start:end, :] = np.eye(out_dim, out_dim)
         indicator = to_tensor(indicator, requires_grad=False)
-        op = einsum("i,ij->j")
+
+        shared_indices = ascii_lowercase[: len(tensor.shape) - 1]
+        op = einsum(f"{shared_indices}y,{shared_indices}yz->{shared_indices}z")
         splits.append(op(tensor, indicator))
 
     return splits
+
+
+def reshape(tensor: Tensor, shape: tuple[int, ...]) -> Tensor:
+    """
+    Reshape a tensor
+    """
+    tensor_elements = functools.reduce(operator.mul, tensor.shape)
+    out_elements = functools.reduce(operator.mul, shape)
+    assert np.allclose(tensor_elements, out_elements)
+
+    result = to_tensor(np.reshape(tensor, shape), requires_grad=tensor.requires_grad)
+    result.args = (tensor,)
+    # back fn is just reverse reshape
+    result.back_fns = (lambda x: np.reshape(x.data, tensor.shape),)
+    return result
