@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import Sequence
 
 from tricycle.initialisers import init_xavier
-from tricycle.ops import einsum
+from tricycle.ops import einsum, split
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -95,7 +95,6 @@ class SelfAttention(Layer):
         x = self.in_projection(x)
 
         # split the embedding into key, query and value
-        # TODO: implement split
         key, query, value = split(x, 3)
 
     def update(self, optimiser: Optimiser):

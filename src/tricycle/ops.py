@@ -111,17 +111,24 @@ def softmax(tensor):
 
 
 def split(tensor, n_splits: int) -> list[Tensor]:
+    # sourcery skip: remove-unnecessary-cast
     """
     Split a tensor along an axis into n_splits pieces
     """
     assert len(tensor.shape) == 1, "Tensor must be a vector"
-    zeros = np.zeros(tensor.shape, dtype=tensor.dtype)
-    [ones_shape] = tensor.shape
-    ones_shape /= n_splits
-    assert ones_shape.is_integer()
+    [out_dim] = tensor.shape
+    out_dim /= n_splits
+    assert out_dim.is_integer()
+    out_dim = int(out_dim)
+    zeros = np.zeros((tensor.shape[0], out_dim), dtype=tensor.dtype)
 
     splits = []
     for split_idx in range(n_splits):
-        offset = split_idx * ones_shape
+        offset = split_idx * out_dim
         indicator = zeros.copy()
-        indicator[offset : offset + ones_shape] = 1
+        indicator[offset : offset + out_dim] = np.eye(out_dim)
+        indicator = to_tensor(indicator, requires_grad=False)
+        op = einsum("i,ij->j")
+        splits.append(op(tensor, indicator))
+
+    return splits
