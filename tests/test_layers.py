@@ -158,7 +158,7 @@ def test_attention_combined():
     n_heads = 2
     n_tokens = 10
 
-    np.random.seed(0)
+    np.random.seed(1)
 
     key = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
     query = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
@@ -168,13 +168,12 @@ def test_attention_combined():
     qu = torch.from_numpy(query)
     v = torch.from_numpy(value)
 
-    out_weights = np.random.uniform(-5, 5, (embedding_dim, embedding_dim))
-
     pytorch_attention = torch.nn.functional.scaled_dot_product_attention(
         qu,
         k,
         v,
         attn_mask=None,
+        dropout_p=0,
         is_causal=True,
     )
     attention = MultiHeadSelfAttention(
