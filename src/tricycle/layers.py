@@ -57,7 +57,7 @@ class Dense(Layer):
         return self
 
 
-class SelfAttention(Layer):
+class MultiHeadSelfAttention(Layer):
     """
     Multi-head self-attention
     """
@@ -106,13 +106,7 @@ class SelfAttention(Layer):
         self.mask[~idx] = -np.inf
         self.mask[idx] = 0
 
-    def forward(self, x: Tensor):
-        # use the projection layer to expand the inoput embedding
-        x = self.in_projection(x)
-
-        # split the embedding into key, query and value
-        key, query, value = split(x, 3)
-
+    def _attention(self, key: Tensor, query: Tensor, value: Tensor):
         # reshape into n_heads x embedding_dim
         head_size = self.embedding_dim // self.n_heads
         n_tokens = key.shape[0]
@@ -148,7 +142,16 @@ class SelfAttention(Layer):
         # smush the heads back together
         attention = einsum("nij,njh->nih")(attention, value)
         attention = swap(attention)
-        attention = reshape(attention, (n_tokens, self.embedding_dim))
+        return reshape(attention, (n_tokens, self.embedding_dim))
+
+    def forward(self, x: Tensor):
+        # use the projection layer to expand the inoput embedding
+        x = self.in_projection(x)
+
+        # split the embedding into key, query and value
+        key, query, value = split(x, 3)
+
+        attention = self._attention(key, query, value)
 
         # project back
         return self.out_projection(attention)

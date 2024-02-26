@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from tricycle.binary import badd
-from tricycle.layers import Dense, Sequential
+from tricycle.layers import Dense, MultiHeadSelfAttention, Sequential
 from tricycle.ops import einsum, reshape, softmax, split, to_tensor
 
 
@@ -32,7 +32,7 @@ def test_sequential_layer():
     assert x_out.shape == (4,)
 
 
-def test_attention():
+def test_attention_individually():
     """
     This operation is pretty complex so we'll perform each stage
     with pytorch and then compare the results
@@ -147,5 +147,40 @@ def test_attention():
     attention = swap(attention)
     attention = reshape(attention, (n_tokens, embedding_dim))
 
-    breakpoint()
     assert np.allclose(att.numpy(), attention)
+
+
+def test_attention_combined():
+    """
+    Compare Tricycle attention with pytorch's MultiheadAttention
+    """
+    embedding_dim = 10
+    n_heads = 2
+    n_tokens = 10
+
+    np.random.seed(0)
+
+    key = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
+    query = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
+    value = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
+
+    k = torch.from_numpy(key)
+    qu = torch.from_numpy(query)
+    v = torch.from_numpy(value)
+
+    out_weights = np.random.uniform(-5, 5, (embedding_dim, embedding_dim))
+
+    pytorch_attention = torch.nn.functional.scaled_dot_product_attention(
+        qu,
+        k,
+        v,
+        attn_mask=None,
+        is_causal=True,
+    )
+    attention = MultiHeadSelfAttention(
+        embedding_dim, n_heads, context_window=32, dropout=0
+    )
+    tricycle_attention = attention._attention(to_tensor(k), to_tensor(qu), to_tensor(v))
+
+    breakpoint()
+    assert np.allclose(tricycle_attention, pytorch_attention.numpy())
