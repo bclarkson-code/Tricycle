@@ -150,6 +150,17 @@ def test_attention_individually():
     assert np.allclose(att.numpy(), attention)
 
 
+def andrej_attention(q, k, v, T, bias):
+    import math
+
+    from torch.nn import functional as F
+
+    att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+    att = att.masked_fill(bias[:, :, :T, :T] == 0, float("-inf"))
+    att = F.softmax(att, dim=-1)
+    return att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+
+
 def test_attention_combined():
     """
     Compare Tricycle attention with pytorch's MultiheadAttention
@@ -180,6 +191,7 @@ def test_attention_combined():
         embedding_dim, n_heads, context_window=32, dropout=0
     )
     tricycle_attention = attention._attention(to_tensor(k), to_tensor(qu), to_tensor(v))
+    andrej = andrej_attention(qu, k, v, n_tokens, attention.mask)
 
     breakpoint()
     assert np.allclose(tricycle_attention, pytorch_attention.numpy())
