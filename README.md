@@ -22,7 +22,6 @@ Here are some things you can do with Tricycle:
 
 Here are some things you can't do with Tricycle (yet):
 - Do anything at the speed of pytorch
-- Perform more advanced operations like Attention
 - Use a GPU
 
 If you want to do these things, you should check out [pytorch](https://pytorch.org/)
