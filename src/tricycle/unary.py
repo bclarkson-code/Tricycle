@@ -3,6 +3,7 @@ from functools import partial
 from string import ascii_letters
 
 import numpy as np
+from numpy.core.numeric import isscalar
 
 from tricycle.ops import Einsum, nothing
 from tricycle.tensor import Tensor, to_tensor
@@ -38,6 +39,9 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
         np.full_like(tensor, constant, dtype=float), requires_grad=False
     )
     constant_tensor.is_vector = tensor.is_vector
+
+    if tensor.is_vector and len(tensor.shape) == 1 or len(tensor.shape) == 0:
+        return Einsum(",->")(tensor, constant_tensor)
     return Einsum("a,a->a")(tensor, constant_tensor)
 
 

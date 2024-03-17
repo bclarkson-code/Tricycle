@@ -5,10 +5,6 @@ from tricycle.reduce import rmax
 from tricycle.tensor import Tensor, to_tensor
 
 
-class AlreadyVectorised(Exception):
-    pass
-
-
 def repeat(subscript: Subscript | str, tensor: Tensor, repeats: int):
     """
     Repeat a tensor along some indices, according to the subscript.

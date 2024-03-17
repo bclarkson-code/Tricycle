@@ -102,7 +102,9 @@ class Tensor(np.ndarray):
 
             return badd(self, other)
         else:
-            raise NotImplementedError(f"Cannot add {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot add {type(self)} and {type(other)}"
+            )
 
     def __iadd__(self, other):
         return self + other
@@ -120,7 +122,9 @@ class Tensor(np.ndarray):
             return bsub(self, other)
 
         else:
-            raise NotImplementedError(f"Cannot sub {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot sub {type(self)} and {type(other)}"
+            )
 
     def __isub__(self, other):
         return -1 * (other - self)
@@ -139,7 +143,9 @@ class Tensor(np.ndarray):
             return bmul(self, other)
 
         else:
-            raise NotImplementedError(f"Cannot mul {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot mul {type(self)} and {type(other)}"
+            )
 
     def __imul__(self, other):
         return self * other
@@ -158,7 +164,9 @@ class Tensor(np.ndarray):
             return bdiv(self, other)
 
         else:
-            raise NotImplementedError(f"Cannot divide {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot divide {type(self)} and {type(other)}"
+            )
 
     def __itruediv__(self, other):
         return self / other
@@ -192,7 +200,9 @@ class Tensor(np.ndarray):
         strides=None,
         order=None,
     ):
-        obj = super().__new__(cls, shape, dtype, buffer, offset, strides, order)
+        obj = super().__new__(
+            cls, shape, dtype, buffer, offset, strides, order
+        )
         obj.uuid = uuid.uuid4()
         return obj
 

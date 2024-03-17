@@ -7,13 +7,28 @@ from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import udiv, umul
 
 
+def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
+    # sourcery skip: assign-if-exp
+    if tensor_1.is_vector:
+        shape_1 = tensor_1.shape[1:]
+    else:
+        shape_1 = tensor_1.shape
+
+    if tensor_2.is_vector:
+        shape_2 = tensor_2.shape[1:]
+    else:
+        shape_2 = tensor_2.shape
+
+    return shape_1 == shape_2
+
+
 def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     """
     Add the elements of two tensors together, elementwise
 
     The two tensors must have the same shape
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(np.add(tensor_1, tensor_2))
 
@@ -33,7 +48,7 @@ def bsub(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     return badd(tensor_1, umul(tensor_2, -1))
 
@@ -44,7 +59,8 @@ def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
-    assert tensor_1.shape == tensor_2.shape
+    breakpoint()
+    assert _shapes_match(tensor_1, tensor_2)
 
     result = Einsum("a,a->a")(tensor_1, tensor_2)
     result.name = "bmul"
@@ -68,7 +84,7 @@ def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(np.maximum(tensor_1, tensor_2))
 
@@ -93,7 +109,7 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(np.minimum(tensor_1, tensor_2))
 

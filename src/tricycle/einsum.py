@@ -51,8 +51,10 @@ class Einsum:
         Figure out the backward operation for each input
         """
         assert len(tensors) == len(subscript.inputs)
-        # we dont want to re-vectorise the input
-        subscript = Subscript(subscript.subscript.replace("z", ""))
+
+        for idx in range(len(tensors)):
+            tensors[idx].is_vector = False
+
         back_functions = []
         for idx in range(len(tensors)):
 
@@ -74,7 +76,11 @@ class Einsum:
                     right_subscript = []
 
                 combined_tensors = [*left_tensors, tensor, *right_tensors]
-                combined_indices = [*left_subscript, subscript.output, *right_subscript]
+                combined_indices = [
+                    *left_subscript,
+                    subscript.output,
+                    *right_subscript,
+                ]
 
                 combined_subscript = Subscript.from_split(
                     combined_indices, subscript.inputs[idx]
@@ -107,7 +113,7 @@ class Einsum:
             return subscript, tensors
 
         [tensor] = tensors
-        ones = to_tensor(np.ones_like(tensor))
+        ones = to_tensor(np.ones_like(tensor), is_vector=tensor.is_vector)
         tensors = [tensor, ones]
 
         [index] = subscript.inputs
