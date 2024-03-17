@@ -188,6 +188,11 @@ class Tensor(np.ndarray):
             return
         self.uuid = getattr(obj, "uuid", None)
 
+    def e(self, subscript: str) -> "Tensor":
+        from tricycle.ops import einsum
+
+        return einsum(subscript)(self)
+
 
 def to_tensor(
     *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
