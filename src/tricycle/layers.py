@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import Sequence
 
+from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
-from tricycle.ops import einsum
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -23,22 +23,18 @@ class Layer:
     def zero_grad(self):
         raise NotImplementedError
 
-    @abstractmethod
-    def vectorise(self) -> "Layer":
-        raise NotImplementedError
-
 
 class Dense(Layer):
     weights: Tensor
     in_features: int
     out_features: int
-    _forward_op: einsum
+    _forward_op: Einsum
 
     def __init__(self, in_features: int, out_features: int, initialiser=init_xavier):
         self.weights = initialiser((in_features, out_features), name="weights")
         self.in_features = in_features
         self.out_features = out_features
-        self._forward_op = einsum("a,ab->b")
+        self._forward_op = Einsum("a,ab->b")
 
     def forward(self, x: Tensor):
         return self._forward_op(x, self.weights)
@@ -48,10 +44,6 @@ class Dense(Layer):
 
     def zero_grad(self):
         self.weights.grad = None
-
-    def vectorise(self) -> "Dense":
-        self._forward_op = einsum("za,ab->zb")
-        return self
 
 
 class Sequential(Layer):
@@ -75,7 +67,3 @@ class Sequential(Layer):
     def zero_grad(self):
         for layer in self.layers:
             layer.zero_grad()
-
-    def vectorise(self) -> "Sequential":
-        self.layers = [layer.vectorise() for layer in self.layers]
-        return self

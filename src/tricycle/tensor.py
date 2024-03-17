@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -23,6 +23,7 @@ class Tensor(np.ndarray):
     name: Optional[str] = None
     requires_grad: bool = False
     show_graph = False
+    is_vector: bool = False
 
     def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
         """
@@ -189,13 +190,29 @@ class Tensor(np.ndarray):
         self.uuid = getattr(obj, "uuid", None)
 
     def e(self, subscript: str) -> "Tensor":
-        from tricycle.ops import einsum
+        from tricycle.einsum import Einsum
 
-        return einsum(subscript)(self)
+        return Einsum(subscript)(self)
+
+    def repeat(self, subscript: str, n_repeats: int) -> "Tensor":
+        from tricycle.ops import repeat
+
+        return repeat(subscript, self, n_repeats)
+
+    def close_to(self, other: "Tensor", **kwargs) -> bool:
+        """
+        Convenience method to check if two tensors are identical
+        to within some tolerance
+        """
+        return np.allclose(np.array(self), np.array(other), **kwargs)
 
 
 def to_tensor(
-    *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
+    *args,
+    name: Optional[str] = None,
+    requires_grad: bool = True,
+    is_vector: bool = False,
+    **kwargs,
 ) -> Tensor:
     """
     Create a new Tensor instance. First, we convert the argument to a numpy
@@ -205,4 +222,5 @@ def to_tensor(
     result.name = name
     result.requires_grad = requires_grad
     result.uuid = uuid.uuid4()
+    result.is_vector = is_vector
     return result

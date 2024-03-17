@@ -4,7 +4,7 @@ from string import ascii_letters
 
 import numpy as np
 
-from tricycle.ops import einsum, nothing
+from tricycle.ops import Einsum, nothing
 from tricycle.tensor import Tensor, to_tensor
 
 grad = False
@@ -22,6 +22,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
     result.args = (tensor,)
     result.back_fn = (nothing,)
     result.name = f"+ {constant}"
+    result.is_vector = tensor.is_vector
     return result
 
 
@@ -36,11 +37,8 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     constant_tensor = to_tensor(
         np.full_like(tensor, constant, dtype=float), requires_grad=False
     )
-    indices = ascii_letters[: len(tensor.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-    result = einsum(subscripts)(tensor, constant_tensor)
-    result.name = f"* {constant}"
-    return result
+    constant_tensor.is_vector = tensor.is_vector
+    return Einsum("a,a->a")(tensor, constant_tensor)
 
 
 def usub(tensor: Tensor, constant: float) -> Tensor:
@@ -64,8 +62,10 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     result = to_tensor(np.power(tensor, constant))
     result.args = (tensor,)
     coef = to_tensor(np.power(tensor, constant - 1))
+    coef.is_vector = tensor.is_vector
     result.back_fn = (partial(bmul, umul(coef, constant)),)
     result.name = f"^ {constant}"
+    result.is_vector = tensor.is_vector
 
     return result
 
@@ -94,6 +94,8 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
     is_bigger = to_tensor((tensor > constant).astype(float))
     result.back_fn = (partial(bmul, is_bigger),)
     result.name = f"> {constant}"
+    result.is_vector = tensor.is_vector
+
     return result
 
 
@@ -113,6 +115,7 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     is_smaller = to_tensor((tensor < constant).astype(float))
     result.back_fn = (partial(bmul, is_smaller),)
     result.name = f"< {constant}"
+    result.is_vector = tensor.is_vector
     return result
 
 
@@ -127,6 +130,7 @@ def uexp(tensor: Tensor) -> Tensor:
     result.args = (tensor,)
     result.back_fn = (partial(bmul, copy(result)),)
     result.name = "exp"
+    result.is_vector = tensor.is_vector
     return result
 
 
@@ -146,6 +150,7 @@ def ulog(tensor: Tensor) -> Tensor:
         ),
     )
     result.name = "log"
+    result.is_vector = tensor.is_vector
     return result
 
 
@@ -161,6 +166,7 @@ def usin(tensor: Tensor) -> Tensor:
     coef = to_tensor(np.cos(tensor))
     result.back_fn = (partial(bmul, coef),)
     result.name = "sin"
+    result.is_vector = tensor.is_vector
     return result
 
 
@@ -176,4 +182,5 @@ def ucos(tensor: Tensor) -> Tensor:
     coef = to_tensor(-np.sin(tensor))
     result.back_fn = (partial(bmul, coef),)
     result.name = "cos"
+    result.is_vector = tensor.is_vector
     return result
