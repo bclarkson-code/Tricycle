@@ -1,6 +1,6 @@
 import functools
 import operator
-from functools import partial
+import re
 from string import ascii_lowercase
 from typing import Sequence
 
@@ -78,6 +78,8 @@ def _parse_subscripts(subscripts: str) -> tuple[list[str], str]:
     """
     Parse a subscripts string into a list of indices and a result
     """
+    # ignore whitespace
+    subscripts = re.sub(r"\s+", "", subscripts)
     indices, result = subscripts.split("->")
     indices = indices.split(",")
     return indices, result
@@ -108,6 +110,28 @@ def softmax(tensor):
     exponentiated = uexp(normalised)
 
     denom = radd(exponentiated, reduce_subscript)
+    denom = repeat(expand_subscript, denom, tensor.shape)
+    return bdiv(exponentiated, denom)
+
+
+def softmax_v2(tensor):
+    """
+    Apply softmax. The softmax is only applied to the final
+    dimension of the tensor
+    Note: the tensor is normalised for numeric stability
+    """
+    from tricycle.binary import bdiv
+    from tricycle.reduce import radd
+    from tricycle.unary import uexp
+
+    normalised = tensor
+    exponentiated = uexp(normalised)
+
+    denom = exponentiated.e("a->")
+
+    indices = ascii_lowercase[: len(tensor.shape)]
+    expand_subscript = f"{indices[:-1]}->{indices}"
+
     denom = repeat(expand_subscript, denom, tensor.shape)
     return bdiv(exponentiated, denom)
 

@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -82,6 +82,19 @@ class Tensor(np.ndarray):
         params = self._find_differentiable_params()
         for param in params.values():
             self._calculate_gradient(param)
+
+    def e(self, subscript: str, *args):
+        """
+        Perform an einsum operation
+        """
+        from tricycle.ops import einsum
+
+        return einsum(subscript)(self, *args)
+
+    def reshape(self, shape: Sequence[int]):
+        from tricycle.ops import reshape
+
+        return reshape(self, shape)
 
     def __hash__(self) -> int:
         return id(self)

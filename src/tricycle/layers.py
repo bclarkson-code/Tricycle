@@ -144,6 +144,56 @@ class MultiHeadSelfAttention(Layer):
         attention = swap(attention)
         return reshape(attention, (n_tokens, self.embedding_dim))
 
+    def _attention_andrej(self, key: Tensor, query: Tensor, value: Tensor):
+        k = k.view(B, T, self.n_head, C // self.n_head).transpose(
+            1, 2
+        )  # (B, nh, T, hs)
+        q = q.view(B, T, self.n_head, C // self.n_head).transpose(
+            1, 2
+        )  # (B, nh, T, hs)
+        v = v.view(B, T, self.n_head, C // self.n_head).transpose(
+            1, 2
+        )  # (B, nh, T, hs)
+
+        # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
+        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        att = F.softmax(att, dim=-1)
+        y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        y = (
+            y.transpose(1, 2).contiguous().view(B, T, C)
+        )  # re-assemble all head outputs side by side
+
+    def masked_fill(self, x: Tensor, mask_shape: tuple[int, int]):
+        mask = np.stack([self.mask[: mask_shape[0], : mask_shape[1]]] * x.shape[0])
+        mask = to_tensor(mask, requires_grad=False, name="mask")
+
+        # TODO: check if this breaks the gradients
+        return badd(x, mask)
+
+    def _attention_v2(self, key: Tensor, query: Tensor, value: Tensor):
+        # reshape into n_heads x embedding_dim
+        head_size = self.embedding_dim // self.n_heads
+        n_tokens = key.shape[0]
+        split_into_heads = (
+            n_tokens,  # number of tokens
+            self.n_heads,  # number of heads
+            head_size,  # embedding per head
+        )
+        key = key.reshape(split_into_heads).e("T N H -> N T H")
+        query = query.reshape(split_into_heads).e("T N H -> N T H")
+        value = value.reshape(split_into_heads).e("T N H -> N T H")
+
+        # attend
+        attention = einsum("N I H, N J H -> N I J", query, key) / np.sqrt(head_size)
+
+        # mask and softmax
+        attention = self.masked_fill(attention, (n_tokens, n_tokens))
+        attention = softmax(attention)
+
+        # smush the heads back together
+        out_shape = (n_tokens, self.n_heads, head_size)
+        return einsum("N I J, N J H -> N H I", attention, value).reshape(out_shape)
+
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding
         x = self.in_projection(x)
