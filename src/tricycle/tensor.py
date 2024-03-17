@@ -66,8 +66,11 @@ class Tensor(np.ndarray):
             return
 
         for path in param._grad_fn:
-            grad = np.ones_like(self).view(Tensor)
-            grad.requires_grad = False
+            grad = to_tensor(
+                np.ones_like(self),
+                requires_grad=False,
+                is_vector=self.is_vector,
+            )
 
             for op in path:
                 grad = op(grad)
@@ -141,6 +144,9 @@ class Tensor(np.ndarray):
     def __imul__(self, other):
         return self * other
 
+    def __neg__(self):
+        return self * -1
+
     def __truediv__(self, other):
         if np.isscalar(other):
             from tricycle.unary import umul
@@ -178,7 +184,13 @@ class Tensor(np.ndarray):
         return f"Tensor({self.__str__()}{name})"
 
     def __new__(
-        cls, shape, dtype=float, buffer=None, offset=0, strides=None, order=None
+        cls,
+        shape,
+        dtype=float,
+        buffer=None,
+        offset=0,
+        strides=None,
+        order=None,
     ):
         obj = super().__new__(cls, shape, dtype, buffer, offset, strides, order)
         obj.uuid = uuid.uuid4()

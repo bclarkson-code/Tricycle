@@ -51,6 +51,8 @@ class Einsum:
         Figure out the backward operation for each input
         """
         assert len(tensors) == len(subscript.inputs)
+        # we dont want to re-vectorise the input
+        subscript = Subscript(subscript.subscript.replace("z", ""))
         back_functions = []
         for idx in range(len(tensors)):
 
@@ -122,11 +124,6 @@ class Einsum:
         If a tensor is labelled as being vectorised, add an extra dimension
         to its indices.
         """
-        if "z" in subscript.subscript:
-            raise ValueError(
-                "`z` cannot be used in an einsum subscript because "
-                "it is reserved for vectorised indices."
-            )
         inputs = []
         vectorise_output = False
         for idx, tensor in zip(subscript.inputs, tensors):
@@ -137,6 +134,12 @@ class Einsum:
                 inputs.append(idx)
         output = subscript.output
         if vectorise_output:
+            if "z" in subscript.subscript:
+                raise ValueError(
+                    "`z` cannot be used in an einsum subscript on "
+                    "non-vectorised tensors because "
+                    "it is reserved for vectorised indices."
+                )
             output = f"z{output}"
 
         subscript = Subscript.from_split(inputs, output)
