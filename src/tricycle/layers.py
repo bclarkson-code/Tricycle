@@ -26,18 +26,16 @@ class Layer:
 
 class Dense(Layer):
     weights: Tensor
-    in_features: int
-    out_features: int
-    _forward_op: Einsum
+    from_size: int
+    to_size: int
 
-    def __init__(self, in_features: int, out_features: int, initialiser=init_xavier):
-        self.weights = initialiser((in_features, out_features), name="weights")
-        self.in_features = in_features
-        self.out_features = out_features
-        self._forward_op = Einsum("a,ab->b")
+    def __init__(self, from_size: int, to_size: int, initialiser=init_xavier):
+        self.weights = initialiser((from_size, to_size), name="weights")
+        self.from_size = from_size
+        self.to_size = to_size
 
     def forward(self, x: Tensor):
-        return self._forward_op(x, self.weights)
+        return Einsum("a,ab->b")(x, self.weights)
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)

@@ -43,7 +43,7 @@ def test_can_train_simple_neural_network_no_wd():
 
             y_pred = model(x)
             loss = loss_fn(y, y_pred)
-            loss = radd(loss / len(x), "i->")
+            loss = radd(loss / len(x), "a->")
             loss.backward()
             losses.append(loss)
 
@@ -85,7 +85,7 @@ def test_can_train_simple_neural_network_wd():
 
             y_pred = model(x)
             loss = loss_fn(y, y_pred)
-            loss = radd(loss / len(x), "i->")
+            loss = radd(loss / len(x), "a->")
             loss.backward()
             losses.append(loss)
 
@@ -116,25 +116,27 @@ def test_can_train_simple_neural_network_momentum():
     optimiser = StochasticGradientDescent(learning_rate=1e-2, momentum=0.9)
 
     BATCH_SIZE = 16
-    N_EPOCHS = 10
+    N_STEPS = 10
 
     losses = []
-    for _ in range(N_EPOCHS):
-        batches = ds.copy().to_tensor().shuffle().batch(BATCH_SIZE)
-        for x, y in batches:
-            x = to_tensor(x)
-            y = to_tensor(y)
+    batches = ds.copy().to_tensor().shuffle().batch(BATCH_SIZE).loop()
+    breakpoint()
+    for step, (x, y) in enumerate(batches):
+        if step > N_STEPS:
+            break
+        x = to_tensor(x)
+        y = to_tensor(y)
 
-            y_pred = model(x)
-            loss = loss_fn(y, y_pred)
-            loss = radd(loss / len(x), "i->")
-            loss.backward()
-            losses.append(loss)
+        y_pred = model(x)
+        loss = loss_fn(y, y_pred)
+        loss = radd(loss / len(x), "a->")
+        loss.backward()
+        losses.append(loss)
 
-            model.update(optimiser)
-            model.zero_grad()
+        model.update(optimiser)
+        model.zero_grad()
 
-            assert layer_1.weights.uuid in optimiser.momentum_store
-            assert layer_2.weights.uuid in optimiser.momentum_store
+        assert layer_1.weights.uuid in optimiser.momentum_store
+        assert layer_2.weights.uuid in optimiser.momentum_store
 
     assert losses[-1] < 0.3

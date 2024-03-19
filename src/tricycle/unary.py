@@ -1,11 +1,9 @@
-from copy import copy
 from functools import partial
-from string import ascii_letters
 
 import numpy as np
-from numpy.core.numeric import isscalar
 
-from tricycle.ops import Einsum, nothing
+from tricycle.einsum import Einsum
+from tricycle.ops import nothing
 from tricycle.tensor import Tensor, to_tensor
 
 grad = False
@@ -40,9 +38,7 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     )
     constant_tensor.is_vector = tensor.is_vector
 
-    if tensor.is_vector and len(tensor.shape) == 1 or len(tensor.shape) == 0:
-        return Einsum(",->")(tensor, constant_tensor)
-    return Einsum("a,a->a")(tensor, constant_tensor)
+    return Einsum("...,...->...")(tensor, constant_tensor)
 
 
 def usub(tensor: Tensor, constant: float) -> Tensor:
@@ -65,8 +61,9 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.power(tensor, constant))
     result.args = (tensor,)
-    coef = to_tensor(np.power(tensor, constant - 1))
-    coef.is_vector = tensor.is_vector
+    coef = to_tensor(
+        np.power(tensor, constant - 1), is_vector=tensor.is_vector
+    )
     result.back_fn = (partial(bmul, umul(coef, constant)),)
     result.name = f"^ {constant}"
     result.is_vector = tensor.is_vector
@@ -95,7 +92,9 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    is_bigger = to_tensor((tensor > constant).astype(float))
+    is_bigger = to_tensor(
+        (tensor > constant).astype(float), is_vector=tensor.is_vector
+    )
     result.back_fn = (partial(bmul, is_bigger),)
     result.name = f"> {constant}"
     result.is_vector = tensor.is_vector
@@ -116,7 +115,9 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    is_smaller = to_tensor((tensor < constant).astype(float))
+    is_smaller = to_tensor(
+        (tensor < constant).astype(float), is_vector=tensor.is_vector
+    )
     result.back_fn = (partial(bmul, is_smaller),)
     result.name = f"< {constant}"
     result.is_vector = tensor.is_vector
@@ -132,9 +133,10 @@ def uexp(tensor: Tensor) -> Tensor:
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    result.back_fn = (partial(bmul, copy(result)),)
     result.name = "exp"
     result.is_vector = tensor.is_vector
+    coef = to_tensor(result, is_vector=tensor.is_vector)
+    result.back_fn = (partial(bmul, coef),)
     return result
 
 
@@ -167,7 +169,7 @@ def usin(tensor: Tensor) -> Tensor:
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    coef = to_tensor(np.cos(tensor))
+    coef = to_tensor(np.cos(tensor), is_vector=tensor.is_vector)
     result.back_fn = (partial(bmul, coef),)
     result.name = "sin"
     result.is_vector = tensor.is_vector
@@ -183,7 +185,7 @@ def ucos(tensor: Tensor) -> Tensor:
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    coef = to_tensor(-np.sin(tensor))
+    coef = to_tensor(-np.sin(tensor), is_vector=tensor.is_vector)
     result.back_fn = (partial(bmul, coef),)
     result.name = "cos"
     result.is_vector = tensor.is_vector

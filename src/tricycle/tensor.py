@@ -72,8 +72,14 @@ class Tensor(np.ndarray):
                 is_vector=self.is_vector,
             )
 
+            logger.debug(f"  {path}")
+            logger.debug("----------------------------")
             for op in path:
+                logger.debug(f"  {op}")
                 grad = op(grad)
+                logger.debug(f"  {grad.shape}")
+                logger.debug(f"  {grad.is_vector}")
+            logger.debug("----------------------------")
 
             param.grad = grad if param.grad is None else param.grad + grad
         param._grad_fn = None
@@ -228,6 +234,21 @@ class Tensor(np.ndarray):
         """
         return np.allclose(np.array(self), np.array(other), **kwargs)
 
+    def to_vector(self):
+        """
+        Treat this tensor as a vector
+        """
+        return vectorise(self)
+
+    def from_vector(self):
+        """
+        Treat a vectorised tensor as a normal tensor
+        """
+        return unvectorise(self)
+
+    def numpy(self):
+        return np.array(self)
+
 
 def to_tensor(
     *args,
@@ -245,4 +266,31 @@ def to_tensor(
     result.requires_grad = requires_grad
     result.uuid = uuid.uuid4()
     result.is_vector = is_vector
+    return result
+
+
+def vectorise(tensor: Tensor) -> Tensor:
+    """
+    Tell Tricycle to treat this tensor as a group of vectors
+    """
+    if tensor.is_vector:
+        raise ValueError("Tensor is already vectorised")
+
+    result = to_tensor(tensor, is_vector=True)
+    result.args = (tensor,)
+    result.back_fn = (unvectorise,)
+    return result
+
+
+def unvectorise(tensor: Tensor) -> Tensor:
+    """
+    Tell Tricycle to treat this tensor as a single tensor
+    (not a group of vectors)
+    """
+    if not tensor.is_vector:
+        raise ValueError("Tensor is not vectorised")
+
+    result = to_tensor(tensor, is_vector=False)
+    result.args = (tensor,)
+    result.back_fn = (vectorise,)
     return result

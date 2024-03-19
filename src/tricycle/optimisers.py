@@ -34,6 +34,9 @@ class StochasticGradientDescent:
         """
         assert tensor.grad is not None
 
+        if tensor.grad.is_vector:
+            tensor.grad = tensor.grad.from_vector().e("z...->...")
+
         grad = self.learning_rate * tensor.grad
 
         if self.weight_decay is not None:

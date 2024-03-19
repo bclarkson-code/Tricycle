@@ -10,6 +10,8 @@ class Dataset:
     An in-memory dataset: not suitable for large datasets
     """
 
+    is_infinite: bool = False
+
     def __init__(self, inputs: Sequence, outputs: Sequence):
         assert len(inputs) == len(outputs)
         self.inputs = inputs
@@ -22,7 +24,10 @@ class Dataset:
 
     def __next__(self):
         if self._index >= len(self.inputs):
-            raise StopIteration
+            if self.is_infinite:
+                self = self.shuffle()
+            else:
+                raise StopIteration
         result = self[self._index]
         self._index += 1
         return result
@@ -31,6 +36,9 @@ class Dataset:
         return len(self.inputs)
 
     def __getitem__(self, idx: int):
+        if self.is_infinite:
+            idx %= len(self.inputs)
+
         idx = self._indices[idx]
         return self.inputs[idx], self.outputs[idx]
 
@@ -63,6 +71,10 @@ class Dataset:
         self.inputs = batched_inputs
         self.outputs = batched_outputs
         self._indices = list(range(len(batched_inputs)))
+        return self
+
+    def reset(self):
+        self._index = 0
         return self
 
     def copy(self):

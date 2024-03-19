@@ -3,16 +3,22 @@ from copy import copy
 
 import numpy as np
 import pytest
+from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes, load_iris, load_linnerud
 from sklearn.preprocessing import RobustScaler
 
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
 from tricycle.loss import cross_entropy, mean_square_error
-from tricycle.tensor import to_tensor
+from tricycle.tensor import to_tensor, unvectorise, vectorise
 from tricycle.utils import r_squared, smooth
 
 logger = logging.getLogger(__name__)
+
+slow_test = pytest.mark.skipif(
+    "not config.getoption('--run-slow')",
+    reason="Only run when --run-slow is given",
+)
 
 
 def test_can_mean_square_error():
@@ -152,7 +158,7 @@ def test_can_linear_regression():
     assert intercept[0] > 0.4
 
 
-@pytest.mark.skip(reason="Slow")
+@slow_test
 def test_linear_regression_real_data():
     X, y = load_diabetes(return_X_y=True)
     x_scaler = RobustScaler()
@@ -194,10 +200,7 @@ def test_linear_regression_multi_input_output():
     X = x_scaler.fit_transform(X)
     y = y_scaler.fit_transform(y)
 
-    X = to_tensor(X, is_vector=True)
-    y = to_tensor(y, is_vector=True)
-
-    learning_rate = 1e-1
+    learning_rate = 1e-0
     n = len(X)
     learning_rate /= n
     loops = 100
@@ -205,28 +208,42 @@ def test_linear_regression_multi_input_output():
     slope = init_xavier((X.shape[1], y.shape[1]), name="slope")
     intercept = to_tensor([-0.01, 0.01, 0.02], name="intercept")
 
-    losses = [0] * loops
-    for idx in range(loops):
-        y_pred = Einsum("i,ij->j")(X, slope) + intercept
-        loss = mean_square_error(y, y_pred)
-        loss.is_vector = False
-        total_loss = loss.e("a->")
-        loss = total_loss / n
-        total_loss.is_vector = True
+    losses: list[np.ndarray | int] = [0] * loops
 
-        losses[idx] = loss
-        breakpoint()
+    def model(X, slope, intercept):
+        return Einsum("i,ij->j")(X, slope) + intercept
+
+    for idx in range(loops):
+        X = to_tensor(X.copy()).to_vector()
+        y = to_tensor(y.copy()).to_vector()
+
+        # predict an output
+        y_pred = model(X, slope, intercept)
+
+        # calculate the loss
+        loss = mean_square_error(y, y_pred)
+        # we need to unvectorise the loss before finding its average
+        loss = loss.from_vector().e("a->") / n
+
+        losses[idx] = loss.numpy()
         loss.backward()
+
+        assert slope.grad is not None
+        assert intercept.grad is not None
+
+        slope.grad = slope.grad.from_vector().e("abc->bc")
+        intercept.grad = intercept.grad.from_vector().e("ab->b")
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
         intercept = to_tensor(
             intercept - intercept.grad * learning_rate, name="intercept"
         )
 
-    assert losses[-1] < 35
+    # the loss should plateau at around 0.5
+    assert losses[-1] < 0.6
 
 
-@pytest.mark.skip(reason="Slow")
+@slow_test
 def test_cross_entropy():
     X, y = load_iris(return_X_y=True)
     x_scaler = RobustScaler()
@@ -262,7 +279,7 @@ def test_cross_entropy():
     assert losses[-1] < 35
 
 
-@pytest.mark.skip(reason="Slow")
+@slow_test
 def test_cross_entropy_minibatch():
     np.random.seed(42)
 

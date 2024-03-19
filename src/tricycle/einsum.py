@@ -52,8 +52,10 @@ class Einsum:
         """
         assert len(tensors) == len(subscript.inputs)
 
-        for idx in range(len(tensors)):
-            tensors[idx].is_vector = False
+        # To avoid adding a bunch of special cases for vectorised
+        # operations, we replace any vectorised operations with
+        # their non-vectorised counterparts
+        subscript = Subscript(subscript.subscript.replace("z", ""))
 
         back_functions = []
         for idx in range(len(tensors)):

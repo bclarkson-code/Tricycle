@@ -19,6 +19,8 @@ def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
     else:
         shape_2 = tensor_2.shape
 
+    if shape_1 != shape_2:
+        breakpoint()
     return shape_1 == shape_2
 
 
@@ -59,7 +61,6 @@ def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
-    breakpoint()
     assert _shapes_match(tensor_1, tensor_2)
 
     result = Einsum("a,a->a")(tensor_1, tensor_2)
