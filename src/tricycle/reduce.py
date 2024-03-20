@@ -4,8 +4,6 @@ from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import Tensor, to_tensor
 
 
-
-
 def rmax(tensor: Tensor, subscript: str | Subscript):
     """
     Generate an indicator tensor that, when einsummed with the tensor, results
@@ -30,7 +28,9 @@ def rmax(tensor: Tensor, subscript: str | Subscript):
     indicator = (
         tensor == np.max(tensor, axis=tuple(reduce_along_axes), keepdims=True)
     ).astype(int)
-    indicator = to_tensor(indicator, requires_grad=False, is_vector=tensor.is_vector)
+    indicator = to_tensor(
+        indicator, requires_grad=False, is_vector=tensor.is_vector
+    )
 
     new_subscript = f"{idx},{idx}->{subscript.output}"
 
@@ -64,7 +64,9 @@ def rmin(tensor: Tensor, subscript: Subscript | str):
     indicator = (
         tensor == np.min(tensor, axis=tuple(reduce_along_axes), keepdims=True)
     ).astype(int)
-    indicator = to_tensor(indicator, requires_grad=False, is_vector=tensor.is_vector)
+    indicator = to_tensor(
+        indicator, requires_grad=False, is_vector=tensor.is_vector
+    )
 
     new_subscript = Subscript.from_split([idx, idx], subscript.output)
 

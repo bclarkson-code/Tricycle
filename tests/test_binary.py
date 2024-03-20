@@ -100,7 +100,9 @@ def test_can_bdiv():
     assert in_tensor_2.grad is not None
     assert in_tensor_1.grad.close_to(to_tensor(1 / in_tensor_2))
 
-    assert in_tensor_2.grad.close_to(to_tensor(-in_tensor_1 / (in_tensor_2**2)))
+    assert in_tensor_2.grad.close_to(
+        to_tensor(-in_tensor_1 / (in_tensor_2**2))
+    )
 
 
 def test_can_bmax():
