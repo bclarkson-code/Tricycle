@@ -8,7 +8,7 @@ class Optimiser:
         raise NotImplementedError
 
 
-class StochasticGradientDescent:
+class StochasticGradientDescent(Optimiser):
     def __init__(
         self,
         learning_rate: float,

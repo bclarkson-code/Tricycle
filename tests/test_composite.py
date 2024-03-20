@@ -1,7 +1,6 @@
 import numpy as np
 
 from tricycle.ops import softmax
-from tricycle.reduce import radd
 from tricycle.tensor import to_tensor
 
 
@@ -17,4 +16,4 @@ def test_softmax():
     right = np.einsum("i,j->ij", out_tensor, out_tensor)
     correct = (left - right) @ np.ones_like(in_tensor)
 
-    assert np.allclose(in_tensor.grad, correct)
+    assert in_tensor.grad.close_to(correct)

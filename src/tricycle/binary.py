@@ -63,7 +63,7 @@ def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     """
     assert _shapes_match(tensor_1, tensor_2)
 
-    result = Einsum("a,a->a")(tensor_1, tensor_2)
+    result = Einsum("...,...->...")(tensor_1, tensor_2)
     result.name = "bmul"
     return result
 

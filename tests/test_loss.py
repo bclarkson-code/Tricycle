@@ -1,4 +1,3 @@
-import logging
 from copy import copy
 
 import numpy as np
@@ -12,8 +11,6 @@ from tricycle.initialisers import init_xavier
 from tricycle.loss import cross_entropy, mean_square_error
 from tricycle.tensor import to_tensor, unvectorise, vectorise
 from tricycle.utils import r_squared, smooth
-
-logger = logging.getLogger(__name__)
 
 slow_test = pytest.mark.skipif(
     "not config.getoption('--run-slow')",
@@ -80,10 +77,7 @@ def test_single_lr_step_with_multiple_datapoints():
 
     assert loss.close_to(correct_loss)
 
-    old_slope = copy(slope.grad) if slope.grad is not None else 0
     loss.backward()
-
-    logger.info(f"{slope.grad}, {slope.grad - old_slope}")
 
     correct = to_tensor([[-5.94], [-19.8]])
     assert slope.grad is not None
@@ -245,6 +239,9 @@ def test_linear_regression_multi_input_output():
 
 @slow_test
 def test_cross_entropy():
+    """
+    This is a really slow test, preserved for reference
+    """
     X, y = load_iris(return_X_y=True)
     x_scaler = RobustScaler()
     X = x_scaler.fit_transform(X)
@@ -281,6 +278,9 @@ def test_cross_entropy():
 
 @slow_test
 def test_cross_entropy_minibatch():
+    """
+    This is a really slow test, preserved for reference
+    """
     np.random.seed(42)
 
     def dataset(X, y, batch_size):
