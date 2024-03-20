@@ -49,12 +49,10 @@ def test_can_train_simple_neural_network():
     # sourcery skip: no-loop-in-tests
     # sourcery skip: no-conditionals-in-tests
     i = 0
-    batches = ds.to_tensor()
+    batches = ds.to_tensor().to_vector()
     for step, (x_in, y_out) in enumerate(batches):
         if step > N_STEPS:
             break
-        x_in = to_tensor(x_in, requires_grad=False).to_vector()
-        y_out = to_tensor(y_out, requires_grad=False).to_vector()
 
         y_pred = model(x_in)
         loss = loss_fn(y_out, y_pred).from_vector().e("a->") / BATCH_SIZE
