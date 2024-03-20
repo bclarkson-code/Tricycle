@@ -1,18 +1,19 @@
 import numpy as np
 
 from tricycle.activation import ReLU
+from tricycle.einsum import Einsum
 from tricycle.layers import Dense, Sequential
-from tricycle.loss import CrossEntropy, MeanSquareError
-from tricycle.ops import einsum
-from tricycle.tensor import to_tensor
+from tricycle.loss import cross_entropy, mean_square_error
+from tricycle.ops import arange, softmax
+from tricycle.tensor import to_tensor, unvectorise, vectorise
 
 
 def test_can_vectorise_single_einsum():
-    input_1 = np.arange(1, 4)
-    input_2 = np.arange(2, 5)
-    input_3 = np.arange(3, 6)
+    input_1 = arange(1, 4)
+    input_2 = arange(2, 5)
+    input_3 = arange(3, 6)
 
-    op = einsum("i->")
+    op = Einsum("a->")
 
     output_1 = op(input_1)
     output_2 = op(input_2)
@@ -22,9 +23,12 @@ def test_can_vectorise_single_einsum():
     assert output_2 == 9
     assert output_3 == 12
 
-    input_vector = np.array([input_1, input_2, input_3])
-    op = einsum("zi->z")
+    input_vector = to_tensor([input_1, input_2, input_3])
+    input_vector = vectorise(input_vector)
+    op = Einsum("a->")
     output_vector = op(input_vector)
+    output_vector = unvectorise(output_vector)
+
     assert np.allclose(output_vector, np.array([6, 9, 12]))
 
 
@@ -43,40 +47,41 @@ def test_can_vectorise_entire_model():
     output_2 = model(input_2)
     output_3 = model(input_3)
 
-    model.vectorise()
     input_vector = to_tensor(np.array([input_1, input_2, input_3]))
+    correct_output = to_tensor(np.array([output_1, output_2, output_3]))
 
+    input_vector = vectorise(input_vector)
+    correct_output = vectorise(correct_output)
     output_vector = model(input_vector)
+    output_vector = unvectorise(output_vector)
 
-    assert np.allclose(output_vector, np.array([output_1, output_2, output_3]))
+    assert output_vector.close_to(correct_output)
 
 
 def test_can_vectorise_mse():
-    mse = MeanSquareError()
-
     y_true = to_tensor([0, 0, 1, 0])
 
     input_1 = to_tensor(np.arange(1, 5))
     input_2 = to_tensor(np.arange(2, 6))
     input_3 = to_tensor(np.arange(3, 7))
 
-    output_1 = mse(y_true, input_1)
-    output_2 = mse(y_true, input_2)
-    output_3 = mse(y_true, input_3)
-
-    mse = mse.vectorise()
+    output_1 = mean_square_error(y_true, input_1)
+    output_2 = mean_square_error(y_true, input_2)
+    output_3 = mean_square_error(y_true, input_3)
 
     input_y_true = to_tensor(np.array([y_true, y_true, y_true]))
     input_vector = to_tensor(np.array([input_1, input_2, input_3]))
+    correct_output = to_tensor(np.array([output_1, output_2, output_3]))
 
-    output_vector = mse(input_y_true, input_vector)
+    input_y_true = vectorise(input_y_true)
+    input_vector = vectorise(input_vector)
+    output_vector = mean_square_error(input_y_true, input_vector)
+    output_vector = unvectorise(output_vector)
 
-    assert np.allclose(output_vector, np.array([output_1, output_2, output_3]))
+    assert output_vector.close_to(correct_output)
 
 
 def test_can_vectorise_cross_entropy():
-    cross_entropy = CrossEntropy()
-
     y_true = to_tensor([0, 0, 1, 0])
     input_1 = to_tensor(np.arange(1, 5))
     input_2 = to_tensor(np.arange(2, 6))
@@ -86,11 +91,32 @@ def test_can_vectorise_cross_entropy():
     output_2 = cross_entropy(y_true, input_2)
     output_3 = cross_entropy(y_true, input_3)
 
-    cross_entropy = cross_entropy.vectorise()
-
     input_y_true = to_tensor(np.array([y_true, y_true, y_true]))
     input_vector = to_tensor(np.array([input_1, input_2, input_3]))
+    correct_output = to_tensor(np.array([output_1, output_2, output_3]))
 
+    input_y_true = vectorise(input_y_true)
+    input_vector = vectorise(input_vector)
     output_vector = cross_entropy(input_y_true, input_vector)
+    output_vector = unvectorise(output_vector)
 
-    assert np.allclose(output_vector, np.array([output_1, output_2, output_3]))
+    assert output_vector.close_to(correct_output)
+
+
+def test_can_vectorise_softmax():
+    input_1 = to_tensor(np.arange(1, 5))
+    input_2 = to_tensor(np.arange(2, 6))
+    input_3 = to_tensor(np.arange(3, 7))
+
+    output_1 = softmax(input_1)
+    output_2 = softmax(input_2)
+    output_3 = softmax(input_3)
+
+    input_vector = to_tensor(np.array([input_1, input_2, input_3]))
+    correct_output = to_tensor(np.array([output_1, output_2, output_3]))
+
+    input_vector = vectorise(input_vector)
+    output_vector = softmax(input_vector)
+    output_vector = unvectorise(output_vector)
+
+    assert output_vector.close_to(correct_output)

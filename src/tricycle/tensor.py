@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -23,6 +23,7 @@ class Tensor(np.ndarray):
     name: Optional[str] = None
     requires_grad: bool = False
     show_graph = False
+    is_vector: bool = False
 
     def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
         """
@@ -65,11 +66,20 @@ class Tensor(np.ndarray):
             return
 
         for path in param._grad_fn:
-            grad = np.ones_like(self).view(Tensor)
-            grad.requires_grad = False
+            grad = to_tensor(
+                np.ones_like(self),
+                requires_grad=False,
+                is_vector=self.is_vector,
+            )
 
+            logger.debug(f"  {path}")
+            logger.debug("----------------------------")
             for op in path:
+                logger.debug(f"  {op}")
                 grad = op(grad)
+                logger.debug(f"  {grad.shape}")
+                logger.debug(f"  {grad.is_vector}")
+            logger.debug("----------------------------")
 
             param.grad = grad if param.grad is None else param.grad + grad
         param._grad_fn = None
@@ -98,7 +108,9 @@ class Tensor(np.ndarray):
 
             return badd(self, other)
         else:
-            raise NotImplementedError(f"Cannot add {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot add {type(self)} and {type(other)}"
+            )
 
     def __iadd__(self, other):
         return self + other
@@ -116,7 +128,9 @@ class Tensor(np.ndarray):
             return bsub(self, other)
 
         else:
-            raise NotImplementedError(f"Cannot sub {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot sub {type(self)} and {type(other)}"
+            )
 
     def __isub__(self, other):
         return -1 * (other - self)
@@ -135,10 +149,15 @@ class Tensor(np.ndarray):
             return bmul(self, other)
 
         else:
-            raise NotImplementedError(f"Cannot mul {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot mul {type(self)} and {type(other)}"
+            )
 
     def __imul__(self, other):
         return self * other
+
+    def __neg__(self):
+        return self * -1
 
     def __truediv__(self, other):
         if np.isscalar(other):
@@ -151,7 +170,9 @@ class Tensor(np.ndarray):
             return bdiv(self, other)
 
         else:
-            raise NotImplementedError(f"Cannot divide {type(self)} and {type(other)}")
+            raise NotImplementedError(
+                f"Cannot divide {type(self)} and {type(other)}"
+            )
 
     def __itruediv__(self, other):
         return self / other
@@ -177,9 +198,17 @@ class Tensor(np.ndarray):
         return f"Tensor({self.__str__()}{name})"
 
     def __new__(
-        cls, shape, dtype=float, buffer=None, offset=0, strides=None, order=None
+        cls,
+        shape,
+        dtype=float,
+        buffer=None,
+        offset=0,
+        strides=None,
+        order=None,
     ):
-        obj = super().__new__(cls, shape, dtype, buffer, offset, strides, order)
+        obj = super().__new__(
+            cls, shape, dtype, buffer, offset, strides, order
+        )
         obj.uuid = uuid.uuid4()
         return obj
 
@@ -188,9 +217,45 @@ class Tensor(np.ndarray):
             return
         self.uuid = getattr(obj, "uuid", None)
 
+    def e(self, subscript: str) -> "Tensor":
+        from tricycle.einsum import Einsum
+
+        return Einsum(subscript)(self)
+
+    def repeat(self, subscript: str, n_repeats: int) -> "Tensor":
+        from tricycle.ops import repeat
+
+        return repeat(subscript, self, n_repeats)
+
+    def close_to(self, other: "Tensor", **kwargs) -> bool:
+        """
+        Convenience method to check if two tensors are identical
+        to within some tolerance
+        """
+        return np.allclose(np.array(self), np.array(other), **kwargs)
+
+    def to_vector(self):
+        """
+        Treat this tensor as a vector
+        """
+        return vectorise(self)
+
+    def from_vector(self):
+        """
+        Treat a vectorised tensor as a normal tensor
+        """
+        return unvectorise(self)
+
+    def numpy(self):
+        return np.array(self)
+
 
 def to_tensor(
-    *args, name: Optional[str] = None, requires_grad: bool = True, **kwargs
+    *args,
+    name: Optional[str] = None,
+    requires_grad: bool = True,
+    is_vector: bool = False,
+    **kwargs,
 ) -> Tensor:
     """
     Create a new Tensor instance. First, we convert the argument to a numpy
@@ -200,4 +265,32 @@ def to_tensor(
     result.name = name
     result.requires_grad = requires_grad
     result.uuid = uuid.uuid4()
+    result.is_vector = is_vector
+    return result
+
+
+def vectorise(tensor: Tensor) -> Tensor:
+    """
+    Tell Tricycle to treat this tensor as a group of vectors
+    """
+    if tensor.is_vector:
+        raise ValueError("Tensor is already vectorised")
+
+    result = to_tensor(tensor, is_vector=True)
+    result.args = (tensor,)
+    result.back_fn = (unvectorise,)
+    return result
+
+
+def unvectorise(tensor: Tensor) -> Tensor:
+    """
+    Tell Tricycle to treat this tensor as a single tensor
+    (not a group of vectors)
+    """
+    if not tensor.is_vector:
+        raise ValueError("Tensor is not vectorised")
+
+    result = to_tensor(tensor, is_vector=False)
+    result.args = (tensor,)
+    result.back_fn = (vectorise,)
     return result

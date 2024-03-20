@@ -8,7 +8,7 @@ class Optimiser:
         raise NotImplementedError
 
 
-class StochasticGradientDescent:
+class StochasticGradientDescent(Optimiser):
     def __init__(
         self,
         learning_rate: float,
@@ -33,6 +33,9 @@ class StochasticGradientDescent:
         including weight decay and momentum
         """
         assert tensor.grad is not None
+
+        if tensor.grad.is_vector:
+            tensor.grad = tensor.grad.from_vector().e("z...->...")
 
         grad = self.learning_rate * tensor.grad
 

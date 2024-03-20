@@ -1,35 +1,39 @@
-import logging
 from copy import copy
 
 import numpy as np
 import pytest
+from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes, load_iris, load_linnerud
 from sklearn.preprocessing import RobustScaler
 
+from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
-from tricycle.loss import CrossEntropy, MeanSquareError
-from tricycle.ops import einsum
-from tricycle.tensor import to_tensor
+from tricycle.loss import cross_entropy, mean_square_error
+from tricycle.tensor import to_tensor, unvectorise, vectorise
 from tricycle.utils import r_squared, smooth
 
-logger = logging.getLogger(__name__)
+slow_test = pytest.mark.skipif(
+    "not config.getoption('--run-slow')",
+    reason="Only run when --run-slow is given",
+)
 
 
 def test_can_mean_square_error():
     y_true = to_tensor([0, 0, 1])
     y_pred = to_tensor([0, 0.5, 0.5])
 
-    mse = MeanSquareError()(y_true, y_pred)
+    mse = mean_square_error(y_true, y_pred)
 
-    assert mse == 0.5
+    assert mse.close_to(1 / 6)
 
 
 def test_can_cross_entropy():
     y_true = to_tensor([0, 0, 1])
     y_pred = to_tensor([0, 0, 0])
 
-    loss = CrossEntropy()(y_true, y_pred)
-    assert loss == 1.0986122886681098
+    loss = cross_entropy(y_true, y_pred)
+
+    assert loss.close_to(1.0986122886681098)
 
 
 def test_can_single_linear_regression_step():
@@ -43,37 +47,45 @@ def test_can_single_linear_regression_step():
 
     x_input = to_tensor(x_input, requires_grad=False, name="x")
     y_input = to_tensor(y_input, requires_grad=False, name="y")
-    y_pred = x_input * slope + intercept
-    logger.info(y_pred)
-    loss = MeanSquareError()(y_input, y_pred)
 
-    assert np.allclose(loss, 8.8209)
+    y_pred = x_input * slope + intercept
+
+    loss = mean_square_error(y_input, y_pred)
+
+    assert loss.close_to(8.8209)
 
     loss.backward()
-    assert np.allclose(slope.grad, [-5.94])
-    assert np.allclose(intercept.grad, [-5.94])
+    assert slope.grad is not None
+    assert intercept.grad is not None
+    assert slope.grad.close_to([-5.94])
+    assert intercept.grad.close_to([-5.94])
 
 
 def test_single_lr_step_with_multiple_datapoints():
+    # sourcery skip: extract-duplicate-method
     x = [[1], [2]]
     y = [[3], [5]]
-    correct_losses = [8.8209, 24.5025]
+    correct_loss = to_tensor([[8.8209], [24.5025]])
     slope = to_tensor([0.02])
     intercept = to_tensor([0.01])
 
-    for x_input, y_input, correct_loss in zip(x, y, correct_losses):
-        x_input = to_tensor(x_input, requires_grad=False, name="x")
-        y_input = to_tensor(y_input, requires_grad=False, name="y")
-        y_pred = x_input * slope + intercept
-        loss = MeanSquareError()(y_input, y_pred)
-        assert np.allclose(loss, correct_loss)
+    x_input = to_tensor(x, requires_grad=False, name="x", is_vector=True)
+    y_input = to_tensor(y, requires_grad=False, name="y", is_vector=True)
 
-        old_slope = copy(slope.grad) if slope.grad is not None else 0
-        loss.backward()
+    y_pred = x_input * slope + intercept
+    loss = mean_square_error(y_input, y_pred)
 
-        logger.info(f"{slope.grad}, {slope.grad - old_slope}")
-    assert np.allclose(slope.grad, [-5.94 - 19.8])
-    assert np.allclose(intercept.grad, [-5.94 - 9.9])
+    assert loss.close_to(correct_loss)
+
+    loss.backward()
+
+    correct = to_tensor([[-5.94], [-19.8]])
+    assert slope.grad is not None
+    assert slope.grad.close_to(correct)
+
+    correct = to_tensor([[-5.94], [-9.9]])
+    assert intercept.grad is not None
+    assert intercept.grad.close_to(correct)
 
 
 def test_can_linear_regression():
@@ -107,13 +119,15 @@ def test_can_linear_regression():
             x_input = to_tensor(x_input, requires_grad=False, name="x")
             y_input = to_tensor(y_input, requires_grad=False, name="y")
             y_pred = x_input * slope + intercept
-            loss = MeanSquareError()(y_input, y_pred)
+            loss = mean_square_error(y_input, y_pred)
             losses[idx] += loss
 
             loss.backward()
 
             slope_grad = slope_derivative(x_input, y_input, slope, intercept)
-            intercept_grad = intercept_derivative(x_input, y_input, slope, intercept)
+            intercept_grad = intercept_derivative(
+                x_input, y_input, slope, intercept
+            )
             assert np.allclose(
                 slope.grad, last_slope_grad + slope_grad
             ), f"{slope.grad=}, {last_slope_grad=}, {slope_grad=}"
@@ -138,7 +152,7 @@ def test_can_linear_regression():
     assert intercept[0] > 0.4
 
 
-@pytest.mark.skip(reason="Slow")
+@slow_test
 def test_linear_regression_real_data():
     X, y = load_diabetes(return_X_y=True)
     x_scaler = RobustScaler()
@@ -159,8 +173,8 @@ def test_linear_regression_real_data():
 
     for _ in range(loops):
         for x_in, y_in in zip(X, y):
-            y_pred = einsum("i,ij->j")(x_in, slope) + intercept
-            loss = MeanSquareError()(y_in, y_pred)
+            y_pred = Einsum("i,ij->j")(x_in, slope) + intercept
+            loss = mean_square_error(y_in, y_pred)
             loss.backward()
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
@@ -180,10 +194,7 @@ def test_linear_regression_multi_input_output():
     X = x_scaler.fit_transform(X)
     y = y_scaler.fit_transform(y)
 
-    X = to_tensor(X)
-    y = to_tensor(y)
-
-    learning_rate = 1e-1
+    learning_rate = 1e-0
     n = len(X)
     learning_rate /= n
     loops = 100
@@ -191,24 +202,46 @@ def test_linear_regression_multi_input_output():
     slope = init_xavier((X.shape[1], y.shape[1]), name="slope")
     intercept = to_tensor([-0.01, 0.01, 0.02], name="intercept")
 
-    losses = [0] * loops
+    losses: list[np.ndarray | int] = [0] * loops
+
+    def model(X, slope, intercept):
+        return Einsum("i,ij->j")(X, slope) + intercept
+
     for idx in range(loops):
-        for x_in, y_in in zip(X, y):
-            y_pred = einsum("i,ij->j")(x_in, slope) + intercept
-            loss = MeanSquareError()(y_in, y_pred)
-            losses[idx] += loss
-            loss.backward()
+        X = to_tensor(X.copy()).to_vector()
+        y = to_tensor(y.copy()).to_vector()
+
+        # predict an output
+        y_pred = model(X, slope, intercept)
+
+        # calculate the loss
+        loss = mean_square_error(y, y_pred)
+        # we need to unvectorise the loss before finding its average
+        loss = loss.from_vector().e("a->") / n
+
+        losses[idx] = loss.numpy()
+        loss.backward()
+
+        assert slope.grad is not None
+        assert intercept.grad is not None
+
+        slope.grad = slope.grad.from_vector().e("abc->bc")
+        intercept.grad = intercept.grad.from_vector().e("ab->b")
 
         slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
         intercept = to_tensor(
             intercept - intercept.grad * learning_rate, name="intercept"
         )
 
-    assert losses[-1] < 35
+    # the loss should plateau at around 0.5
+    assert losses[-1] < 0.6
 
 
-@pytest.mark.skip(reason="Slow")
+@slow_test
 def test_cross_entropy():
+    """
+    This is a really slow test, preserved for reference
+    """
     X, y = load_iris(return_X_y=True)
     x_scaler = RobustScaler()
     X = x_scaler.fit_transform(X)
@@ -230,8 +263,8 @@ def test_cross_entropy():
     losses = [0] * loops
     for idx in range(loops):
         for x_in, y_in in zip(X, y):
-            y_pred = einsum("i,ij->j")(x_in, slope) + intercept
-            loss = CrossEntropy()(y_in, y_pred)
+            y_pred = Einsum("i,ij->j")(x_in, slope) + intercept
+            loss = cross_entropy(y_in, y_pred)
             losses[idx] += loss
             loss.backward()
 
@@ -243,14 +276,19 @@ def test_cross_entropy():
     assert losses[-1] < 35
 
 
-@pytest.mark.skip(reason="Slow")
+@slow_test
 def test_cross_entropy_minibatch():
+    """
+    This is a really slow test, preserved for reference
+    """
     np.random.seed(42)
 
     def dataset(X, y, batch_size):
         while True:
             indices = np.arange(len(X))
-            batch_indices = np.random.choice(indices, size=batch_size, replace=False)
+            batch_indices = np.random.choice(
+                indices, size=batch_size, replace=False
+            )
             yield zip(X[batch_indices], y[batch_indices])
 
     X, y = load_iris(return_X_y=True)
@@ -274,8 +312,8 @@ def test_cross_entropy_minibatch():
             x_in = to_tensor(x_in)
             y_in = to_tensor(y_in)
 
-            y_pred = einsum("i,ij->j")(x_in, slope) + intercept
-            loss = CrossEntropy()(y_in, y_pred)
+            y_pred = Einsum("i,ij->j")(x_in, slope) + intercept
+            loss = cross_entropy(y_in, y_pred)
             batch_loss += loss
             loss.backward()
 
