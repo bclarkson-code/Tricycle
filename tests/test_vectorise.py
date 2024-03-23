@@ -120,3 +120,29 @@ def test_can_vectorise_softmax():
     output_vector = unvectorise(output_vector)
 
     assert output_vector.close_to(correct_output)
+
+
+def test_can_vectorise_split():
+    in_tensor = to_tensor(
+        [[1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]], is_vector=True
+    )
+
+    out_tensors = in_tensor.split(3)
+
+    assert len(out_tensors) == 3
+    assert out_tensors[0].shape == (2, 2)
+    assert out_tensors[1].shape == (2, 2)
+    assert out_tensors[2].shape == (2, 2)
+
+    assert out_tensors[0].close_to([[1, 2], [1, 2]])
+    assert out_tensors[1].close_to([[3, 4], [3, 4]])
+    assert out_tensors[2].close_to([[5, 6], [5, 6]])
+
+    assert out_tensors[0].is_vector
+    assert out_tensors[1].is_vector
+    assert out_tensors[2].is_vector
+
+    out_tensors[0].backward()
+
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to([[1, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]])

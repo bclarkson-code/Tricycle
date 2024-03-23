@@ -56,11 +56,16 @@ def arange(*args, **kwargs):
     return to_tensor(np.arange(*args, **kwargs))
 
 
-def split(tensor: Tensor, n_splits: int) -> Sequence[Tensor]:
+def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
     """
     Split a tensor along its first axis int n_splits partitions
     """
-    length = tensor.shape[0]
+    if axis < 0:
+        axis += tensor.ndim
+    if tensor.is_vector:
+        axis += 1
+
+    length = tensor.shape[axis]
     if length % n_splits:
         raise ValueError(
             f"Length must be divisible by n_splits. Found {length} and {n_splits}"
@@ -69,9 +74,17 @@ def split(tensor: Tensor, n_splits: int) -> Sequence[Tensor]:
 
     results = []
     for split_idx in range(n_splits):
-        idx = slice(split_idx * split_size, (split_idx + 1) * split_size)
+        idx = []
+        for i in range(tensor.ndim):
+            if i == axis:
+                axis_idx = slice(
+                    split_idx * split_size, (split_idx + 1) * split_size
+                )
+            else:
+                axis_idx = slice(None)
+            idx.append(axis_idx)
 
-        result = tensor[:, idx] if tensor.is_vector else tensor[idx]
+        result = tensor[*idx]
 
         def undo_split(grad, idx=idx):
             """
@@ -91,10 +104,7 @@ def split(tensor: Tensor, n_splits: int) -> Sequence[Tensor]:
             result_grad = to_tensor(
                 np.zeros_like(tensor), is_vector=result.is_vector
             )
-            if result.is_vector:
-                result_grad[:, idx] = grad
-            else:
-                result_grad[idx] = grad
+            result_grad[*idx] = grad
             return result_grad
 
         result.back_fn = (undo_split,)
@@ -105,4 +115,9 @@ def split(tensor: Tensor, n_splits: int) -> Sequence[Tensor]:
 
 
 def reshape(tensor: Tensor, shape: Sequence[int]):
-    raise NotImplementedError("reshape is not implemented yet")
+    result = to_tensor(np.reshape(tensor, shape))
+    result.is_vector = tensor.is_vector
+    result.args = (tensor,)
+    result.back_fn = (lambda grad: reshape(grad, tensor.shape),)
+
+    return result

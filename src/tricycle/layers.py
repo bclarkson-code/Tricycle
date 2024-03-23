@@ -5,7 +5,7 @@ import numpy as np
 
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
-from tricycle.ops import reshape
+from tricycle.ops import reshape, softmax
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -69,7 +69,7 @@ class MultiHeadSelfAttention(Layer):
         self.embedding_dim = embedding_dim
         self.n_heads = n_heads
         self.dropout = dropout
-        self.context_window = embedding_dim
+        self.context_window = context_window
 
         # Initialise the weights before and after the actual attention
         # mechanism. There aren't actually any weights in the attention bit
@@ -91,48 +91,32 @@ class MultiHeadSelfAttention(Layer):
         )
 
         # build a mask to make attention causal
-        self.mask = np.ones((context_window, context_window))
-        idx = np.tril(self.mask.astype(bool))
-        self.mask[~idx] = -np.inf
-        self.mask[idx] = 0
+        self.mask = build_mask(self.context_window)
 
     def _attention(self, key: Tensor, query: Tensor, value: Tensor):
         # reshape into n_heads x embedding_dim
         head_size = self.embedding_dim // self.n_heads
         n_tokens = key.shape[0]
-        new_shape = (
+        head_shape = (
             n_tokens,  # number of tokens
             self.n_heads,  # number of heads
             head_size,  # embedding per head
         )
-        key = reshape(key, new_shape)
-        query = reshape(query, new_shape)
-        value = reshape(value, new_shape)
-
-        # split into heads
-        swap = einsum("tnh->nth")
-        key = swap(key)
-        query = swap(query)
-        value = swap(value)
+        # reshape and reorder the heads
+        key = key.reshape(head_shape).e("TNH -> NTH")
+        query = query.reshape(head_shape).e("TNH -> NTH")
+        value = value.reshape(head_shape).e("TNH -> NTH")
 
         # attend
-        attend = einsum("nih,njh->nij")
-        attention = attend(query, key) / np.sqrt(head_size)
+        attention = Einsum("NIh, NJh -> NIJ")(query, key) / np.sqrt(head_size)
 
-        # mask
-        mask = np.stack([self.mask[:n_tokens, :n_tokens]] * attention.shape[0])
-        mask = to_tensor(mask, requires_grad=False, name="mask")
-
-        # TODO: check if this breaks the gradients
-        attention = badd(attention, mask)
-
-        # softmax
+        # mask and softmax
+        attention = self.masked_fill(attention, (n_tokens, n_tokens))
         attention = softmax(attention)
 
         # smush the heads back together
-        attention = einsum("nij,njh->nih")(attention, value)
-        attention = swap(attention)
-        return reshape(attention, (n_tokens, self.embedding_dim))
+        out_shape = (n_tokens, self.n_heads, head_size)
+        return Einsum("NIj, NjH -> NHI")(attention, value).reshape(out_shape)
 
     def _attention_andrej(self, key: Tensor, query: Tensor, value: Tensor):
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
@@ -160,42 +144,14 @@ class MultiHeadSelfAttention(Layer):
         mask = to_tensor(mask, requires_grad=False, name="mask")
 
         # TODO: check if this breaks the gradients
-        return badd(x, mask)
-
-    def _attention_v2(self, key: Tensor, query: Tensor, value: Tensor):
-        # reshape into n_heads x embedding_dim
-        head_size = self.embedding_dim // self.n_heads
-        n_tokens = key.shape[0]
-        split_into_heads = (
-            n_tokens,  # number of tokens
-            self.n_heads,  # number of heads
-            head_size,  # embedding per head
-        )
-        key = key.reshape(split_into_heads).e("T N H -> N T H")
-        query = query.reshape(split_into_heads).e("T N H -> N T H")
-        value = value.reshape(split_into_heads).e("T N H -> N T H")
-
-        # attend
-        attention = einsum("N I H, N J H -> N I J", query, key) / np.sqrt(
-            head_size
-        )
-
-        # mask and softmax
-        attention = self.masked_fill(attention, (n_tokens, n_tokens))
-        attention = softmax(attention)
-
-        # smush the heads back together
-        out_shape = (n_tokens, self.n_heads, head_size)
-        return einsum("N I J, N J H -> N H I", attention, value).reshape(
-            out_shape
-        )
+        return x + mask
 
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding
         x = self.in_projection(x)
 
         # split the embedding into key, query and value
-        key, query, value = split(x, 3)
+        query, key, value = x.split(3, axis=1)  # tricycle
 
         attention = self._attention(key, query, value)
 
@@ -230,3 +186,24 @@ class Sequential(Layer):
     def zero_grad(self):
         for layer in self.layers:
             layer.zero_grad()
+
+
+def build_mask(context_window: int):
+    """
+    Build an attention mask to stop the model from being able to see
+    future tokens
+    """
+    mask = np.ones((context_window, context_window))
+    idx = np.tril(mask.astype(bool))
+    mask[~idx] = -np.inf
+    mask[idx] = 0
+    return to_tensor(mask, requires_grad=False, name="mask")
+
+
+def masked_fill(x: Tensor, mask_shape: tuple[int, int], full_mask: Tensor):
+    """
+    Apply an attention_mask to a tensor
+    """
+    mask = np.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * x.shape[0])
+    mask = to_tensor(mask, requires_grad=False, name="mask")
+    return x + mask

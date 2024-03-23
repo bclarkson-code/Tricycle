@@ -232,10 +232,10 @@ class Tensor(np.ndarray):
 
         return reshape(self, shape)
 
-    def split(self, n_splits: int) -> List["Tensor"]:
+    def split(self, n_splits: int, axis: int = 1) -> List["Tensor"]:
         from tricycle.ops import split
 
-        return split(self, n_splits)
+        return split(self, n_splits, axis)
 
     def close_to(self, other: "Tensor" | ArrayLike, **kwargs) -> bool:
         """

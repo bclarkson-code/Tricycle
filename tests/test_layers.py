@@ -36,7 +36,8 @@ def test_sequential_layer():
 def test_attention_individually():
     """
     This operation is pretty complex so we'll perform each stage
-    with pytorch and then compare the results
+    with pytorch and then compare the results. Here, I'm comparing
+    with Andrej Karpathy's implementation from NanoGPT
     """
     # setup
     embedding_dim = 10
@@ -44,70 +45,49 @@ def test_attention_individually():
     n_tokens = 10
     context_window = 32
     projected_size = embedding_dim * 3
+    head_size = embedding_dim // n_heads
+    head_shape = (n_tokens, n_heads, head_size)
+    T = n_tokens
+    C = embedding_dim
 
     # random input tensor
     in_tensor = np.random.uniform(-5, 5, (n_tokens, projected_size))
     in_tensor = to_tensor(in_tensor)
-    breakpoint()
-
-    T = n_tokens
-    C = embedding_dim
 
     x = torch.from_numpy(in_tensor)
 
     qu, k, v = x.split(embedding_dim, dim=1)  # pytorch
-    query, key, value = in_tensor.split(3)  # tricycle
+    query, key, value = in_tensor.split(3, axis=1)  # tricycle
 
-    assert np.allclose(query, qu.numpy()), (query, qu.numpy())
-    assert np.allclose(key, k.numpy())
-    assert np.allclose(value, v.numpy())
+    assert query.close_to(qu)
+    assert key.close_to(k)
+    assert value.close_to(v)
 
     # pytorch
     k = k.view(T, n_heads, C // n_heads)
     qu = qu.view(T, n_heads, C // n_heads)
     v = v.view(T, n_heads, C // n_heads)
-
-    # tricycle
-    head_size = embedding_dim // n_heads
-    key = reshape(key, (n_tokens, n_heads, head_size))
-    query = reshape(query, (n_tokens, n_heads, head_size))
-    value = reshape(value, (n_tokens, n_heads, head_size))
-
-    assert np.allclose(key, k.numpy())
-    assert np.allclose(query, qu.numpy())
-    assert np.allclose(value, v.numpy())
-
-    # pytorch
     k = k.transpose(-3, -2)
     qu = qu.transpose(-3, -2)
     v = v.transpose(-3, -2)
 
     # tricycle
-    swap = Einsum("tnh->nth")
-    key = swap(key)
-    query = swap(query)
-    value = swap(value)
+    key = key.reshape(head_shape).e("TNH -> NTH")
+    query = query.reshape(head_shape).e("TNH -> NTH")
+    value = value.reshape(head_shape).e("TNH -> NTH")
 
-    assert np.allclose(key, k.numpy())
-    assert np.allclose(query, qu.numpy())
-    assert np.allclose(value, v.numpy())
+    assert query.close_to(qu)
+    assert key.close_to(k)
+    assert value.close_to(v)
 
     # pytorch
     att = qu @ k.transpose(-2, -1)
-
-    # tricycle
-    attend = Einsum("nih,njh->nij")
-    attention = attend(query, key)
-
-    assert np.allclose(attention, att.numpy())
-
-    # pytorch
     att *= 1 / np.sqrt(k.size(-1))
 
     # tricycle
-    attention = attention / np.sqrt(head_size)
+    attention = Einsum("NIh, NJh -> NIJ")(query, key) / np.sqrt(head_size)
 
-    assert np.allclose(attention, att.numpy())
+    assert attention.close_to(att)
 
     # pytorch
     bias = torch.tril(torch.ones(context_window, context_window)).view(
@@ -118,16 +98,17 @@ def test_attention_individually():
     # tricycle
     mask = np.ones((context_window, context_window))
     idx = np.tril(mask.astype(bool))
+
     mask[~idx] = -np.inf
     mask[idx] = 0
     mask = np.stack([mask[:T, :T]] * attention.shape[0])
     mask = to_tensor(mask, requires_grad=False, name="mask")
 
-    # TODO: check if this breaks the gradients
     attention = badd(attention, mask)
 
-    assert np.allclose(att.numpy(), attention)
+    assert attention.close_to(att)
 
+    breakpoint()
     # pytorch
     att = torch.softmax(att, dim=-1)
 
