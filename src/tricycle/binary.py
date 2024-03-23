@@ -1,11 +1,27 @@
 from functools import partial
-from string import ascii_letters
 
 import numpy as np
 
-from tricycle.ops import einsum, nothing
+from tricycle.ops import Einsum, nothing
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import udiv, umul
+
+
+def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
+    # sourcery skip: assign-if-exp
+    if tensor_1.is_vector:
+        shape_1 = tensor_1.shape[1:]
+    else:
+        shape_1 = tensor_1.shape
+
+    if tensor_2.is_vector:
+        shape_2 = tensor_2.shape[1:]
+    else:
+        shape_2 = tensor_2.shape
+
+    if shape_1 != shape_2:
+        breakpoint()
+    return shape_1 == shape_2
 
 
 def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
@@ -14,13 +30,16 @@ def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(np.add(tensor_1, tensor_2))
 
     result.args = (tensor_1, tensor_2)
     result.back_fns = (nothing, nothing)
     result.name = "badd"
+
+    if tensor_1.is_vector or tensor_2.is_vector:
+        result.is_vector = True
 
     return result
 
@@ -31,7 +50,7 @@ def bsub(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     return badd(tensor_1, umul(tensor_2, -1))
 
@@ -42,12 +61,9 @@ def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
-    indices = ascii_letters[: len(tensor_1.shape)]
-    subscripts = f"{indices},{indices}->{indices}"
-
-    result = einsum(subscripts)(tensor_1, tensor_2)
+    result = Einsum("...,...->...")(tensor_1, tensor_2)
     result.name = "bmul"
     return result
 
@@ -69,16 +85,20 @@ def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(np.maximum(tensor_1, tensor_2))
 
-    indicator_1 = to_tensor((tensor_1 > tensor_2).astype(float))
-    indicator_2 = to_tensor((tensor_1 <= tensor_2).astype(float))
+    indicator_1 = to_tensor(
+        (tensor_1 > tensor_2).astype(float), is_vector=tensor_1.is_vector
+    )
+    indicator_2 = to_tensor(
+        (tensor_1 <= tensor_2).astype(float), is_vector=tensor_2.is_vector
+    )
     result.args = (tensor_1, tensor_2)
     result.back_fns = (partial(bmul, indicator_1), partial(bmul, indicator_2))
     result.name = "bmax"
-
+    result.is_vector = tensor_1.is_vector or tensor_2.is_vector
     return result
 
 
@@ -90,14 +110,19 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
-    assert tensor_1.shape == tensor_2.shape
+    assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(np.minimum(tensor_1, tensor_2))
 
-    indicator_1 = to_tensor((tensor_1 < tensor_2).astype(float))
-    indicator_2 = to_tensor((tensor_1 >= tensor_2).astype(float))
+    indicator_1 = to_tensor(
+        (tensor_1 < tensor_2).astype(float), is_vector=tensor_1.is_vector
+    )
+    indicator_2 = to_tensor(
+        (tensor_1 >= tensor_2).astype(float), is_vector=tensor_2.is_vector
+    )
     result.args = (tensor_1, tensor_2)
     result.back_fns = (partial(bmul, indicator_1), partial(bmul, indicator_2))
     result.name = "bmin"
+    result.is_vector = tensor_1.is_vector or tensor_2.is_vector
 
     return result

@@ -1,61 +1,30 @@
-from abc import ABC, abstractmethod
+import numpy as np
 
-from tricycle.binary import bmul
 from tricycle.ops import softmax
-from tricycle.reduce import radd
-from tricycle.tensor import Tensor
-from tricycle.unary import ulog, umul
+from tricycle.tensor import Tensor, to_tensor
+from tricycle.unary import ulog
 
 
-class LossFn(ABC):
-    @abstractmethod
-    def __call__(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        raise NotImplementedError
+def mean_square_error(y_true: Tensor, y_pred: Tensor):
+    # sourcery skip: assign-if-exp, reintroduce-else
+    square_error = (y_true - y_pred) ** 2
+    assert isinstance(square_error, Tensor)
 
-    @abstractmethod
-    def vectorise(self) -> "VectorisedLossFn":
-        raise NotImplementedError
+    divisor = square_error.shape[-1]
+    if divisor == 1:
+        return square_error
 
-
-class VectorisedLossFn(LossFn):
-    def vectorise(self) -> "VectorisedLossFn":
-        return self
-
-    @abstractmethod
-    def __call__(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        raise NotImplementedError
+    result = square_error.e("a->")
+    return result / divisor
 
 
-class VectorisedMeanSquareError(VectorisedLossFn):
-    def __call__(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        square_error = (y_true - y_pred) ** 2
-        return radd(square_error, "ki->k")
+def cross_entropy(y_true: Tensor, y_pred: Tensor) -> Tensor:
+    # sourcery skip: assign-if-exp, reintroduce-else
+    """
+    Calculate the cross entropy loss
+    """
+    # normalise and log
+    y_pred = ulog(softmax(y_pred))
+    product = y_true * y_pred * -1
 
-
-class MeanSquareError(LossFn):
-    def __call__(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        square_error = (y_true - y_pred) ** 2
-        return radd(square_error, "i->")
-
-    def vectorise(self) -> "VectorisedLossFn":
-        return VectorisedMeanSquareError()
-
-
-class VectorisedCrossEntropy(VectorisedLossFn):
-    def __call__(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        # normalise and log
-        y_pred = ulog(softmax(y_pred))
-        return umul(radd(bmul(y_true, y_pred), "ki->k"), -1)
-
-
-class CrossEntropy(LossFn):
-    def __call__(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        """
-        Calculate the cross entropy loss
-        """
-        # normalise and log
-        y_pred = ulog(softmax(y_pred))
-        return umul(radd(bmul(y_true, y_pred), "i->"), -1)
-
-    def vectorise(self) -> "VectorisedLossFn":
-        return VectorisedCrossEntropy()
+    return product.e("a->")

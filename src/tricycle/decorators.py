@@ -11,7 +11,10 @@ def to_tensor(fn: Op) -> Op:
 
     @wraps(fn)
     def wrapped(*args, **kwargs):
-        args = [arg if isinstance(arg, Tensor) else to_tensor_op(arg) for arg in args]
+        args = [
+            arg if isinstance(arg, Tensor) else to_tensor_op(arg)
+            for arg in args
+        ]
         return fn(*args, **kwargs)
 
     return wrapped

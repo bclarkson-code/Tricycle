@@ -1,11 +1,8 @@
 from abc import abstractmethod
 from typing import Sequence
 
-import numpy as np
-
-from tricycle.binary import badd
+from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
-from tricycle.ops import einsum, reshape, softmax, split
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -26,35 +23,25 @@ class Layer:
     def zero_grad(self):
         raise NotImplementedError
 
-    @abstractmethod
-    def vectorise(self) -> "Layer":
-        raise NotImplementedError
-
 
 class Dense(Layer):
     weights: Tensor
-    in_features: int
-    out_features: int
-    _forward_op: einsum
+    from_size: int
+    to_size: int
 
-    def __init__(self, in_features: int, out_features: int, initialiser=init_xavier):
-        self.weights = initialiser((in_features, out_features), name="weights")
-        self.in_features = in_features
-        self.out_features = out_features
-        self._forward_op = einsum("a,ab->b")
+    def __init__(self, from_size: int, to_size: int, initialiser=init_xavier):
+        self.weights = initialiser((from_size, to_size), name="weights")
+        self.from_size = from_size
+        self.to_size = to_size
 
     def forward(self, x: Tensor):
-        return self._forward_op(x, self.weights)
+        return Einsum("a,ab->b")(x, self.weights)
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)
 
     def zero_grad(self):
         self.weights.grad = None
-
-    def vectorise(self) -> "Dense":
-        self._forward_op = einsum("za,ab->zb")
-        return self
 
 
 class MultiHeadSelfAttention(Layer):
@@ -164,7 +151,9 @@ class MultiHeadSelfAttention(Layer):
         )  # re-assemble all head outputs side by side
 
     def masked_fill(self, x: Tensor, mask_shape: tuple[int, int]):
-        mask = np.stack([self.mask[: mask_shape[0], : mask_shape[1]]] * x.shape[0])
+        mask = np.stack(
+            [self.mask[: mask_shape[0], : mask_shape[1]]] * x.shape[0]
+        )
         mask = to_tensor(mask, requires_grad=False, name="mask")
 
         # TODO: check if this breaks the gradients
@@ -184,7 +173,9 @@ class MultiHeadSelfAttention(Layer):
         value = value.reshape(split_into_heads).e("T N H -> N T H")
 
         # attend
-        attention = einsum("N I H, N J H -> N I J", query, key) / np.sqrt(head_size)
+        attention = einsum("N I H, N J H -> N I J", query, key) / np.sqrt(
+            head_size
+        )
 
         # mask and softmax
         attention = self.masked_fill(attention, (n_tokens, n_tokens))
@@ -192,7 +183,9 @@ class MultiHeadSelfAttention(Layer):
 
         # smush the heads back together
         out_shape = (n_tokens, self.n_heads, head_size)
-        return einsum("N I J, N J H -> N H I", attention, value).reshape(out_shape)
+        return einsum("N I J, N J H -> N H I", attention, value).reshape(
+            out_shape
+        )
 
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding
@@ -234,7 +227,3 @@ class Sequential(Layer):
     def zero_grad(self):
         for layer in self.layers:
             layer.zero_grad()
-
-    def vectorise(self) -> "Sequential":
-        self.layers = [layer.vectorise() for layer in self.layers]
-        return self

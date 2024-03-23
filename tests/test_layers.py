@@ -11,7 +11,7 @@ def test_dense_layer():
 
     assert layer.weights.shape == (10, 8)
 
-    x_in = np.ones(10)
+    x_in = to_tensor(np.ones(10))
 
     x_out = layer(x_in)
     assert x_out.shape == (8,)
@@ -21,14 +21,14 @@ def test_sequential_layer():
     layer1 = Dense(10, 8)
     layer2 = Dense(8, 4)
 
-    seq = Sequential(layer1, layer2)
+    model = Sequential(layer1, layer2)
 
-    assert seq.layers[0].weights.shape == (10, 8)
-    assert seq.layers[1].weights.shape == (8, 4)
+    assert model.layers[0].weights.shape == (10, 8)
+    assert model.layers[1].weights.shape == (8, 4)
 
-    x_in = np.ones(10)
+    x_in = to_tensor(np.ones(10))
 
-    x_out = seq(x_in)
+    x_out = model(x_in)
     assert x_out.shape == (4,)
 
 
@@ -190,7 +190,9 @@ def test_attention_combined():
     attention = MultiHeadSelfAttention(
         embedding_dim, n_heads, context_window=32, dropout=0
     )
-    tricycle_attention = attention._attention(to_tensor(k), to_tensor(qu), to_tensor(v))
+    tricycle_attention = attention._attention(
+        to_tensor(k), to_tensor(qu), to_tensor(v)
+    )
     andrej = andrej_attention(qu, k, v, n_tokens, attention.mask)
 
     breakpoint()
