@@ -35,7 +35,7 @@ def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     result = to_tensor(np.add(tensor_1, tensor_2))
 
     result.args = (tensor_1, tensor_2)
-    result.back_fns = (nothing, nothing)
+    result.back_fn = (nothing, nothing)
     result.name = "badd"
 
     if tensor_1.is_vector or tensor_2.is_vector:
@@ -96,7 +96,7 @@ def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         (tensor_1 <= tensor_2).astype(float), is_vector=tensor_2.is_vector
     )
     result.args = (tensor_1, tensor_2)
-    result.back_fns = (partial(bmul, indicator_1), partial(bmul, indicator_2))
+    result.back_fn = (partial(bmul, indicator_1), partial(bmul, indicator_2))
     result.name = "bmax"
     result.is_vector = tensor_1.is_vector or tensor_2.is_vector
     return result
@@ -121,7 +121,7 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         (tensor_1 >= tensor_2).astype(float), is_vector=tensor_2.is_vector
     )
     result.args = (tensor_1, tensor_2)
-    result.back_fns = (partial(bmul, indicator_1), partial(bmul, indicator_2))
+    result.back_fn = (partial(bmul, indicator_1), partial(bmul, indicator_2))
     result.name = "bmin"
     result.is_vector = tensor_1.is_vector or tensor_2.is_vector
 

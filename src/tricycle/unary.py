@@ -19,7 +19,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.add(tensor, constant))
     result.args = (tensor,)
-    result.back_fns = (nothing,)
+    result.back_fn = (nothing,)
     result.name = f"+ {constant}"
     result.is_vector = tensor.is_vector
     return result
@@ -149,7 +149,7 @@ def ulog(tensor: Tensor) -> Tensor:
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    result.back_fns = (
+    result.back_fn = (
         partial(
             bmul,
             udiv(1, tensor),

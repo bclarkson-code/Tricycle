@@ -1,8 +1,11 @@
 from abc import abstractmethod
 from typing import Sequence
 
+import numpy as np
+
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
+from tricycle.ops import reshape
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -75,15 +78,15 @@ class MultiHeadSelfAttention(Layer):
         # Project the embedding into 3 embeddings. One for each of key, query
         # and value
         self.in_projection = Dense(
-            in_features=self.embedding_dim,
-            out_features=self.embedding_dim * 3,
+            from_size=self.embedding_dim,
+            to_size=self.embedding_dim * 3,
             initialiser=initialiser,
         )
 
         # Pass the final embedding through a linear layer
         self.out_projection = Dense(
-            in_features=self.embedding_dim,
-            out_features=self.embedding_dim,
+            from_size=self.embedding_dim,
+            to_size=self.embedding_dim,
             initialiser=initialiser,
         )
 

@@ -24,7 +24,7 @@ class StochasticGradientDescent(Optimiser):
     def _reset_grad(self, tensor: Tensor):
         tensor.grad = None
         tensor.args = None
-        tensor.back_fns = None
+        tensor.back_fn = None
         return tensor
 
     def update_weight(self, tensor: Tensor):

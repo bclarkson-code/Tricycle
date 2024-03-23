@@ -1,8 +1,9 @@
 import logging
 import uuid
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,10 @@ class Tensor(np.ndarray):
     _id: int
     _grad_fn: Optional[List[List[Op]]] = None
     args: tuple["Tensor", ...] | None = None
-    back_fns: tuple[Op, ...] | None = None
+    back_fn: tuple[Op, ...] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
-    show_graph = False
     is_vector: bool = False
 
     def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
@@ -49,7 +49,7 @@ class Tensor(np.ndarray):
 
             # At non-leaf node
             else:
-                for arg, op in zip(current_node.args, current_node.back_fns):
+                for arg, op in zip(current_node.args, current_node.back_fn):
                     if not arg.requires_grad:
                         continue
 
@@ -92,19 +92,6 @@ class Tensor(np.ndarray):
         params = self._find_differentiable_params()
         for param in params.values():
             self._calculate_gradient(param)
-
-    def e(self, subscript: str, *args):
-        """
-        Perform an einsum operation
-        """
-        from tricycle.ops import einsum
-
-        return einsum(subscript)(self, *args)
-
-    def reshape(self, shape: Sequence[int]):
-        from tricycle.ops import reshape
-
-        return reshape(self, shape)
 
     def __hash__(self) -> int:
         return id(self)
@@ -240,7 +227,17 @@ class Tensor(np.ndarray):
 
         return repeat(subscript, self, n_repeats)
 
-    def close_to(self, other: "Tensor", **kwargs) -> bool:
+    def reshape(self, shape: Sequence[int]) -> "Tensor":
+        from tricycle.ops import reshape
+
+        return reshape(self, shape)
+
+    def split(self, n_splits: int) -> List["Tensor"]:
+        from tricycle.ops import split
+
+        return split(self, n_splits)
+
+    def close_to(self, other: "Tensor" | ArrayLike, **kwargs) -> bool:
         """
         Convenience method to check if two tensors are identical
         to within some tolerance

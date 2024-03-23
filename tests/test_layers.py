@@ -2,8 +2,9 @@ import numpy as np
 import torch
 
 from tricycle.binary import badd
+from tricycle.einsum import Einsum, Subscript
 from tricycle.layers import Dense, MultiHeadSelfAttention, Sequential
-from tricycle.ops import einsum, reshape, softmax, split, to_tensor
+from tricycle.ops import reshape, softmax, split, to_tensor
 
 
 def test_dense_layer():
@@ -46,6 +47,8 @@ def test_attention_individually():
 
     # random input tensor
     in_tensor = np.random.uniform(-5, 5, (n_tokens, projected_size))
+    in_tensor = to_tensor(in_tensor)
+    breakpoint()
 
     T = n_tokens
     C = embedding_dim
@@ -53,7 +56,8 @@ def test_attention_individually():
     x = torch.from_numpy(in_tensor)
 
     qu, k, v = x.split(embedding_dim, dim=1)  # pytorch
-    query, key, value = split(in_tensor, n_splits=3)  # tricycle
+    query, key, value = in_tensor.split(3)  # tricycle
+
     assert np.allclose(query, qu.numpy()), (query, qu.numpy())
     assert np.allclose(key, k.numpy())
     assert np.allclose(value, v.numpy())
@@ -79,7 +83,7 @@ def test_attention_individually():
     v = v.transpose(-3, -2)
 
     # tricycle
-    swap = einsum("tnh->nth")
+    swap = Einsum("tnh->nth")
     key = swap(key)
     query = swap(query)
     value = swap(value)
@@ -92,7 +96,7 @@ def test_attention_individually():
     att = qu @ k.transpose(-2, -1)
 
     # tricycle
-    attend = einsum("nih,njh->nij")
+    attend = Einsum("nih,njh->nij")
     attention = attend(query, key)
 
     assert np.allclose(attention, att.numpy())
@@ -136,7 +140,7 @@ def test_attention_individually():
     att = att @ v
 
     # tricycle
-    attention = einsum("nij,njh->nih")(attention, value)
+    attention = Einsum("nij,njh->nih")(attention, value)
 
     assert np.allclose(att.numpy(), attention)
 
