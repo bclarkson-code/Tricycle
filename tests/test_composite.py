@@ -1,7 +1,6 @@
 import numpy as np
 
 from tricycle.ops import softmax, split
-from tricycle.reduce import radd
 from tricycle.tensor import to_tensor
 
 
@@ -13,11 +12,14 @@ def test_softmax():
     assert out_tensor.shape == (4,)
     out_tensor.backward()
 
+    # manually figure out softmax derivative using
+    # d S(x) / d x = S(x) * (1 - S(x))
     left = np.einsum("i,ij->ij", out_tensor, np.eye(4, 4))
     right = np.einsum("i,j->ij", out_tensor, out_tensor)
     correct = (left - right) @ np.ones_like(in_tensor)
 
-    assert np.allclose(in_tensor.grad, correct)
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to(correct)
 
 
 def test_split():
@@ -34,3 +36,15 @@ def test_split():
     assert np.allclose(out_tensors[0], [1, 2])
     assert np.allclose(out_tensors[1], [3, 4])
     assert np.allclose(out_tensors[2], [5, 6])
+
+    out_tensors[0].backward()
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to([1, 1, 0, 0, 0, 0])
+
+    out_tensors[1].backward()
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to([1, 1, 1, 1, 0, 0])
+
+    out_tensors[2].backward()
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to([1, 1, 1, 1, 1, 1])
