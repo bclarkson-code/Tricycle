@@ -20,7 +20,7 @@ def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
         shape_2 = tensor_2.shape
 
     if shape_1 != shape_2:
-        breakpoint()
+        raise ValueError(f"Shapes {shape_1} and {shape_2} do not match")
     return shape_1 == shape_2
 
 

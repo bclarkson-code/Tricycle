@@ -96,12 +96,14 @@ class MultiHeadSelfAttention(Layer):
     def _attention(self, key: Tensor, query: Tensor, value: Tensor):
         # reshape into n_heads x embedding_dim
         head_size = self.embedding_dim // self.n_heads
-        n_tokens = key.shape[0]
+        n_tokens = key.shape[1] if key.is_vector else key.shape[0]
         head_shape = (
             n_tokens,  # number of tokens
             self.n_heads,  # number of heads
             head_size,  # embedding per head
         )
+        out_shape = (n_tokens, self.embedding_dim)
+
         # reshape and reorder the heads
         key = key.reshape(head_shape).e("TNH -> NTH")
         query = query.reshape(head_shape).e("TNH -> NTH")
@@ -111,12 +113,12 @@ class MultiHeadSelfAttention(Layer):
         attention = Einsum("NIh, NJh -> NIJ")(query, key) / np.sqrt(head_size)
 
         # mask and softmax
-        attention = self.masked_fill(attention, (n_tokens, n_tokens))
+        attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
         attention = softmax(attention)
 
         # smush the heads back together
-        out_shape = (n_tokens, self.n_heads, head_size)
-        return Einsum("NIj, NjH -> NHI")(attention, value).reshape(out_shape)
+        out_shape = (n_tokens, self.embedding_dim)
+        return Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
 
     def _attention_andrej(self, key: Tensor, query: Tensor, value: Tensor):
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
@@ -131,20 +133,15 @@ class MultiHeadSelfAttention(Layer):
 
         # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
         att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        bias = torch.tril(torch.ones(context_window, context_window)).view(
+            1, context_window, context_window
+        )
+        att = att.masked_fill(bias[:, :T, :T] == 0, float("-inf"))
         att = F.softmax(att, dim=-1)
         y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side
-
-    def masked_fill(self, x: Tensor, mask_shape: tuple[int, int]):
-        mask = np.stack(
-            [self.mask[: mask_shape[0], : mask_shape[1]]] * x.shape[0]
-        )
-        mask = to_tensor(mask, requires_grad=False, name="mask")
-
-        # TODO: check if this breaks the gradients
-        return x + mask
 
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding
@@ -193,9 +190,10 @@ def build_mask(context_window: int):
     Build an attention mask to stop the model from being able to see
     future tokens
     """
+    NEGATIVE_INFINITY = -np.inf
     mask = np.ones((context_window, context_window))
     idx = np.tril(mask.astype(bool))
-    mask[~idx] = -np.inf
+    mask[~idx] = NEGATIVE_INFINITY
     mask[idx] = 0
     return to_tensor(mask, requires_grad=False, name="mask")
 
@@ -204,6 +202,7 @@ def masked_fill(x: Tensor, mask_shape: tuple[int, int], full_mask: Tensor):
     """
     Apply an attention_mask to a tensor
     """
-    mask = np.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * x.shape[0])
+    repeats = x.shape[1] if x.is_vector else x.shape[0]
+    mask = np.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
     mask = to_tensor(mask, requires_grad=False, name="mask")
     return x + mask

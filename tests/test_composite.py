@@ -23,6 +23,22 @@ def test_softmax():
     assert in_tensor.grad.close_to(correct)
 
 
+def test_softmax_multi_dimension():
+    in_tensor = to_tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+
+    out_tensor = softmax(in_tensor)
+
+    assert out_tensor.shape == (2, 2, 2)
+    assert out_tensor.close_to(
+        [
+            [[0.26894142, 0.73105858], [0.26894142, 0.73105858]],
+            [[0.26894142, 0.73105858], [0.26894142, 0.73105858]],
+        ],
+    )
+
+    out_tensor.backward()
+
+
 def test_split_first_axis():
     in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
 

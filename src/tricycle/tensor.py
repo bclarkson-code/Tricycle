@@ -222,10 +222,10 @@ class Tensor(np.ndarray):
 
         return Einsum(subscript)(self)
 
-    def repeat(self, subscript: str, n_repeats: int) -> "Tensor":
+    def repeat(self, n_repeats: int) -> "Tensor":
         from tricycle.ops import repeat
 
-        return repeat(subscript, self, n_repeats)
+        return repeat(self, n_repeats)
 
     def reshape(self, shape: Sequence[int]) -> "Tensor":
         from tricycle.ops import reshape

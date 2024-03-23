@@ -7,24 +7,19 @@ from tricycle.reduce import rmax
 from tricycle.tensor import Tensor, to_tensor
 
 
-def repeat(subscript: Subscript | str, tensor: Tensor, repeats: int):
+def repeat(tensor: Tensor, repeats: int):
     """
-    Repeat a tensor along some indices, according to the subscript.
-    Note: This is mathematically equivalent to Einsumming the tensor
-    with a one tensor
+    Repeat a tensor along its final axis
+    This is done my multiplying with a ones tensor the same shape as the
+    desired output
     """
-    if isinstance(subscript, str):
-        subscript = Subscript(subscript)
+    subscript = Subscript("...,...a->...a")
+    new_shape = tensor.shape + (repeats,)
+    ones = to_tensor(
+        np.ones(new_shape), is_vector=tensor.is_vector, requires_grad=False
+    )
 
-    unique_indices = set(",".join(subscript.inputs))
-
-    unset_indices = "".join(set(subscript.output) - unique_indices)
-    one_shape = [repeats] * len(unset_indices)
-
-    ones = to_tensor(np.ones(one_shape), requires_grad=False)
-    inputs = [unset_indices] + subscript.inputs
-    new_subscript = Subscript.from_split(inputs, subscript.output)
-    return Einsum(new_subscript)(ones, tensor)
+    return Einsum(subscript)(tensor, ones)
 
 
 def nothing(tensor):
@@ -44,11 +39,11 @@ def softmax(tensor):
     from tricycle.unary import uexp
 
     # normalise
-    largest_element = rmax(tensor, "a->").repeat("->a", tensor.shape[-1])
+    largest_element = rmax(tensor, "...a->...").repeat(tensor.shape[-1])
     tensor = tensor - largest_element
 
     numerator = uexp(tensor)
-    denominator = numerator.e("a->").repeat("->a", tensor.shape[-1])
+    denominator = numerator.e("...a->...").repeat(tensor.shape[-1])
     return bdiv(numerator, denominator)
 
 
@@ -115,6 +110,9 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
 
 
 def reshape(tensor: Tensor, shape: Sequence[int]):
+    if tensor.is_vector:
+        shape = [tensor.shape[0]] + list(shape)
+
     result = to_tensor(np.reshape(tensor, shape))
     result.is_vector = tensor.is_vector
     result.args = (tensor,)
