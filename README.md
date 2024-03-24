@@ -19,6 +19,7 @@ Here are some things you can do with Tricycle:
 - Automatic differentiation of tensors
 - Manipulate tensors with [einstein notation](https://en.wikipedia.org/wiki/Einstein_notation)
 - Successfully train deep learning models
+- Use attention (!)
 
 Here are some things you can't do with Tricycle (yet):
 - Do anything at the speed of pytorch
