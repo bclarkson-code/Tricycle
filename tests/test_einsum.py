@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle.einsum import Einsum
+from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import to_tensor
 
 
@@ -43,3 +43,47 @@ def test_transpose():
     op(x).backward()
     assert x.grad is not None
     assert x.grad.close_to(np.ones_like(x))
+
+
+def test_parse_subscripts():
+    subscript = Subscript("a,b->ab")
+    assert subscript.inputs == [["a"], ["b"]]
+    assert subscript.output == ["a", "b"]
+
+    subscript = Subscript("a,b->")
+    assert subscript.inputs == [["a"], ["b"]]
+    assert subscript.output == []
+
+    subscript = Subscript("...a,b...->ab...")
+    assert subscript.inputs == [["...", "a"], ["b", "..."]]
+    assert subscript.output == ["a", "b", "..."]
+
+    subscript = Subscript("...,...->...")
+    assert subscript.inputs == [["..."], ["..."]]
+    assert subscript.output == ["..."]
+
+    subscript = Subscript("z...,z...->z...")
+    assert subscript.inputs == [["z", "..."], ["z", "..."]]
+    assert subscript.output == ["z", "..."]
+
+
+def test_can_parse_split():
+    inputs = [["a"], ["b"]]
+    output = ["a", "b"]
+    assert Subscript.join(inputs, output) == "a,b->ab"
+
+    inputs = [["a"], ["b"]]
+    output = []
+    assert Subscript.join(inputs, output) == "a,b->"
+
+    inputs = [["...", "a"], ["b", "..."]]
+    output = ["a", "b", "..."]
+    assert Subscript.join(inputs, output) == "...a,b...->ab..."
+
+    inputs = [["..."], ["..."]]
+    output = ["..."]
+    assert Subscript.join(inputs, output) == "...,...->..."
+
+    inputs = [["z", "..."], ["z", "..."]]
+    output = ["z", "..."]
+    assert Subscript.join(inputs, output) == "z...,z...->z..."

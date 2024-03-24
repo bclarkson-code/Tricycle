@@ -1,8 +1,10 @@
 import logging
 import uuid
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
+from copy import copy
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,6 @@ class Tensor(np.ndarray):
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
-    show_graph = False
     is_vector: bool = False
 
     def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
@@ -36,10 +37,14 @@ class Tensor(np.ndarray):
 
         # Find every route to a differentiable parameter
         while stack:
+            logger.debug(f"Current_stack: {[node.shape for node, _ in stack]}")
             current_node, current_gradient = stack.pop()
 
             # At leaf node
             if current_node.args is None:
+                logger.debug(
+                    f"Found leaf node: {current_node.shape} {current_node.name}"
+                )
                 if current_node._grad_fn is None:
                     current_node._grad_fn = [current_gradient]
                 else:
@@ -222,12 +227,22 @@ class Tensor(np.ndarray):
 
         return Einsum(subscript)(self)
 
-    def repeat(self, subscript: str, n_repeats: int) -> "Tensor":
+    def repeat(self, n_repeats: int) -> "Tensor":
         from tricycle.ops import repeat
 
-        return repeat(subscript, self, n_repeats)
+        return repeat(self, n_repeats)
 
-    def close_to(self, other: "Tensor", **kwargs) -> bool:
+    def reshape(self, shape: Sequence[int]) -> "Tensor":
+        from tricycle.ops import reshape
+
+        return reshape(self, shape)
+
+    def split(self, n_splits: int, axis: int = 0) -> List["Tensor"]:
+        from tricycle.ops import split
+
+        return split(self, n_splits, axis)
+
+    def close_to(self, other: "Tensor" | ArrayLike, **kwargs) -> bool:
         """
         Convenience method to check if two tensors are identical
         to within some tolerance
@@ -276,7 +291,9 @@ def vectorise(tensor: Tensor) -> Tensor:
     if tensor.is_vector:
         raise ValueError("Tensor is already vectorised")
 
-    result = to_tensor(tensor, is_vector=True)
+    result = to_tensor(
+        copy(tensor), is_vector=True, requires_grad=tensor.requires_grad
+    )
     result.args = (tensor,)
     result.back_fn = (unvectorise,)
     return result
@@ -290,7 +307,9 @@ def unvectorise(tensor: Tensor) -> Tensor:
     if not tensor.is_vector:
         raise ValueError("Tensor is not vectorised")
 
-    result = to_tensor(tensor, is_vector=False)
+    result = to_tensor(
+        copy(tensor), is_vector=False, requires_grad=tensor.requires_grad
+    )
     result.args = (tensor,)
     result.back_fn = (vectorise,)
     return result

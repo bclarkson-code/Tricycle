@@ -1,3 +1,5 @@
+import itertools
+import re
 from typing import Sequence
 
 import numpy as np
@@ -11,25 +13,38 @@ class Subscript:
     """
 
     subscript: str
-    inputs: list[str]
-    output: str
+    inputs: list[list[str]]
+    output: list[str]
+    _index_pattern: re.Pattern = re.compile(r"(?:[A-Za-z]|(?:\.{3}))")
 
     def __init__(self, subscript: str):
         self.subscript = subscript
         self.inputs, self.output = self.split()
 
-    def split(self) -> tuple[list[str], str]:
+    def split(self) -> tuple[list[list[str]], list[str]]:
         """
         Parse a subscripts string into a list of indices and a result
         """
         indices, result = self.subscript.split("->")
         indices = indices.split(",")
+        indices = [re.findall(self._index_pattern, idx) for idx in indices]
+        result = re.findall(self._index_pattern, result)
         return indices, result
 
+    @staticmethod
+    def join(indices: list[list[str]], result: list[str]) -> str:
+        inputs_string = ",".join(["".join(idx) for idx in indices])
+        outputs_string = "".join(result)
+        return f"{inputs_string}->{outputs_string}"
+
     @classmethod
-    def from_split(cls, indices: list[str], result: str):
-        subscript = ",".join(indices) + "->" + result
-        return cls(subscript)
+    def from_split(cls, indices: list[list[str]], result: list[str]):
+        return cls(cls.join(indices, result))
+
+    @property
+    def unique_input_indices(self) -> set[str]:
+        all_inputs = itertools.chain(*self.inputs)
+        return set(all_inputs)
 
     def __repr__(self):
         return self.subscript
@@ -115,7 +130,11 @@ class Einsum:
             return subscript, tensors
 
         [tensor] = tensors
-        ones = to_tensor(np.ones_like(tensor), is_vector=tensor.is_vector)
+        ones = to_tensor(
+            np.ones_like(tensor),
+            is_vector=tensor.is_vector,
+            requires_grad=False,
+        )
         tensors = [tensor, ones]
 
         [index] = subscript.inputs
@@ -136,7 +155,7 @@ class Einsum:
         vectorise_output = False
         for idx, tensor in zip(subscript.inputs, tensors):
             if tensor.is_vector:
-                inputs.append(f"z{idx}")
+                inputs.append(["z"] + idx)
                 vectorise_output = True
             else:
                 inputs.append(idx)
@@ -148,12 +167,35 @@ class Einsum:
                     "non-vectorised tensors because "
                     "it is reserved for vectorised indices."
                 )
-            output = f"z{output}"
+            output = ["z"] + output
 
         subscript = Subscript.from_split(inputs, output)
         return subscript, tensors, vectorise_output
 
-    def __call__(self, *tensors: Tensor):
+    def _replace_infinity(self, tensors: Sequence[Tensor]):
+        """
+        If tensors contain infinity, temporarily replace them with the max
+        value for that datatype
+        """
+        processed = []
+        for tensor in tensors:
+            if not np.isinf(tensor.data).any():
+                processed.append(tensor)
+                continue
+
+            new_tensor = to_tensor(
+                np.nan_to_num(tensor.data), is_vector=tensor.is_vector
+            )
+            new_tensor.args = tensor.args
+            new_tensor.back_fn = tensor.back_fn
+            new_tensor.name = tensor.name
+            processed.append(new_tensor)
+
+        return processed
+
+    def __call__(self, *tensors: Tensor, replace_inf=False):
+        if replace_inf:
+            tensors = self._replace_infinity(tensors)
         subscript, tensors, vectorise_output = self._handle_vectorised(
             self.subscript, tensors
         )
