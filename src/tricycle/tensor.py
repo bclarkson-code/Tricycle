@@ -1,5 +1,6 @@
 import logging
 import uuid
+from copy import copy
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -41,7 +42,9 @@ class Tensor(np.ndarray):
 
             # At leaf node
             if current_node.args is None:
-                logger.debug(f"Found leaf node: {current_node.shape}")
+                logger.debug(
+                    f"Found leaf node: {current_node.shape} {current_node.name}"
+                )
                 if current_node._grad_fn is None:
                     current_node._grad_fn = [current_gradient]
                 else:
@@ -288,7 +291,9 @@ def vectorise(tensor: Tensor) -> Tensor:
     if tensor.is_vector:
         raise ValueError("Tensor is already vectorised")
 
-    result = to_tensor(tensor, is_vector=True)
+    result = to_tensor(
+        copy(tensor), is_vector=True, requires_grad=tensor.requires_grad
+    )
     result.args = (tensor,)
     result.back_fn = (unvectorise,)
     return result
@@ -302,7 +307,9 @@ def unvectorise(tensor: Tensor) -> Tensor:
     if not tensor.is_vector:
         raise ValueError("Tensor is not vectorised")
 
-    result = to_tensor(tensor, is_vector=False)
+    result = to_tensor(
+        copy(tensor), is_vector=False, requires_grad=tensor.requires_grad
+    )
     result.args = (tensor,)
     result.back_fn = (vectorise,)
     return result

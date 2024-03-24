@@ -53,7 +53,7 @@ def arange(*args, **kwargs):
 
 def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
     """
-    Split a tensor along its first axis int n_splits partitions
+    Split a tensor along its first axis into n_splits partitions
     """
     if axis < 0:
         axis += tensor.ndim
@@ -79,7 +79,9 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
                 axis_idx = slice(None)
             idx.append(axis_idx)
 
-        result = to_tensor(tensor[*idx], requires_grad=tensor.requires_grad)
+        result = to_tensor(
+            tensor[tuple(idx)], requires_grad=tensor.requires_grad
+        )
 
         def undo_split(grad, idx=idx):
             """
@@ -99,7 +101,7 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
             result_grad = to_tensor(
                 np.zeros_like(tensor), is_vector=result.is_vector
             )
-            result_grad[*idx] = grad
+            result_grad[tuple(idx)] = grad
             return result_grad
 
         result.back_fn = (undo_split,)

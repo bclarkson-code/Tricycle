@@ -124,10 +124,10 @@ def test_can_vectorise_softmax():
 
 def test_can_vectorise_split():
     in_tensor = to_tensor(
-        [[1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]], is_vector=True
+        [[1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]], name="in_tensor"
     )
 
-    out_tensors = in_tensor.split(3)
+    out_tensors = in_tensor.to_vector().split(3)
 
     assert len(out_tensors) == 3
     assert out_tensors[0].shape == (2, 2)

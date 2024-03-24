@@ -89,7 +89,8 @@ def test_can_upow():
 def test_can_udiv():
     # 2 divided by each element
     in_tensor = to_tensor(np.arange(12, dtype=float).reshape(3, 4))
-    out_tensor = udiv(2, in_tensor)
+    with np.errstate(divide="ignore"):
+        out_tensor = udiv(2, in_tensor)
 
     assert out_tensor.shape == (3, 4)
     assert np.allclose(
@@ -102,8 +103,9 @@ def test_can_udiv():
             ]
         ),
     )
-    out_tensor.backward()
-    correct = -np.power(copy(in_tensor), -2) * 2
+    with np.errstate(divide="ignore"):
+        out_tensor.backward()
+        correct = -np.power(copy(in_tensor), -2) * 2
 
     assert np.allclose(in_tensor.grad, correct)
 
