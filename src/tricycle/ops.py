@@ -3,8 +3,8 @@ from typing import Sequence
 import numpy as np
 
 from tricycle.einsum import Einsum, Subscript
-from tricycle.reduce import rmax
 from tricycle.tensor import Tensor, to_tensor
+from tricycle.unary import uexp
 
 
 def repeat(tensor: Tensor, repeats: int):
@@ -20,31 +20,6 @@ def repeat(tensor: Tensor, repeats: int):
     )
 
     return Einsum(subscript)(tensor, ones)
-
-
-def nothing(tensor):
-    """
-    Return a tensor
-    """
-    return tensor
-
-
-def softmax(tensor):
-    """
-    Apply softmax. The softmax is only applied to the final
-    dimension of the tensor
-    Note: the tensor is normalised for numeric stability
-    """
-    from tricycle.binary import bdiv
-    from tricycle.unary import uexp
-
-    # normalise
-    largest_element = rmax(tensor, "...a->...").repeat(tensor.shape[-1])
-    tensor = tensor - largest_element
-
-    numerator = uexp(tensor)
-    denominator = numerator.e("...a->...").repeat(tensor.shape[-1])
-    return bdiv(numerator, denominator)
 
 
 def arange(*args, **kwargs):

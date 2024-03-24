@@ -8,6 +8,7 @@ from tricycle.unary import (
     uadd,
     ucos,
     udiv,
+    uerf,
     uexp,
     ulog,
     umax,
@@ -15,6 +16,7 @@ from tricycle.unary import (
     umul,
     upow,
     usin,
+    usqrt,
     usub,
 )
 
@@ -194,3 +196,31 @@ def test_can_ucos():
     correct = [-np.sin(1), -np.sin(2), -np.sin(3), -np.sin(4)]
 
     assert np.allclose(in_tensor.grad, correct)
+
+
+def test_can_usqrt():
+    in_tensor = to_tensor([1, 2, 3, 4])
+    out_tensor = usqrt(in_tensor)
+
+    assert out_tensor.shape == (4,)
+    assert out_tensor.close_to([1, np.sqrt(2), np.sqrt(3), np.sqrt(4)])
+
+    out_tensor.backward()
+
+    correct = [0.5, 0.35355339, 0.28867513, 0.25]
+    assert in_tensor.grad.close_to(correct)
+
+
+def test_can_uerf():
+    in_tensor = to_tensor([1, 2, 3, 4])
+    out_tensor = uerf(in_tensor)
+
+    assert out_tensor.shape == (4,)
+    assert out_tensor.close_to(
+        [0.84270079, 0.99532227, 0.99997791, 0.99999998]
+    )
+
+    out_tensor.backward()
+
+    correct = [-1.12837917, -1.12837917, -1.12837917, -1.12837917]
+    assert in_tensor.grad.close_to(correct)

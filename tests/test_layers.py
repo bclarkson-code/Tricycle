@@ -1,11 +1,10 @@
 from copy import copy
 
 import numpy as np
-import pytest
 import torch
-from matplotlib import pyplot as plt
 
 from tricycle.einsum import Einsum
+from tricycle.functions import softmax
 from tricycle.layers import (
     Dense,
     MultiHeadSelfAttention,
@@ -13,7 +12,7 @@ from tricycle.layers import (
     build_mask,
     masked_fill,
 )
-from tricycle.ops import reshape, softmax, split, to_tensor
+from tricycle.ops import to_tensor
 
 
 def test_dense_layer():

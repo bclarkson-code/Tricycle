@@ -5,8 +5,8 @@ from typing import Sequence
 import numpy as np
 
 from tricycle.einsum import Einsum
+from tricycle.functions import softmax
 from tricycle.initialisers import init_xavier
-from tricycle.ops import reshape, softmax
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 

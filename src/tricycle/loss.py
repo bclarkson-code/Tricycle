@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle.ops import softmax
+from tricycle.functions import softmax
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import ulog
 
