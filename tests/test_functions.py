@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle.functions import sigmoid, softmax
+from tricycle.functions import sigmoid, softmax, tanh
 from tricycle.tensor import to_tensor
 
 
@@ -47,6 +47,20 @@ def test_sigmoid():
 
     out_tensor.backward()
     correct_grad = out_tensor * (1 - out_tensor)
+
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to(correct_grad)
+
+
+def test_tanh():
+    in_tensor = to_tensor([0, 1, 2, 3])
+    out_tensor = tanh(in_tensor)
+
+    assert out_tensor.shape == (4,)
+    assert out_tensor.close_to([0, 0.76159416, 0.96402758, 0.99505475])
+
+    out_tensor.backward()
+    correct_grad = 1 - out_tensor**2
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.close_to(correct_grad)

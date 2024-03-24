@@ -2,8 +2,8 @@ from functools import partial
 
 import numpy as np
 
-from tricycle.ops import Einsum, nothing
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.ops import Einsum
+from tricycle.tensor import Tensor, nothing, to_tensor
 from tricycle.unary import udiv, umul
 
 

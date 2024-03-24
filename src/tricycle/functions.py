@@ -25,3 +25,12 @@ def sigmoid(tensor: Tensor):
     Apply the sigmoid function
     """
     return udiv(1, (uexp(-tensor) + 1))
+
+
+def tanh(tensor: Tensor):
+    """
+    Apply the tanh function
+    """
+    numerator = uexp(tensor * 2) - 1
+    denominator = uexp(tensor * 2) + 1
+    return bdiv(numerator, denominator)

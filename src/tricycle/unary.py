@@ -1,6 +1,7 @@
 from functools import partial
 
 import numpy as np
+from scipy.special import erf
 
 from tricycle.einsum import Einsum
 from tricycle.tensor import Tensor, nothing, to_tensor
@@ -188,4 +189,28 @@ def ucos(tensor: Tensor) -> Tensor:
     result.back_fn = (partial(bmul, coef),)
     result.name = "cos"
     result.is_vector = tensor.is_vector
+    return result
+
+
+def usqrt(tensor: Tensor):
+    """
+    Apply the square root function
+    """
+    return upow(tensor, 0.5)
+
+
+def uerf(tensor: Tensor) -> Tensor:
+    """
+    Calculate the error function of every element of a tensor
+    """
+    result = to_tensor(
+        erf(tensor),
+        is_vector=tensor.is_vector,
+        requires_grad=tensor.requires_grad,
+    )
+    SQRT_PI = 1.7724538509055159
+    result.args = (tensor,)
+    result.name = "erf"
+    result.back_fn = (lambda x: (x * -2) / SQRT_PI,)
+
     return result
