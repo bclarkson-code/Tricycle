@@ -232,7 +232,7 @@ class Tensor(np.ndarray):
 
         return reshape(self, shape)
 
-    def split(self, n_splits: int, axis: int = 1) -> List["Tensor"]:
+    def split(self, n_splits: int, axis: int = 0) -> List["Tensor"]:
         from tricycle.ops import split
 
         return split(self, n_splits, axis)

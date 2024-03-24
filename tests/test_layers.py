@@ -243,13 +243,72 @@ def test_attention_combined():
     assert tricycle_result.close_to(pytorch_result)
 
 
-@pytest.mark.skip
+def andrej_attention_block(
+    x, B, T, C, n_head, c_attn, c_proj, n_embd, block_size=32
+):
+    """
+    Andrej Karpathy's implementation of an attention block from nanogpt
+    """
+    q, k, v = c_attn(x).split(n_embd, dim=2)
+    y = andrej_attention(q, k, v, B, T, C, n_head, block_size)
+    return c_proj(y)
+
+
 def test_attention_block():
     """
     Compare Tricycle attention with pytorch's MultiheadAttention
     """
-    embedding_dim = 10
-    n_heads = 2
-    n_tokens = 10
+    n_heads = 3
+    embedding_dim = 15
+    dropout = 0
+    n_tokens = 7
+    batch_size = 11
+    context_window = 32
 
-    np.random.seed(1)
+    np.random.seed(0)
+
+    x = np.random.normal(size=(batch_size, n_tokens, embedding_dim))
+
+    in_projection_weights = np.random.normal(
+        0, 1, (embedding_dim, embedding_dim * 3)
+    )
+    out_projection_weights = np.random.normal(
+        0, 1, (embedding_dim, embedding_dim)
+    )
+
+    tricycle_attention = MultiHeadSelfAttention(
+        embedding_dim=embedding_dim,
+        n_heads=n_heads,
+        context_window=context_window,
+        dropout=dropout,
+    )
+    tricycle_attention.in_projection.weights = to_tensor(in_projection_weights)
+    tricycle_attention.out_projection.weights = to_tensor(
+        out_projection_weights
+    )
+
+    in_tensor = to_tensor(x).to_vector()
+    tricycle_result = tricycle_attention(in_tensor).from_vector()
+
+    c_attn = torch.nn.Linear(embedding_dim, 3 * embedding_dim, bias=False)
+    c_attn.weight = torch.nn.Parameter(torch.tensor(in_projection_weights.T))
+    c_proj = torch.nn.Linear(embedding_dim, embedding_dim, bias=False)
+    c_proj.weight = torch.nn.Parameter(torch.tensor(out_projection_weights.T))
+
+    andrej_result = (
+        andrej_attention_block(
+            torch.tensor(x),
+            batch_size,
+            n_tokens,
+            embedding_dim,
+            n_heads,
+            c_attn,
+            c_proj,
+            embedding_dim,
+            block_size=32,
+        )
+        .detach()
+        .numpy()
+    )
+
+    assert tricycle_result.close_to(andrej_result)

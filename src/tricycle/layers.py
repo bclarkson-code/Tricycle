@@ -38,7 +38,7 @@ class Dense(Layer):
         self.to_size = to_size
 
     def forward(self, x: Tensor):
-        return Einsum("a,ab->b")(x, self.weights)
+        return Einsum("...a,ab->...b")(x, self.weights)
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)
