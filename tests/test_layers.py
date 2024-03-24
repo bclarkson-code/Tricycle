@@ -288,27 +288,42 @@ def test_attention_block():
     )
 
     in_tensor = to_tensor(x).to_vector()
-    tricycle_result = tricycle_attention(in_tensor).from_vector()
+    tricycle_result = tricycle_attention(in_tensor)
 
     c_attn = torch.nn.Linear(embedding_dim, 3 * embedding_dim, bias=False)
     c_attn.weight = torch.nn.Parameter(torch.tensor(in_projection_weights.T))
     c_proj = torch.nn.Linear(embedding_dim, embedding_dim, bias=False)
     c_proj.weight = torch.nn.Parameter(torch.tensor(out_projection_weights.T))
 
-    andrej_result = (
-        andrej_attention_block(
-            torch.tensor(x),
-            batch_size,
-            n_tokens,
-            embedding_dim,
-            n_heads,
-            c_attn,
-            c_proj,
-            embedding_dim,
-            block_size=32,
-        )
-        .detach()
-        .numpy()
+    andrej_result = andrej_attention_block(
+        torch.tensor(x),
+        batch_size,
+        n_tokens,
+        embedding_dim,
+        n_heads,
+        c_attn,
+        c_proj,
+        embedding_dim,
+        block_size=32,
     )
 
-    assert tricycle_result.close_to(andrej_result)
+    assert tricycle_result.close_to(andrej_result.detach().numpy())
+
+    tricycle_loss = tricycle_result.e("ab->").from_vector().e("a->")
+    andrej_loss = andrej_result.sum()
+
+    assert tricycle_loss.close_to(andrej_loss.detach().numpy())
+
+    tricycle_loss.backward()
+    andrej_loss.backward()
+
+    assert not tricycle_attention.out_projection.weights.is_vector
+    tricycle_out_weights = tricycle_attention.out_projection.weights.grad
+    tricycle_out_weights = tricycle_out_weights.from_vector().e("abc->bc")
+
+    assert tricycle_out_weights.close_to(c_proj.weight.grad.T.numpy())
+
+    # this fails, the gradf seems to have been lost somewhere
+    # assert tricycle_attention.in_projection.weights.grad.close_to(
+    #     c_attn.weight.grad.numpy()
+    # )

@@ -196,7 +196,11 @@ class Einsum:
             self.subscript, tensors
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
-        result = to_tensor(np.einsum(str(subscript), *tensors))
+        try:
+            result = to_tensor(np.einsum(str(subscript), *tensors))
+        except Exception as e:
+            breakpoint()
+            raise e
         if vectorise_output:
             result.is_vector = True
 

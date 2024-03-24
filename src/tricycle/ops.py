@@ -116,6 +116,11 @@ def reshape(tensor: Tensor, shape: Sequence[int]):
     result = to_tensor(np.reshape(tensor, shape))
     result.is_vector = tensor.is_vector
     result.args = (tensor,)
-    result.back_fn = (lambda grad: reshape(grad, tensor.shape),)
+
+    def undo_reshape(grad):
+        new_shape = tensor.shape[1:] if tensor.is_vector else tensor.shape
+        return reshape(grad, new_shape)
+
+    result.back_fn = (undo_reshape,)
 
     return result

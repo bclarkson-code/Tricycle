@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from string import ascii_letters
 from typing import Sequence
 
 import numpy as np
@@ -37,8 +38,37 @@ class Dense(Layer):
         self.from_size = from_size
         self.to_size = to_size
 
+    def _build_missing_indices(self, x: Tensor, initial_subscript: str) -> str:
+        """
+        In some circumstances, using ellipses with vectorised tensors
+        can be defined in the forward direction but not in reverse.
+
+        To fix this, we're building a string of indices that can be used
+        in place of an ellipsis. This is a bit of an ugly hack, but it
+        works for now.
+
+        TODO: fix this properly
+        """
+        n_untouched_indices = (
+            len(x.shape) - 2 if x.is_vector else len(x.shape) - 1
+        )
+        untouched_indices = ""
+        i = 0
+        while len(untouched_indices) < n_untouched_indices:
+            next_idx = ascii_letters[i]
+            if (
+                next_idx not in untouched_indices
+                and next_idx != "z"
+                and next_idx not in initial_subscript
+            ):
+                untouched_indices += next_idx
+            i += 1
+        return untouched_indices
+
     def forward(self, x: Tensor):
-        return Einsum("...a,ab->...b")(x, self.weights)
+        initial_subscript = "a,aB->B"
+        idx = self._build_missing_indices(x, initial_subscript)
+        return Einsum(f"{idx}a,aB->{idx}B")(x, self.weights)
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)
