@@ -143,7 +143,7 @@ class Tensor(np.ndarray):
     def __mul__(self, other):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
-        if np.isscalar(other):
+        if np.isscalar(other) or other.shape == ():
             from tricycle.unary import umul
 
             return umul(self, other)

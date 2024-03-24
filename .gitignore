@@ -2,3 +2,4 @@
 .null-ls*
 *__pycache__*
 poetry.lock
+*.DS_Store
