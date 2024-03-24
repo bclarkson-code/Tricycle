@@ -79,7 +79,7 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
                 axis_idx = slice(None)
             idx.append(axis_idx)
 
-        result = tensor[*idx]
+        result = to_tensor(tensor[*idx], requires_grad=tensor.requires_grad)
 
         def undo_split(grad, idx=idx):
             """

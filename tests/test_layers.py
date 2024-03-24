@@ -282,12 +282,14 @@ def test_attention_block():
         context_window=context_window,
         dropout=dropout,
     )
-    tricycle_attention.in_projection.weights = to_tensor(in_projection_weights)
+    tricycle_attention.in_projection.weights = to_tensor(
+        in_projection_weights, name="in_proj"
+    )
     tricycle_attention.out_projection.weights = to_tensor(
-        out_projection_weights
+        out_projection_weights, name="out_proj"
     )
 
-    in_tensor = to_tensor(x).to_vector()
+    in_tensor = to_tensor(x, requires_grad=False).to_vector()
     tricycle_result = tricycle_attention(in_tensor)
 
     c_attn = torch.nn.Linear(embedding_dim, 3 * embedding_dim, bias=False)
@@ -323,7 +325,7 @@ def test_attention_block():
 
     assert tricycle_out_weights.close_to(c_proj.weight.grad.T.numpy())
 
-    # this fails, the gradf seems to have been lost somewhere
-    # assert tricycle_attention.in_projection.weights.grad.close_to(
-    #     c_attn.weight.grad.numpy()
-    # )
+    tricycle_in_weights = tricycle_attention.in_projection.weights.grad
+    tricycle_in_weights = tricycle_in_weights.from_vector().e("abc->bc")
+
+    assert tricycle_in_weights.close_to(c_attn.weight.grad.T.numpy())

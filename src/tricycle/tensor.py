@@ -36,10 +36,12 @@ class Tensor(np.ndarray):
 
         # Find every route to a differentiable parameter
         while stack:
+            logger.debug(f"Current_stack: {[node.shape for node, _ in stack]}")
             current_node, current_gradient = stack.pop()
 
             # At leaf node
             if current_node.args is None:
+                logger.debug(f"Found leaf node: {current_node.shape}")
                 if current_node._grad_fn is None:
                     current_node._grad_fn = [current_gradient]
                 else:

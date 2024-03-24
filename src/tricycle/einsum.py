@@ -130,7 +130,11 @@ class Einsum:
             return subscript, tensors
 
         [tensor] = tensors
-        ones = to_tensor(np.ones_like(tensor), is_vector=tensor.is_vector)
+        ones = to_tensor(
+            np.ones_like(tensor),
+            is_vector=tensor.is_vector,
+            requires_grad=False,
+        )
         tensors = [tensor, ones]
 
         [index] = subscript.inputs
@@ -196,11 +200,7 @@ class Einsum:
             self.subscript, tensors
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
-        try:
-            result = to_tensor(np.einsum(str(subscript), *tensors))
-        except Exception as e:
-            breakpoint()
-            raise e
+        result = to_tensor(np.einsum(str(subscript), *tensors))
         if vectorise_output:
             result.is_vector = True
 
