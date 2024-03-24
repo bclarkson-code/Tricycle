@@ -71,10 +71,6 @@ class MultiHeadSelfAttention(Layer):
         self.dropout = dropout
         self.context_window = context_window
 
-        # Initialise the weights before and after the actual attention
-        # mechanism. There aren't actually any weights in the attention bit
-        # only before and after
-
         # Project the embedding into 3 embeddings. One for each of key, query
         # and value
         self.in_projection = Dense(
@@ -119,29 +115,6 @@ class MultiHeadSelfAttention(Layer):
         # smush the heads back together
         out_shape = (n_tokens, self.embedding_dim)
         return Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
-
-    def _attention_andrej(self, key: Tensor, query: Tensor, value: Tensor):
-        k = k.view(B, T, self.n_head, C // self.n_head).transpose(
-            1, 2
-        )  # (B, nh, T, hs)
-        q = q.view(B, T, self.n_head, C // self.n_head).transpose(
-            1, 2
-        )  # (B, nh, T, hs)
-        v = v.view(B, T, self.n_head, C // self.n_head).transpose(
-            1, 2
-        )  # (B, nh, T, hs)
-
-        # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
-        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-        bias = torch.tril(torch.ones(context_window, context_window)).view(
-            1, context_window, context_window
-        )
-        att = att.masked_fill(bias[:, :T, :T] == 0, float("-inf"))
-        att = F.softmax(att, dim=-1)
-        y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-        y = (
-            y.transpose(1, 2).contiguous().view(B, T, C)
-        )  # re-assemble all head outputs side by side
 
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding

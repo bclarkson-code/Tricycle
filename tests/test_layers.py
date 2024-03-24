@@ -1,9 +1,11 @@
+from copy import copy
+
 import numpy as np
 import pytest
 import torch
+from matplotlib import pyplot as plt
 
-from tricycle.binary import badd
-from tricycle.einsum import Einsum, Subscript
+from tricycle.einsum import Einsum
 from tricycle.layers import (
     Dense,
     MultiHeadSelfAttention,
@@ -158,6 +160,22 @@ def andrej_attention(q, k, v, B, T, C, n_head, block_size=32):
     return y.transpose(1, 2).contiguous().view(B, T, C)
 
 
+def pytorch_attention(q, k, v, B, T, C, n_head, block_size=32):
+    k = k.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
+    q = q.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
+    v = v.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
+    y = torch.nn.functional.scaled_dot_product_attention(
+        q,
+        k,
+        v,
+        attn_mask=None,
+        dropout_p=0,
+        is_causal=True,
+    )
+    y = y.transpose(1, 2).contiguous().view(B, T, C)
+    return y
+
+
 def test_attention_combined():
     """
     Compare Tricycle's attention with Andrej's
@@ -172,6 +190,7 @@ def test_attention_combined():
     T = n_tokens
     C = embedding_dim
 
+    np.random.seed(0)
     # random input tensor
     in_tensor = np.random.uniform(
         -5, 5, (batch_size, n_tokens, projected_size)
@@ -188,7 +207,25 @@ def test_attention_combined():
     assert value.close_to(v)
 
     andrej_result = andrej_attention(
-        qu, k, v, B, T, C, n_heads, context_window
+        q=copy(qu),
+        k=copy(k),
+        v=copy(v),
+        B=B,
+        T=T,
+        C=C,
+        n_head=n_heads,
+        block_size=context_window,
+    ).numpy()
+
+    pytorch_result = pytorch_attention(
+        q=copy(qu),
+        k=copy(k),
+        v=copy(v),
+        B=B,
+        T=T,
+        C=C,
+        n_head=n_heads,
+        block_size=context_window,
     )
 
     tricycle_attention = MultiHeadSelfAttention(
@@ -198,10 +235,12 @@ def test_attention_combined():
         dropout=0,
     )
     tricycle_result = tricycle_attention._attention(
-        query, key, value
+        query=query, key=key, value=value
     ).from_vector()
 
-    assert tricycle_result.close_to(andrej_result, rtol=1e0)
+    assert np.allclose(andrej_result, pytorch_result)
+    assert tricycle_result.close_to(andrej_result)
+    assert tricycle_result.close_to(pytorch_result)
 
 
 @pytest.mark.skip
@@ -214,30 +253,3 @@ def test_attention_block():
     n_tokens = 10
 
     np.random.seed(1)
-
-    key = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
-    query = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
-    value = np.random.uniform(-5, 5, (n_tokens, embedding_dim))
-
-    k = torch.from_numpy(key)
-    qu = torch.from_numpy(query)
-    v = torch.from_numpy(value)
-
-    pytorch_attention = torch.nn.functional.scaled_dot_product_attention(
-        qu,
-        k,
-        v,
-        attn_mask=None,
-        dropout_p=0,
-        is_causal=True,
-    )
-    attention = MultiHeadSelfAttention(
-        embedding_dim, n_heads, context_window=32, dropout=0
-    )
-    tricycle_attention = attention._attention(
-        to_tensor(k), to_tensor(qu), to_tensor(v)
-    )
-    andrej = andrej_attention(qu, k, v, n_tokens, attention.mask)
-
-    breakpoint()
-    assert np.allclose(tricycle_attention, pytorch_attention.numpy())
