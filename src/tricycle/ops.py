@@ -5,6 +5,7 @@ import numpy as np
 from tricycle.einsum import Einsum, Subscript
 from tricycle.reduce import rmax
 from tricycle.tensor import Tensor, to_tensor
+from tricycle.unary import uexp
 
 
 def repeat(tensor: Tensor, repeats: int):
@@ -126,3 +127,10 @@ def reshape(tensor: Tensor, shape: Sequence[int]):
     result.back_fn = (undo_reshape,)
 
     return result
+
+
+def sigmoid(tensor: Tensor):
+    """
+    Apply the sigmoid function
+    """
+    return 1 / (1 + uexp(-tensor))

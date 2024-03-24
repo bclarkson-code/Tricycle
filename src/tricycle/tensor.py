@@ -313,3 +313,12 @@ def unvectorise(tensor: Tensor) -> Tensor:
     result.args = (tensor,)
     result.back_fn = (vectorise,)
     return result
+
+
+def nothing(tensor):
+    """
+    Return a tensor
+
+    This is used as a dummy to simplify the backpropagation logic
+    """
+    return tensor

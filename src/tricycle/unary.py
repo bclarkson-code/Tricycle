@@ -3,8 +3,7 @@ from functools import partial
 import numpy as np
 
 from tricycle.einsum import Einsum
-from tricycle.ops import nothing
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor, nothing, to_tensor
 
 grad = False
 
