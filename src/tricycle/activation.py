@@ -1,8 +1,10 @@
+import numpy as np
+
 from tricycle.functions import sigmoid, tanh
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor
+from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import uerf, umax
 
 
@@ -86,18 +88,34 @@ class SwiGLU(Layer):
     """
 
     linear: Dense
+    bias: Tensor
 
-    def __init__(self, size: int, initialiser=init_xavier, *args, **kwargs):
+    def __init__(
+        self,
+        size: int,
+        initialiser=init_xavier,
+        tunable_bias=True,
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
+        self.bias = to_tensor(1.0, requires_grad=tunable_bias, name="bias")
+        self.tunable_bias = tunable_bias
         self.linear = Dense(size, 2 * size, initialiser)
 
     def forward(self, x: Tensor):
         x = self.linear(x)
+        # this is slow and terrible hack
         left, right = x.split(2)
-        return left * (right * sigmoid(right))
+        if right.is_vector:
+            bias = self.bias.repeat(right.shape[1])
+        else:
+            bias = self.bias.repeat(right.shape[0])
+        return left * (right * sigmoid(right * bias))
 
     def update(self, optimiser: Optimiser):
         self.linear.update(optimiser)
+        self.bias = optimiser(self.bias)
 
     def zero_grad(self):
         self.linear.zero_grad()

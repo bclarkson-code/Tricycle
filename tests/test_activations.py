@@ -49,3 +49,46 @@ def test_swiglu():
 
     y = swiglu(x)
     assert y.close_to([3.52318831, 3.52318831, 3.52318831, 3.52318831])
+
+    y.backward()
+
+    assert swiglu.linear.weights.grad is not None
+    weight_grad = swiglu.linear.weights.grad
+    assert weight_grad.close_to(
+        [
+            [
+                -1.76159416,
+                -1.76159416,
+                -1.76159416,
+                -1.76159416,
+                -2.1815685,
+                -2.1815685,
+                -2.1815685,
+                -2.1815685,
+            ],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [
+                1.76159416,
+                1.76159416,
+                1.76159416,
+                1.76159416,
+                2.1815685,
+                2.1815685,
+                2.1815685,
+                2.1815685,
+            ],
+            [
+                3.52318831,
+                3.52318831,
+                3.52318831,
+                3.52318831,
+                4.363137,
+                4.363137,
+                4.363137,
+                4.363137,
+            ],
+        ]
+    )
+
+    assert swiglu.bias.grad is not None
+    assert swiglu.bias.grad.close_to(3.359794732912208)
