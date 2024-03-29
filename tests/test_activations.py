@@ -25,6 +25,20 @@ def test_gelu_full():
     assert y.close_to([-0.15865525, 0.0, 0.84134475])
 
 
+def test_gelu_vectorised():
+    x = to_tensor([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
+    x = x.to_vector()
+    gelu = GeLU(approximate=False)
+    y = gelu(x)
+    assert y.close_to(
+        [
+            [-0.15865525, 0.0, 0.84134475],
+            [-0.15865525, 0.0, 0.84134475],
+            [-0.15865525, 0.0, 0.84134475],
+        ]
+    )
+
+
 def test_gelu_approx():
     x = to_tensor([-1, 0, 1])
     gelu = GeLU(approximate=True)

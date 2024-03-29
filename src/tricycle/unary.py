@@ -34,9 +34,10 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     assert np.isscalar(constant)
 
     constant_tensor = to_tensor(
-        np.full_like(tensor, constant, dtype=float), requires_grad=False
+        np.full_like(tensor, constant, dtype=float),
+        requires_grad=False,
+        is_vector=tensor.is_vector,
     )
-    constant_tensor.is_vector = tensor.is_vector
 
     return Einsum("...,...->...")(tensor, constant_tensor)
 
