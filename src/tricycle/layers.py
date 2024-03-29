@@ -165,6 +165,23 @@ class MultiHeadSelfAttention(Layer):
         self.weights.grad = None
 
 
+class MLPBlock(Layer):
+    def __init__(
+        self, embedding_dim: int, dropout: float, expansion_ratio: float = 4
+    ):
+        self.linear1 = Dense(
+            from_size=embedding_dim,
+            to_size=int(expansion_ratio * embedding_dim),
+            initialiser=init_xavier,
+        )
+        self.linear2 = Dense(
+            from_size=int(expansion_ratio * embedding_dim),
+            to_size=embedding_dim,
+            initialiser=init_xavier,
+        )
+        self.dropout = dropout
+
+
 class Sequential(Layer):
     layers: Sequence[Layer]
 
