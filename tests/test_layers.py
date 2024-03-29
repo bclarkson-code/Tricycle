@@ -7,6 +7,7 @@ from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.layers import (
     Dense,
+    Dropout,
     MultiHeadSelfAttention,
     Sequential,
     build_mask,
@@ -328,3 +329,34 @@ def test_attention_block():
     tricycle_in_weights = tricycle_in_weights.from_vector().e("abc->bc")
 
     assert tricycle_in_weights.close_to(c_attn.weight.grad.T.numpy())
+
+
+def test_dropout():  # sourcery skip: square-identity
+    np.random.seed(0)
+    size = 100
+    dropout_prob = 0.3
+
+    # non-vectorised
+    in_tensor = to_tensor(
+        np.random.normal(size=(size, size)), name="in_tensor"
+    )
+    dropout = Dropout(dropout_prob)
+
+    out_tensor = dropout(in_tensor.to_vector())
+
+    assert out_tensor.shape == in_tensor.shape
+    zero_x_idx, zero_y_idx = np.where(out_tensor == 0)
+    n_zeros = len(zero_x_idx)
+    expected_n_zeros = int(size * size * dropout_prob)
+
+    assert np.allclose(n_zeros, expected_n_zeros, rtol=1e-2)
+
+    out_tensor.backward()
+
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.shape == in_tensor.shape
+
+    correct_grad = np.ones_like(in_tensor)
+    correct_grad[zero_x_idx, zero_y_idx] = 0
+
+    assert in_tensor.grad.close_to(correct_grad)
