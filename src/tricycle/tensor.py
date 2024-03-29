@@ -117,6 +117,9 @@ class Tensor(np.ndarray):
                 f"Cannot add {type(self)} and {type(other)}"
             )
 
+    def __radd__(self, other):
+        return self + other
+
     def __iadd__(self, other):
         return self + other
 
@@ -136,6 +139,9 @@ class Tensor(np.ndarray):
             raise NotImplementedError(
                 f"Cannot sub {type(self)} and {type(other)}"
             )
+
+    def __rsub__(self, other):
+        return other - self
 
     def __isub__(self, other):
         return -1 * (other - self)
@@ -157,6 +163,9 @@ class Tensor(np.ndarray):
             raise NotImplementedError(
                 f"Cannot mul {type(self)} and {type(other)}"
             )
+
+    def __rmul__(self, other):
+        return self * other
 
     def __imul__(self, other):
         return self * other
