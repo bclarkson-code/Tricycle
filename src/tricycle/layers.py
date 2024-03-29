@@ -4,6 +4,7 @@ from typing import Sequence
 
 import numpy as np
 
+from tricycle.binary import bmul
 from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.initialisers import init_xavier
@@ -163,6 +164,26 @@ class MultiHeadSelfAttention(Layer):
 
     def zero_grad(self):
         self.weights.grad = None
+
+
+class Dropout(Layer):
+    def __init__(self, probability: float):
+        self.probability = probability
+
+    def forward(self, x: Tensor):
+        random_mask = np.random.binomial(
+            n=1, p=1 - self.probability, size=x.shape
+        )
+        random_mask = to_tensor(
+            random_mask, requires_grad=False, is_vector=x.is_vector
+        )
+        return bmul(x, random_mask)
+
+    def update(self, optimiser: Optimiser):
+        pass
+
+    def zero_grad(self):
+        pass
 
 
 class Sequential(Layer):
