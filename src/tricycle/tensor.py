@@ -141,10 +141,10 @@ class Tensor(np.ndarray):
             )
 
     def __rsub__(self, other):
-        return other - self
+        return -(self - other)
 
     def __isub__(self, other):
-        return -1 * (other - self)
+        return self.__sub__(other)
 
     def __mul__(self, other):
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
