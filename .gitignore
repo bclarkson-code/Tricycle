@@ -3,3 +3,5 @@
 *__pycache__*
 poetry.lock
 *.DS_Store
+datasets/shakespeare/tokens_1024.pkl
+datasets/shakespeare/raw_data.txt

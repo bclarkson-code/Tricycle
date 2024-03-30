@@ -2,6 +2,7 @@ import random
 from typing import Sequence
 
 import numpy as np
+from sklearn.datasets import fetch_olivetti_faces
 
 from tricycle.tensor import to_tensor
 
@@ -95,3 +96,77 @@ class InfiniteBatchDataset(Dataset):
     def from_vector(self):
         self.is_vector = False
         return self
+
+
+class CausalLMDataset:
+    def __init__(
+        self,
+        tokens: Sequence[int],
+        vocab_size: int,
+        batch_size: int,
+        context_window: int,
+    ):
+        self.tokens = tokens
+        self.vocab_size = vocab_size
+        self.batch_size = batch_size
+        self.context_window = context_window
+        self.is_batch = False
+
+    def __len__(self):
+        return (
+            len(self.tokens) - self.batch_size
+            if self.is_batch
+            else len(self.tokens) - 1
+        )
+
+    def one_hot_encode(self, tokens: Sequence[int]):
+        """
+        One hot encode some tokens into one-hot vectors
+        """
+        one_hot = np.zeros((len(tokens), self.vocab_size))
+
+        for i, token in enumerate(tokens):
+            one_hot[i, token] = 1
+        return one_hot
+
+    def _get_single(self, idx: int):
+        """
+        Get a single input-output pair
+        """
+        if idx >= len(self.tokens) - self.context_window - 1:
+            raise IndexError(f"Index {idx} out of range")
+
+        tokens = self.tokens[idx : idx + self.context_window + 1]
+        tokens = self.one_hot_encode(tokens)
+        inputs = tokens[:-1]
+        outputs = tokens[-1]
+        return inputs, outputs
+
+    def _get_batch(self, idx: int):
+        """
+        Get a batch of input-output pairs
+        """
+        if idx >= len(self.tokens) - self.context_window - self.batch_size:
+            raise IndexError(f"Index {idx} out of range")
+
+        tokens = self.tokens[idx : idx + self.context_window + self.batch_size]
+        tokens = self.one_hot_encode(tokens)
+        inputs = [
+            tokens[i : i + self.context_window] for i in range(self.batch_size)
+        ]
+        outputs = [
+            tokens[i + self.context_window] for i in range(self.batch_size)
+        ]
+
+        inputs = np.array(inputs)
+        outputs = np.array(outputs)
+        return inputs, outputs
+
+    def __getitem__(self, idx: int):
+        return self._get_batch(idx) if self.is_batch else self._get_single(idx)
+
+    def batch(self):
+        self.is_batch = True
+
+    def unbatch(self):
+        self.is_batch = False
