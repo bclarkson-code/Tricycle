@@ -4,7 +4,7 @@ import numpy as np
 
 from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import uexp
+from tricycle.unary import usqrt
 
 
 def repeat(tensor: Tensor, repeats: int):
@@ -101,3 +101,23 @@ def reshape(tensor: Tensor, shape: Sequence[int]):
     result.back_fn = (undo_reshape,)
 
     return result
+
+
+def mean(tensor: Tensor) -> Tensor:
+    """
+    Find the mean of a tensor
+    """
+    return tensor.e("...a->...") / tensor.shape[-1]
+
+
+def variance(tensor: Tensor) -> Tensor:
+    average = mean(tensor).repeat(tensor.shape[-1])
+    square_deviation = (tensor - average) ** 2
+    return mean(square_deviation)
+
+
+def standard_deviation(tensor: Tensor) -> Tensor:
+    """
+    Find the standard deviation of a tensor
+    """
+    return usqrt(variance(tensor))

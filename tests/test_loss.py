@@ -217,7 +217,7 @@ def test_linear_regression_multi_input_output():
         # calculate the loss
         loss = mean_square_error(y, y_pred)
         # we need to unvectorise the loss before finding its average
-        loss = loss.from_vector().e("a->") / n
+        loss = loss.from_vector().mean()
 
         losses[idx] = loss.numpy()
         loss.backward()

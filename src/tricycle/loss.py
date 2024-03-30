@@ -14,8 +14,7 @@ def mean_square_error(y_true: Tensor, y_pred: Tensor):
     if divisor == 1:
         return square_error
 
-    result = square_error.e("a->")
-    return result / divisor
+    return square_error.mean()
 
 
 def cross_entropy(y_true: Tensor, y_pred: Tensor) -> Tensor:

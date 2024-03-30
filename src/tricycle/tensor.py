@@ -197,7 +197,7 @@ class Tensor(np.ndarray):
     def __mod__(self, _):
         raise NotImplementedError("Cannot mod")
 
-    def __pow__(self, other):
+    def __pow__(self, other) -> "Tensor":
         if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
             other = to_tensor(other)
         if np.isscalar(other):
@@ -205,7 +205,13 @@ class Tensor(np.ndarray):
 
             return upow(self, other)
         elif isinstance(other, Tensor):
-            raise NotImplementedError("Cannot power")
+            raise NotImplementedError(
+                f"Cannot power two tensors of shape: {self.shape}, {other.shape}"
+            )
+        else:
+            raise NotImplementedError(
+                f"Cannot power {type(self)} and {type(other)}"
+            )
 
     def __repr__(self):
         name = f", name={self.name}" if self.name is not None else ""
@@ -250,6 +256,16 @@ class Tensor(np.ndarray):
         from tricycle.ops import split
 
         return split(self, n_splits, axis)
+
+    def mean(self) -> "Tensor":
+        from tricycle.ops import mean
+
+        return mean(self)
+
+    def standard_deviation(self) -> "Tensor":
+        from tricycle.ops import standard_deviation
+
+        return standard_deviation(self)
 
     def close_to(self, other: "Tensor" | ArrayLike, **kwargs) -> bool:
         """

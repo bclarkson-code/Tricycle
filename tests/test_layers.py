@@ -311,7 +311,7 @@ def test_attention_block():
 
     assert tricycle_result.close_to(andrej_result.detach().numpy())
 
-    tricycle_loss = tricycle_result.e("ab->").from_vector().e("a->")
+    tricycle_loss = tricycle_result.from_vector().e("abc->")
     andrej_loss = andrej_result.sum()
 
     assert tricycle_loss.close_to(andrej_loss.detach().numpy())
