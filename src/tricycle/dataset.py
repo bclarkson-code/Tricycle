@@ -163,10 +163,36 @@ class CausalLMDataset:
         return inputs, outputs
 
     def __getitem__(self, idx: int):
-        return self._get_batch(idx) if self.is_batch else self._get_single(idx)
+        inputs, output = (
+            self._get_batch(idx) if self.is_batch else self._get_single(idx)
+        )
+        if self.as_tensor:
+            inputs = to_tensor(inputs, requires_grad=False, name="inputs")
+            output = to_tensor(output, requires_grad=False, name="output")
+
+        if self.is_vector:
+            if not self.as_tensor:
+                raise ValueError("Cannot vectorise an unbatched dataset")
+
+            inputs = inputs.to_vector()
+            output = output.to_vector()
+
+        return inputs, output
 
     def batch(self):
         self.is_batch = True
+        return self
 
     def unbatch(self):
         self.is_batch = False
+        return self
+
+    def to_tensor(self):
+        self.as_tensor = True
+        return self
+
+    def to_vector(self):
+        if not self.is_batch:
+            raise ValueError("Cannot vectorise an unbatched dataset")
+        self.is_vector = True
+        return self
