@@ -41,3 +41,4 @@ for inputs, outputs in tqdm(dataset):
     loss = loss_fn(outputs, logits).from_vector().mean().mean()
     loss.backward()
     model.update(optimiser)
+    break
