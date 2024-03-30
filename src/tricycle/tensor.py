@@ -262,10 +262,20 @@ class Tensor(np.ndarray):
 
         return mean(self)
 
+    def variance(self) -> "Tensor":
+        from tricycle.ops import variance
+
+        return variance(self)
+
     def standard_deviation(self) -> "Tensor":
         from tricycle.ops import standard_deviation
 
         return standard_deviation(self)
+
+    def normalise(self) -> "Tensor":
+        from tricycle.ops import normalise
+
+        return normalise(self)
 
     def close_to(self, other: "Tensor" | ArrayLike, **kwargs) -> bool:
         """

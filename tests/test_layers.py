@@ -8,6 +8,7 @@ from tricycle.functions import softmax
 from tricycle.layers import (
     Dense,
     Dropout,
+    LayerNorm,
     MultiHeadSelfAttention,
     Sequential,
     build_mask,
@@ -360,3 +361,22 @@ def test_dropout():  # sourcery skip: square-identity
     correct_grad[zero_x_idx, zero_y_idx] = 0
 
     assert in_tensor.grad.close_to(correct_grad)
+
+
+def test_layer_norm():
+    np.random.seed(0)
+    in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
+    layer_norm = LayerNorm()
+    out_tensor = layer_norm(in_tensor.to_vector())
+
+    assert out_tensor.shape == in_tensor.shape
+    out_tensor.backward()
+
+    assert copy(out_tensor).mean().close_to([0] * 100)
+    assert copy(out_tensor).standard_deviation().close_to([1] * 100)
+
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.shape == in_tensor.shape
+
+    # not sure if this is correct. TODO: check
+    assert in_tensor.grad.close_to(np.zeros_like(in_tensor))

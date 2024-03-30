@@ -20,13 +20,11 @@ class Layer:
     def __call__(self, x: Tensor):
         return self.forward(x)
 
-    @abstractmethod
     def update(self, optimiser: Optimiser):
-        raise NotImplementedError
+        pass
 
-    @abstractmethod
     def zero_grad(self):
-        raise NotImplementedError
+        pass
 
 
 class Dense(Layer):
@@ -179,11 +177,14 @@ class Dropout(Layer):
         )
         return bmul(x, random_mask)
 
-    def update(self, optimiser: Optimiser):
-        pass
 
-    def zero_grad(self):
-        pass
+class LayerNorm(Layer):
+    """
+    Normalise each tensor individually
+    """
+
+    def forward(self, x: Tensor):
+        return x.normalise()
 
 
 class Sequential(Layer):

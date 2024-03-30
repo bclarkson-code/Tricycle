@@ -121,3 +121,15 @@ def standard_deviation(tensor: Tensor) -> Tensor:
     Find the standard deviation of a tensor
     """
     return usqrt(variance(tensor))
+
+
+def normalise(tensor: Tensor, eps: float = 1e-8) -> Tensor:
+    """
+    Standard normalise a tensor. Optionally add a small constant to the
+    divisor to avoid division by zero.
+    """
+    x_mean = mean(tensor).repeat(tensor.shape[-1])
+    x_standard_deviation = standard_deviation(tensor).repeat(tensor.shape[-1])
+    if eps:
+        x_standard_deviation += eps
+    return (tensor - x_mean) / x_standard_deviation
