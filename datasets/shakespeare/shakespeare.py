@@ -1,4 +1,5 @@
 import pickle
+from collections import abc
 from pathlib import Path
 
 import httpx
@@ -6,7 +7,7 @@ import httpx
 from tricycle.tokeniser import BPETokeniser
 
 
-class Shakespeare:
+class Shakespeare(abc.Sequence):
     url: str = (
         "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
     )
@@ -36,16 +37,28 @@ class Shakespeare:
             self.tokens = list(self.token_path.read_bytes())
 
     def download(self):
+        """
+        Download the shakespeare dataset
+        """
         raw_data = httpx.get(self.url).text
         with open(self.raw_data_path, "wb") as f:
             f.write(raw_data.encode("utf-8"))
 
     def generate(self):
+        """
+        Download and tokenise the shakespeare dataset
+        """
         self.download()
         raw_data = list(self.raw_data_path.read_bytes())
         self.tokeniser = BPETokeniser(self.vocab_size)
         self.tokeniser.train_ints(raw_data)
         return self.tokeniser.tokenise_ints(raw_data)
+
+    def __getitem__(self, idx: int) -> int | list[int]:
+        return self.tokens[idx]
+
+    def __len__(self) -> int:
+        return len(self.tokens)
 
 
 if __name__ == "__main__":
