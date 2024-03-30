@@ -36,6 +36,22 @@ def test_can_cross_entropy():
     assert loss.close_to(1.0986122886681098)
 
 
+def test_cross_entropy_vectorised():
+    batch_size = 3
+    n_tokens = 5
+    vocab_size = 7
+
+    y_true = np.random.random((batch_size, n_tokens, vocab_size))
+    y_pred = np.random.random((batch_size, n_tokens, vocab_size))
+
+    y_true = to_tensor(y_true).to_vector()
+    y_pred = to_tensor(y_pred).to_vector()
+
+    loss = cross_entropy(y_true, y_pred)
+
+    assert loss.shape == (batch_size, n_tokens)
+
+
 def test_can_single_linear_regression_step():
     """
     A single step of linear regression

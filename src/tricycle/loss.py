@@ -1,7 +1,5 @@
-import numpy as np
-
 from tricycle.functions import softmax
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 from tricycle.unary import ulog
 
 
@@ -26,4 +24,4 @@ def cross_entropy(y_true: Tensor, y_pred: Tensor) -> Tensor:
     y_pred = ulog(softmax(y_pred))
     product = y_true * y_pred * -1
 
-    return product.e("a->")
+    return product.e("...a->...")

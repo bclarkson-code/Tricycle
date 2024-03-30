@@ -114,7 +114,7 @@ class CausalLMDataset:
 
     def __len__(self):
         return (
-            len(self.tokens) - self.batch_size
+            (len(self.tokens) - self.batch_size) // self.batch_size
             if self.is_batch
             else len(self.tokens) - 1
         )
@@ -139,24 +139,26 @@ class CausalLMDataset:
         tokens = self.tokens[idx : idx + self.context_window + 1]
         tokens = self.one_hot_encode(tokens)
         inputs = tokens[:-1]
-        outputs = tokens[-1]
+        outputs = tokens[1:]
         return inputs, outputs
 
     def _get_batch(self, idx: int):
         """
         Get a batch of input-output pairs
         """
-        if idx >= len(self.tokens) - self.context_window - self.batch_size:
+        if idx >= len(self.tokens) - self.context_window - self.batch_size - 1:
             raise IndexError(f"Index {idx} out of range")
 
-        tokens = self.tokens[idx : idx + self.context_window + self.batch_size]
+        start = idx * self.batch_size
+        end = start + self.context_window + self.batch_size + 1
+        tokens = self.tokens[start:end]
         tokens = self.one_hot_encode(tokens)
-        inputs = [
-            tokens[i : i + self.context_window] for i in range(self.batch_size)
-        ]
-        outputs = [
-            tokens[i + self.context_window] for i in range(self.batch_size)
-        ]
+
+        inputs = []
+        outputs = []
+        for i in range(self.batch_size):
+            inputs.append(tokens[i : i + self.context_window])
+            outputs.append(tokens[i + 1 : i + self.context_window + 1])
 
         inputs = np.array(inputs)
         outputs = np.array(outputs)

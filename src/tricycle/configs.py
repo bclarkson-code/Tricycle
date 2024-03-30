@@ -17,6 +17,12 @@ class GPTConfig:
     residual_dropout_prob: float
     linear_dropout_prob: float
 
+    learning_rate: float
+    weight_decay: float
+    momentum: float
+
+    batch_size: int
+
 
 class SmolGPTConfig(GPTConfig):
     embedding_dim = 768
@@ -24,7 +30,6 @@ class SmolGPTConfig(GPTConfig):
     vocab_size = 1024
     n_heads = 8
     n_layers = 1
-    batch_size = 16
     expansion_ratio = 4
     activation_fn = GeLU()
 
@@ -32,3 +37,9 @@ class SmolGPTConfig(GPTConfig):
     attention_dropout_prob = 0.1
     residual_dropout_prob = 0.1
     linear_dropout_prob = 0.1
+
+    learning_rate = 3e-4
+    weight_decay = 0
+    momentum = 0
+
+    batch_size = 16
