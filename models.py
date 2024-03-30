@@ -6,7 +6,7 @@ from tricycle.layers import Dense, Dropout, Layer
 from tricycle.tensor import Tensor, to_tensor
 
 
-class PicoGPT(Layer):
+class GPT(Layer):
     def __init__(self, config: GPTConfig):
         self.embedding_dim = config.embedding_dim
         self.context_window = config.context_window

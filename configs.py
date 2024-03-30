@@ -18,7 +18,7 @@ class GPTConfig:
     linear_dropout_prob: float
 
 
-class PicoGPTConfig(GPTConfig):
+class SmolGPTConfig(GPTConfig):
     embedding_dim = 768
     context_window = 256
     vocab_size = 1024
