@@ -25,10 +25,10 @@ class GPTConfig:
 
 
 class SmolGPTConfig(GPTConfig):
-    embedding_dim = 768
-    context_window = 256
+    embedding_dim = 128
+    context_window = 64
     vocab_size = 1024
-    n_heads = 8
+    n_heads = 2
     n_layers = 1
     expansion_ratio = 4
     activation_fn = GeLU()
@@ -42,4 +42,4 @@ class SmolGPTConfig(GPTConfig):
     weight_decay = 0
     momentum = 0
 
-    batch_size = 16
+    batch_size = 4
