@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 numpy = "^1.26.2"
+tqdm = "^4.66.2"
 
 [tool.poetry.group.test.dependencies]
 scikit-learn = "^1.3.2"
