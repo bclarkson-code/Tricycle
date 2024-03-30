@@ -91,13 +91,13 @@ class MultiHeadSelfAttention(Layer):
         embedding_dim: int,
         n_heads: int,
         context_window: int,
-        dropout: float,
+        attention_dropout_prob: float,
+        residual_dropout_prob: float,
         initialiser=init_xavier,
     ):
         # set the constants
         self.embedding_dim = embedding_dim
         self.n_heads = n_heads
-        self.dropout = dropout
         self.context_window = context_window
 
         # Project the embedding into 3 embeddings. One for each of key, query
@@ -117,6 +117,9 @@ class MultiHeadSelfAttention(Layer):
 
         # build a mask to make attention causal
         self.mask = build_mask(self.context_window)
+
+        self.attention_dropout = Dropout(attention_dropout_prob)
+        self.residual_dropout = Dropout(residual_dropout_prob)
 
     def _attention(self, key: Tensor, query: Tensor, value: Tensor):
         # reshape into n_heads x embedding_dim
@@ -140,10 +143,13 @@ class MultiHeadSelfAttention(Layer):
         # mask and softmax
         attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
         attention = softmax(attention)
+        attention = self.attention_dropout(attention)
 
         # smush the heads back together
         out_shape = (n_tokens, self.embedding_dim)
-        return Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
+        out = Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
+        out = self.residual_dropout(out)
+        return out
 
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding
