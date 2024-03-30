@@ -9,7 +9,6 @@ from tricycle.dataset import InfiniteBatchDataset
 from tricycle.layers import Dense, Sequential
 from tricycle.loss import cross_entropy
 from tricycle.optimisers import StochasticGradientDescent
-from tricycle.tensor import to_tensor
 
 slow_test = pytest.mark.skipif(
     "not config.getoption('--run-slow')",
