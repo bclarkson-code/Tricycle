@@ -1,3 +1,4 @@
+import pickle
 from pathlib import Path
 
 import httpx
@@ -17,16 +18,20 @@ class Shakespeare:
     def __init__(
         self,
         vocab_size: int,
-        token_path: Path = Path("tokens.bin"),
-        raw_data_path: Path = Path("raw_data.txt"),
+        token_path: Path | None = None,
+        raw_data_path: Path = Path("datasets/shakespeare/raw_data.txt"),
     ):
+        if token_path is None:
+            token_path = Path(f"datasets/shakespeare/tokens_{vocab_size}.pkl")
+
         self.vocab_size = vocab_size
         self.raw_data_path = raw_data_path
         self.token_path = token_path
 
         if not self.token_path.exists():
             self.tokens = self.generate()
-            self.token_path.write_bytes(bytes(self.tokens))
+            with open(self.token_path, "wb") as f:
+                pickle.dump(self.tokens, f)
         else:
             self.tokens = list(self.token_path.read_bytes())
 
@@ -40,7 +45,6 @@ class Shakespeare:
         raw_data = list(self.raw_data_path.read_bytes())
         self.tokeniser = BPETokeniser(self.vocab_size)
         self.tokeniser.train_ints(raw_data)
-        breakpoint()
         return self.tokeniser.tokenise_ints(raw_data)
 
 
