@@ -1,7 +1,7 @@
 import logging
 import uuid
 from copy import copy
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -21,82 +21,90 @@ class Tensor(np.ndarray):
     _grad_fn: Optional[List[List[Op]]] = None
     args: tuple["Tensor", ...] | None = None
     back_fn: tuple[Op, ...] | None = None
+    parents: set["Tensor"] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
     is_vector: bool = False
 
-    def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
+    def _attach_parents(self):
         """
-        Find every path backward through the computational graph from the current tensor
-        to every differentiable parameter and attach them to the corresponding
-        differentiable_params
+        Traverse through the graph, labelling each tensor with the tensors that
+        are direct parents to it in the graph
         """
-        stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
-        differentiable_params: Dict[int, Tensor] = {}
+        stack: list["Tensor"] = [self]
 
-        # Find every route to a differentiable parameter
         while stack:
-            logger.debug(f"Current_stack: {[node.shape for node, _ in stack]}")
-            current_node, current_gradient = stack.pop()
+            node = stack.pop()
 
-            # At leaf node
-            if current_node.args is None:
-                logger.debug(
-                    f"Found leaf node: {current_node.shape} {current_node.name}"
-                )
-                if current_node._grad_fn is None:
-                    current_node._grad_fn = [current_gradient]
+            if not node.args:
+                continue
+
+            for arg in node.args:
+                if not arg.requires_grad:
+                    continue
+
+                if arg.parents is None:
+                    arg.parents = set()
+
+                if node not in arg.parents:
+                    stack.append(arg)
+                    arg.parents.add(node)
+
+    def _calculate_gradients(self):
+        """
+        Traverse through the graph, calculating gradients along the way such
+        that a child is only visited if the entirety of its parent's gradient
+        has been computed
+        """
+        self.grad = to_tensor(
+            np.ones_like(self),
+            requires_grad=False,
+            is_vector=self.is_vector,
+        )
+
+        stack: list["Tensor"] = [self]
+
+        while stack:
+            node = stack.pop()
+
+            if node.args is None or node.back_fn is None:
+                continue
+
+            for arg, back_fn in zip(node.args, node.back_fn):
+                if not arg.requires_grad:
+                    continue
+
+                if arg.parents is None:
+                    raise ValueError(
+                        "arg.parents is None. Parents must be attached",
+                        "before calculating gradients. Did you forget to ",
+                        "call _attach_parents?",
+                    )
+
+                # already visited along this edge, dont do it again
+                if node not in arg.parents:
+                    continue
+
+                arg.parents.remove(node)
+
+                # calculate gradients
+                if arg.grad is None:
+                    arg.grad = back_fn(node.grad)
                 else:
-                    current_node._grad_fn.append(current_gradient)
-                if hash(current_node) not in differentiable_params:
-                    differentiable_params[hash(current_node)] = current_node
+                    arg.grad += back_fn(node.grad)
 
-            # At non-leaf node
-            else:
-                for arg, op in zip(current_node.args, current_node.back_fn):
-                    if not arg.requires_grad:
-                        continue
-
-                    new_gradient = current_gradient + [op]
-                    stack.append((arg, new_gradient))
-        return differentiable_params
-
-    def _calculate_gradient(self, param: "Tensor") -> None:
-        """
-        Calculate the gradient for a single parameter in the computational
-        graph
-        """
-        if param._grad_fn is None:
-            return
-
-        for path in param._grad_fn:
-            grad = to_tensor(
-                np.ones_like(self),
-                requires_grad=False,
-                is_vector=self.is_vector,
-            )
-
-            logger.debug(f"  {path}")
-            logger.debug("----------------------------")
-            for op in path:
-                logger.debug(f"  {op}")
-                grad = op(grad)
-                logger.debug(f"  {grad.shape}")
-                logger.debug(f"  {grad.is_vector}")
-            logger.debug("----------------------------")
-
-            param.grad = grad if param.grad is None else param.grad + grad
-        param._grad_fn = None
+                # only move to arg if we have been to all of its parents
+                if len(arg.parents) == 0:
+                    stack.append(arg)
 
     def backward(self):
         """
         Perform a backward pass through the graph, calculating the gradient
         for each parameter
         """
-        params = self._find_differentiable_params()
-        for param in params.values():
-            self._calculate_gradient(param)
+        self._attach_parents()
+        self._calculate_gradients()
 
     def __hash__(self) -> int:
         return id(self)
