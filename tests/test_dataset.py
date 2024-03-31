@@ -17,10 +17,10 @@ def test_can_build_causal_lm_dataset():
     expected_vectors[np.arange(11), expected_tokens] = 1
 
     assert np.allclose(inputs, expected_vectors[:10])
-    assert np.allclose(output, expected_vectors[10])
+    assert np.allclose(output, expected_vectors[1:11])
 
     dataset.batch()
 
     inputs, outputs = dataset._get_batch(0)
     assert inputs.shape == (10, 10, 100)
-    assert outputs.shape == (10, 100)
+    assert outputs.shape == (10, 10, 100)

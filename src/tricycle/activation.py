@@ -12,12 +12,6 @@ class ReLU(Layer):
     def forward(self, x: Tensor):
         return umax(x, 0)
 
-    def update(self, optimiser: Optimiser):
-        pass
-
-    def zero_grad(self):
-        pass
-
 
 class Swish(Layer):
     """
@@ -27,12 +21,6 @@ class Swish(Layer):
 
     def forward(self, x: Tensor):
         return x * sigmoid(x)
-
-    def update(self, optimiser: Optimiser):
-        pass
-
-    def zero_grad(self):
-        pass
 
 
 class GeLU(Layer):

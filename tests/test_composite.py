@@ -62,3 +62,60 @@ def test_reshape():
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.close_to([1, 1, 1, 1, 1, 1])
+
+
+def test_mean():
+    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
+
+    out_tensor = in_tensor.mean()
+
+    assert out_tensor.close_to(3.5)
+
+    out_tensor.backward()
+
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to([1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6])
+
+
+def test_standard_deviation():
+    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
+
+    out_tensor = in_tensor.standard_deviation()
+
+    assert out_tensor.close_to(np.std([1, 2, 3, 4, 5, 6]))
+
+    out_tensor.backward()
+
+    assert in_tensor.grad is not None
+    diff = 0.09759
+    correct = np.array(
+        [
+            -3 * diff,
+            -2 * diff,
+            -1 * diff,
+            0,
+            diff,
+            2 * diff,
+        ]
+    )
+    correct += diff / 2
+    assert in_tensor.grad.close_to(correct)
+
+
+def test_normalise():
+    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
+
+    out_tensor = in_tensor.normalise()
+
+    assert out_tensor.mean().close_to(0)
+    assert out_tensor.standard_deviation().close_to(1)
+    assert out_tensor.close_to(
+        [
+            -1.4638501,
+            -0.87831006,
+            -0.29277002,
+            0.29277002,
+            0.87831006,
+            1.4638501,
+        ]
+    )
