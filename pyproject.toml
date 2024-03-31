@@ -28,6 +28,7 @@ matplotlib = "^3.8.2"
 pydot = "^2.0.0"
 graphviz = "^0.20.1"
 networkx = "^3.2.1"
+py-spy = "^0.3.14"
 
 [tool.isort]
 profile = "black"
