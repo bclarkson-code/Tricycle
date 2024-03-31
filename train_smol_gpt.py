@@ -5,6 +5,11 @@ works of shakespeare.
 The hyperparams for this model are very much a work in progress
 """
 
+import datetime
+import os
+import pickle
+
+import mlflow
 from tqdm import tqdm
 
 from tricycle.configs import SmolGPTConfig
@@ -13,6 +18,10 @@ from tricycle.loss import cross_entropy
 from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import Shakespeare
+
+mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_experiment("Tricycle SmolGPT")
+os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 config = SmolGPTConfig()
 model = GPT(config)
@@ -35,10 +44,22 @@ optimiser = StochasticGradientDescent(
     weight_decay=config.weight_decay,
     momentum=config.momentum,
 )
+with mlflow.start_run():
+    mlflow.log_params(config.__dict__)
 
-for inputs, outputs in tqdm(dataset):
-    logits = model(inputs)
-    loss = loss_fn(outputs, logits).from_vector().mean().mean()
-    loss.backward()
-    model.update(optimiser)
-    break
+    try:
+        for step, (inputs, outputs) in tqdm(
+            enumerate(dataset), total=len(dataset)
+        ):
+            logits = model(inputs)
+            loss = loss_fn(outputs, logits).from_vector().mean().mean()
+            loss.backward()
+            model.update(optimiser)
+            mlflow.log_metric("loss", loss, step=step)
+    # save before crashing
+    except Exception as e:
+        with open(
+            f"smolgpt_{datetime.datetime.now().isoformat()}.pkl", "wb"
+        ) as f:
+            pickle.dump(model, f)
+        raise e
