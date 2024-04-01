@@ -6,10 +6,11 @@ The hyperparams for this model are very much a work in progress
 """
 
 import os
+from pathlib import Path
 
 import mlflow
 from omegaconf import OmegaConf
-from ray import tune
+from ray import train, tune
 from tqdm import tqdm
 
 from tricycle.activation import GeLU
@@ -18,6 +19,8 @@ from tricycle.loss import cross_entropy
 from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import Shakespeare
+
+EXPERIMENT_NAME = "SmolGPT:base:find_learning_rate"
 
 search_space = {
     "model": {
@@ -38,12 +41,12 @@ search_space = {
         "weight_decay": 0,
         "momentum": 0,
         "batch_size": 32,
-        "n_steps": 10_000,
+        "n_steps": 250,
     },
     "mlflow": {
         "mlflow_enabled": True,
         "mlflow_tracking_uri": "http://localhost:5000",
-        "mlflow_experiment_name": "SmolGPT:base:find_learning_rate",
+        "mlflow_experiment_name": EXPERIMENT_NAME,
     },
     "experiment": {
         "train_steps": 10_000,
@@ -53,7 +56,7 @@ search_space = {
 }
 
 
-def train(config):
+def train_model(config):
     config = OmegaConf.create(config)
 
     mlflow.set_tracking_uri(config.mlflow.tracking_uri)
@@ -132,4 +135,21 @@ def train(config):
                 valid_loss /= len(test_dataset)
 
                 mlflow.log_metric("valid_loss", valid_loss)
-    return
+    return {"valid_loss": valid_loss}
+
+
+if __name__ == "__main__":
+    tuner = tune.Tuner(
+        tune.with_resources(train_model, {"cpu": 1, "memory": 1024 * 3}),
+        tune_config=tune.TuneConfig(
+            metric="valid_loss",
+            num_samples=16,
+        ),
+        run_config=train.RunConfig(
+            storage_path=Path("results"),
+            name=EXPERIMENT_NAME,
+        ),
+        param_space=search_space,
+    )
+    results = tuner.fit()
+    results.get_dataframe().to_csv(f"{EXPERIMENT_NAME}_results.csv")
