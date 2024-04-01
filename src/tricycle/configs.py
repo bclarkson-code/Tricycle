@@ -23,6 +23,10 @@ class GPTConfig:
 
     batch_size: int
 
+    mlflow_enabled: bool
+    mlflow_tracking_uri: str
+    mlflow_experiment_name: str
+
 
 class SmolGPTConfig(GPTConfig):
     embedding_dim = 128
@@ -43,3 +47,7 @@ class SmolGPTConfig(GPTConfig):
     momentum = 0
 
     batch_size = 4
+
+    mlflow_enabled = False
+    mlflow_tracking_uri = "http://localhost:5000"
+    mlflow_experiment_name = "Tricycle SmolGPT"
