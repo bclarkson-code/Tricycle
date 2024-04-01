@@ -8,9 +8,7 @@ from tricycle.tokeniser import BPETokeniser
 
 
 class Shakespeare(abc.Sequence):
-    url: str = (
-        "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
-    )
+    url: str = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
     vocab_size: int
     token_path: Path
     raw_data_path: Path
@@ -23,7 +21,9 @@ class Shakespeare(abc.Sequence):
         raw_data_path: Path = Path("datasets/shakespeare/raw_data.txt"),
     ):
         if token_path is None:
-            token_path = Path(f"datasets/shakespeare/tokens_{vocab_size}.pkl")
+            token_path = Path(
+                f"/home/ben/Documents/Tricycle/datasets/shakespeare/tokens_{vocab_size}.pkl"
+            )
 
         self.vocab_size = vocab_size
         self.raw_data_path = raw_data_path

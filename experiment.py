@@ -6,6 +6,7 @@ The hyperparams for this model are very much a work in progress
 """
 
 import os
+import pickle
 from pathlib import Path
 
 import mlflow
@@ -35,23 +36,22 @@ search_space = {
         "attention_dropout_prob": 0,
         "residual_dropout_prob": 0,
         "linear_dropout_prob": 0,
+        "batch_size": 32,
     },
     "train": {
         "learning_rate": tune.loguniform(1e-4, 1e-1),
         "weight_decay": 0,
         "momentum": 0,
         "batch_size": 32,
-        "n_steps": 250,
     },
     "mlflow": {
-        "mlflow_enabled": True,
-        "mlflow_tracking_uri": "http://localhost:5000",
-        "mlflow_experiment_name": EXPERIMENT_NAME,
+        "tracking_uri": "http://localhost:5000",
+        "experiment_name": EXPERIMENT_NAME,
     },
     "experiment": {
         "train_steps": 10_000,
         "valid_steps": 10,
-        "valid_every": 100,
+        "valid_every": 25,
     },
 }
 
@@ -63,21 +63,21 @@ def train_model(config):
     mlflow.set_experiment(config.mlflow.experiment_name)
     os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
-    match config.model.activation_fn:
-        case "gelu":
-            config.model.activation_fn = GeLU()
-        case _:
-            raise ValueError(
-                f"Unknown activation function: {config.model.activation_fn}"
-            )
-
     model = GPT(config.model)
 
     tokens = Shakespeare(vocab_size=config.model.vocab_size)
 
     # train-test split
-    n_valid_tokens = config.experiment.valid_steps * config.model.batch_size
-    n_train_tokens = config.experiment.train_steps * config.model.batch_size
+    n_valid_tokens = (
+        config.model.context_window
+        + config.experiment.valid_steps * config.model.batch_size
+        + 1
+    )
+    n_train_tokens = (
+        config.model.context_window
+        + config.experiment.train_steps * config.model.batch_size
+        + 1
+    )
     assert n_train_tokens + n_valid_tokens < len(tokens), "Dataset too small"
     train_dataset = (
         CausalLMDataset(
@@ -119,7 +119,7 @@ def train_model(config):
             loss.backward()
             model.update(optimiser)
 
-            mlflow.log_metric("loss", loss.item())
+            mlflow.log_metric("train_loss", float(loss), step=step)
 
             # clean up the computational graph
             loss.cleanup()
@@ -134,7 +134,26 @@ def train_model(config):
                     loss.cleanup()
                 valid_loss /= len(test_dataset)
 
-                mlflow.log_metric("valid_loss", valid_loss)
+                mlflow.log_metric("valid_loss", valid_loss, step=step)
+
+    # final loss
+    valid_loss = 0
+    for inputs, outputs in test_dataset:
+        logits = model(inputs)
+        loss = loss_fn(outputs, logits).from_vector().mean().mean()
+        valid_loss += float(loss)
+        loss.cleanup()
+    valid_loss /= len(test_dataset)
+    mlflow.log_metric("valid_loss", valid_loss, step=len(train_dataset))
+
+    # save the model
+    model_dir = Path(
+        f"/home/ben/Documents/Tricycle/results/{EXPERIMENT_NAME}/models"
+    )
+    model_dir.mkdir(parents=True, exist_ok=True)
+    with open(model_dir / f"lr_{config.train.learning_rate}.pkl", "wb") as f:
+        pickle.dump(model, f)
+
     return {"valid_loss": valid_loss}
 
 
@@ -146,7 +165,7 @@ if __name__ == "__main__":
             num_samples=16,
         ),
         run_config=train.RunConfig(
-            storage_path=Path("results"),
+            storage_path=Path("results").absolute(),
             name=EXPERIMENT_NAME,
         ),
         param_space=search_space,

@@ -111,10 +111,12 @@ class CausalLMDataset:
         self.batch_size = batch_size
         self.context_window = context_window
         self.is_batch = False
+        self._idx = 0
 
     def __len__(self):
         return (
-            (len(self.tokens) - self.batch_size) // self.batch_size
+            (len(self.tokens) - self.context_window - self.batch_size - 1)
+            // self.batch_size
             if self.is_batch
             else len(self.tokens) - 1
         )
@@ -172,14 +174,25 @@ class CausalLMDataset:
             inputs = to_tensor(inputs, requires_grad=False, name="inputs")
             output = to_tensor(output, requires_grad=False, name="output")
 
-        if self.is_vector:
-            if not self.as_tensor:
-                raise ValueError("Cannot vectorise an unbatched dataset")
+        if self.is_vector and not self.as_tensor:
+            raise ValueError("Cannot vectorise an unbatched dataset")
 
-            inputs = inputs.to_vector()
-            output = output.to_vector()
+        inputs = inputs.to_vector()
+        output = output.to_vector()
 
         return inputs, output
+
+    def __iter__(self):
+        self._idx = 0
+        return self
+
+    def __next__(self):
+        if self._idx >= len(self):
+            raise StopIteration
+
+        result = self[self._idx]
+        self._idx += 1
+        return result
 
     def batch(self):
         self.is_batch = True

@@ -170,6 +170,14 @@ class MLPBlock(Layer):
             initialiser=init_xavier,
         )
         self.dropout = Dropout(dropout_prob)
+        if isinstance(activation_fn, str):
+            match activation_fn:
+                case "gelu":
+                    activation_fn = GeLU()
+                case _:
+                    raise NotImplementedError(
+                        f"Unknown activation function: {activation_fn}"
+                    )
         self.activation_fn = activation_fn
 
     def forward(self, x: Tensor):
