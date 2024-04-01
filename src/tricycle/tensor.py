@@ -69,10 +69,10 @@ class Tensor(np.ndarray):
         while stack:
             node = stack.pop()
 
-            if node.args is None or node.back_fnss is None:
+            if node.args is None or node.back_fns is None:
                 continue
 
-            for arg, back_fns in zip(node.args, node.back_fnss):
+            for arg, back_fns in zip(node.args, node.back_fns):
                 if not arg.requires_grad:
                     continue
 
@@ -98,12 +98,11 @@ class Tensor(np.ndarray):
                 # only move to arg if we have been to all of its parents
                 if len(arg.parents) == 0:
                     stack.append(arg)
-        breakpoint()
 
-    def delete_tree(self):
+    def cleanup(self):
         """
         Traverse through the graph, deleting all non-parameter nodes in
-        the graph
+        the graph to avoid a memory leak
         """
         stack: list["Tensor"] = [self]
         while stack:
@@ -334,6 +333,7 @@ def to_tensor(
     name: Optional[str] = None,
     requires_grad: bool = True,
     is_vector: bool = False,
+    uuid_: Optional[uuid.UUID] = None,
     **kwargs,
 ) -> Tensor:
     """
@@ -343,7 +343,7 @@ def to_tensor(
     result = np.asarray(*args, **kwargs).view(Tensor)
     result.name = name
     result.requires_grad = requires_grad
-    result.uuid = uuid.uuid4()
+    result.uuid = uuid_ or uuid.uuid4()
     result.is_vector = is_vector
     return result
 

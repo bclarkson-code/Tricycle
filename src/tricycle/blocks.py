@@ -68,6 +68,7 @@ class MultiHeadSelfAttention(Layer):
             from_size=self.embedding_dim,
             to_size=self.embedding_dim * 3,
             initialiser=initialiser,
+            name="in_projection",
         )
 
         # Pass the final embedding through a linear layer
@@ -75,6 +76,7 @@ class MultiHeadSelfAttention(Layer):
             from_size=self.embedding_dim,
             to_size=self.embedding_dim,
             initialiser=initialiser,
+            name="out_projection",
         )
 
         # build a mask to make attention causal
@@ -118,7 +120,7 @@ class MultiHeadSelfAttention(Layer):
         x = self.in_projection(x)
 
         # split the embedding into key, query and value
-        query, key, value = x.split(3, axis=1)  # tricycle
+        query, key, value = x.split(3, axis=1)
 
         attention = self._attention(key, query, value)
 
@@ -126,10 +128,12 @@ class MultiHeadSelfAttention(Layer):
         return self.out_projection(attention)
 
     def update(self, optimiser: Optimiser):
-        self.weights = optimiser(self.weights)
+        self.in_projection.update(optimiser)
+        self.out_projection.update(optimiser)
 
     def zero_grad(self):
-        self.weights.grad = None
+        self.in_projection.zero_grad()
+        self.out_projection.zero_grad()
 
 
 class MLPBlock(Layer):

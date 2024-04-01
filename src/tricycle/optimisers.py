@@ -32,8 +32,6 @@ class StochasticGradientDescent(Optimiser):
         Perform a gradient update on a tensor, optionally
         including weight decay and momentum
         """
-        if tensor.grad is None:
-            breakpoint()
         assert tensor.grad is not None
 
         if tensor.grad.is_vector:
@@ -43,22 +41,28 @@ class StochasticGradientDescent(Optimiser):
 
         if self.weight_decay is not None:
             wd = self.learning_rate * self.weight_decay * tensor
-            grad += wd
+            grad += to_tensor(wd, name=f"weight_decay({self.weight_decay})")
 
-        if self.momentum is not None:
+        if self.momentum is not None and self.momentum > 0:
             if tensor.uuid not in self.momentum_store:
                 last_momentum = to_tensor(np.zeros_like(grad))
             else:
                 last_momentum = self.momentum_store[tensor.uuid]
 
             grad += self.momentum * last_momentum
-            self.momentum_store[tensor.uuid] = grad
+            self.momentum_store[tensor.uuid] = to_tensor(grad)
 
-        # We need to make sure that the new tensor looks like the old one
-        old_uuid = tensor.uuid
-        result = tensor - grad
-        result.grad = None
-        result.uuid = old_uuid
+        # update the value only, leave everything else
+        result = to_tensor(
+            tensor - grad,
+            requires_grad=tensor.requires_grad,
+            name=tensor.name,
+            is_vector=tensor.is_vector,
+            uuid_=tensor.uuid,
+        )
+
+        del tensor
+        del grad
 
         return result
 
