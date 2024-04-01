@@ -37,17 +37,18 @@ class SmolGPTConfig(GPTConfig):
     expansion_ratio = 4
     activation_fn = GeLU()
 
-    input_dropout_prob = 0.1
-    attention_dropout_prob = 0.1
-    residual_dropout_prob = 0.1
-    linear_dropout_prob = 0.1
+    input_dropout_prob = 0
+    attention_dropout_prob = 0
+    residual_dropout_prob = 0
+    linear_dropout_prob = 0
 
-    learning_rate = 3e-4
+    learning_rate = 3e-2
     weight_decay = 0
     momentum = 0
 
-    batch_size = 4
+    batch_size = 32
 
-    mlflow_enabled = False
+    debug = True
+    mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"
     mlflow_experiment_name = "Tricycle SmolGPT"
