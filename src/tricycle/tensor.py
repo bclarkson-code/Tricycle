@@ -21,7 +21,7 @@ class Tensor(np.ndarray):
     _id: int
     _grad_fn: Optional[List[List[Op]]] = None
     args: tuple["Tensor", ...] | None = None
-    back_fn: tuple[Op, ...] | None = None
+    back_fns: tuple[Op, ...] | None = None
     parents: set["Tensor"] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
@@ -69,10 +69,10 @@ class Tensor(np.ndarray):
         while stack:
             node = stack.pop()
 
-            if node.args is None or node.back_fn is None:
+            if node.args is None or node.back_fnss is None:
                 continue
 
-            for arg, back_fn in zip(node.args, node.back_fn):
+            for arg, back_fns in zip(node.args, node.back_fnss):
                 if not arg.requires_grad:
                     continue
 
@@ -91,15 +91,16 @@ class Tensor(np.ndarray):
 
                 # calculate gradients
                 if arg.grad is None:
-                    arg.grad = back_fn(node.grad)
+                    arg.grad = back_fns(node.grad)
                 else:
-                    arg.grad += back_fn(node.grad)
+                    arg.grad += back_fns(node.grad)
 
                 # only move to arg if we have been to all of its parents
                 if len(arg.parents) == 0:
                     stack.append(arg)
+        breakpoint()
 
-    def _delete_tree(self):
+    def delete_tree(self):
         """
         Traverse through the graph, deleting all non-parameter nodes in
         the graph
@@ -118,15 +119,13 @@ class Tensor(np.ndarray):
             del node
         gc.collect()
 
-    def backward(self, delete_when_done: bool = False):
+    def backward(self):
         """
         Perform a backward pass through the graph, calculating the gradient
         for each parameter
         """
         self._attach_parents()
         self._calculate_gradients()
-        if delete_when_done:
-            self._delete_tree()
 
     def __hash__(self) -> int:
         return id(self)
@@ -360,7 +359,7 @@ def vectorise(tensor: Tensor) -> Tensor:
         copy(tensor), is_vector=True, requires_grad=tensor.requires_grad
     )
     result.args = (tensor,)
-    result.back_fn = (unvectorise,)
+    result.back_fns = (unvectorise,)
     return result
 
 
@@ -376,7 +375,7 @@ def unvectorise(tensor: Tensor) -> Tensor:
         copy(tensor), is_vector=False, requires_grad=tensor.requires_grad
     )
     result.args = (tensor,)
-    result.back_fn = (vectorise,)
+    result.back_fns = (vectorise,)
     return result
 
 

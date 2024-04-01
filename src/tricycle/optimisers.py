@@ -24,7 +24,7 @@ class StochasticGradientDescent(Optimiser):
     def _reset_grad(self, tensor: Tensor):
         tensor.grad = None
         tensor.args = None
-        tensor.back_fn = None
+        tensor.back_fns = None
         return tensor
 
     def update_weight(self, tensor: Tensor):
@@ -32,6 +32,8 @@ class StochasticGradientDescent(Optimiser):
         Perform a gradient update on a tensor, optionally
         including weight decay and momentum
         """
+        if tensor.grad is None:
+            breakpoint()
         assert tensor.grad is not None
 
         if tensor.grad.is_vector:
@@ -51,8 +53,6 @@ class StochasticGradientDescent(Optimiser):
 
             grad += self.momentum * last_momentum
             self.momentum_store[tensor.uuid] = grad
-
-        del tensor.grad
 
         # We need to make sure that the new tensor looks like the old one
         old_uuid = tensor.uuid
