@@ -16,3 +16,4 @@ datasets/shakespeare/raw_data.txt
 # jupyter
 .ipynb_checkpoints
 *.ipynb
+output.bin

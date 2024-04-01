@@ -108,11 +108,13 @@ class Tensor(np.ndarray):
         while stack:
             node = stack.pop()
 
-            if not node.args:
-                continue
+            # add children to stack
+            if node.args:
+                stack.extend(iter(node.args))
 
-            for arg in node.args:
-                stack.append(arg)
+            # delete node
+            if hasattr(node, "grad") and node.grad is not None:
+                del node.grad
             del node
         gc.collect()
 
