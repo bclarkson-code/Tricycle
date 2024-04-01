@@ -49,7 +49,7 @@ search_space = {
         "experiment_name": EXPERIMENT_NAME,
     },
     "experiment": {
-        "train_steps": 10_000,
+        "train_steps": 2500,
         "valid_steps": 10,
         "valid_every": 25,
     },
@@ -109,7 +109,8 @@ def train_model(config):
     )
 
     with mlflow.start_run():
-        mlflow.log_params(config)
+        for key, values in config.items():
+            mlflow.log_params({f"{key}/{k}": v for k, v in values.items()})
 
         for step, (inputs, outputs) in tqdm(
             enumerate(train_dataset), total=config.experiment.train_steps
@@ -159,11 +160,11 @@ def train_model(config):
 
 if __name__ == "__main__":
     tuner = tune.Tuner(
-        tune.with_resources(train_model, {"cpu": 1, "memory": 1024 * 3}),
-        tune_config=tune.TuneConfig(
-            metric="valid_loss",
-            num_samples=23,
+        tune.with_resources(
+            train_model,
+            {"cpu": 1},
         ),
+        tune_config=tune.TuneConfig(metric="valid_loss", num_samples=24),
         run_config=train.RunConfig(
             storage_path=Path("results").absolute(),
             name=EXPERIMENT_NAME,
