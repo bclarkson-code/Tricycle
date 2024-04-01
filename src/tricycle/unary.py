@@ -19,7 +19,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
 
     result = to_tensor(np.add(tensor, constant))
     result.args = (tensor,)
-    result.back_fn = (nothing,)
+    result.back_fns = (nothing,)
     result.name = f"+ {constant}"
     result.is_vector = tensor.is_vector
     return result
@@ -65,7 +65,7 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     coef = to_tensor(
         np.power(tensor, constant - 1), is_vector=tensor.is_vector
     )
-    result.back_fn = (partial(bmul, umul(coef, constant)),)
+    result.back_fns = (partial(bmul, umul(coef, constant)),)
     result.name = f"^ {constant}"
     result.is_vector = tensor.is_vector
 
@@ -96,7 +96,7 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
     is_bigger = to_tensor(
         (tensor > constant).astype(float), is_vector=tensor.is_vector
     )
-    result.back_fn = (partial(bmul, is_bigger),)
+    result.back_fns = (partial(bmul, is_bigger),)
     result.name = f"> {constant}"
     result.is_vector = tensor.is_vector
 
@@ -119,7 +119,7 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     is_smaller = to_tensor(
         (tensor < constant).astype(float), is_vector=tensor.is_vector
     )
-    result.back_fn = (partial(bmul, is_smaller),)
+    result.back_fns = (partial(bmul, is_smaller),)
     result.name = f"< {constant}"
     result.is_vector = tensor.is_vector
     return result
@@ -137,7 +137,7 @@ def uexp(tensor: Tensor) -> Tensor:
     result.name = "exp"
     result.is_vector = tensor.is_vector
     coef = to_tensor(result, is_vector=tensor.is_vector)
-    result.back_fn = (partial(bmul, coef),)
+    result.back_fns = (partial(bmul, coef),)
     return result
 
 
@@ -150,7 +150,7 @@ def ulog(tensor: Tensor) -> Tensor:
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    result.back_fn = (
+    result.back_fns = (
         partial(
             bmul,
             udiv(1, tensor),
@@ -171,7 +171,7 @@ def usin(tensor: Tensor) -> Tensor:
 
     result.args = (tensor,)
     coef = to_tensor(np.cos(tensor), is_vector=tensor.is_vector)
-    result.back_fn = (partial(bmul, coef),)
+    result.back_fns = (partial(bmul, coef),)
     result.name = "sin"
     result.is_vector = tensor.is_vector
     return result
@@ -187,7 +187,7 @@ def ucos(tensor: Tensor) -> Tensor:
 
     result.args = (tensor,)
     coef = to_tensor(-np.sin(tensor), is_vector=tensor.is_vector)
-    result.back_fn = (partial(bmul, coef),)
+    result.back_fns = (partial(bmul, coef),)
     result.name = "cos"
     result.is_vector = tensor.is_vector
     return result
@@ -212,6 +212,6 @@ def uerf(tensor: Tensor) -> Tensor:
     SQRT_PI = 1.7724538509055159
     result.args = (tensor,)
     result.name = "erf"
-    result.back_fn = (lambda x: (x * -2) / SQRT_PI,)
+    result.back_fns = (lambda x: (x * -2) / SQRT_PI,)
 
     return result

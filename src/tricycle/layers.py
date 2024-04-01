@@ -31,9 +31,14 @@ class Dense(Layer):
     weights: Tensor
     from_size: int
     to_size: int
+    name: str | None
 
-    def __init__(self, from_size: int, to_size: int, initialiser=init_xavier):
-        self.weights = initialiser((from_size, to_size), name="weights")
+    def __init__(
+        self, from_size: int, to_size: int, initialiser=init_xavier, name=None
+    ):
+        self.weights = initialiser(
+            (from_size, to_size), name="weights" if name is None else name
+        )
         self.from_size = from_size
         self.to_size = to_size
 
@@ -68,100 +73,6 @@ class Dense(Layer):
         initial_subscript = "a,aB->B"
         idx = self._build_missing_indices(x, initial_subscript)
         return Einsum(f"{idx}a,aB->{idx}B")(x, self.weights)
-
-    def update(self, optimiser: Optimiser):
-        self.weights = optimiser(self.weights)
-
-    def zero_grad(self):
-        self.weights.grad = None
-
-
-class MultiHeadSelfAttention(Layer):
-    """
-    Multi-head self-attention
-    """
-
-    embedding_dim: int
-    n_heads: int
-    dropout: float
-    context_window: int
-
-    def __init__(
-        self,
-        embedding_dim: int,
-        n_heads: int,
-        context_window: int,
-        attention_dropout_prob: float,
-        residual_dropout_prob: float,
-        initialiser=init_xavier,
-    ):
-        # set the constants
-        self.embedding_dim = embedding_dim
-        self.n_heads = n_heads
-        self.context_window = context_window
-
-        # Project the embedding into 3 embeddings. One for each of key, query
-        # and value
-        self.in_projection = Dense(
-            from_size=self.embedding_dim,
-            to_size=self.embedding_dim * 3,
-            initialiser=initialiser,
-        )
-
-        # Pass the final embedding through a linear layer
-        self.out_projection = Dense(
-            from_size=self.embedding_dim,
-            to_size=self.embedding_dim,
-            initialiser=initialiser,
-        )
-
-        # build a mask to make attention causal
-        self.mask = build_mask(self.context_window)
-
-        self.attention_dropout = Dropout(attention_dropout_prob)
-        self.residual_dropout = Dropout(residual_dropout_prob)
-
-    def _attention(self, key: Tensor, query: Tensor, value: Tensor):
-        # reshape into n_heads x embedding_dim
-        head_size = self.embedding_dim // self.n_heads
-        n_tokens = key.shape[1] if key.is_vector else key.shape[0]
-        head_shape = (
-            n_tokens,  # number of tokens
-            self.n_heads,  # number of heads
-            head_size,  # embedding per head
-        )
-        out_shape = (n_tokens, self.embedding_dim)
-
-        # reshape and reorder the heads
-        key = key.reshape(head_shape).e("TNH -> NTH")
-        query = query.reshape(head_shape).e("TNH -> NTH")
-        value = value.reshape(head_shape).e("TNH -> NTH")
-
-        # attend
-        attention = Einsum("NIh, NJh -> NIJ")(query, key) / np.sqrt(head_size)
-
-        # mask and softmax
-        attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
-        attention = softmax(attention)
-        attention = self.attention_dropout(attention)
-
-        # smush the heads back together
-        out_shape = (n_tokens, self.embedding_dim)
-        out = Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
-        out = self.residual_dropout(out)
-        return out
-
-    def forward(self, x: Tensor):
-        # use the projection layer to expand the inoput embedding
-        x = self.in_projection(x)
-
-        # split the embedding into key, query and value
-        query, key, value = x.split(3, axis=1)  # tricycle
-
-        attention = self._attention(key, query, value)
-
-        # project back
-        return self.out_projection(attention)
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)
