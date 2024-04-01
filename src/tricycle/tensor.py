@@ -1,3 +1,4 @@
+import gc
 import logging
 import uuid
 from copy import copy
@@ -98,13 +99,32 @@ class Tensor(np.ndarray):
                 if len(arg.parents) == 0:
                     stack.append(arg)
 
-    def backward(self):
+    def _delete_tree(self):
+        """
+        Traverse through the graph, deleting all non-parameter nodes in
+        the graph
+        """
+        stack: list["Tensor"] = [self]
+        while stack:
+            node = stack.pop()
+
+            if not node.args:
+                continue
+
+            for arg in node.args:
+                stack.append(arg)
+            del node
+        gc.collect()
+
+    def backward(self, delete_when_done: bool = False):
         """
         Perform a backward pass through the graph, calculating the gradient
         for each parameter
         """
         self._attach_parents()
         self._calculate_gradients()
+        if delete_when_done:
+            self._delete_tree()
 
     def __hash__(self) -> int:
         return id(self)
