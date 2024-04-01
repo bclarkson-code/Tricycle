@@ -30,62 +30,59 @@ If you want to do these things, you should check out [pytorch](https://pytorch.o
 If you would like to learn more about the process of building tricycle, you can check out my [blog](http://bclarkson-code.com)
 
 ## Usage
-Theoretically, as a fully functional deep learning library, you can build any modern Deep Learning model with Tricycle. For example, this is how you can train a simple neural network on the iris dataset:
+Theoretically, as a fully functional deep learning library, you can build any modern Deep Learning model with Tricycle. For example, this is how you can train a (very) small language model on the shakespeare dataset:
 
 ```python
-import numpy as np
-from matplotlib import pyplot as plt
-from sklearn.datasets import load_iris
+import pickle
 
-from tricycle.activation import ReLU
-from tricycle.dataset import InfiniteBatchDataset
-from tricycle.layers import Dense, Sequential
+from tqdm import tqdm
+
+from tricycle.configs import SmolGPTConfig
+from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
+from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
+from tricycle_datasets.shakespeare import Shakespeare
 
-BATCH_SIZE = 64
-LEARNING_RATE = 3e-2
-N_STEPS = 100
+config = SmolGPTConfig()
+model = GPT(config)
 
-# load iris data from sklearn
-X, y = load_iris(return_X_y=True)
-
-# one hot encode y
-y = np.eye(3)[y.astype(int)]
-
-# create a dataset
-ds = InfiniteBatchDataset(X, y, batch_size=BATCH_SIZE)
-batches = ds.to_tensor().to_vector()
-
-# create a model
-layer_1 = Dense(4, 16)
-relu = ReLU()
-layer_2 = Dense(16, 3)
-model = Sequential(layer_1, relu, layer_2)
-
-# create a loss function and an optimiser
+tokens = Shakespeare(vocab_size=config.vocab_size)
+dataset = (
+    CausalLMDataset(
+        tokens=tokens,
+        vocab_size=config.vocab_size,
+        batch_size=config.batch_size,
+        context_window=config.context_window,
+    )
+    .batch()
+    .to_tensor()
+    .to_vector()
+)
 loss_fn = cross_entropy
-optimiser = StochasticGradientDescent(learning_rate=LEARNING_RATE)
+optimiser = StochasticGradientDescent(
+    learning_rate=config.learning_rate,
+    weight_decay=config.weight_decay,
+    momentum=config.momentum,
+)
 
-losses = []
-for step, (inputs, outputs) in enumerate(batches):
-    if step > N_STEPS:
-        break
-
-    y_pred = model(inputs)
-    loss = loss_fn(outputs, y_pred).from_vector().e("a->") / BATCH_SIZE
+for inputs, outputs in tqdm(dataset):
+    logits = model(inputs)
+    loss = loss_fn(outputs, logits).from_vector().mean().mean()
     loss.backward()
-    losses.append(loss)
-
     model.update(optimiser)
-    model.zero_grad()
 
-# Plot a graph of the loss
-plt.plot(losses)
-plt.show()
+    # clean up the computational graph
+    loss.cleanup()
+
+# save results
+with open("model.pkl", "wb") as f:
+    pickle.dump(model, f)
 ```
 
-As you can see, it is about as complex as any other deep learning framework.
+This will fetch the complete works of shakespeare, build it into a dataset, tokenise it, and train a simple GPT on it.
+
+As you can see, it looks pretty similar to other frameworks like PyTorch. However, because Tricycle is much smaller and simpler, if you want to figure out how something works, you can dive into the code and get an answer in a few minutes instead of hours.
 
 ## Installation
 Tricycle uses [poetry](https://python-poetry.org/) to manage dependencies. Assuming it is installed, you
