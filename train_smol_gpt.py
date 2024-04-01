@@ -19,6 +19,7 @@ from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import Shakespeare
 
+
 mlflow.set_tracking_uri("http://localhost:5000")
 mlflow.set_experiment("Tricycle SmolGPT")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
@@ -63,3 +64,4 @@ with mlflow.start_run():
         ) as f:
             pickle.dump(model, f)
         raise e
+
