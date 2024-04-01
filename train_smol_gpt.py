@@ -6,7 +6,9 @@ The hyperparams for this model are very much a work in progress
 """
 
 import os
+import pickle
 
+import mlflow
 from tqdm import tqdm
 
 from tricycle.configs import SmolGPTConfig
@@ -19,12 +21,10 @@ from tricycle_datasets.shakespeare import Shakespeare
 config = SmolGPTConfig()
 model = GPT(config)
 
-if config.mlflow_enabled:
-    import mlflow
 
-    mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-    mlflow.set_experiment(config.mlflow_experiment_name)
-    os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
+mlflow.set_tracking_uri(config.mlflow_tracking_uri)
+mlflow.set_experiment(config.mlflow_experiment_name)
+os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 
 tokens = Shakespeare(vocab_size=config.vocab_size)
@@ -46,30 +46,22 @@ optimiser = StochasticGradientDescent(
     momentum=config.momentum,
 )
 
-if config.mlflow_enabled:
-    with mlflow.start_run():
-        mlflow.log_params(config.__dict__)
+with mlflow.start_run():
+    mlflow.log_params(config.__dict__)
 
-        for step, (inputs, outputs) in tqdm(
-            enumerate(dataset), total=len(dataset)
-        ):
-            if step > 100:
-                break
-            logits = model(inputs)
-            loss = loss_fn(outputs, logits).from_vector().mean().mean()
-            loss.backward()
-            model.update(optimiser)
-            mlflow.log_metric("loss", loss, step=step)
-else:
     for step, (inputs, outputs) in tqdm(
         enumerate(dataset), total=len(dataset)
     ):
-        if step > 10:
+        if step > 100:
             break
         logits = model(inputs)
         loss = loss_fn(outputs, logits).from_vector().mean().mean()
         loss.backward()
         model.update(optimiser)
+        mlflow.log_metric("loss", loss, step=step)
 
-        # important: avoids memory leak
         loss.cleanup()
+
+# save results
+with open("model.pkl", "wb") as f:
+    pickle.dump(model, f)
