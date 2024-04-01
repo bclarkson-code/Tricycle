@@ -112,7 +112,7 @@ def train_model(config):
         mlflow.log_params(config)
 
         for step, (inputs, outputs) in tqdm(
-            enumerate(train_dataset), total=config.train.n_steps
+            enumerate(train_dataset), total=config.experiment.train_steps
         ):
             logits = model(inputs)
             loss = loss_fn(outputs, logits).from_vector().mean().mean()
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         tune.with_resources(train_model, {"cpu": 1, "memory": 1024 * 3}),
         tune_config=tune.TuneConfig(
             metric="valid_loss",
-            num_samples=16,
+            num_samples=23,
         ),
         run_config=train.RunConfig(
             storage_path=Path("results").absolute(),
