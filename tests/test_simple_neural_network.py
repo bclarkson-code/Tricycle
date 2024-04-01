@@ -17,7 +17,6 @@ slow_test = pytest.mark.skipif(
 logger = logging.getLogger(__name__)
 
 
-@slow_test
 def test_can_train_simple_neural_network():
     """
     Train a simple neural network on the iris dataset
