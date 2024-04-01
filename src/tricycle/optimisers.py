@@ -52,9 +52,12 @@ class StochasticGradientDescent(Optimiser):
             grad += self.momentum * last_momentum
             self.momentum_store[tensor.uuid] = grad
 
+        del tensor.grad
+
         # We need to make sure that the new tensor looks like the old one
         old_uuid = tensor.uuid
         result = tensor - grad
+        result.grad = None
         result.uuid = old_uuid
 
         return result
