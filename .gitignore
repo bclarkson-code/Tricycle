@@ -1,7 +1,19 @@
+# environment
 .venv
-.null-ls*
-*__pycache__*
 poetry.lock
+*__pycache__*
+
+# nvim
+.null-ls*
+
+# macos
 *.DS_Store
-datasets/shakespeare/tokens_1024.pkl
+
+# datasets
+datasets/shakespeare/tokens_*.pkl
 datasets/shakespeare/raw_data.txt
+
+# jupyter
+.ipynb_checkpoints
+*.ipynb
+output.bin

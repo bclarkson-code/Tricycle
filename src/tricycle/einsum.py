@@ -187,7 +187,7 @@ class Einsum:
                 np.nan_to_num(tensor.data), is_vector=tensor.is_vector
             )
             new_tensor.args = tensor.args
-            new_tensor.back_fn = tensor.back_fn
+            new_tensor.back_fns = tensor.back_fns
             new_tensor.name = tensor.name
             processed.append(new_tensor)
 
@@ -205,6 +205,6 @@ class Einsum:
             result.is_vector = True
 
         result.args = tuple(tensors)
-        result.back_fn = tuple(self._build_back_ops(tensors, subscript))
+        result.back_fns = tuple(self._build_back_ops(tensors, subscript))
         result.name = f"einsum {self.subscript}"
         return result

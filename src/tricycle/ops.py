@@ -79,7 +79,7 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
             result_grad[tuple(idx)] = grad
             return result_grad
 
-        result.back_fn = (undo_split,)
+        result.back_fns = (undo_split,)
         result.args = (tensor,)
         result.is_vector = tensor.is_vector
         results.append(result)
@@ -98,7 +98,7 @@ def reshape(tensor: Tensor, shape: Sequence[int]):
         new_shape = tensor.shape[1:] if tensor.is_vector else tensor.shape
         return reshape(grad, new_shape)
 
-    result.back_fn = (undo_reshape,)
+    result.back_fns = (undo_reshape,)
 
     return result
 

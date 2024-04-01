@@ -3,6 +3,7 @@ import numpy as np
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
 from tricycle.layers import Dense, Dropout, Layer
+from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
 
@@ -48,7 +49,7 @@ class GPT(Layer):
         position = to_tensor(np.arange(n_tokens))
 
         pos_embedding = (
-            self.position_embedding(position).repeat(n_tokens).e("ab->ba")
+            self.position_embedding(position).repeat(n_tokens).e("ET->TE")
         )
         token_embedding = self.token_embedding(x)
 
@@ -59,3 +60,13 @@ class GPT(Layer):
             embedding = block(embedding)
 
         return self.head(embedding)
+
+    def zero_grad(self):
+        self.input_dropout.zero_grad()
+        for block in self.blocks:
+            block.zero_grad()
+
+    def update(self, optimiser: Optimiser):
+        self.input_dropout.update(optimiser)
+        for block in self.blocks:
+            block.update(optimiser)
