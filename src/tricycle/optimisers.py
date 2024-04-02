@@ -44,13 +44,14 @@ class StochasticGradientDescent(Optimiser):
             grad += to_tensor(wd, name=f"weight_decay({self.weight_decay})")
 
         if self.momentum is not None and self.momentum > 0:
-            if tensor.uuid not in self.momentum_store:
+            if tensor._id not in self.momentum_store:
                 last_momentum = to_tensor(np.zeros_like(grad))
             else:
-                last_momentum = self.momentum_store[tensor.uuid]
+                last_momentum = self.momentum_store[tensor._id]
 
+            breakpoint()
             grad += self.momentum * last_momentum
-            self.momentum_store[tensor.uuid] = to_tensor(grad)
+            self.momentum_store[tensor._id] = to_tensor(grad)
 
         # update the value only, leave everything else
         result = to_tensor(
@@ -58,7 +59,7 @@ class StochasticGradientDescent(Optimiser):
             requires_grad=tensor.requires_grad,
             name=tensor.name,
             is_vector=tensor.is_vector,
-            uuid_=tensor.uuid,
+            _id=tensor._id,
         )
 
         del tensor

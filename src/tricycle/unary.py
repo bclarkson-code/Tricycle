@@ -61,10 +61,10 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
 
-    result = to_tensor(np.power(tensor, constant))
+    result = to_tensor(np.power(tensor._data, constant))
     result.args = (tensor,)
     coef = to_tensor(
-        np.power(tensor, constant - 1), is_vector=tensor.is_vector
+        np.power(tensor._data, constant - 1), is_vector=tensor.is_vector
     )
     result.back_fns = (partial(bmul, umul(coef, constant)),)
     result.name = f"^ {constant}"
@@ -89,14 +89,13 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
 
-    result = to_tensor(np.maximum(tensor, constant))
+    result = to_tensor(np.maximum(tensor._data, constant))
 
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    is_bigger = to_tensor(
-        (tensor > constant).astype(float), is_vector=tensor.is_vector
-    )
+    is_bigger = tensor > constant
+    is_bigger.is_vector = tensor.is_vector
     result.back_fns = (partial(bmul, is_bigger),)
     result.name = f"> {constant}"
     result.is_vector = tensor.is_vector
@@ -112,14 +111,13 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
 
-    result = to_tensor(np.minimum(tensor, constant))
+    result = to_tensor(np.minimum(tensor._data, constant))
 
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    is_smaller = to_tensor(
-        (tensor < constant).astype(float), is_vector=tensor.is_vector
-    )
+    is_smaller = tensor < constant
+    is_smaller.is_vector = tensor.is_vector
     result.back_fns = (partial(bmul, is_smaller),)
     result.name = f"< {constant}"
     result.is_vector = tensor.is_vector
@@ -130,14 +128,14 @@ def uexp(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    result = to_tensor(np.exp(tensor))
+    result = to_tensor(np.exp(tensor._data))
 
     from tricycle.binary import bmul
 
     result.args = (tensor,)
     result.name = "exp"
     result.is_vector = tensor.is_vector
-    coef = to_tensor(result, is_vector=tensor.is_vector)
+    coef = to_tensor(result._data, is_vector=tensor.is_vector)
     result.back_fns = (partial(bmul, coef),)
     return result
 
@@ -146,7 +144,7 @@ def ulog(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    result = to_tensor(np.log(tensor))
+    result = to_tensor(np.log(tensor._data))
 
     from tricycle.binary import bmul
 
@@ -166,12 +164,12 @@ def usin(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    result = to_tensor(np.sin(tensor))
+    result = to_tensor(np.sin(tensor._data))
 
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    coef = to_tensor(np.cos(tensor), is_vector=tensor.is_vector)
+    coef = to_tensor(np.cos(tensor._data), is_vector=tensor.is_vector)
     result.back_fns = (partial(bmul, coef),)
     result.name = "sin"
     result.is_vector = tensor.is_vector
@@ -182,12 +180,12 @@ def ucos(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    result = to_tensor(np.cos(tensor))
+    result = to_tensor(np.cos(tensor._data))
 
     from tricycle.binary import bmul
 
     result.args = (tensor,)
-    coef = to_tensor(-np.sin(tensor), is_vector=tensor.is_vector)
+    coef = to_tensor(-np.sin(tensor._data), is_vector=tensor.is_vector)
     result.back_fns = (partial(bmul, coef),)
     result.name = "cos"
     result.is_vector = tensor.is_vector
@@ -206,7 +204,7 @@ def uerf(tensor: Tensor) -> Tensor:
     Calculate the error function of every element of a tensor
     """
     result = to_tensor(
-        erf(tensor),
+        erf(tensor._data),
         is_vector=tensor.is_vector,
         requires_grad=tensor.requires_grad,
     )

@@ -156,7 +156,7 @@ class Einsum:
 
         [tensor] = tensors
         ones = to_tensor(
-            np.ones_like(tensor),
+            np.ones(tensor.shape),
             is_vector=tensor.is_vector,
             requires_grad=False,
         )
@@ -204,12 +204,12 @@ class Einsum:
         """
         processed = []
         for tensor in tensors:
-            if not np.isinf(tensor.data).any():
+            if not np.isinf(tensor._data).any():
                 processed.append(tensor)
                 continue
 
             new_tensor = to_tensor(
-                np.nan_to_num(tensor.data), is_vector=tensor.is_vector
+                np.nan_to_num(tensor._data), is_vector=tensor.is_vector
             )
             new_tensor.args = tensor.args
             new_tensor.back_fns = tensor.back_fns
@@ -225,7 +225,8 @@ class Einsum:
             self.subscript, tensors
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
-        result = to_tensor(np.einsum(str(subscript), *tensors))
+        tensor_data = [t._data for t in tensors]
+        result = to_tensor(np.einsum(str(subscript), *tensor_data))
         if vectorise_output:
             result.is_vector = True
 

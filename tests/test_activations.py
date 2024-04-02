@@ -8,7 +8,7 @@ def test_relu():
     x = to_tensor([-1, 0, 1])
     relu = ReLU()
     y = relu(x)
-    assert np.allclose(y, [0, 0, 1])
+    assert y.close_to([0, 0, 1])
 
 
 def test_swish():
@@ -50,7 +50,7 @@ def test_gelu_approx():
 def test_glu():
     x = to_tensor([-1, 0, 2])
     glu = GLU(size=3)
-    glu.linear.weights = to_tensor(np.ones_like(glu.linear.weights))
+    glu.linear.weights = to_tensor(np.ones(glu.linear.weights.shape))
 
     y = glu(x)
     assert y.close_to([0.73105858, 0.73105858, 0.73105858])
@@ -59,7 +59,7 @@ def test_glu():
 def test_swiglu():
     x = to_tensor([-1, 0, 1, 2])
     swiglu = SwiGLU(size=4)
-    swiglu.linear.weights = to_tensor(np.ones_like(swiglu.linear.weights))
+    swiglu.linear.weights = to_tensor(np.ones(swiglu.linear.weights.shape))
 
     y = swiglu(x)
     assert y.close_to([3.52318831, 3.52318831, 3.52318831, 3.52318831])

@@ -90,14 +90,14 @@ def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     """
     assert _shapes_match(tensor_1, tensor_2)
 
-    result = to_tensor(np.maximum(tensor_1, tensor_2))
+    result = to_tensor(np.maximum(tensor_1._data, tensor_2._data))
 
-    indicator_1 = to_tensor(
-        (tensor_1 > tensor_2).astype(float), is_vector=tensor_1.is_vector
-    )
-    indicator_2 = to_tensor(
-        (tensor_1 <= tensor_2).astype(float), is_vector=tensor_2.is_vector
-    )
+    indicator_1 = tensor_1 > tensor_2
+    indicator_1.is_vector = tensor_1.is_vector
+
+    indicator_2 = tensor_1 <= tensor_2
+    indicator_2.is_vector = tensor_2.is_vector
+
     result.args = (tensor_1, tensor_2)
     result.back_fns = (partial(bmul, indicator_1), partial(bmul, indicator_2))
     result.name = "bmax"
@@ -115,14 +115,14 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     """
     assert _shapes_match(tensor_1, tensor_2)
 
-    result = to_tensor(np.minimum(tensor_1, tensor_2))
+    result = to_tensor(np.minimum(tensor_1._data, tensor_2._data))
 
-    indicator_1 = to_tensor(
-        (tensor_1 < tensor_2).astype(float), is_vector=tensor_1.is_vector
-    )
-    indicator_2 = to_tensor(
-        (tensor_1 >= tensor_2).astype(float), is_vector=tensor_2.is_vector
-    )
+    indicator_1 = tensor_1 < tensor_2
+    indicator_1.is_vector = tensor_1.is_vector
+
+    indicator_2 = tensor_1 >= tensor_2
+    indicator_2.is_vector = tensor_2.is_vector
+
     result.args = (tensor_1, tensor_2)
     result.back_fns = (partial(bmul, indicator_1), partial(bmul, indicator_2))
     result.name = "bmin"

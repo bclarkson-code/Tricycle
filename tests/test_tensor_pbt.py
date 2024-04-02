@@ -130,7 +130,7 @@ def test_tensor_multiplication(tensors):
 
 @given(tensor())
 def test_close_to(tensor):
-    equal_nan = np.isnan(tensor).any()
+    equal_nan = np.isnan(tensor._data).any()
 
     assert tensor.close_to(tensor, equal_nan=equal_nan)
 

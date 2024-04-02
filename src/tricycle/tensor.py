@@ -21,7 +21,7 @@ class Tensor:
 
     _id: int
     _grad_fn: Optional[List[List[Op]]] = None
-    _data: ArrayLike
+    _data: np.ndarray
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
     parents: set["Tensor"] | None = None
@@ -32,7 +32,7 @@ class Tensor:
 
     def __init__(
         self,
-        data: ArrayLike,
+        data: np.ndarray,
         requires_grad: bool = False,
         is_vector: bool = False,
         name: str | None = None,
@@ -75,7 +75,7 @@ class Tensor:
         has been computed
         """
         self.grad = to_tensor(
-            np.ones_like(self),
+            np.ones(self._data.shape),
             requires_grad=False,
             is_vector=self.is_vector,
         )
@@ -230,10 +230,26 @@ class Tensor:
                 f"Cannot divide {type(self)} and {type(other)}"
             )
 
+    def __rtruediv__(self, other):
+        if np.isscalar(other):
+            from tricycle.unary import udiv
+
+            return udiv(other, self)
+        elif isinstance(other, Tensor):
+            from tricycle.binary import bdiv
+
+            return bdiv(other, self)
+
     def __itruediv__(self, other):
         return self / other
 
     def __floordiv__(self, _):
+        raise NotImplementedError("Cannot floor divide")
+
+    def __rfloordiv__(self, _):
+        raise NotImplementedError("Cannot floor divide")
+
+    def __ifloordiv__(self, _):
         raise NotImplementedError("Cannot floor divide")
 
     def __mod__(self, _):
@@ -255,9 +271,45 @@ class Tensor:
                 f"Cannot power {type(self)} and {type(other)}"
             )
 
+    def __lt__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data < other._data)
+        return Tensor(self._data < other)
+
+    def __le__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data <= other._data)
+        return Tensor(self._data <= other)
+
+    def __eq__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data == other._data)
+        return Tensor(self._data == other)
+
+    def __ne__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data != other._data)
+        return Tensor(self._data != other)
+
+    def __gt__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data > other._data)
+        return Tensor(self._data > other)
+
+    def __ge__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data >= other._data)
+        return Tensor(self._data >= other)
+
     def __repr__(self):
         name = f", name={self.name}" if self.name is not None else ""
         return f"Tensor({self._data.__str__()}{name})"
+
+    def __getitem__(self, idx):
+        return self._data[idx]
+
+    def __setitem__(self, idx, value):
+        self._data[idx] = value
 
     def e(self, subscript: str) -> "Tensor":
         from tricycle.einsum import Einsum
@@ -273,6 +325,7 @@ class Tensor:
     def shape(self) -> Sequence[int]:
         return self._data.shape
 
+    @property
     def ndim(self) -> int:
         return self._data.ndim
 
@@ -307,14 +360,21 @@ class Tensor:
         return normalise(self)
 
     def close_to(
-        self, other: "Tensor" | ArrayLike, equal_nan=False, **kwargs
+        self,
+        other: Union["Tensor", ArrayLike, float, int],
+        equal_nan=False,
+        **kwargs,
     ) -> bool:
         """
         Convenience method to check if two tensors are identical
         to within some tolerance
         """
+        if not isinstance(other, Tensor):
+            return np.allclose(
+                self._data, np.array(other), equal_nan=equal_nan, **kwargs
+            )
         return np.allclose(
-            np.array(self), np.array(other), equal_nan=equal_nan, **kwargs
+            self._data, other._data, equal_nan=equal_nan, **kwargs
         )
 
     def to_vector(self):
@@ -328,6 +388,12 @@ class Tensor:
         Treat a vectorised tensor as a normal tensor
         """
         return unvectorise(self)
+
+    def zero_grad(self):
+        self._grad = None
+        self.args = None
+        self.back_fns = None
+        return self
 
     def numpy(self):
         return np.array(self)
@@ -362,7 +428,7 @@ def vectorise(tensor: Tensor) -> Tensor:
         raise ValueError("Tensor is already vectorised")
 
     result = to_tensor(
-        copy(tensor), is_vector=True, requires_grad=tensor.requires_grad
+        tensor._data, is_vector=True, requires_grad=tensor.requires_grad
     )
     result.args = (tensor,)
     result.back_fns = (unvectorise,)
@@ -378,7 +444,7 @@ def unvectorise(tensor: Tensor) -> Tensor:
         raise ValueError("Tensor is not vectorised")
 
     result = to_tensor(
-        copy(tensor), is_vector=False, requires_grad=tensor.requires_grad
+        tensor._data, is_vector=False, requires_grad=tensor.requires_grad
     )
     result.args = (tensor,)
     result.back_fns = (vectorise,)

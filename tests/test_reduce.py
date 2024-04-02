@@ -10,11 +10,8 @@ def test_can_rmax():
     out_tensor = rmax(in_tensor, "ijk->ik")
 
     assert out_tensor.shape == (3, 5)
-    assert np.allclose(
-        out_tensor,
-        np.array(
-            [[15, 16, 17, 18, 19], [35, 36, 37, 38, 39], [55, 56, 57, 58, 59]]
-        ),
+    assert out_tensor.close_to(
+        [[15, 16, 17, 18, 19], [35, 36, 37, 38, 39], [55, 56, 57, 58, 59]]
     )
 
     out_tensor.backward()
@@ -39,6 +36,7 @@ def test_can_rmax():
         ],
     ]
 
+    assert in_tensor.grad is not None
     assert in_tensor.grad.close_to(correct)
 
 
@@ -48,11 +46,8 @@ def test_can_rmin():
     out_tensor = rmin(in_tensor, "ijk->ik")
 
     assert out_tensor.shape == (3, 5)
-    assert np.allclose(
-        out_tensor,
-        np.array(
-            [[0, 1, 2, 3, 4], [20, 21, 22, 23, 24], [40, 41, 42, 43, 44]]
-        ),
+    assert out_tensor.close_to(
+        [[0, 1, 2, 3, 4], [20, 21, 22, 23, 24], [40, 41, 42, 43, 44]]
     )
 
     out_tensor.backward()

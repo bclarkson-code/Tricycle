@@ -46,7 +46,7 @@ def test_dropout():  # sourcery skip: square-identity
     out_tensor = dropout(in_tensor.to_vector())
 
     assert out_tensor.shape == in_tensor.shape
-    zero_x_idx, zero_y_idx = np.where(out_tensor == 0)
+    zero_x_idx, zero_y_idx = np.where(out_tensor._data == 0)
     n_zeros = len(zero_x_idx)
     expected_n_zeros = int(size * size * dropout_prob)
 
@@ -57,7 +57,7 @@ def test_dropout():  # sourcery skip: square-identity
     assert in_tensor.grad is not None
     assert in_tensor.grad.shape == in_tensor.shape
 
-    correct_grad = np.ones_like(in_tensor)
+    correct_grad = np.ones(in_tensor.shape)
     correct_grad[zero_x_idx, zero_y_idx] = 0
 
     assert in_tensor.grad.close_to(correct_grad)
@@ -79,4 +79,4 @@ def test_layer_norm():
     assert in_tensor.grad.shape == in_tensor.shape
 
     # not sure if this is correct. TODO: check
-    assert in_tensor.grad.close_to(np.zeros_like(in_tensor))
+    assert in_tensor.grad.close_to(np.zeros(in_tensor.shape))
