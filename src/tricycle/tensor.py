@@ -243,7 +243,7 @@ class Tensor(np.ndarray):
 
     def __repr__(self):
         name = f", name={self.name}" if self.name is not None else ""
-        return f"Tensor({self.__str__()}{name})"
+        return f"Tensor({self.__str__()}{name}, is_vector={self.is_vector})"
 
     def __new__(
         cls,
@@ -305,12 +305,12 @@ class Tensor(np.ndarray):
 
         return normalise(self)
 
-    def close_to(self, other: "Tensor" | ArrayLike, **kwargs) -> bool:
+    def close_to(self, other: "Tensor" | ArrayLike, equal_nan=False, **kwargs) -> bool:
         """
         Convenience method to check if two tensors are identical
         to within some tolerance
         """
-        return np.allclose(np.array(self), np.array(other), **kwargs)
+        return np.allclose(np.array(self), np.array(other), equal_nan=equal_nan, **kwargs)
 
     def to_vector(self):
         """
