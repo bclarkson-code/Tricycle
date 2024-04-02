@@ -3,23 +3,19 @@
 
 Ever wanted to learn how a deep learning framework *actually* works under the hood? Tricycle might be for you.
 
-Want to do anything else? Check out [pytorch](https://pytorch.org/)
-
 ## Overview
 Tricycle is a minimal framework for deep learning. The goal of this library is
-not to build anything useful, but instead to get a good understanding of how
-deep learning works at every level. It is built using nothing but standard
-Python and Numpy which means that everything from automatic differentiation
-to loss functions should (theoretically) be understandable to anyone who knows
-a bit of Python
+not to match the speed or complexity or Pytorch or Tensorflow, but instead to get a good understanding of how
+deep learning actually works at every level: from automatic differentiation all the way up to modern Transformers. It is built using nothing but standard
+Python and Numpy which means that everything be understandable to anyone who knows a bit of Python.
 
 Here are some things you can do with Tricycle:
-- Create a tensor object
+- Create tensors
 - Perform operations (addition, exponentiation, cosine, ...) on tensors
 - Automatic differentiation of tensors
 - Manipulate tensors with [einstein notation](https://en.wikipedia.org/wiki/Einstein_notation)
 - Successfully train deep learning models
-- Use attention (!)
+- Train a Transformer (!)
 
 Here are some things you can't do with Tricycle (yet):
 - Do anything at the speed of pytorch
