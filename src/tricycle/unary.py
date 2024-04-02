@@ -1,3 +1,4 @@
+import numbers
 from functools import partial
 
 import numpy as np
@@ -15,7 +16,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
     differentiable.
     """
     assert isinstance(tensor, Tensor)
-    assert np.isscalar(constant)
+    assert isinstance(constant, numbers.Number)
 
     result = to_tensor(np.add(tensor, constant))
     result.args = (tensor,)

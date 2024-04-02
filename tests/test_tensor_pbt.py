@@ -1,17 +1,24 @@
+import numbers
 from copy import copy
 
 import hypothesis.strategies as st
 import numpy as np
 import pytest
 from hypothesis import assume, given
-from hypothesis.extra.array_api import make_strategies_namespace
-from numpy import array_api as xp
+from hypothesis.extra import numpy as xp
 
 from tricycle.binary import _shapes_match
 from tricycle.einsum import EinsumBackOp
 from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
 
-np_strategies = make_strategies_namespace(xp)
+
+@st.composite
+def scalar(draw):
+    """
+    Generate a single, initial scalar
+    """
+    dtype = draw(xp.scalar_dtypes())
+    return draw(xp.from_dtype(dtype))
 
 
 @st.composite
@@ -20,7 +27,7 @@ def tensor(draw):
     Generate a single, initial tensor (not as the result of an operation)
     """
     shape = draw(st.integers(min_value=1, max_value=10))
-    data = draw(np_strategies.arrays(dtype=xp.float64, shape=shape))
+    data = draw(xp.arrays(dtype=np.float64, shape=shape))
     is_vector = draw(st.booleans())
     requires_grad = draw(st.booleans())
 
@@ -42,7 +49,7 @@ def tensor_pair_same_shape(draw):
 
     tensors = []
     for _ in range(2):
-        data = draw(np_strategies.arrays(dtype=xp.float64, shape=shape))
+        data = draw(xp.arrays(dtype=np.float64, shape=shape))
         is_vector = draw(st.booleans())
 
         if draw(st.booleans()):
@@ -55,7 +62,7 @@ def tensor_pair_same_shape(draw):
 
 
 @given(tensor_pair_same_shape())
-def test_tensor_addition(tensors):
+def test_tensor_addition_same_shape(tensors):
     # sourcery skip: no-conditionals-in-tests
     tensor_1, tensor_2 = tensors
 
@@ -76,6 +83,22 @@ def test_tensor_addition(tensors):
     assert result.back_fns == (nothing, nothing)
 
     assert result.is_vector == tensor_1.is_vector or tensor_2.is_vector
+
+
+@given(tensor(), scalar())
+def test_tensor_addition_scalar(tensor, scalar):
+    # for some reason, datetimes count as scalars in numpy
+    assume(isinstance(scalar, numbers.Number))
+    assume(not isinstance(scalar, np.datetime64))
+    assume(not isinstance(scalar, np.timedelta64))
+
+    result = tensor + scalar
+    assert result.shape == tensor.shape
+
+    assert result.args == (tensor,)
+    assert result.back_fns == (nothing,)
+
+    assert result.is_vector == tensor.is_vector
 
 
 @given(tensor_pair_same_shape())
@@ -131,9 +154,7 @@ def test_can_vectorise_and_unvectorise(tensor):
         assert unvectorised.back_fns == (vectorise,)
 
         assert len(unvectorised.args[0].args) == 1
-        assert (
-            unvectorised.args[0].args[0].close_to(tensor, equal_nan=True)
-        )
+        assert unvectorised.args[0].args[0].close_to(tensor, equal_nan=True)
         assert unvectorised.args[0].back_fns == (unvectorise,)
 
         assert unvectorised.requires_grad
