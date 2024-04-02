@@ -21,3 +21,4 @@ output.bin
 # experiment results
 *.csv
 resuls/*
+.hypothesis

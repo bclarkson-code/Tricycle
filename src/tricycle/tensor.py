@@ -1,8 +1,9 @@
 import gc
 import logging
+import numbers
 import uuid
 from copy import copy
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -144,10 +145,8 @@ class Tensor:
     def __hash__(self) -> int:
         return id(self)
 
-    def __add__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
-            other = to_tensor(other)
-        if np.isscalar(other):
+    def __add__(self, other: Union[float, "Tensor"]) -> "Tensor":
+        if isinstance(other, numbers.Number):
             from tricycle.unary import uadd
 
             return uadd(self, other)
@@ -307,13 +306,16 @@ class Tensor:
 
         return normalise(self)
 
-    def close_to(self, other: "Tensor", **kwargs) -> bool:
+    def close_to(
+        self, other: "Tensor" | ArrayLike, equal_nan=False, **kwargs
+    ) -> bool:
         """
         Convenience method to check if two tensors are identical
         to within some tolerance
         """
-        assert isinstance(other, Tensor)
-        return np.allclose(self._data, other._data, **kwargs)
+        return np.allclose(
+            np.array(self), np.array(other), equal_nan=equal_nan, **kwargs
+        )
 
     def to_vector(self):
         """
