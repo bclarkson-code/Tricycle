@@ -17,7 +17,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert np.isscalar(constant)
 
-    result = to_tensor(np.add(tensor, constant))
+    result = to_tensor(np.add(tensor._data, constant))
     result.args = (tensor,)
     result.back_fns = (nothing,)
     result.name = f"+ {constant}"
@@ -34,7 +34,7 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     assert np.isscalar(constant)
 
     constant_tensor = to_tensor(
-        np.full_like(tensor, constant, dtype=float),
+        np.full(shape=tensor.shape, fill_value=constant, dtype=float),
         requires_grad=False,
         is_vector=tensor.is_vector,
     )

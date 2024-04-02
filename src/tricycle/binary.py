@@ -8,15 +8,18 @@ from tricycle.unary import udiv, umul
 
 
 def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
-    # sourcery skip: assign-if-exp
-    if tensor_1.is_vector:
-        shape_1 = tensor_1.shape[1:]
-    else:
+    # sourcery skip: assign-if-exp, merge-duplicate-blocks, remove-redundant-if
+    if tensor_1.is_vector and tensor_2.is_vector:
         shape_1 = tensor_1.shape
-
-    if tensor_2.is_vector:
+        shape_2 = tensor_2.shape
+    elif tensor_1.is_vector:
+        shape_1 = tensor_1.shape[1:]
+        shape_2 = tensor_2.shape
+    elif tensor_2.is_vector:
+        shape_1 = tensor_1.shape
         shape_2 = tensor_2.shape[1:]
     else:
+        shape_1 = tensor_1.shape
         shape_2 = tensor_2.shape
 
     if shape_1 != shape_2:
@@ -32,7 +35,7 @@ def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     """
     assert _shapes_match(tensor_1, tensor_2)
 
-    result = to_tensor(np.add(tensor_1, tensor_2))
+    result = to_tensor(np.add(tensor_1._data, tensor_2._data))
 
     result.args = (tensor_1, tensor_2)
     result.back_fns = (nothing, nothing)

@@ -17,3 +17,7 @@ datasets/shakespeare/raw_data.txt
 .ipynb_checkpoints
 *.ipynb
 output.bin
+
+# experiment results
+*.csv
+resuls/*
