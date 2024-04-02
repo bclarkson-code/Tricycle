@@ -8,7 +8,9 @@ from tricycle.tokeniser import BPETokeniser
 
 
 class Shakespeare(abc.Sequence):
-    url: str = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
+    url: str = (
+        "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
+    )
     vocab_size: int
     token_path: Path
     raw_data_path: Path
