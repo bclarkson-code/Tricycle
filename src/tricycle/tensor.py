@@ -2,9 +2,9 @@ import gc
 import logging
 import numbers
 import uuid
-from copy import copy
 from typing import Callable, List, Optional, Sequence, Union
 
+import cupy as cp
 import numpy as np
 from numpy.typing import ArrayLike
 
@@ -22,6 +22,7 @@ class Tensor:
     _id: int
     _grad_fn: Optional[List[List[Op]]] = None
     _data: np.ndarray
+    on_gpu: bool = False
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
     parents: set["Tensor"] | None = None
@@ -389,6 +390,18 @@ class Tensor:
         """
         return unvectorise(self)
 
+    def to_gpu(self):
+        """
+        Move this tensor to the GPU
+        """
+        return to_gpu(self)
+
+    def from_gpu(self):
+        """
+        Move this tensor from the GPU
+        """
+        return from_gpu(self)
+
     def zero_grad(self):
         self._grad = None
         self.args = None
@@ -400,7 +413,7 @@ class Tensor:
 
 
 def to_tensor(
-    *args,
+    tensor_like: ArrayLike,
     name: Optional[str] = None,
     requires_grad: bool = True,
     is_vector: bool = False,
@@ -411,8 +424,12 @@ def to_tensor(
     Create a new Tensor instance. First, we convert the argument to a numpy
     array and then to a tensor
     """
+    if isinstance(tensor_like, Tensor):
+        array = tensor_like._data
+    else:
+        array = np.asarray(tensor_like, **kwargs)
     return Tensor(
-        np.asarray(*args, **kwargs),
+        array,
         name=name,
         requires_grad=requires_grad,
         is_vector=is_vector,
@@ -457,4 +474,22 @@ def nothing(tensor):
 
     This is used as a dummy to simplify the backpropagation logic
     """
+    return tensor
+
+
+def to_gpu(tensor: Tensor) -> Tensor:
+    """
+    Move a tensor to the GPU
+    """
+    tensor._data = cp.asarray(tensor._data)
+    tensor.on_gpu = True
+    return tensor
+
+
+def from_gpu(tensor):
+    """
+    Move a tensor from the GPU to the CPU
+    """
+    tensor.on_gpu = False
+    tensor._data = cp.asnumpy(tensor._data)
     return tensor

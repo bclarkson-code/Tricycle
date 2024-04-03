@@ -45,13 +45,12 @@ class StochasticGradientDescent(Optimiser):
 
         if self.momentum is not None and self.momentum > 0:
             if tensor._id not in self.momentum_store:
-                last_momentum = to_tensor(np.zeros_like(grad))
+                last_momentum = to_tensor(np.zeros(grad.shape))
             else:
                 last_momentum = self.momentum_store[tensor._id]
 
-            breakpoint()
             grad += self.momentum * last_momentum
-            self.momentum_store[tensor._id] = to_tensor(grad)
+            self.momentum_store[tensor._id] = to_tensor(grad._data)
 
         # update the value only, leave everything else
         result = to_tensor(
@@ -61,6 +60,12 @@ class StochasticGradientDescent(Optimiser):
             is_vector=tensor.is_vector,
             _id=tensor._id,
         )
+
+        try:
+            assert result.shape == tensor.shape
+        except AssertionError as e:
+            breakpoint()
+            raise e
 
         del tensor
         del grad
