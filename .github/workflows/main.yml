@@ -27,13 +27,12 @@ jobs:
     - name: Install Mamba
       uses: mamba-org/setup-micromamba@v1
       with:
-        # environment-file is not assumed anymore
+        micromamba-version: '1.5.6-0' # any version from https://github.com/mamba-org/micromamba-releases
         environment-file: environment.yml
-        create-args: >- # beware the >- instead of |, we don't split on newlines but on spaces
+        init-shell: >-
           python=3.10
-          numpy
-        # now called cache-environment
         cache-environment: true
+        post-cleanup: 'all'
 
     #----------------------------------------------
     # install dependencies if cache does not exist
