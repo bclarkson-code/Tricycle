@@ -5,8 +5,10 @@ works of shakespeare.
 The hyperparams for this model are very much a work in progress
 """
 
+import os
 import pickle
 
+import mlflow
 from tqdm import tqdm
 
 from tricycle.configs import SmolGPTConfig
@@ -39,6 +41,10 @@ optimiser = StochasticGradientDescent(
 )
 
 model.to_gpu()
+
+mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_experiment("SmolGPT:large")
+os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 for inputs, outputs in tqdm(dataset):
     inputs = inputs.to_gpu()

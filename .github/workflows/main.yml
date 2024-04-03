@@ -24,19 +24,15 @@ jobs:
       with:
         python-version: "3.10"
 
-    # ---------------------------------------------
-    #  -----  install mamba  -----
-    # ---------------------------------------------
-    - name: Install mamba
+    - name: Install Mamba
       uses: mamba-org/setup-micromamba@v1
       with:
-        # environment-file is not assumed anymore
+        micromamba-version: '1.5.6-0' # any version from https://github.com/mamba-org/micromamba-releases
         environment-file: environment.yml
-        create-args: >- # beware the >- instead of |, we don't split on newlines but on spaces
-          python=3.10
-          numpy
-        # now called cache-environment
-        cache-environment: true 
+        init-shell: >-
+          bash
+        cache-environment: true
+        post-cleanup: 'all'
 
     #----------------------------------------------
     # install dependencies if cache does not exist
@@ -44,16 +40,19 @@ jobs:
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root --with test
+      shell: bash -el {0}
     #----------------------------------------------
     # install your root project, if required
     #----------------------------------------------
     - name: Install project
       run: poetry install --no-interaction
+      shell: bash -el {0}
     #----------------------------------------------
     # run pre-commit checks
     #----------------------------------------------
     - name: Run pre-commit checks
       run: poetry run pre-commit run --all-files
+      shell: bash -el {0}
     #----------------------------------------------
     #              run test suite
     #----------------------------------------------
@@ -61,3 +60,4 @@ jobs:
       run: |
         source .venv/bin/activate
         pytest tests/
+      shell: bash -el {0}
