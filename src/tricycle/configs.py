@@ -42,7 +42,7 @@ class SmolGPTConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    learning_rate = 3e-3
+    learning_rate = 1e-4
     weight_decay = 0
     momentum = 0
 
