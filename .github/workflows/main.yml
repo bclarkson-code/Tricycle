@@ -23,15 +23,17 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
-    #----------------------------------------------
-    #  -----  install & configure poetry  -----
-    #----------------------------------------------
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
+        
+    - name: Install Mamba
+      uses: mamba-org/setup-micromamba@v1
       with:
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-        installer-parallel: true
+        # environment-file is not assumed anymore
+        environment-file: environment.yml
+        create-args: >- # beware the >- instead of |, we don't split on newlines but on spaces
+          python=3.10
+          numpy
+        # now called cache-environment
+        cache-environment: true
 
     #----------------------------------------------
     # install dependencies if cache does not exist
