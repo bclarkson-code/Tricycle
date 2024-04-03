@@ -34,26 +34,25 @@ jobs:
         cache-environment: true
         post-cleanup: 'all'
 
-    - name: activate environment
-      run: |
-        mamba activate tricycle
-
     #----------------------------------------------
     # install dependencies if cache does not exist
     #----------------------------------------------
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root --with test
+      shell: bash -el {0}
     #----------------------------------------------
     # install your root project, if required
     #----------------------------------------------
     - name: Install project
       run: poetry install --no-interaction
+      shell: bash -el {0}
     #----------------------------------------------
     # run pre-commit checks
     #----------------------------------------------
     - name: Run pre-commit checks
       run: poetry run pre-commit run --all-files
+      shell: bash -el {0}
     #----------------------------------------------
     #              run test suite
     #----------------------------------------------
@@ -61,3 +60,4 @@ jobs:
       run: |
         source .venv/bin/activate
         pytest tests/
+      shell: bash -el {0}
