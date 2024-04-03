@@ -53,5 +53,5 @@ for inputs, outputs in tqdm(dataset):
     loss.cleanup()
 
 # save results
-with open("model.pkl", "wb") as f:
+with open("shakespeare_model.pkl", "wb") as f:
     pickle.dump(model, f)
