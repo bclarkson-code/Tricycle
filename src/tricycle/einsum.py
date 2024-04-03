@@ -2,7 +2,7 @@ import itertools
 import re
 from typing import Sequence
 
-import numpy as np
+import cupy as cp
 
 from tricycle.tensor import Tensor, to_tensor
 
@@ -146,17 +146,18 @@ class Einsum:
         is unaltered while the backward operation is now fully defined:
 
         # forward
-        einsum("ab,ab->")(x, np.ones_like(x))
+        einsum("ab,ab->")(x, xp.ones_like(x))
 
         # backward
-        einsum(",ab->ab")(grad, np.ones_like(x))
+        einsum(",ab->ab")(grad, xp.ones_like(x))
         """
+        xp = cp.get_array_module(*tensors)
         if len(tensors) != 1:
             return subscript, tensors
 
         [tensor] = tensors
         ones = to_tensor(
-            np.ones(tensor.shape),
+            xp.ones(tensor.shape),
             is_vector=tensor.is_vector,
             requires_grad=False,
         )
@@ -202,14 +203,15 @@ class Einsum:
         If tensors contain infinity, temporarily replace them with the max
         value for that datatype
         """
+        xp = cp.get_array_module(*tensors)
         processed = []
         for tensor in tensors:
-            if not np.isinf(tensor._data).any():
+            if not xp.isinf(tensor._data).any():
                 processed.append(tensor)
                 continue
 
             new_tensor = to_tensor(
-                np.nan_to_num(tensor._data), is_vector=tensor.is_vector
+                xp.nan_to_num(tensor._data), is_vector=tensor.is_vector
             )
             new_tensor.args = tensor.args
             new_tensor.back_fns = tensor.back_fns
@@ -219,6 +221,7 @@ class Einsum:
         return processed
 
     def __call__(self, *tensors: Tensor, replace_inf=False):
+        xp = cp.get_array_module(*tensors)
         if replace_inf:
             tensors = self._replace_infinity(tensors)
         subscript, tensors, vectorise_output = self._handle_vectorised(
@@ -226,7 +229,7 @@ class Einsum:
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
         tensor_data = [t._data for t in tensors]
-        result = to_tensor(np.einsum(str(subscript), *tensor_data))
+        result = to_tensor(xp.einsum(str(subscript), *tensor_data))
         if vectorise_output:
             result.is_vector = True
 

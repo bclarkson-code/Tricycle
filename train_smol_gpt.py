@@ -38,7 +38,12 @@ optimiser = StochasticGradientDescent(
     momentum=config.momentum,
 )
 
+model.to_gpu()
+
 for inputs, outputs in tqdm(dataset):
+    inputs = inputs.to_gpu()
+    outputs = outputs.to_gpu()
+
     logits = model(inputs)
     loss = loss_fn(outputs, logits).from_vector().mean().mean()
     loss.backward()

@@ -1,6 +1,6 @@
 from functools import partial
 
-import numpy as np
+import cupy as cp
 
 from tricycle.ops import Einsum
 from tricycle.tensor import Tensor, nothing, to_tensor
@@ -33,9 +33,11 @@ def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
+    xp = cp.get_array_module(tensor_1._data, tensor_2._data)
     assert _shapes_match(tensor_1, tensor_2)
 
-    result = to_tensor(np.add(tensor_1._data, tensor_2._data))
+
+    result = to_tensor(xp.add(tensor_1._data, tensor_2._data))
 
     result.args = (tensor_1, tensor_2)
     result.back_fns = (nothing, nothing)
@@ -88,9 +90,10 @@ def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
+    xp = cp.get_array_module(tensor_1._data, tensor_2._data)
     assert _shapes_match(tensor_1, tensor_2)
 
-    result = to_tensor(np.maximum(tensor_1._data, tensor_2._data))
+    result = to_tensor(xp.maximum(tensor_1._data, tensor_2._data))
 
     indicator_1 = tensor_1 > tensor_2
     indicator_1.is_vector = tensor_1.is_vector
@@ -113,9 +116,10 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
+    xp = cp.get_array_module(tensor_1._data, tensor_2._data)
     assert _shapes_match(tensor_1, tensor_2)
 
-    result = to_tensor(np.minimum(tensor_1._data, tensor_2._data))
+    result = to_tensor(xp.minimum(tensor_1._data, tensor_2._data))
 
     indicator_1 = tensor_1 < tensor_2
     indicator_1.is_vector = tensor_1.is_vector

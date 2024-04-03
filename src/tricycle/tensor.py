@@ -21,8 +21,7 @@ class Tensor:
 
     _id: int
     _grad_fn: Optional[List[List[Op]]] = None
-    _data: np.ndarray
-    on_gpu: bool = False
+    _data: np.ndarray | cp.ndarray
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
     parents: set["Tensor"] | None = None
@@ -33,14 +32,17 @@ class Tensor:
 
     def __init__(
         self,
-        data: np.ndarray,
+        data: np.ndarray | cp.ndarray | ArrayLike,
         requires_grad: bool = False,
         is_vector: bool = False,
         name: str | None = None,
         _id: int | None = None,
     ):
         self._id = _id or uuid.uuid4().int
-        self._data = data
+        if isinstance(data, (np.ndarray, cp.ndarray)):
+            self._data = data
+        else:
+            self._data = np.array(data)
         self.requires_grad = requires_grad
         self.is_vector = is_vector
         self.name = name
@@ -76,7 +78,7 @@ class Tensor:
         has been computed
         """
         self.grad = to_tensor(
-            np.ones(self._data.shape),
+            self.xp.ones(self._data.shape),
             requires_grad=False,
             is_vector=self.is_vector,
         )
@@ -167,9 +169,11 @@ class Tensor:
         return self + other
 
     def __sub__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
+        if isinstance(other, self.xp.ndarray) and not isinstance(
+            other, Tensor
+        ):
             other = to_tensor(other)
-        if np.isscalar(other):
+        if self.xp.isscalar(other):
             from tricycle.unary import usub
 
             return usub(self, other)
@@ -190,9 +194,11 @@ class Tensor:
         return self.__sub__(other)
 
     def __mul__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
+        if isinstance(other, self.xp.ndarray) and not isinstance(
+            other, Tensor
+        ):
             other = to_tensor(other)
-        if np.isscalar(other) or other.shape == ():
+        if self.xp.isscalar(other) or other.shape == ():
             from tricycle.unary import umul
 
             return umul(self, other)
@@ -217,7 +223,7 @@ class Tensor:
         return self * -1
 
     def __truediv__(self, other):
-        if np.isscalar(other):
+        if self.xp.isscalar(other):
             from tricycle.unary import umul
 
             return umul(self, 1 / other)
@@ -232,7 +238,7 @@ class Tensor:
             )
 
     def __rtruediv__(self, other):
-        if np.isscalar(other):
+        if self.xp.isscalar(other):
             from tricycle.unary import udiv
 
             return udiv(other, self)
@@ -257,9 +263,11 @@ class Tensor:
         raise NotImplementedError("Cannot mod")
 
     def __pow__(self, other) -> "Tensor":
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
+        if isinstance(other, self.xp.ndarray) and not isinstance(
+            other, Tensor
+        ):
             other = to_tensor(other)
-        if np.isscalar(other):
+        if self.xp.isscalar(other):
             from tricycle.unary import upow
 
             return upow(self, other)
@@ -312,7 +320,14 @@ class Tensor:
     def __setitem__(self, idx, value):
         self._data[idx] = value
 
+    @property
+    def xp(self):
+        return cp.get_array_module(self._data)
+
     def e(self, subscript: str) -> "Tensor":
+        """
+        Perform an einsum operation on the tensor
+        """
         from tricycle.einsum import Einsum
 
         return Einsum(subscript)(self)
@@ -371,10 +386,10 @@ class Tensor:
         to within some tolerance
         """
         if not isinstance(other, Tensor):
-            return np.allclose(
-                self._data, np.array(other), equal_nan=equal_nan, **kwargs
+            return self.xp.allclose(
+                self._data, self.xp.array(other), equal_nan=equal_nan, **kwargs
             )
-        return np.allclose(
+        return self.xp.allclose(
             self._data, other._data, equal_nan=equal_nan, **kwargs
         )
 
@@ -390,17 +405,23 @@ class Tensor:
         """
         return unvectorise(self)
 
+    @property
+    def on_gpu(self):
+        return isinstance(self._data, cp.ndarray)
+
     def to_gpu(self):
         """
         Move this tensor to the GPU
         """
-        return to_gpu(self)
+        self._data = cp.asarray(self._data)
+        return self
 
     def from_gpu(self):
         """
         Move this tensor from the GPU
         """
-        return from_gpu(self)
+        self._data = cp.asnumpy(self._data)
+        return self
 
     def zero_grad(self):
         self._grad = None
@@ -409,7 +430,7 @@ class Tensor:
         return self
 
     def numpy(self):
-        return np.array(self)
+        return cp.asnumpy(self._data) if self.on_gpu else self._data
 
 
 def to_tensor(
@@ -426,6 +447,8 @@ def to_tensor(
     """
     if isinstance(tensor_like, Tensor):
         array = tensor_like._data
+    elif isinstance(tensor_like, cp.ndarray):
+        array = tensor_like
     else:
         array = np.asarray(tensor_like, **kwargs)
     return Tensor(
@@ -474,22 +497,4 @@ def nothing(tensor):
 
     This is used as a dummy to simplify the backpropagation logic
     """
-    return tensor
-
-
-def to_gpu(tensor: Tensor) -> Tensor:
-    """
-    Move a tensor to the GPU
-    """
-    tensor._data = cp.asarray(tensor._data)
-    tensor.on_gpu = True
-    return tensor
-
-
-def from_gpu(tensor):
-    """
-    Move a tensor from the GPU to the CPU
-    """
-    tensor.on_gpu = False
-    tensor._data = cp.asnumpy(tensor._data)
     return tensor

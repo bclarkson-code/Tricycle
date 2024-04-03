@@ -68,6 +68,12 @@ class GLU(Layer):
     def zero_grad(self):
         self.linear.zero_grad()
 
+    def to_gpu(self):
+        self.linear.to_gpu()
+
+    def from_gpu(self):
+        self.linear.from_gpu()
+
 
 class SwiGLU(Layer):
     """
@@ -107,3 +113,9 @@ class SwiGLU(Layer):
 
     def zero_grad(self):
         self.linear.zero_grad()
+
+    def to_gpu(self):
+        self.linear.to_gpu()
+
+    def from_gpu(self):
+        self.linear.from_gpu()

@@ -5,7 +5,6 @@ from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.layers import Dense, Sequential
 from tricycle.loss import cross_entropy, mean_square_error
-from tricycle.ops import arange
 from tricycle.tensor import to_tensor, unvectorise, vectorise
 
 

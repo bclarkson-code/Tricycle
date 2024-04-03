@@ -29,18 +29,18 @@ class GPTConfig:
 
 
 class SmolGPTConfig(GPTConfig):
-    embedding_dim = 128
-    context_window = 64
+    embedding_dim = 384
+    context_window = 256
     vocab_size = 1024
-    n_heads = 2
-    n_layers = 1
+    n_heads = 6
+    n_layers = 6
     expansion_ratio = 4
     activation_fn = GeLU()
 
-    input_dropout_prob = 0
-    attention_dropout_prob = 0
-    residual_dropout_prob = 0
-    linear_dropout_prob = 0
+    input_dropout_prob = 0.2
+    attention_dropout_prob = 0.2
+    residual_dropout_prob = 0.2
+    linear_dropout_prob = 0.2
 
     learning_rate = 3e-2
     weight_decay = 0

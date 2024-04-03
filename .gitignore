@@ -22,3 +22,4 @@ output.bin
 *.csv
 resuls/*
 .hypothesis
+results

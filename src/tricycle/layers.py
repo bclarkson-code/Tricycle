@@ -26,6 +26,12 @@ class Layer:
     def zero_grad(self):
         pass
 
+    def to_gpu(self):
+        pass
+
+    def from_gpu(self):
+        pass
+
 
 class Dense(Layer):
     weights: Tensor
@@ -80,6 +86,12 @@ class Dense(Layer):
     def zero_grad(self):
         self.weights.grad = None
 
+    def to_gpu(self):
+        self.weights.to_gpu()
+
+    def from_gpu(self):
+        self.weights.from_gpu()
+
 
 class Dropout(Layer):
     def __init__(self, probability: float):
@@ -126,25 +138,12 @@ class Sequential(Layer):
         for layer in self.layers:
             layer.zero_grad()
 
+    def to_gpu(self):
+        for layer in self.layers:
+            layer.to_gpu()
 
-def build_mask(context_window: int):
-    """
-    Build an attention mask to stop the model from being able to see
-    future tokens
-    """
-    NEGATIVE_INFINITY = -np.inf
-    mask = np.ones((context_window, context_window))
-    idx = np.tril(mask.astype(bool))
-    mask[~idx] = NEGATIVE_INFINITY
-    mask[idx] = 0
-    return to_tensor(mask, requires_grad=False, name="mask")
+    def from_gpu(self):
+        for layer in self.layers:
+            layer.from_gpu()
 
 
-def masked_fill(x: Tensor, mask_shape: tuple[int, int], full_mask: Tensor):
-    """
-    Apply an attention_mask to a tensor
-    """
-    repeats = x.shape[1] if x.is_vector else x.shape[0]
-    mask = np.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
-    mask = to_tensor(mask, requires_grad=False, name="mask")
-    return x + mask
