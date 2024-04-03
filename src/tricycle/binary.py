@@ -36,7 +36,6 @@ def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     xp = cp.get_array_module(tensor_1._data, tensor_2._data)
     assert _shapes_match(tensor_1, tensor_2)
 
-
     result = to_tensor(xp.add(tensor_1._data, tensor_2._data))
 
     result.args = (tensor_1, tensor_2)

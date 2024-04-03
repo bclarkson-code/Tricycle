@@ -1,6 +1,7 @@
 """
 Several layers can be grouped together into a single layer called a block
 """
+
 from typing import Callable
 
 import cupy as cp

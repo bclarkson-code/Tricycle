@@ -42,11 +42,11 @@ class SmolGPTConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    learning_rate = 3e-2
+    learning_rate = 3e-3
     weight_decay = 0
     momentum = 0
 
-    batch_size = 32
+    batch_size = 8
 
     debug = True
     mlflow_enabled = True

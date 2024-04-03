@@ -145,5 +145,3 @@ class Sequential(Layer):
     def from_gpu(self):
         for layer in self.layers:
             layer.from_gpu()
-
-

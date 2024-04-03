@@ -130,6 +130,7 @@ class Tensor:
             # add children to stack
             if node.args:
                 stack.extend(iter(node.args))
+                del node.args
 
             # delete node
             if hasattr(node, "grad") and node.grad is not None:
