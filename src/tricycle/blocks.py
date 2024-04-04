@@ -12,10 +12,10 @@ from tricycle.functions import softmax
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Dropout, Layer, LayerNorm
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor, select_backend, to_tensor
 
 
-def build_mask(context_window: int):
+def build_mask(context_window: int) -> Tensor:
     """
     Build an attention mask to stop the model from being able to see
     future tokens
@@ -28,14 +28,17 @@ def build_mask(context_window: int):
     return to_tensor(mask, requires_grad=False, name="mask")
 
 
-def masked_fill(x: Tensor, mask_shape: tuple[int, int], full_mask: Tensor):
+def masked_fill(
+    tensor: Tensor, mask_shape: tuple[int, int], full_mask: Tensor
+):
     """
     Apply an attention_mask to a tensor
     """
-    repeats = x.shape[1] if x.is_vector else x.shape[0]
-    mask = np.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
+    xp = tensor.xp
+    repeats = tensor.shape[1] if tensor.is_vector else tensor.shape[0]
+    mask = xp.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
     mask = to_tensor(mask, requires_grad=False, name="mask")
-    return x + mask
+    return tensor + mask
 
 
 class MultiHeadSelfAttention(Layer):
@@ -86,6 +89,7 @@ class MultiHeadSelfAttention(Layer):
         self.residual_dropout = Dropout(residual_dropout_prob)
 
     def _attention(self, key: Tensor, query: Tensor, value: Tensor):
+        xp = select_backend(key._data, query._data, value._data)
         # reshape into n_heads x embedding_dim
         head_size = self.embedding_dim // self.n_heads
         n_tokens = key.shape[1] if key.is_vector else key.shape[0]
@@ -102,7 +106,7 @@ class MultiHeadSelfAttention(Layer):
         value = value.reshape(head_shape).e("TNH -> NTH")
 
         # attend
-        attention = Einsum("NIh, NJh -> NIJ")(query, key) / np.sqrt(head_size)
+        attention = Einsum("NIh, NJh -> NIJ")(query, key) / xp.sqrt(head_size)
 
         # mask and softmax
         attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
@@ -134,6 +138,16 @@ class MultiHeadSelfAttention(Layer):
     def zero_grad(self):
         self.in_projection.zero_grad()
         self.out_projection.zero_grad()
+
+    def to_gpu(self):
+        self.in_projection.to_gpu()
+        self.out_projection.to_gpu()
+        self.mask.to_gpu()
+
+    def from_gpu(self):
+        self.in_projection.from_gpu()
+        self.out_projection.from_gpu()
+        self.mask.from_gpu()
 
 
 class MLPBlock(Layer):
@@ -195,6 +209,14 @@ class MLPBlock(Layer):
         self.linear_1.zero_grad()
         self.linear_2.zero_grad()
 
+    def to_gpu(self):
+        self.linear_1.to_gpu()
+        self.linear_2.to_gpu()
+
+    def from_gpu(self):
+        self.linear_1.from_gpu()
+        self.linear_2.from_gpu()
+
 
 class GPT2TransformerBlock(Layer):
     embedding_dim: int
@@ -244,3 +266,11 @@ class GPT2TransformerBlock(Layer):
     def zero_grad(self):
         self.attention_block.zero_grad()
         self.mlp_block.zero_grad()
+
+    def to_gpu(self):
+        self.attention_block.to_gpu()
+        self.mlp_block.to_gpu()
+
+    def from_gpu(self):
+        self.attention_block.from_gpu()
+        self.mlp_block.from_gpu()

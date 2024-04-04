@@ -38,7 +38,7 @@ def test_attention_individually():
     in_tensor = np.random.uniform(-5, 5, (n_tokens, projected_size))
     in_tensor = to_tensor(in_tensor)
 
-    x = torch.from_numpy(in_tensor)
+    x = torch.from_numpy(in_tensor._data)
 
     qu, k, v = x.split(embedding_dim, dim=1)  # pytorch
     query, key, value = in_tensor.split(3, axis=1)  # tricycle
@@ -170,7 +170,7 @@ def test_attention_combined():
     )
     in_tensor = to_tensor(in_tensor).to_vector()
 
-    x = torch.from_numpy(in_tensor)
+    x = torch.from_numpy(in_tensor._data)
 
     qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch
     query, key, value = in_tensor.split(3, axis=1)  # tricycle
@@ -313,8 +313,8 @@ def test_MLPBlock():
     assert block.linear_1.weights.shape == (4, 16)
     assert block.linear_2.weights.shape == (16, 4)
 
-    block.linear_1.weights = to_tensor(np.ones_like(block.linear_1.weights))
-    block.linear_2.weights = to_tensor(np.ones_like(block.linear_2.weights))
+    block.linear_1.weights = to_tensor(np.ones(block.linear_1.weights.shape))
+    block.linear_2.weights = to_tensor(np.ones(block.linear_2.weights.shape))
 
     out_tensor = block(in_tensor.to_vector())
 

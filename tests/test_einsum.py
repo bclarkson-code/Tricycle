@@ -12,7 +12,7 @@ def test_vector_reduce():
 
     result.backward()
     assert x.grad is not None
-    assert x.grad.close_to(np.ones_like(x))
+    assert x.grad.close_to(np.ones(x.shape))
 
 
 def test_matrix_reduce():
@@ -22,7 +22,7 @@ def test_matrix_reduce():
 
     op(x).backward()
     assert x.grad is not None
-    assert x.grad.close_to(np.ones_like(x))
+    assert x.grad.close_to(np.ones(x.shape))
 
 
 def test_matrix_partial_reduce():
@@ -32,17 +32,17 @@ def test_matrix_partial_reduce():
 
     op(x).backward()
     assert x.grad is not None
-    assert x.grad.close_to(np.ones_like(x))
+    assert x.grad.close_to(np.ones(x.shape))
 
 
 def test_transpose():
     x = to_tensor(np.arange(20).reshape(4, 5))
     op = Einsum("ij->ji")
-    assert op(x).close_to(x.T)
+    assert op(x).close_to(x._data.T)
 
     op(x).backward()
     assert x.grad is not None
-    assert x.grad.close_to(np.ones_like(x))
+    assert x.grad.close_to(np.ones(x.shape))
 
 
 def test_parse_subscripts():

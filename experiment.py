@@ -21,7 +21,7 @@ from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import Shakespeare
 
-EXPERIMENT_NAME = "SmolGPT:base:find_learning_rate"
+EXPERIMENT_NAME = "SmolGPT:base:find_learning_rate_gpu"
 
 search_space = {
     "model": {
@@ -36,13 +36,12 @@ search_space = {
         "attention_dropout_prob": 0,
         "residual_dropout_prob": 0,
         "linear_dropout_prob": 0,
-        "batch_size": 32,
+        "batch_size": 256,
     },
     "train": {
         "learning_rate": tune.loguniform(1e-4, 1e-1),
         "weight_decay": 0,
         "momentum": 0,
-        "batch_size": 32,
     },
     "mlflow": {
         "tracking_uri": "http://localhost:5000",
@@ -52,6 +51,7 @@ search_space = {
         "train_steps": 2500,
         "valid_steps": 10,
         "valid_every": 25,
+        "num_trials": 10,
     },
 }
 
@@ -108,6 +108,8 @@ def train_model(config):
         momentum=config.train.momentum,
     )
 
+    model.to_gpu()
+
     with mlflow.start_run():
         for key, values in config.items():
             mlflow.log_params({f"{key}/{k}": v for k, v in values.items()})
@@ -115,12 +117,15 @@ def train_model(config):
         for step, (inputs, outputs) in tqdm(
             enumerate(train_dataset), total=config.experiment.train_steps
         ):
+            inputs = inputs.to_gpu()
+            outputs = outputs.to_gpu()
+
             logits = model(inputs)
             loss = loss_fn(outputs, logits).from_vector().mean().mean()
             loss.backward()
             model.update(optimiser)
 
-            mlflow.log_metric("train_loss", float(loss), step=step)
+            mlflow.log_metric("train_loss", float(loss.numpy()), step=step)
 
             # clean up the computational graph
             loss.cleanup()
@@ -131,7 +136,7 @@ def train_model(config):
                 for inputs, outputs in test_dataset:
                     logits = model(inputs)
                     loss = loss_fn(outputs, logits).from_vector().mean().mean()
-                    valid_loss += float(loss)
+                    valid_loss += float(loss.numpy())
                     loss.cleanup()
                 valid_loss /= len(test_dataset)
 
@@ -142,7 +147,7 @@ def train_model(config):
     for inputs, outputs in test_dataset:
         logits = model(inputs)
         loss = loss_fn(outputs, logits).from_vector().mean().mean()
-        valid_loss += float(loss)
+        valid_loss += float(loss.numpy())
         loss.cleanup()
     valid_loss /= len(test_dataset)
     mlflow.log_metric("valid_loss", valid_loss, step=len(train_dataset))
@@ -162,9 +167,12 @@ if __name__ == "__main__":
     tuner = tune.Tuner(
         tune.with_resources(
             train_model,
-            {"cpu": 1},
+            {"gpu": 1, "cpu": 16},
         ),
-        tune_config=tune.TuneConfig(metric="valid_loss", num_samples=24),
+        tune_config=tune.TuneConfig(
+            metric="valid_loss",
+            num_samples=search_space["experiment"]["num_trials"],
+        ),
         run_config=train.RunConfig(
             storage_path=Path("results").absolute(),
             name=EXPERIMENT_NAME,
