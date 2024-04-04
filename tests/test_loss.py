@@ -1,15 +1,12 @@
-from copy import copy
-
 import numpy as np
 import pytest
-from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes, load_iris, load_linnerud
 from sklearn.preprocessing import RobustScaler
 
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
 from tricycle.loss import cross_entropy, mean_square_error
-from tricycle.tensor import to_tensor, unvectorise, vectorise
+from tricycle.tensor import to_tensor
 from tricycle.utils import r_squared, smooth
 
 slow_test = pytest.mark.skipif(

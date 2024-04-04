@@ -9,4 +9,5 @@ except ImportError:
     warn("Could not find CuPY, disabling GPU features")
     CUPY_ENABLED = False
 except Exception:
+    CUPY_ENABLED = False
     warn("Failed to build cupy array. Disabling GPU features")
