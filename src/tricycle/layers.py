@@ -47,7 +47,9 @@ class Dense(Layer):
         self.from_size = from_size
         self.to_size = to_size
 
-    def _build_missing_indices(self, tensor: Tensor, initial_subscript: str) -> str:
+    def _build_missing_indices(
+        self, tensor: Tensor, initial_subscript: str
+    ) -> str:
         """
         In some circumstances, using ellipses with vectorised tensors
         can be defined in the forward direction but not in reverse.
@@ -59,7 +61,9 @@ class Dense(Layer):
         TODO: fix this properly
         """
         n_untouched_indices = (
-            len(tensor.shape) - 2 if tensor.is_vector else len(tensor.shape) - 1
+            len(tensor.shape) - 2
+            if tensor.is_vector
+            else len(tensor.shape) - 1
         )
         untouched_indices = ""
         i = 0

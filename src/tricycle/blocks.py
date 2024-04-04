@@ -28,7 +28,9 @@ def build_mask(context_window: int) -> Tensor:
     return to_tensor(mask, requires_grad=False, name="mask")
 
 
-def masked_fill(tensor: Tensor, mask_shape: tuple[int, int], full_mask: Tensor):
+def masked_fill(
+    tensor: Tensor, mask_shape: tuple[int, int], full_mask: Tensor
+):
     """
     Apply an attention_mask to a tensor
     """
