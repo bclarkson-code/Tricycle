@@ -4,9 +4,11 @@ import numbers
 import uuid
 from typing import Callable, List, Optional, Sequence, Union
 
-import cupy as cp
 import numpy as np
 from numpy.typing import ArrayLike
+
+from tricycle import CUPY_ENABLED
+from tricycle.exceptions import GPUDisabledException
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ class Tensor:
 
     _id: int
     _grad_fn: Optional[List[List[Op]]] = None
-    _data: np.ndarray | cp.ndarray
+    _data: np.ndarray | ArrayLike
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
     parents: set["Tensor"] | None = None
@@ -32,17 +34,23 @@ class Tensor:
 
     def __init__(
         self,
-        data: np.ndarray | cp.ndarray | ArrayLike,
+        data: np.ndarray | ArrayLike,
         requires_grad: bool = False,
         is_vector: bool = False,
         name: str | None = None,
         _id: int | None = None,
     ):
         self._id = _id or uuid.uuid4().int
-        if isinstance(data, (np.ndarray, cp.ndarray)):
-            self._data = data
+        if CUPY_ENABLED:
+            import cupy
+
+            if isinstance(data, (np.ndarray, cupy.ndarray)):
+                self._data = data
+            else:
+                self._data = np.array(data)
         else:
             self._data = np.array(data)
+
         self.requires_grad = requires_grad
         self.is_vector = is_vector
         self.name = name
@@ -323,7 +331,7 @@ class Tensor:
 
     @property
     def xp(self):
-        return cp.get_array_module(self._data)
+        return select_backend(self._data)
 
     def e(self, subscript: str) -> "Tensor":
         """
@@ -408,20 +416,36 @@ class Tensor:
 
     @property
     def on_gpu(self):
-        return isinstance(self._data, cp.ndarray)
+        if not CUPY_ENABLED:
+            return False
+        import cupy
+
+        return isinstance(self._data, cupy.ndarray)
 
     def to_gpu(self):
         """
         Move this tensor to the GPU
         """
-        self._data = cp.asarray(self._data)
+        if not CUPY_ENABLED:
+            raise GPUDisabledException(
+                "Cannot move tensor to GPU because CuPY is not enabled"
+            )
+        import cupy
+
+        self._data = cupy.asarray(self._data)
         return self
 
     def from_gpu(self):
         """
         Move this tensor from the GPU
         """
-        self._data = cp.asnumpy(self._data)
+        if not CUPY_ENABLED:
+            raise GPUDisabledException(
+                "Cannot move tensor from GPU because CuPY is not enabled"
+            )
+        import cupy
+
+        self._data = cupy.asnumpy(self._data)
         return self
 
     def zero_grad(self):
@@ -431,7 +455,12 @@ class Tensor:
         return self
 
     def numpy(self):
-        return cp.asnumpy(self._data) if self.on_gpu else self._data
+        if not CUPY_ENABLED:
+            return self._data
+
+        import cupy
+
+        return cupy.asnumpy(self._data) if self.on_gpu else self._data
 
 
 def to_tensor(
@@ -446,12 +475,21 @@ def to_tensor(
     Create a new Tensor instance. First, we convert the argument to a numpy
     array and then to a tensor
     """
-    if isinstance(tensor_like, Tensor):
+    if CUPY_ENABLED:
+        import cupy
+
+        if isinstance(tensor_like, Tensor):
+            array = tensor_like._data
+        elif isinstance(tensor_like, cupy.ndarray):
+            array = tensor_like
+        else:
+            array = np.asarray(tensor_like, **kwargs)
+
+    elif isinstance(tensor_like, Tensor):
         array = tensor_like._data
-    elif isinstance(tensor_like, cp.ndarray):
-        array = tensor_like
     else:
         array = np.asarray(tensor_like, **kwargs)
+
     return Tensor(
         array,
         name=name,
@@ -499,3 +537,13 @@ def nothing(tensor):
     This is used as a dummy to simplify the backpropagation logic
     """
     return tensor
+
+
+def select_backend(*tensors: Tensor | np.ndarray | ArrayLike):
+    if not CUPY_ENABLED:
+        return np
+
+    import cupy
+
+    tensors = [tensor for tensor in tensors if isinstance(tensor, Tensor)]
+    return cupy.get_array_module(tensors)

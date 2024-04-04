@@ -4,7 +4,6 @@ Several layers can be grouped together into a single layer called a block
 
 from typing import Callable
 
-import cupy as cp
 import numpy as np
 
 from tricycle.activation import GeLU
@@ -13,7 +12,7 @@ from tricycle.functions import softmax
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Dropout, Layer, LayerNorm
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor, select_backend, to_tensor
 
 
 def build_mask(context_window: int) -> Tensor:
@@ -29,15 +28,15 @@ def build_mask(context_window: int) -> Tensor:
     return to_tensor(mask, requires_grad=False, name="mask")
 
 
-def masked_fill(x: Tensor, mask_shape: tuple[int, int], full_mask: Tensor):
+def masked_fill(tensor: Tensor, mask_shape: tuple[int, int], full_mask: Tensor):
     """
     Apply an attention_mask to a tensor
     """
-    xp = cp.get_array_module(x._data)
-    repeats = x.shape[1] if x.is_vector else x.shape[0]
+    xp = tensor.xp
+    repeats = tensor.shape[1] if tensor.is_vector else tensor.shape[0]
     mask = xp.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
     mask = to_tensor(mask, requires_grad=False, name="mask")
-    return x + mask
+    return tensor + mask
 
 
 class MultiHeadSelfAttention(Layer):
@@ -88,7 +87,7 @@ class MultiHeadSelfAttention(Layer):
         self.residual_dropout = Dropout(residual_dropout_prob)
 
     def _attention(self, key: Tensor, query: Tensor, value: Tensor):
-        xp = cp.get_array_module([key._data, query._data, value._data])
+        xp = select_backend(key._data, query._data, value._data)
         # reshape into n_heads x embedding_dim
         head_size = self.embedding_dim // self.n_heads
         n_tokens = key.shape[1] if key.is_vector else key.shape[0]

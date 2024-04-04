@@ -1,5 +1,3 @@
-import cupy as cp
-
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
 from tricycle.layers import Dense, Dropout, Layer
@@ -35,13 +33,13 @@ class GPT(Layer):
             to_size=config.vocab_size, from_size=self.embedding_dim
         )
 
-    def forward(self, x: Tensor):
+    def forward(self, tensor: Tensor):
         """
         Forward pass of the transformer. inputs is expected to be a one-hot
         encoded tensor
         """
-        xp = cp.get_array_module(x._data)
-        _, n_tokens, _ = x.shape
+        xp = tensor.xp
+        _, n_tokens, _ = tensor.shape
         assert n_tokens <= self.context_window, (
             "Can't have more tokens than context window. ",
             f"Found {n_tokens=} and {self.context_window=}",
@@ -52,7 +50,7 @@ class GPT(Layer):
         pos_embedding = (
             self.position_embedding(position).repeat(n_tokens).e("ET->TE")
         )
-        token_embedding = self.token_embedding(x)
+        token_embedding = self.token_embedding(tensor)
 
         embedding = token_embedding + pos_embedding
         embedding = self.input_dropout(embedding)

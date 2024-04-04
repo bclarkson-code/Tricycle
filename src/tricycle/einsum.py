@@ -2,9 +2,7 @@ import itertools
 import re
 from typing import Sequence
 
-import cupy as cp
-
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor, select_backend, to_tensor
 
 
 class Subscript:
@@ -151,7 +149,7 @@ class Einsum:
         # backward
         einsum(",ab->ab")(grad, xp.ones_like(x))
         """
-        xp = cp.get_array_module(*tensors)
+        xp = select_backend(*tensors)
         if len(tensors) != 1:
             return subscript, tensors
 
@@ -203,7 +201,7 @@ class Einsum:
         If tensors contain infinity, temporarily replace them with the max
         value for that datatype
         """
-        xp = cp.get_array_module(*tensors)
+        xp = select_backend(*tensors)
         processed = []
         for tensor in tensors:
             if not xp.isinf(tensor._data).any():
@@ -221,7 +219,7 @@ class Einsum:
         return processed
 
     def __call__(self, *tensors: Tensor, replace_inf=False):
-        xp = cp.get_array_module(*tensors)
+        xp = select_backend(*tensors)
         if replace_inf:
             tensors = self._replace_infinity(tensors)
         subscript, tensors, vectorise_output = self._handle_vectorised(

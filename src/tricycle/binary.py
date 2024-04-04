@@ -1,9 +1,7 @@
 from functools import partial
 
-import cupy as cp
-
 from tricycle.ops import Einsum
-from tricycle.tensor import Tensor, nothing, to_tensor
+from tricycle.tensor import Tensor, nothing, select_backend, to_tensor
 from tricycle.unary import udiv, umul
 
 
@@ -33,7 +31,7 @@ def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
 
     The two tensors must have the same shape
     """
-    xp = cp.get_array_module(tensor_1._data, tensor_2._data)
+    xp = select_backend(tensor_1._data, tensor_2._data)
     assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(xp.add(tensor_1._data, tensor_2._data))
@@ -89,7 +87,7 @@ def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
-    xp = cp.get_array_module(tensor_1._data, tensor_2._data)
+    xp = select_backend(tensor_1._data, tensor_2._data)
     assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(xp.maximum(tensor_1._data, tensor_2._data))
@@ -115,7 +113,7 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     The two tensors must have the same shape
     if elements are equal, return the first
     """
-    xp = cp.get_array_module(tensor_1._data, tensor_2._data)
+    xp = select_backend(tensor_1._data, tensor_2._data)
     assert _shapes_match(tensor_1, tensor_2)
 
     result = to_tensor(xp.minimum(tensor_1._data, tensor_2._data))

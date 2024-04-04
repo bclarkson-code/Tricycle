@@ -1,4 +1,5 @@
 import numbers
+from warnings import warn
 
 import hypothesis.strategies as st
 import numpy as np
@@ -6,6 +7,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis.extra import numpy as xp
 
+from tricycle import CUPY_ENABLED
 from tricycle.binary import _shapes_match, badd, bdiv, bmax, bmin, bmul, bsub
 from tricycle.einsum import EinsumBackOp
 from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
@@ -86,7 +88,11 @@ def tensor(draw):
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
     is_vector = draw(st.booleans())
     requires_grad = draw(st.booleans())
-    on_gpu = draw(st.booleans())
+    if CUPY_ENABLED:
+        on_gpu = draw(st.booleans())
+    else:
+        warn("CUPY_ENABLED = False so GPU tests have been disabled")
+        on_gpu = False
 
     tensor = to_tensor(
         data,
@@ -222,6 +228,8 @@ def test_can_vectorise_and_unvectorise(tensor):
 
 @given(tensor())
 def test_can_move_to_and_from_gpu(tensor):
+    if not CUPY_ENABLED:
+        pytest.skip("GPU not enabled")
     assume(not tensor.on_gpu)
 
     gpu_tensor = tensor.to_gpu()

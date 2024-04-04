@@ -1,7 +1,5 @@
 from typing import Sequence
 
-import cupy as cp
-
 from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import usqrt
@@ -13,7 +11,7 @@ def repeat(tensor: Tensor, repeats: int):
     This is done my multiplying with a ones tensor the same shape as the
     desired output
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
     subscript = Subscript("...,...a->...a")
     new_shape = tensor.shape + (repeats,)
     ones = to_tensor(
@@ -27,7 +25,7 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
     """
     Split a tensor along its first axis into n_splits partitions
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
     if axis < 0:
         axis += tensor.ndim
     if tensor.is_vector:
@@ -85,7 +83,7 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
 
 
 def reshape(tensor: Tensor, shape: Sequence[int]):
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
     if tensor.is_vector:
         shape = [tensor.shape[0]] + list(shape)
 

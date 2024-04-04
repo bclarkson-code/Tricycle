@@ -4,16 +4,13 @@ import numpy as np
 import pytest
 from sklearn.datasets import load_iris
 
+from tricycle import CUPY_ENABLED
 from tricycle.activation import ReLU
 from tricycle.dataset import InfiniteBatchDataset
 from tricycle.layers import Dense, Sequential
 from tricycle.loss import cross_entropy
 from tricycle.optimisers import StochasticGradientDescent
 
-slow_test = pytest.mark.skipif(
-    "not config.getoption('--run-slow')",
-    reason="Only run when --run-slow is given",
-)
 logger = logging.getLogger(__name__)
 
 
@@ -69,6 +66,9 @@ def test_can_train_simple_neural_network_gpu():
     """
     Train a simple neural network on the iris dataset
     """
+    if not CUPY_ENABLED:
+        pytest.skip()
+
     BATCH_SIZE = 64
     LEARNING_RATE = 3e-2
     N_STEPS = 100

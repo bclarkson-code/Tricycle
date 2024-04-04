@@ -1,10 +1,9 @@
 import numbers
 from functools import partial
 
-import cupy as cp
-from cupyx.scipy.special import erf as cp_erf
 from scipy.special import erf as np_erf
 
+from tricycle import CUPY_ENABLED
 from tricycle.einsum import Einsum
 from tricycle.tensor import Tensor, nothing, to_tensor
 
@@ -16,7 +15,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
     Add a constant, elementwise, to a tensor. The constant is not
     differentiable.
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
 
     assert isinstance(tensor, Tensor)
     assert isinstance(constant, numbers.Number)
@@ -34,7 +33,7 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     Multiply a constant, elementwise, to a tensor. The constant is not
     differentiable.
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
 
     assert isinstance(tensor, Tensor)
     assert xp.isscalar(constant)
@@ -61,7 +60,7 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     Raise a tensor to a constant, elementwise. The constant is not
     differentiable.
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
 
     from tricycle.binary import bmul
 
@@ -93,7 +92,7 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
     Return the max of the tensor and the constant,
     elementwise. The constant is not differentiable.
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
 
     assert isinstance(tensor, Tensor)
     assert xp.isscalar(constant)
@@ -117,7 +116,7 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     Return the max of the tensor and the constant,
     elementwise. The constant is not differentiable.
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
 
     assert isinstance(tensor, Tensor)
     assert xp.isscalar(constant)
@@ -139,7 +138,7 @@ def uexp(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
 
     result = to_tensor(xp.exp(tensor._data))
 
@@ -157,7 +156,7 @@ def ulog(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
 
     result = to_tensor(xp.log(tensor._data))
 
@@ -179,7 +178,7 @@ def usin(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
     result = to_tensor(xp.sin(tensor._data))
 
     from tricycle.binary import bmul
@@ -196,7 +195,7 @@ def ucos(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
-    xp = cp.get_array_module(tensor._data)
+    xp = tensor.xp
     result = to_tensor(xp.cos(tensor._data))
 
     from tricycle.binary import bmul
@@ -220,7 +219,14 @@ def uerf(tensor: Tensor) -> Tensor:
     """
     Calculate the error function of every element of a tensor
     """
-    erf = cp_erf if isinstance(tensor._data, cp.ndarray) else np_erf
+    if CUPY_ENABLED:
+        import cupy
+        from cupyx.scipy.special import erf as cp_erf
+
+        erf = cp_erf if isinstance(tensor._data, cupy.ndarray) else np_erf
+    else:
+        erf = np_erf
+
     result = to_tensor(
         erf(tensor._data),
         is_vector=tensor.is_vector,
