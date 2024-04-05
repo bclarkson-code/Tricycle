@@ -1,9 +1,15 @@
 import pickle
+from tricycle.functions import softmax
+import cupy as cp
+from matplotlib import pyplot as plt
+from typing import Sequence
 from pathlib import Path
 
 import numpy as np
 
 from tricycle.configs import SmolGPTConfig
+from tricycle.layers import Dropout
+from tricycle.models import GPT
 from tricycle.tensor import to_tensor
 from tricycle_datasets.shakespeare import Shakespeare
 
@@ -23,69 +29,77 @@ def load_tokeniser():
     return tokeniser
 
 
-def load_model():
-    with open("shakespeare_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    return model
-
-
-def one_hot_encode(tokens):
+def one_hot_encode(
+    tokens: Sequence[int],
+    vocab_size=config.vocab_size,
+    pad_token_id=config.pad_token_id,
+):
     """
     One hot encode some tokens into one-hot vectors
     """
-    one_hot = np.zeros((len(tokens), config.vocab_size))
+    one_hot = np.zeros((len(tokens), vocab_size))
 
     for i, token in enumerate(tokens):
+        if token == pad_token_id:
+            continue
         one_hot[i, token] = 1
     return one_hot
 
 
-def detokenise(tokens, tokeniser):
-    undo_tokenising = {v: k for k, v in tokeniser.merges.items()}
-    all_bytes = False
+def pad(
+    tokens: list[int],
+    context_window=config.context_window,
+    pad_token_id=config.pad_token_id,
+):
+    n_padding_tokens = max(0, context_window - len(tokens))
+    return tokens + [pad_token_id] * n_padding_tokens
 
-    while not all_bytes:
-        detokenised = []
-        all_bytes = True
-        for t in tokens:
-            if t < 256:
-                detokenised.append(t)
-            else:
-                all_bytes = False
-                detokenised.extend(list(undo_tokenising[t]))
-        tokens = detokenised
-    return bytes(tokens)
+
+def load_model():
+    with open("models/shakespeare_model_mmmmmmmmmmm.pkl", "rb") as f:
+        model = pickle.load(f)
+    return model
+
+
+def deactivate_dropout(model):
+    stack = [model]
+
+    while stack:
+        node = stack.pop()
+        if isinstance(node, Dropout):
+            node.probability = 0
+
+        if not node.layers:
+            continue
+
+        stack.extend(iter(node.layers))
 
 
 if __name__ == "__main__":
+    np.random.seed(0)
     tokeniser = load_tokeniser()
-
     model = load_model()
-    model.input_dropout.probability = 0
-    for block in model.blocks:
-        block.attention_block.attention_dropout.probabillity = 0
-        block.attention_block.residual_dropout.probabillity = 0
-        block.mlp_block.dropout.probability = 0
 
-    sample_text = "To be or not to be, that is the question"
-    tokens = tokeniser.tokenise(sample_text)
-    print(tokens)
+    deactivate_dropout(model)
 
-    start = max(len(tokens) - config.context_window, 0)
-    end = len(tokens)
+    sample_text = "Here is some example text"
+    tokens = tokeniser.encode(sample_text)
+    for _ in range(10):
+        n_tokens = len(tokens)
+        tokens = pad(tokens)
 
-    if len(tokens) < config.context_window:
-        n_padding_tokens = config.context_window - len(tokens)
-        tokens += [0] * n_padding_tokens
+        encoded = one_hot_encode(tokens)
+        encoded = np.expand_dims(one_hot_encode(tokens), 0)
+        encoded = to_tensor(encoded).to_vector()
 
-    encoded = np.expand_dims(one_hot_encode(tokens), 0)
-    encoded = to_tensor(encoded).to_vector()
+        pred = model(encoded)
+        pred = softmax(pred)
+        probabilities = cp.asnumpy(pred._data[0][n_tokens])
 
-    pred = model(encoded).numpy()
-    print(pred.shape)
-    print(np.argmax(pred[0][0]))
-    tokens = np.argmax(pred, axis=-1)[0]
-    print(tokens.shape)
-    print(tokens)
-    text = detokenise(tokens, tokeniser)
-    print(text)
+        # sample according to probabilities
+        next_token = np.random.choice(
+            list(range(config.vocab_size)), p=probabilities
+        )
+        tokens = tokens[:n_tokens]
+        tokens.append(next_token)
+        print(tokeniser.decode(tokens))
