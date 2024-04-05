@@ -26,6 +26,7 @@ class BPETokeniser:
         # initialise our pairs and merges with single byte tokens
         self.pairs = [(idx, None) for idx in range(self.MIN_TOKENS)]
         self.merges = {(idx, None): idx for idx in range(self.MIN_TOKENS)}
+        self.vocab = [idx.to_bytes(1, "big") for idx in range(self.MIN_TOKENS)]
 
     def count_pairs(self, data: list[int]):
         counts = {}
@@ -83,6 +84,9 @@ class BPETokeniser:
             )
             self.merges[most_common_pair] = token_id
             self.pairs.append(most_common_pair)
+            left, right = most_common_pair
+            self.vocab.append(self.vocab[left] + self.vocab[right])
+
         if len(self.pairs) != self.vocab_size:
             warn(f"Expected {self.vocab_size} pairs, got {len(self.pairs)}")
         return self
@@ -105,7 +109,7 @@ class BPETokeniser:
             int_array = self.replace_pair(int_array, pair, token_id)
         return int_array
 
-    def tokenise(self, text: str) -> list[int]:
+    def encode(self, text: str) -> list[int]:
         """
         Tokenise a string
         """
@@ -113,6 +117,15 @@ class BPETokeniser:
         as_ints = list(as_bytes)
 
         return self.tokenise_ints(as_ints)
+
+    def decode(self, tokens: list[int]) -> str:
+        """
+        Convert tokens into a string
+        """
+        decoded = b''
+        for token in tokens:
+            decoded += self.vocab[token]
+        return decoded.decode('utf-8', errors='replace')
 
     def save(self, path: str | Path):
         with open(path, "wb") as f:

@@ -11,6 +11,7 @@ from tricycle import CUPY_ENABLED
 from tricycle.binary import _shapes_match, badd, bdiv, bmax, bmin, bmul, bsub
 from tricycle.einsum import EinsumBackOp
 from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
+from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
     uadd,
     ucos,
@@ -40,6 +41,11 @@ def scalar(draw):
         return draw(st.floats())
     if group == "complex":
         return draw(st.complex_numbers())
+
+
+@st.composite
+def string(draw):
+    return draw(st.text())
 
 
 @st.composite
@@ -154,7 +160,10 @@ def test_tensor_addition_same_shape(tensors):
 @given(tensor(), scalar())
 def test_tensor_addition_scalar(tensor, scalar):
     assume(isinstance(scalar, numbers.Number))
-    assume(abs(scalar) < 2**64)
+    try:
+        assume(abs(scalar) < 2**64)
+    except OverflowError:
+        assume(False)
     assume(not isinstance(scalar, np.datetime64))
     assume(not isinstance(scalar, np.timedelta64))
 
@@ -244,7 +253,10 @@ def test_unary_ops(tensor, op):
     # sourcery skip: no-conditionals-in-tests
     op, constant = op
     if constant is not None:
-        assume(abs(constant) < 2**64)
+        try:
+            assume(abs(constant) < 2**64)
+        except OverflowError:
+            assume(False)
         result = op(tensor=tensor, constant=constant)
     else:
         result = op(tensor)
@@ -269,6 +281,15 @@ def test_binary_ops(tensors, op):
     assert result.shape in [tensor_1.shape, tensor_2.shape]
     assert result.is_vector == any([tensor_1.is_vector, tensor_2.is_vector])
     assert result.on_gpu == any([tensor_1.on_gpu, tensor_2.on_gpu])
+
+
+@given(string())
+def test_tokeniser(text):
+    tokeniser = BPETokeniser(vocab_size=1024)
+    tokens = tokeniser.encode(text)
+    decoded = tokeniser.decode(tokens)
+
+    assert text == decoded
 
 
 if __name__ == "__main__":
