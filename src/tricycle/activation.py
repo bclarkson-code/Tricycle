@@ -56,6 +56,7 @@ class GLU(Layer):
     def __init__(self, size: int, initialiser=init_xavier, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.linear = Dense(size, 2 * size, initialiser)
+        self.layers = [self.linear]
 
     def forward(self, x: Tensor):
         x = self.linear(x)
@@ -96,6 +97,7 @@ class SwiGLU(Layer):
         self.bias = to_tensor(1.0, requires_grad=tunable_bias, name="bias")
         self.tunable_bias = tunable_bias
         self.linear = Dense(size, 2 * size, initialiser)
+        self.layers = [self.linear]
 
     def forward(self, x: Tensor):
         x = self.linear(x)

@@ -32,6 +32,13 @@ class GPT(Layer):
         self.head = Dense(
             to_size=config.vocab_size, from_size=self.embedding_dim
         )
+        self.layers = [
+            self.token_embedding,
+            self.position_embedding,
+            self.input_dropout,
+            *self.blocks,
+            self.head,
+        ]
 
     def forward(self, tensor: Tensor):
         """

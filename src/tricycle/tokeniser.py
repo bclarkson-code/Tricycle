@@ -2,8 +2,6 @@ import pickle
 from pathlib import Path
 from warnings import warn
 
-from tqdm import tqdm
-
 
 class BPETokeniser:
     """
@@ -26,6 +24,7 @@ class BPETokeniser:
         # initialise our pairs and merges with single byte tokens
         self.pairs = [(idx, None) for idx in range(self.MIN_TOKENS)]
         self.merges = {(idx, None): idx for idx in range(self.MIN_TOKENS)}
+        self.vocab = [idx.to_bytes(1, "big") for idx in range(self.MIN_TOKENS)]
 
     def count_pairs(self, data: list[int]):
         counts = {}
@@ -69,9 +68,7 @@ class BPETokeniser:
         """
         Train the tokeniser on an array of ints
         """
-        for token_id in tqdm(
-            range(self.MIN_TOKENS, self.vocab_size), desc="Tokenising"
-        ):
+        for token_id in range(self.MIN_TOKENS, self.vocab_size):
             most_common_pair = self.most_common_pair(
                 self.count_pairs(int_array)
             )
@@ -83,6 +80,9 @@ class BPETokeniser:
             )
             self.merges[most_common_pair] = token_id
             self.pairs.append(most_common_pair)
+            left, right = most_common_pair
+            self.vocab.append(self.vocab[left] + self.vocab[right])
+
         if len(self.pairs) != self.vocab_size:
             warn(f"Expected {self.vocab_size} pairs, got {len(self.pairs)}")
         return self
@@ -99,13 +99,13 @@ class BPETokeniser:
         """
         Tokenise an array of ints
         """
-        for pair, token_id in tqdm(self.merges.items(), desc="Tokenising"):
+        for pair, token_id in self.merges.items():
             if pair[1] is None:
                 continue
             int_array = self.replace_pair(int_array, pair, token_id)
         return int_array
 
-    def tokenise(self, text: str) -> list[int]:
+    def encode(self, text: str) -> list[int]:
         """
         Tokenise a string
         """
@@ -113,6 +113,18 @@ class BPETokeniser:
         as_ints = list(as_bytes)
 
         return self.tokenise_ints(as_ints)
+
+    def decode(self, tokens: list[int] | int) -> str:
+        """
+        Convert tokens into a string
+        """
+        if not isinstance(tokens, list):
+            tokens = [tokens]
+
+        decoded = b""
+        for token in tokens:
+            decoded += self.vocab[token]
+        return decoded.decode("utf-8", errors="replace")
 
     def save(self, path: str | Path):
         with open(path, "wb") as f:
