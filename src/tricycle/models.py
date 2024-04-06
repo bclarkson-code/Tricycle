@@ -123,4 +123,7 @@ class GPT(Layer):
         PARAM_SIZE = self.head.weights[0][0].dtype.itemsize
         total *= PARAM_SIZE
 
-        print(f"\nTotal: {humanize.naturalsize(total)}")
+        print("\nTotal size:")
+        print(f"  - {humanize.naturalsize(total)}")
+        print("Total parameters:")
+        print(f"  - {humanize.intword(total/PARAM_SIZE)}")
