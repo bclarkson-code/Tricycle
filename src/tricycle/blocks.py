@@ -2,6 +2,7 @@
 Several layers can be grouped together into a single layer called a block
 """
 
+from math import sqrt
 from typing import Callable
 
 import numpy as np
@@ -112,7 +113,8 @@ class MultiHeadSelfAttention(Layer):
         value = value.reshape(head_shape).e("TNH -> NTH")
 
         # attend
-        attention = Einsum("NIh, NJh -> NIJ")(query, key) / xp.sqrt(head_size)
+        divisor = sqrt(head_size)
+        attention = Einsum("NIh, NJh -> NIJ")(query, key) / divisor
 
         # mask and softmax
         attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)

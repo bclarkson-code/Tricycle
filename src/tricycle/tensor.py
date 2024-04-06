@@ -469,6 +469,7 @@ def to_tensor(
     requires_grad: bool = True,
     is_vector: bool = False,
     _id: int | None = None,
+    dtype: np.dtype = np.float16,
     **kwargs,
 ) -> Tensor:
     """
@@ -483,12 +484,12 @@ def to_tensor(
         elif isinstance(tensor_like, cupy.ndarray):
             array = tensor_like
         else:
-            array = np.asarray(tensor_like, **kwargs)
+            array = np.asarray(tensor_like, dtype=dtype, **kwargs)
 
     elif isinstance(tensor_like, Tensor):
         array = tensor_like._data
     else:
-        array = np.asarray(tensor_like, **kwargs)
+        array = np.asarray(tensor_like, dtype=dtype, **kwargs)
 
     return Tensor(
         array,
@@ -545,5 +546,4 @@ def select_backend(*tensors: Tensor | np.ndarray | ArrayLike):
 
     import cupy
 
-    tensors = [tensor for tensor in tensors if isinstance(tensor, Tensor)]
-    return cupy.get_array_module(tensors)
+    return cupy.get_array_module(*tensors)
