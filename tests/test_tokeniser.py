@@ -65,8 +65,19 @@ def test_can_tokenise_simple_text():
     tokeniser.merges[(ord("a"), ord("b"))] = 256
 
     sample_text = "aababa"
-    got = tokeniser.tokenise(sample_text)
+    got = tokeniser.encode(sample_text)
     want = [ord("a"), 256, 256, ord("a")]
+
+    assert got == want
+
+
+def test_can_decode_tokens():
+    tokeniser = BPETokeniser(257)
+    tokeniser.vocab.append(b"ab")
+
+    sample_tokens = [ord("a"), 256, 256, ord("a")]
+    got = tokeniser.decode(sample_tokens)
+    want = "aababa"
 
     assert got == want
 
@@ -82,7 +93,7 @@ def test_can_tokenise_longer_text():
 
     assert len(tokeniser.merges) == len(tokeniser.pairs) == 1000
 
-    got = tokeniser.tokenise(sample_text)
+    got = tokeniser.encode(sample_text)
 
     assert got[:10] == [78, 279, 82, 65, 693, 82, 675, 66, 337, 383]
     assert got[-10:] == [640, 612, 339, 455, 266, 115, 597, 434, 464, 262]

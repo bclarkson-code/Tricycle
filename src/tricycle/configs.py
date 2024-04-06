@@ -1,6 +1,5 @@
-from typing import Callable
-
 from tricycle.activation import GeLU
+from tricycle.layers import Layer
 
 
 class GPTConfig:
@@ -10,7 +9,7 @@ class GPTConfig:
     n_heads: int
     n_layers: int
     expansion_ratio: float
-    activation_fn: Callable
+    activation_fn: Layer
 
     input_dropout_prob: float
     attention_dropout_prob: float
@@ -26,6 +25,8 @@ class GPTConfig:
     mlflow_enabled: bool
     mlflow_tracking_uri: str
     mlflow_experiment_name: str
+
+    pad_token_id: int
 
 
 class SmolGPTConfig(GPTConfig):
@@ -52,3 +53,5 @@ class SmolGPTConfig(GPTConfig):
     mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"
     mlflow_experiment_name = "Tricycle SmolGPT"
+
+    pad_token_id = -1

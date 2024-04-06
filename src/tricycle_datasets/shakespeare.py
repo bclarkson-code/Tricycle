@@ -30,6 +30,7 @@ class Shakespeare(abc.Sequence):
         self.vocab_size = vocab_size
         self.raw_data_path = raw_data_path
         self.token_path = token_path
+        self.tokeniser = None
 
         if not self.token_path.exists():
             self.tokens = self.generate()

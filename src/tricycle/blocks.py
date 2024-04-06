@@ -87,6 +87,12 @@ class MultiHeadSelfAttention(Layer):
 
         self.attention_dropout = Dropout(attention_dropout_prob)
         self.residual_dropout = Dropout(residual_dropout_prob)
+        self.layers = [
+            self.in_projection,
+            self.attention_dropout,
+            self.residual_dropout,
+            self.out_projection,
+        ]
 
     def _attention(self, key: Tensor, query: Tensor, value: Tensor):
         xp = select_backend(key._data, query._data, value._data)
@@ -162,7 +168,7 @@ class MLPBlock(Layer):
     embedding_dim: int
     dropout_prob: float
     expansion_ratio: float
-    activation_fn: Callable
+    activation_fn: Layer
     linear_1: Dense
     linear_2: Dense
 
@@ -171,7 +177,7 @@ class MLPBlock(Layer):
         embedding_dim: int,
         dropout_prob: float,
         expansion_ratio: float = 4,
-        activation_fn: Callable = GeLU(),
+        activation_fn: Layer = GeLU(),
     ):
         self.linear_1 = Dense(
             from_size=embedding_dim,
@@ -193,6 +199,12 @@ class MLPBlock(Layer):
                         f"Unknown activation function: {activation_fn}"
                     )
         self.activation_fn = activation_fn
+        self.layers = [
+            self.linear_1,
+            self.activation_fn,
+            self.linear_2,
+            self.dropout,
+        ]
 
     def forward(self, x: Tensor):
         x = self.linear_1(x)
@@ -221,7 +233,7 @@ class MLPBlock(Layer):
 class GPT2TransformerBlock(Layer):
     embedding_dim: int
     expansion_ratio: float
-    activation_fn: Callable
+    activation_fn: Layer
     attention_dropout_prob: float
     residual_dropout_prob: float
     linear_dropout_prob: float
@@ -232,7 +244,7 @@ class GPT2TransformerBlock(Layer):
         n_heads: int,
         context_window: int,
         expansion_ratio: float = 4,
-        activation_fn: Callable = GeLU(),
+        activation_fn: Layer = GeLU(),
         attention_dropout_prob: float = 0,
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
@@ -253,6 +265,13 @@ class GPT2TransformerBlock(Layer):
         )
         self.layer_norm_1 = LayerNorm()
         self.layer_norm_2 = LayerNorm()
+
+        self.layers = [
+            self.layer_norm_1,
+            self.attention_block,
+            self.layer_norm_2,
+            self.mlp_block,
+        ]
 
     def forward(self, x: Tensor):
         x = self.attention_block(self.layer_norm_1(x)) + x

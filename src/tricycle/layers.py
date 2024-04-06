@@ -1,6 +1,6 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from string import ascii_letters
-from typing import Sequence
+from typing import Sequence, Union
 
 import numpy as np
 
@@ -11,7 +11,10 @@ from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
 
-class Layer:
+class Layer(ABC):
+    tensors: dict[str, Tensor] = {}
+    layers: Sequence["Layer"] = []
+
     @abstractmethod
     def forward(self, tensor: Tensor):
         raise NotImplementedError
@@ -46,6 +49,7 @@ class Dense(Layer):
         )
         self.from_size = from_size
         self.to_size = to_size
+        self.tensors = {"weights": self.weights}
 
     def _build_missing_indices(
         self, tensor: Tensor, initial_subscript: str
@@ -120,8 +124,6 @@ class LayerNorm(Layer):
 
 
 class Sequential(Layer):
-    layers: Sequence[Layer]
-
     def __init__(self, *layers: Layer):
         self.layers = layers
 
