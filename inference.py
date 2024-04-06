@@ -1,15 +1,14 @@
 import pickle
-from tricycle.functions import softmax
-import cupy as cp
-from matplotlib import pyplot as plt
-from typing import Sequence
+import sys
 from pathlib import Path
+from typing import Sequence
 
+import cupy as cp
 import numpy as np
 
 from tricycle.configs import SmolGPTConfig
+from tricycle.functions import softmax
 from tricycle.layers import Dropout
-from tricycle.models import GPT
 from tricycle.tensor import to_tensor
 from tricycle_datasets.shakespeare import Shakespeare
 
@@ -75,16 +74,9 @@ def deactivate_dropout(model):
         stack.extend(iter(node.layers))
 
 
-if __name__ == "__main__":
-    np.random.seed(0)
-    tokeniser = load_tokeniser()
-    model = load_model()
-
-    deactivate_dropout(model)
-
-    sample_text = "Here is some example text"
-    tokens = tokeniser.encode(sample_text)
-    for _ in range(10):
+def generate(text, model, sample=True):
+    tokens = tokeniser.encode(text)
+    while True:
         n_tokens = len(tokens)
         tokens = pad(tokens)
 
@@ -97,9 +89,25 @@ if __name__ == "__main__":
         probabilities = cp.asnumpy(pred._data[0][n_tokens])
 
         # sample according to probabilities
-        next_token = np.random.choice(
-            list(range(config.vocab_size)), p=probabilities
-        )
+        if sample:
+            next_token = np.random.choice(
+                list(range(config.vocab_size)), p=probabilities
+            )
+        else:
+            next_token = np.argmax(probabilities)
         tokens = tokens[:n_tokens]
-        tokens.append(next_token)
-        print(tokeniser.decode(tokens))
+        yield next_token
+
+
+if __name__ == "__main__":
+    np.random.seed(0)
+    tokeniser = load_tokeniser()
+    model = load_model()
+
+    deactivate_dropout(model)
+
+    sample_text = "Here is some example text"
+    print(sample_text, end="", flush=True)
+    sys.stdout.flush()
+    for token in generate(sample_text, model, sample=False):
+        print(tokeniser.decode(token), end="", flush=True)

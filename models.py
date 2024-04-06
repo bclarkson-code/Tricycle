@@ -47,7 +47,6 @@ class GPT(Layer):
         )
 
         position = to_tensor(xp.arange(n_tokens))
-        breakpoint()
 
         pos_embedding = self.position_embedding(position)
         token_embedding = self.token_embedding(x)
@@ -67,3 +66,11 @@ class GPT(Layer):
 
         for block in self.blocks:
             block.to_gpu()
+
+    def from_gpu(self):
+        self.token_embedding.from_gpu()
+        self.position_embedding.from_gpu()
+        self.head.from_gpu()
+
+        for block in self.blocks:
+            block.from_gpu()
