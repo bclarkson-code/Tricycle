@@ -23,9 +23,7 @@ class Shakespeare(abc.Sequence):
         raw_data_path: Path = Path("datasets/shakespeare/raw_data.txt"),
     ):
         if token_path is None:
-            token_path = Path(
-                f"/home/ben/Documents/Tricycle/datasets/shakespeare/tokens_{vocab_size}.pkl"
-            )
+            token_path = Path(f"datasets/shakespeare/tokens_{vocab_size}.pkl")
 
         self.vocab_size = vocab_size
         self.raw_data_path = raw_data_path
