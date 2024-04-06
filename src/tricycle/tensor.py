@@ -397,7 +397,11 @@ class Tensor:
         """
         if not isinstance(other, Tensor):
             return self.xp.allclose(
-                self._data, self.xp.array(other), equal_nan=equal_nan, rtol=rtol, **kwargs
+                self._data,
+                self.xp.array(other),
+                equal_nan=equal_nan,
+                rtol=rtol,
+                **kwargs,
             )
         return self.xp.allclose(
             self._data, other._data, equal_nan=equal_nan, rtol=rtol, **kwargs

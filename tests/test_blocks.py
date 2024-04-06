@@ -302,7 +302,9 @@ def test_attention_block():
     tricycle_in_weights = tricycle_attention.in_projection.weights.grad
     tricycle_in_weights = tricycle_in_weights.from_vector().e("abc->bc")
 
-    assert tricycle_in_weights.close_to(c_attn.weight.grad.T.numpy(), rtol=1e-3)
+    assert tricycle_in_weights.close_to(
+        c_attn.weight.grad.T.numpy(), rtol=1e-3
+    )
 
 
 def test_MLPBlock():
