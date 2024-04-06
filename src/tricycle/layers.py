@@ -126,7 +126,6 @@ class LayerNorm(Layer):
 class Sequential(Layer):
     def __init__(self, *layers: Layer):
         self.layers = layers
-        self.tensors = {"weights": self.weights}
 
     def __getitem__(self, idx):
         return self.layers[idx]
