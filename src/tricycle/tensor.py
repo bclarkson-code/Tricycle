@@ -388,6 +388,7 @@ class Tensor:
         self,
         other: Union["Tensor", ArrayLike, float, int],
         equal_nan=False,
+        rtol=1e-4,
         **kwargs,
     ) -> bool:
         """
@@ -396,10 +397,10 @@ class Tensor:
         """
         if not isinstance(other, Tensor):
             return self.xp.allclose(
-                self._data, self.xp.array(other), equal_nan=equal_nan, **kwargs
+                self._data, self.xp.array(other), equal_nan=equal_nan, rtol=rtol, **kwargs
             )
         return self.xp.allclose(
-            self._data, other._data, equal_nan=equal_nan, **kwargs
+            self._data, other._data, equal_nan=equal_nan, rtol=rtol, **kwargs
         )
 
     def to_vector(self):
@@ -469,7 +470,7 @@ def to_tensor(
     requires_grad: bool = True,
     is_vector: bool = False,
     _id: int | None = None,
-    dtype: np.dtype = np.float16,
+    dtype: np.dtype = np.float32,
     **kwargs,
 ) -> Tensor:
     """

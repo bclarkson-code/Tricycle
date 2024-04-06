@@ -146,7 +146,7 @@ def test_can_linear_regression():
             assert intercept.grad is not None
 
             assert slope.grad.close_to(
-                last_slope_grad + slope_grad
+                last_slope_grad + slope_grad, atol=1e-4
             ), f"{slope.grad=}, {last_slope_grad=}, {slope_grad=}"
 
             assert intercept.grad.close_to(

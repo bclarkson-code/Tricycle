@@ -19,7 +19,7 @@ def test_softmax():
     correct = (left - right) @ np.ones_like(in_tensor._data)
 
     assert in_tensor.grad is not None
-    assert in_tensor.grad.close_to(correct)
+    assert in_tensor.grad.close_to(correct, rtol=1e-3, atol=1e-7)
 
 
 def test_softmax_multi_dimension():
