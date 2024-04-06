@@ -14,9 +14,9 @@ def test_softmax():
 
     # manually figure out softmax derivative using
     # d S(x) / d x = S(x) * (1 - S(x))
-    left = np.einsum("i,ij->ij", out_tensor, np.eye(4, 4))
-    right = np.einsum("i,j->ij", out_tensor, out_tensor)
-    correct = (left - right) @ np.ones_like(in_tensor)
+    left = np.einsum("i,ij->ij", out_tensor._data, np.eye(4, 4))
+    right = np.einsum("i,j->ij", out_tensor._data, out_tensor._data)
+    correct = (left - right) @ np.ones_like(in_tensor._data)
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.close_to(correct)

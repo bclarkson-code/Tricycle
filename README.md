@@ -15,11 +15,11 @@ Here are some things you can do with Tricycle:
 - Automatic differentiation of tensors
 - Manipulate tensors with [einstein notation](https://en.wikipedia.org/wiki/Einstein_notation)
 - Successfully train deep learning models
+- Use a GPU
 - Train a Transformer (!)
 
 Here are some things you can't do with Tricycle (yet):
 - Do anything at the speed of pytorch
-- Use a GPU
 
 If you want to do these things, you should check out [pytorch](https://pytorch.org/)
 
@@ -62,7 +62,12 @@ optimiser = StochasticGradientDescent(
     momentum=config.momentum,
 )
 
+model.to_gpu()
+
 for inputs, outputs in tqdm(dataset):
+    inputs = inputs.to_gpu()
+    outputs = outputs.to_gpu()
+
     logits = model(inputs)
     loss = loss_fn(outputs, logits).from_vector().mean().mean()
     loss.backward()

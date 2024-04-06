@@ -1,15 +1,12 @@
-from copy import copy
-
 import numpy as np
 import pytest
-from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes, load_iris, load_linnerud
 from sklearn.preprocessing import RobustScaler
 
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
 from tricycle.loss import cross_entropy, mean_square_error
-from tricycle.tensor import to_tensor, unvectorise, vectorise
+from tricycle.tensor import to_tensor
 from tricycle.utils import r_squared, smooth
 
 slow_test = pytest.mark.skipif(
@@ -129,8 +126,8 @@ def test_can_linear_regression():
     intercepts = []
     slopes = []
     for idx in range(100):
-        last_slope_grad = np.array([0])
-        last_intercept_grad = np.array([0])
+        last_slope_grad = to_tensor([0])
+        last_intercept_grad = to_tensor([0])
         for x_input, y_input in zip(x, y):
             x_input = to_tensor(x_input, requires_grad=False, name="x")
             y_input = to_tensor(y_input, requires_grad=False, name="y")
@@ -144,11 +141,16 @@ def test_can_linear_regression():
             intercept_grad = intercept_derivative(
                 x_input, y_input, slope, intercept
             )
-            assert np.allclose(
-                slope.grad, last_slope_grad + slope_grad
+
+            assert slope.grad is not None
+            assert intercept.grad is not None
+
+            assert slope.grad.close_to(
+                last_slope_grad + slope_grad
             ), f"{slope.grad=}, {last_slope_grad=}, {slope_grad=}"
-            assert np.allclose(
-                intercept.grad, last_intercept_grad + intercept_grad
+
+            assert intercept.grad.close_to(
+                last_intercept_grad + intercept_grad
             ), f"{intercept.grad=}, {last_intercept_grad=}, {intercept_grad=}"
 
             last_slope_grad = slope.grad
@@ -159,13 +161,13 @@ def test_can_linear_regression():
 
         slopes.append(slope)
         intercepts.append(intercept)
-        slope = to_tensor(slope, name="slope")
-        intercept = to_tensor(intercept, name="intercept")
+        slope = slope.zero_grad()
+        intercept = intercept.zero_grad()
 
     assert losses[-1] < 1.5
-    assert np.allclose(slope[0], 2, atol=0.01)
+    assert slopes[-1].close_to(2, atol=0.01)
     # The intercept takes much longer to tune
-    assert intercept[0] > 0.4
+    assert intercepts[-1].close_to(0.455, atol=0.01)
 
 
 @slow_test
@@ -204,18 +206,18 @@ def test_linear_regression_real_data():
 
 
 def test_linear_regression_multi_input_output():
-    X, y = load_linnerud(return_X_y=True)
+    X_data, y_data = load_linnerud(return_X_y=True)
     x_scaler = RobustScaler()
     y_scaler = RobustScaler()
-    X = x_scaler.fit_transform(X)
-    y = y_scaler.fit_transform(y)
+    X_data = x_scaler.fit_transform(X_data)
+    y_data = y_scaler.fit_transform(y_data)
 
     learning_rate = 1e-0
-    n = len(X)
+    n = len(X_data)
     learning_rate /= n
     loops = 100
 
-    slope = init_xavier((X.shape[1], y.shape[1]), name="slope")
+    slope = init_xavier((X_data.shape[1], y_data.shape[1]), name="slope")
     intercept = to_tensor([-0.01, 0.01, 0.02], name="intercept")
 
     losses: list[np.ndarray | int] = [0] * loops
@@ -224,8 +226,8 @@ def test_linear_regression_multi_input_output():
         return Einsum("i,ij->j")(X, slope) + intercept
 
     for idx in range(loops):
-        X = to_tensor(X.copy()).to_vector()
-        y = to_tensor(y.copy()).to_vector()
+        X = to_tensor(X_data).to_vector()
+        y = to_tensor(y_data).to_vector()
 
         # predict an output
         y_pred = model(X, slope, intercept)
@@ -244,10 +246,8 @@ def test_linear_regression_multi_input_output():
         slope.grad = slope.grad.from_vector().e("abc->bc")
         intercept.grad = intercept.grad.from_vector().e("ab->b")
 
-        slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
-        intercept = to_tensor(
-            intercept - intercept.grad * learning_rate, name="intercept"
-        )
+        slope = (slope - slope.grad * learning_rate).zero_grad()
+        intercept = (intercept - intercept.grad * learning_rate).zero_grad()
 
     # the loss should plateau at around 0.5
     assert losses[-1] < 0.6

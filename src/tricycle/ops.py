@@ -1,7 +1,5 @@
 from typing import Sequence
 
-import numpy as np
-
 from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import usqrt
@@ -13,23 +11,21 @@ def repeat(tensor: Tensor, repeats: int):
     This is done my multiplying with a ones tensor the same shape as the
     desired output
     """
+    xp = tensor.xp
     subscript = Subscript("...,...a->...a")
     new_shape = tensor.shape + (repeats,)
     ones = to_tensor(
-        np.ones(new_shape), is_vector=tensor.is_vector, requires_grad=False
+        xp.ones(new_shape), is_vector=tensor.is_vector, requires_grad=False
     )
 
     return Einsum(subscript)(tensor, ones)
-
-
-def arange(*args, **kwargs):
-    return to_tensor(np.arange(*args, **kwargs))
 
 
 def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
     """
     Split a tensor along its first axis into n_splits partitions
     """
+    xp = tensor.xp
     if axis < 0:
         axis += tensor.ndim
     if tensor.is_vector:
@@ -74,9 +70,9 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
             [1, 1, 0, 0]
             """
             result_grad = to_tensor(
-                np.zeros_like(tensor), is_vector=result.is_vector
+                xp.zeros(tensor.shape), is_vector=result.is_vector
             )
-            result_grad[tuple(idx)] = grad
+            result_grad[tuple(idx)] = grad._data
             return result_grad
 
         result.back_fns = (undo_split,)
@@ -87,10 +83,11 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
 
 
 def reshape(tensor: Tensor, shape: Sequence[int]):
+    xp = tensor.xp
     if tensor.is_vector:
         shape = [tensor.shape[0]] + list(shape)
 
-    result = to_tensor(np.reshape(tensor, shape))
+    result = to_tensor(xp.reshape(tensor._data, shape))
     result.is_vector = tensor.is_vector
     result.args = (tensor,)
 

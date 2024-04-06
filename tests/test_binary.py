@@ -73,8 +73,8 @@ def test_can_bmul():
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None
-    assert in_tensor_1.grad.close_to(to_tensor(in_tensor_2))
-    assert in_tensor_2.grad.close_to(to_tensor(in_tensor_1))
+    assert in_tensor_1.grad.close_to(in_tensor_2)
+    assert in_tensor_2.grad.close_to(in_tensor_1)
 
 
 def test_can_bdiv():
@@ -98,11 +98,9 @@ def test_can_bdiv():
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None
-    assert in_tensor_1.grad.close_to(to_tensor(1 / in_tensor_2))
+    assert in_tensor_1.grad.close_to(1 / in_tensor_2)
 
-    assert in_tensor_2.grad.close_to(
-        to_tensor(-in_tensor_1 / (in_tensor_2**2))
-    )
+    assert in_tensor_2.grad.close_to(-in_tensor_1 / (in_tensor_2**2))
 
 
 def test_can_bmax():
@@ -119,10 +117,8 @@ def test_can_bmax():
 
     out_tensor.backward()
 
-    one_is_bigger = (in_tensor_1 > in_tensor_2).astype(np.float32)
-    two_is_bigger = (in_tensor_1 <= in_tensor_2).astype(np.float32)
-    one_is_bigger = to_tensor(one_is_bigger)
-    two_is_bigger = to_tensor(two_is_bigger)
+    one_is_bigger = in_tensor_1 > in_tensor_2
+    two_is_bigger = in_tensor_1 <= in_tensor_2
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None
@@ -144,10 +140,8 @@ def test_can_bmin():
 
     out_tensor.backward()
 
-    one_is_smaller = (in_tensor_1 < in_tensor_2).astype(np.float32)
-    two_is_smaller = (in_tensor_1 >= in_tensor_2).astype(np.float32)
-    one_is_smaller = to_tensor(one_is_smaller)
-    two_is_smaller = to_tensor(two_is_smaller)
+    one_is_smaller = in_tensor_1 < in_tensor_2
+    two_is_smaller = in_tensor_1 >= in_tensor_2
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None

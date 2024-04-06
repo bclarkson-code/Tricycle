@@ -40,12 +40,13 @@ def rmax(tensor: Tensor, subscript: str | Subscript):
     if not reduce_along_axes:
         return tensor
 
-    indicator = (
-        tensor == np.max(tensor, axis=tuple(reduce_along_axes), keepdims=True)
-    ).astype(int)
+    indicator = tensor._data == np.max(
+        tensor._data, axis=tuple(reduce_along_axes), keepdims=True
+    )
     indicator = to_tensor(
         indicator, requires_grad=False, is_vector=tensor.is_vector
     )
+    indicator._data = indicator._data.astype(np.int8)
 
     new_subscript = Subscript.from_split([idx, idx], subscript.output)
 
@@ -70,6 +71,7 @@ def rmin(tensor: Tensor, subscript: Subscript | str):
     assert (
         len(subscript.inputs) == 1
     ), f"Can only reduce a single tensor at a time. Indices suggeststed: {len(subscript.inputs)} tensors: {subscript.inputs}"
+
     [idx] = subscript.inputs
 
     reduce_along_axes = [
@@ -79,12 +81,13 @@ def rmin(tensor: Tensor, subscript: Subscript | str):
     if not reduce_along_axes:
         return tensor
 
-    indicator = (
-        tensor == np.min(tensor, axis=tuple(reduce_along_axes), keepdims=True)
-    ).astype(int)
+    indicator = tensor._data == np.min(
+        tensor._data, axis=tuple(reduce_along_axes), keepdims=True
+    )
     indicator = to_tensor(
         indicator, requires_grad=False, is_vector=tensor.is_vector
     )
+    indicator._data = indicator._data.astype(np.int8)
 
     new_subscript = Subscript.from_split([idx, idx], subscript.output)
 

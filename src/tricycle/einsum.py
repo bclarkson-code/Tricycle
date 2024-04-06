@@ -2,9 +2,7 @@ import itertools
 import re
 from typing import Sequence
 
-import numpy as np
-
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor, select_backend, to_tensor
 
 
 class Subscript:
@@ -53,6 +51,60 @@ class Subscript:
         return self.subscript
 
 
+class EinsumBackOp:
+    def __init__(
+        self, idx: int, tensors: Sequence[Tensor], subscript: Subscript
+    ):
+        self.idx = idx
+        self.tensors = tensors
+        self.subscript = subscript
+
+        self.left_tensors, self.right_tensors = self._build_inputs()
+        self.combined_subscript = self._build_subscript()
+
+    def _build_inputs(self):
+        left_tensors = self.tensors[: self.idx]
+
+        # Special case for the last index
+        if self.idx < len(self.tensors) - 1:
+            right_tensors = self.tensors[self.idx + 1 :]
+        else:
+            right_tensors = []
+
+        return left_tensors, right_tensors
+
+    def _build_subscript(self):
+        left_subscript = self.subscript.inputs[: self.idx]
+
+        # Special case for the last index
+        if self.idx < len(self.tensors) - 1:
+            right_subscript = self.subscript.inputs[self.idx + 1 :]
+        else:
+            right_subscript = []
+
+        combined_indices = [
+            *left_subscript,
+            self.subscript.output,
+            *right_subscript,
+        ]
+        return Subscript.from_split(
+            combined_indices, self.subscript.inputs[self.idx]
+        )
+
+    def __call__(self, tensor: Tensor):
+        """
+        Build the backward function for einsum. This is done by
+        swapping the indices and tensors for an input with the output.
+        E.g "ij,jk->ik" with idx = 0 would become "ik,jk->ij"
+        """
+
+        combined_tensors = [*self.left_tensors, tensor, *self.right_tensors]
+        return Einsum(self.combined_subscript)(*combined_tensors)
+
+    def __repr__(self):
+        return f"EinsumBackOp({self.combined_subscript})"
+
+
 class Einsum:
     subscript: Subscript
 
@@ -74,36 +126,7 @@ class Einsum:
 
         back_functions = []
         for idx in range(len(tensors)):
-
-            def back_op(tensor: Tensor, idx: int = idx):
-                """
-                Build the backward function for einsum. This is done by
-                swapping the indices and tensors for an input with the output.
-                E.g "ij,jk->ik" with idx = 0 would become "ik,jk->ij"
-                """
-                left_tensors = tensors[:idx]
-                left_subscript = subscript.inputs[:idx]
-
-                # Special case for the last index
-                if idx < len(tensors) - 1:
-                    right_tensors = tensors[idx + 1 :]
-                    right_subscript = subscript.inputs[idx + 1 :]
-                else:
-                    right_tensors = []
-                    right_subscript = []
-
-                combined_tensors = [*left_tensors, tensor, *right_tensors]
-                combined_indices = [
-                    *left_subscript,
-                    subscript.output,
-                    *right_subscript,
-                ]
-
-                combined_subscript = Subscript.from_split(
-                    combined_indices, subscript.inputs[idx]
-                )
-                return Einsum(combined_subscript)(*combined_tensors)
-
+            back_op = EinsumBackOp(idx, tensors, subscript)
             back_functions.append(back_op)
 
         return back_functions
@@ -121,17 +144,18 @@ class Einsum:
         is unaltered while the backward operation is now fully defined:
 
         # forward
-        einsum("ab,ab->")(x, np.ones_like(x))
+        einsum("ab,ab->")(x, xp.ones_like(x))
 
         # backward
-        einsum(",ab->ab")(grad, np.ones_like(x))
+        einsum(",ab->ab")(grad, xp.ones_like(x))
         """
+        xp = select_backend(*tensors)
         if len(tensors) != 1:
             return subscript, tensors
 
         [tensor] = tensors
         ones = to_tensor(
-            np.ones_like(tensor),
+            xp.ones(tensor.shape),
             is_vector=tensor.is_vector,
             requires_grad=False,
         )
@@ -177,14 +201,15 @@ class Einsum:
         If tensors contain infinity, temporarily replace them with the max
         value for that datatype
         """
+        xp = select_backend(*tensors)
         processed = []
         for tensor in tensors:
-            if not np.isinf(tensor.data).any():
+            if not xp.isinf(tensor._data).any():
                 processed.append(tensor)
                 continue
 
             new_tensor = to_tensor(
-                np.nan_to_num(tensor.data), is_vector=tensor.is_vector
+                xp.nan_to_num(tensor._data), is_vector=tensor.is_vector
             )
             new_tensor.args = tensor.args
             new_tensor.back_fns = tensor.back_fns
@@ -194,13 +219,15 @@ class Einsum:
         return processed
 
     def __call__(self, *tensors: Tensor, replace_inf=False):
+        xp = select_backend(*tensors)
         if replace_inf:
             tensors = self._replace_infinity(tensors)
         subscript, tensors, vectorise_output = self._handle_vectorised(
             self.subscript, tensors
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
-        result = to_tensor(np.einsum(str(subscript), *tensors))
+        tensor_data = [t._data for t in tensors]
+        result = to_tensor(xp.einsum(str(subscript), *tensor_data))
         if vectorise_output:
             result.is_vector = True
 

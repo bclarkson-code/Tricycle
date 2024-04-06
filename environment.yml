@@ -1,0 +1,13 @@
+name: tricycle
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.10
+  - poetry
+  - cupy
+  # - cudnn
+  # - cutensor
+  # - nccl
