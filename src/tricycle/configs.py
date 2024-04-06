@@ -1,5 +1,5 @@
-from tricycle.layers import Layer
 from tricycle.activation import GeLU
+from tricycle.layers import Layer
 
 
 class GPTConfig:

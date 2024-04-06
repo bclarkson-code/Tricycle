@@ -1,4 +1,4 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from string import ascii_letters
 from typing import Sequence, Union
 
