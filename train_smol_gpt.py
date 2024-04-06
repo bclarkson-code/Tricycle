@@ -23,6 +23,7 @@ from tricycle_datasets.shakespeare import Shakespeare
 
 config = SmolGPTConfig()
 model = GPT(config)
+model.display()
 
 tokens = Shakespeare(vocab_size=config.vocab_size)
 dataset = (
@@ -46,7 +47,7 @@ optimiser = StochasticGradientDescent(
 model.to_gpu()
 
 mlflow.set_tracking_uri("http://localhost:5000")
-mlflow.set_experiment("SmolGPT:large")
+mlflow.set_experiment("SmolGPT:debug")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 best_loss = float("inf")

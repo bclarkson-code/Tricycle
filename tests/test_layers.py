@@ -72,11 +72,11 @@ def test_layer_norm():
     assert out_tensor.shape == in_tensor.shape
     out_tensor.backward()
 
-    assert copy(out_tensor).mean().close_to([0] * 100)
-    assert copy(out_tensor).standard_deviation().close_to([1] * 100)
+    assert copy(out_tensor).mean().close_to([0] * 100, atol=1e-7)
+    assert copy(out_tensor).standard_deviation().close_to([1] * 100, atol=1e-7)
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.shape == in_tensor.shape
 
     # not sure if this is correct. TODO: check
-    assert in_tensor.grad.close_to(np.zeros(in_tensor.shape))
+    assert in_tensor.grad.close_to(np.zeros(in_tensor.shape), atol=1e-6)

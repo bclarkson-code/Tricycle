@@ -1,3 +1,6 @@
+import humanize
+import numpy as np
+
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
 from tricycle.layers import Dense, Dropout, Layer
@@ -84,13 +87,43 @@ class GPT(Layer):
     def to_gpu(self):
         self.token_embedding.to_gpu()
         self.position_embedding.to_gpu()
-        self.head.to_gpu()
         for block in self.blocks:
             block.to_gpu()
+        self.head.to_gpu()
 
     def from_gpu(self):
         self.token_embedding.from_gpu()
         self.position_embedding.from_gpu()
-        self.head.from_gpu()
         for block in self.blocks:
             block.from_gpu()
+        self.head.from_gpu()
+
+    def display(self):
+        stack = [(self, 0)]
+
+        contents = []
+        while stack:
+            node, indent = stack.pop()
+
+            tensors = list(node.tensors.values())
+            shapes = [t.shape for t in tensors]
+            size = sum(np.product(shape) for shape in shapes)
+            contents.append((node.__class__.__name__, size, indent))
+
+            stack.extend((layer, indent + 1) for layer in node.layers[::-1])
+
+        total = 0
+        for layer, size, n_indent in contents:
+            total += size
+            size = humanize.scientific(size) if size else ""
+            indent = "  " * n_indent
+
+            print(f"{indent}{layer}({size})")
+
+        PARAM_SIZE = self.head.weights[0][0].dtype.itemsize
+        total *= PARAM_SIZE
+
+        print("\nTotal size:")
+        print(f"  - {humanize.naturalsize(total)}")
+        print("Total parameters:")
+        print(f"  - {humanize.intword(total/PARAM_SIZE)}")

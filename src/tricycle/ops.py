@@ -72,6 +72,7 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
             result_grad = to_tensor(
                 xp.zeros(tensor.shape), is_vector=result.is_vector
             )
+            tensor.xp
             result_grad[tuple(idx)] = grad._data
             return result_grad
 
