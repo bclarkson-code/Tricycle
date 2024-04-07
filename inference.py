@@ -9,6 +9,7 @@ import numpy as np
 from tricycle.configs import SmolGPTConfig
 from tricycle.functions import softmax
 from tricycle.layers import Dropout
+from tricycle.models import GPT
 from tricycle.tensor import to_tensor
 from tricycle_datasets.shakespeare import Shakespeare
 
@@ -55,9 +56,7 @@ def pad(
 
 
 def load_model():
-    with open("models/shakespeare_model_mmmmmmmmmmm.pkl", "rb") as f:
-        model = pickle.load(f)
-    return model
+    return GPT(config)
 
 
 def deactivate_dropout(model):
@@ -74,19 +73,19 @@ def deactivate_dropout(model):
         stack.extend(iter(node.layers))
 
 
-def generate(text, model, sample=True):
+def generate(text, model, tokeniser, sample=True):
     tokens = tokeniser.encode(text)
     while True:
         n_tokens = len(tokens)
         tokens = pad(tokens)
 
-        encoded = one_hot_encode(tokens)
-        encoded = np.expand_dims(one_hot_encode(tokens), 0)
-        encoded = to_tensor(encoded).to_vector()
+        encoded = to_tensor(
+            [tokens], dtype=int, requires_grad=False
+        ).to_vector()
 
         pred = model(encoded)
         pred = softmax(pred)
-        probabilities = cp.asnumpy(pred._data[0][n_tokens])
+        probabilities = pred.xp.asnumpy(pred._data[0][n_tokens])
 
         # sample according to probabilities
         if sample:
@@ -103,6 +102,7 @@ if __name__ == "__main__":
     np.random.seed(0)
     tokeniser = load_tokeniser()
     model = load_model()
+    model.to_gpu()
 
     deactivate_dropout(model)
 

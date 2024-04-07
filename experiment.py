@@ -21,22 +21,22 @@ from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import Shakespeare
 
-EXPERIMENT_NAME = "SmolGPT:base:find_learning_rate_gpu"
+EXPERIMENT_NAME = "SmolGPT:base:find_learning_rate"
 
 search_space = {
     "model": {
-        "embedding_dim": 128,
-        "context_window": 64,
+        "embedding_dim": 384,
+        "context_window": 256,
         "vocab_size": 1024,
-        "n_heads": 2,
-        "n_layers": 1,
+        "n_heads": 6,
+        "n_layers": 6,
         "expansion_ratio": 4,
         "activation_fn": "gelu",
-        "input_dropout_prob": 0,
-        "attention_dropout_prob": 0,
-        "residual_dropout_prob": 0,
-        "linear_dropout_prob": 0,
-        "batch_size": 256,
+        "input_dropout_prob": 0.2,
+        "attention_dropout_prob": 0.2,
+        "residual_dropout_prob": 0.2,
+        "linear_dropout_prob": 0.2,
+        "batch_size": 12,
     },
     "train": {
         "learning_rate": tune.loguniform(1e-4, 1e-1),
@@ -48,8 +48,8 @@ search_space = {
         "experiment_name": EXPERIMENT_NAME,
     },
     "experiment": {
-        "train_steps": 2500,
-        "valid_steps": 10,
+        "train_steps": 500,
+        "valid_steps": 5,
         "valid_every": 25,
         "num_trials": 10,
     },
@@ -65,7 +65,16 @@ def train_model(config):
 
     model = GPT(config.model)
 
-    tokens = Shakespeare(vocab_size=config.model.vocab_size)
+    working_dir = Path(__file__).parent
+    raw_data_path = working_dir / "datasets/shakespeare/raw_data.txt"
+    tokeniser_path = working_dir / "datasets/shakespeare/tokeniser.pkl"
+    token_path = working_dir / "datasets/shakespeare/tokens_1024.pkl"
+    tokens = Shakespeare(
+        vocab_size=config.model.vocab_size,
+        raw_data_path=raw_data_path,
+        tokeniser_path=tokeniser_path,
+        token_path=token_path,
+    )
 
     # train-test split
     n_valid_tokens = (
@@ -141,6 +150,7 @@ def train_model(config):
                 valid_loss /= len(test_dataset)
 
                 mlflow.log_metric("valid_loss", valid_loss, step=step)
+                train.report({"valid_loss": valid_loss})
 
     # final loss
     valid_loss = 0
