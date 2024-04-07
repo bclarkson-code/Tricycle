@@ -24,6 +24,7 @@ class Shakespeare(abc.Sequence):
     ):
         if token_path is None:
             token_path = Path(f"datasets/shakespeare/tokens_{vocab_size}.pkl")
+            token_path.parent.mkdir(exist_ok=True, parents=True)
 
         self.vocab_size = vocab_size
         self.raw_data_path = raw_data_path

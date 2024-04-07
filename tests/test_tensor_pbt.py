@@ -4,7 +4,7 @@ from warnings import warn
 import hypothesis.strategies as st
 import numpy as np
 import pytest
-from hypothesis import assume, given
+from hypothesis import assume, example, given
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
@@ -284,11 +284,24 @@ def test_binary_ops(tensors, op):
 
 
 @given(string())
-def test_tokeniser(text):
+def test_tokeniser_encode_decode(text):
     tokeniser = BPETokeniser(vocab_size=1024)
     tokens = tokeniser.encode(text)
     decoded = tokeniser.decode(tokens)
 
+    assert text == decoded
+
+
+@given(string())
+def test_tokeniser_train_encode_decode(text):
+    tokeniser = BPETokeniser(vocab_size=1024)
+
+    tokeniser.train(text)
+
+    encoded = tokeniser.encode(text)
+    assert encoded == tokeniser.tokens
+
+    decoded = tokeniser.decode(encoded)
     assert text == decoded
 
 

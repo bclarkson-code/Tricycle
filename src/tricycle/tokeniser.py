@@ -34,10 +34,12 @@ class BPETokeniser:
 
     def most_common_pair(
         self, counts: dict[tuple[int, int], int]
-    ) -> tuple[int, int]:
+    ) -> tuple[int, int] | None:
         """
         Return the most common pair
         """
+        if not counts:
+            return None
         most_common = max(counts, key=counts.get)
         return None if counts.get(most_common) == 1 else most_common
 
@@ -82,6 +84,8 @@ class BPETokeniser:
             self.pairs.append(most_common_pair)
             left, right = most_common_pair
             self.vocab.append(self.vocab[left] + self.vocab[right])
+
+        self.tokens = int_array
 
         if len(self.pairs) != self.vocab_size:
             warn(f"Expected {self.vocab_size} pairs, got {len(self.pairs)}")
