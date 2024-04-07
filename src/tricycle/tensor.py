@@ -324,7 +324,7 @@ class Tensor:
         return f"Tensor({self._data.__str__()}{name})"
 
     def __getitem__(self, idx):
-        return self._data[idx]
+        return to_tensor(self._data[idx], requires_grad=self.requires_grad)
 
     def __setitem__(self, idx, value):
         self._data[idx] = value
@@ -513,7 +513,10 @@ def vectorise(tensor: Tensor) -> Tensor:
         raise ValueError("Tensor is already vectorised")
 
     result = to_tensor(
-        tensor._data, is_vector=True, requires_grad=tensor.requires_grad
+        tensor._data,
+        is_vector=True,
+        requires_grad=tensor.requires_grad,
+        dtype=tensor._data.dtype,
     )
     result.args = (tensor,)
     result.back_fns = (unvectorise,)
@@ -529,7 +532,10 @@ def unvectorise(tensor: Tensor) -> Tensor:
         raise ValueError("Tensor is not vectorised")
 
     result = to_tensor(
-        tensor._data, is_vector=False, requires_grad=tensor.requires_grad
+        tensor._data,
+        is_vector=False,
+        requires_grad=tensor.requires_grad,
+        dtype=tensor._data.dtype,
     )
     result.args = (tensor,)
     result.back_fns = (vectorise,)
