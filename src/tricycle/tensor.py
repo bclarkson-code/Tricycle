@@ -354,6 +354,10 @@ class Tensor:
     def ndim(self) -> int:
         return self._data.ndim
 
+    @property
+    def dtype(self) -> np.dtype:
+        return self._data.dtype
+
     def reshape(self, shape: Sequence[int]) -> "Tensor":
         from tricycle.ops import reshape
 
@@ -474,7 +478,7 @@ def to_tensor(
     requires_grad: bool = True,
     is_vector: bool = False,
     _id: int | None = None,
-    dtype: np.dtype = np.float32,
+    dtype: np.dtype = np.float16,
     **kwargs,
 ) -> Tensor:
     """

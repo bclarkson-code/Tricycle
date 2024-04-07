@@ -2,6 +2,8 @@ import pickle
 from pathlib import Path
 from warnings import warn
 
+from tqdm.auto import tqdm
+
 
 class BPETokeniser:
     """
@@ -66,11 +68,14 @@ class BPETokeniser:
 
         return out
 
-    def train_ints(self, int_array: list[int]):
+    def train_ints(self, int_array: list[int], loading_bar=False):
         """
         Train the tokeniser on an array of ints
         """
-        for token_id in range(self.MIN_TOKENS, self.vocab_size):
+        token_ids = range(self.MIN_TOKENS, self.vocab_size)
+        if loading_bar:
+            token_ids = tqdm(token_ids, desc="Training")
+        for token_id in token_ids:
             most_common_pair = self.most_common_pair(
                 self.count_pairs(int_array)
             )
@@ -99,11 +104,16 @@ class BPETokeniser:
         as_ints = list(as_bytes)
         return self.train_ints(as_ints)
 
-    def tokenise_ints(self, int_array: list[int]):
+    def tokenise_ints(
+        self, int_array: list[int], loading_bar=False
+    ) -> list[int]:
         """
         Tokenise an array of ints
         """
-        for pair, token_id in self.merges.items():
+        ints = self.merges.items()
+        if loading_bar:
+            ints = tqdm(ints, desc="tokenising", total=len(ints))
+        for pair, token_id in ints:
             if pair[1] is None:
                 continue
             int_array = self.replace_pair(int_array, pair, token_id)

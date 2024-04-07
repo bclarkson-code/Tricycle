@@ -3,7 +3,7 @@ import numpy as np
 
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
-from tricycle.layers import Dense, Dropout, Layer
+from tricycle.layers import Dense, Dropout, Embedding, Layer
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -12,10 +12,10 @@ class GPT(Layer):
     def __init__(self, config: GPTConfig):
         self.embedding_dim = config.embedding_dim
         self.context_window = config.context_window
-        self.token_embedding = Dense(
+        self.token_embedding = Embedding(
             to_size=self.embedding_dim, from_size=config.vocab_size
         )
-        self.position_embedding = Dense(
+        self.position_embedding = Embedding(
             to_size=self.embedding_dim, from_size=self.context_window
         )
         self.input_dropout = Dropout(config.input_dropout_prob)
@@ -49,17 +49,22 @@ class GPT(Layer):
         encoded tensor
         """
         xp = tensor.xp
-        _, n_tokens, _ = tensor.shape
+        if tensor.ndim == 1:
+            n_tokens = 1
+            context_window = tensor.shape[-1]
+            tensor._data = np.expand_dims(tensor._data, 0)
+        else:
+            n_tokens, context_window = tensor.shape
         assert n_tokens <= self.context_window, (
             "Can't have more tokens than context window. ",
             f"Found {n_tokens=} and {self.context_window=}",
         )
 
-        position = to_tensor(xp.arange(n_tokens))
-
-        pos_embedding = (
-            self.position_embedding(position).repeat(n_tokens).e("ET->TE")
+        position = to_tensor(
+            xp.arange(context_window), requires_grad=False, dtype=int
         )
+
+        pos_embedding = self.position_embedding(position)
         token_embedding = self.token_embedding(tensor)
 
         embedding = token_embedding + pos_embedding

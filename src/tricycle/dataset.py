@@ -139,9 +139,9 @@ class CausalLMDataset:
             raise IndexError(f"Index {idx} out of range")
 
         tokens = self.tokens[idx : idx + self.context_window + 1]
-        tokens = self.one_hot_encode(tokens)
+        encoded_tokens = self.one_hot_encode(tokens)
         inputs = tokens[:-1]
-        outputs = tokens[1:]
+        outputs = encoded_tokens[1:]
         return inputs, outputs
 
     def _get_batch(self, idx: int):
@@ -154,13 +154,13 @@ class CausalLMDataset:
         start = idx * self.batch_size
         end = start + self.context_window + self.batch_size + 1
         tokens = self.tokens[start:end]
-        tokens = self.one_hot_encode(tokens)
+        encoded_tokens = self.one_hot_encode(tokens)
 
         inputs = []
         outputs = []
         for i in range(self.batch_size):
             inputs.append(tokens[i : i + self.context_window])
-            outputs.append(tokens[i + 1 : i + self.context_window + 1])
+            outputs.append(encoded_tokens[i + 1 : i + self.context_window + 1])
 
         inputs = np.array(inputs)
         outputs = np.array(outputs)
@@ -171,7 +171,9 @@ class CausalLMDataset:
             self._get_batch(idx) if self.is_batch else self._get_single(idx)
         )
         if self.as_tensor:
-            inputs = to_tensor(inputs, requires_grad=False, name="inputs")
+            inputs = to_tensor(
+                inputs, requires_grad=False, name="inputs", dtype=int
+            )
             output = to_tensor(output, requires_grad=False, name="output")
 
         if self.is_vector and not self.as_tensor:
