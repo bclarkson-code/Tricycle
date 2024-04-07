@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from string import ascii_letters
-from typing import Sequence, Union
+from typing import Sequence
 
 import numpy as np
 
@@ -8,7 +8,7 @@ from tricycle.binary import bmul
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor, nothing, to_tensor
 
 
 class Layer(ABC):
@@ -121,6 +121,58 @@ class LayerNorm(Layer):
 
     def forward(self, tensor: Tensor):
         return tensor.normalise()
+
+
+class Embedding(Layer):
+    """
+    Convert an index to an embedding with a lookup (rather than a one-hot
+    encoding and a matrix multiplication)
+    """
+
+    def __init__(
+        self, vocab_size: int, out_shape: int, initialiser=init_xavier
+    ):
+        self.weights = initialiser((vocab_size, out_shape))
+        self.vocab_size = vocab_size
+
+    def forward(self, tensor: Tensor):
+        assert (
+            tensor.requires_grad is False
+        ), "Cannot embed a differentiable tensor"
+
+        if tensor.is_vector:
+            result = np.stack(
+                [self.weights._data[idx] for idx in tensor._data]
+            )
+            result = to_tensor(
+                result,
+                is_vector=True,
+            )
+        else:
+            result = to_tensor(self.weights[tensor._data], is_vector=False)
+
+        result.args = (tensor, self.weights)
+
+        def _embed_back_fn(grad: Tensor):
+            xp = grad.xp
+            coef = xp.zeros((tensor.shape[-1], self.vocab_size))
+            indices = xp.arange(tensor.shape[-1])
+
+            coef[indices, tensor._data] = 1
+            coef = to_tensor(coef, requires_grad=False)
+            return Einsum("aB,aC->BC")(coef, grad)
+
+        result.back_fns = (nothing, _embed_back_fn)
+        return result
+
+    def _raise_exception(self, *args):
+        """
+        I haven't figured out how 2nd order derivatives work yet so we'll
+        raise an exception for now
+        """
+        raise NotImplementedError(
+            "2nd order derivatives for embedding are not yet implemented"
+        )
 
 
 class Sequential(Layer):
