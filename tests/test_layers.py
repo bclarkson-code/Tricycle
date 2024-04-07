@@ -2,6 +2,7 @@ from copy import copy
 
 import numpy as np
 
+from tricycle.einsum import Einsum
 from tricycle.layers import Dense, Dropout, Embedding, LayerNorm, Sequential
 from tricycle.tensor import to_tensor
 
@@ -162,3 +163,29 @@ def test_embedding_vectorised():
             ],
         ]
     )
+
+
+def test_embedding_matches_orignal_method():
+    vocab_size = 1024
+    embed_dim = 384
+    weights = to_tensor(np.random.random((vocab_size, embed_dim)))
+
+    def original_embed(tokens):
+        one_hot = np.zeros((tokens.shape[0], vocab_size))
+        for i, token in enumerate(tokens._data):
+            one_hot[i, token] = 1
+        one_hot = to_tensor(one_hot)
+        return Einsum("ca,aB->cB")(one_hot, weights)
+
+    embedding_layer = Embedding(vocab_size=vocab_size, out_shape=embed_dim)
+    embedding_layer.weights = copy(weights)
+
+    tokens = np.random.randint(low=0, high=1024, size=100)
+    tokens = to_tensor(tokens, dtype=int, requires_grad=False)
+
+    # 3.84 ms ± 17.6 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    original_out = original_embed(tokens)
+    # 28.1 µs ± 64.5 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    new_out = embedding_layer(tokens)
+
+    assert original_out.close_to(new_out)
