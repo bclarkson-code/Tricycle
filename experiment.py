@@ -10,18 +10,21 @@ import pickle
 from pathlib import Path
 
 import mlflow
+import numpy as np
 from omegaconf import OmegaConf
 from ray import train, tune
 from tqdm import tqdm
 
-from tricycle.activation import GeLU
+from inference import get_sample
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
 from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
+from tricycle.scheduler import lr_schedule
+from tricycle.tokeniser import BPETokeniser
 from tricycle_datasets.shakespeare import Shakespeare
 
-EXPERIMENT_NAME = "SmolGPT:base:find_learning_rate"
+EXPERIMENT_NAME = "SmolGPT:base:find_lr_schedule"
 
 search_space = {
     "model": {
@@ -39,24 +42,28 @@ search_space = {
         "batch_size": 12,
     },
     "train": {
-        "learning_rate": tune.loguniform(1e-4, 1e-1),
+        "max_learning_rate": 1e-4,
+        "min_learning_rate": tune.grid_search([1e-4, 1e-5]),
+        "warmup_steps": 100,
         "weight_decay": 0,
         "momentum": 0,
+        "shuffle": True,
     },
     "mlflow": {
         "tracking_uri": "http://localhost:5000",
         "experiment_name": EXPERIMENT_NAME,
     },
     "experiment": {
-        "train_steps": 500,
+        "train_steps": 25_000,
         "valid_steps": 5,
         "valid_every": 25,
-        "num_trials": 10,
+        "num_trials": 1,
     },
 }
 
 
 def train_model(config):
+    np.random.seed(0)
     config = OmegaConf.create(config)
 
     mlflow.set_tracking_uri(config.mlflow.tracking_uri)
@@ -65,11 +72,11 @@ def train_model(config):
 
     model = GPT(config.model)
 
-    working_dir = Path(__file__).parent
-    raw_data_path = working_dir / "datasets/shakespeare/raw_data.txt"
-    tokeniser_path = working_dir / "datasets/shakespeare/tokeniser.pkl"
-    token_path = working_dir / "datasets/shakespeare/tokens_1024.pkl"
-    tokens = Shakespeare(
+    current_dir = Path(__file__).parent.absolute()
+    raw_data_path = current_dir / "datasets/shakespeare/raw_data.txt"
+    tokeniser_path = current_dir / "datasets/shakespeare/tokeniser.pkl"
+    token_path = current_dir / "datasets/shakespeare/tokens_1024.pkl"
+    shakespeare = Shakespeare(
         vocab_size=config.model.vocab_size,
         raw_data_path=raw_data_path,
         tokeniser_path=tokeniser_path,
@@ -87,10 +94,12 @@ def train_model(config):
         + config.experiment.train_steps * config.model.batch_size
         + 1
     )
-    assert n_train_tokens + n_valid_tokens < len(tokens), "Dataset too small"
+    assert n_train_tokens + n_valid_tokens < len(
+        shakespeare
+    ), "Dataset too small"
     train_dataset = (
         CausalLMDataset(
-            tokens=tokens[:n_train_tokens],
+            tokens=shakespeare[:n_train_tokens],
             vocab_size=config.model.vocab_size,
             batch_size=config.model.batch_size,
             context_window=config.model.context_window,
@@ -99,9 +108,11 @@ def train_model(config):
         .to_tensor()
         .to_vector()
     )
+    if config.shuffle:
+        train_dataset = train_dataset.shuffle()
     test_dataset = (
         CausalLMDataset(
-            tokens=tokens[-n_valid_tokens:],
+            tokens=shakespeare[-n_valid_tokens:],
             vocab_size=config.model.vocab_size,
             batch_size=config.model.batch_size,
             context_window=config.model.context_window,
@@ -112,7 +123,13 @@ def train_model(config):
     )
     loss_fn = cross_entropy
     optimiser = StochasticGradientDescent(
-        learning_rate=config.train.learning_rate,
+        learning_rate=lr_schedule(
+            0,
+            max_learning_rate=config.train.max_learning_rate,
+            min_learning_rate=config.train.min_learning_rate,
+            warmup_steps=config.train.warmup_steps,
+            total_steps=config.experiment.train_steps,
+        ),
         weight_decay=config.train.weight_decay,
         momentum=config.train.momentum,
     )
@@ -139,6 +156,18 @@ def train_model(config):
             # clean up the computational graph
             loss.cleanup()
 
+            # update the lr
+            optimiser.learning_rate = lr_schedule(
+                step,
+                max_learning_rate=config.train.max_learning_rate,
+                min_learning_rate=config.train.min_learning_rate,
+                warmup_steps=config.train.warmup_steps,
+                total_steps=config.experiment.train_steps,
+            )
+            mlflow.log_metric(
+                "learning_rate", optimiser.learning_rate, step=step
+            )
+
             # validation
             if step % config.experiment.valid_every == 0:
                 valid_loss = 0
@@ -149,26 +178,36 @@ def train_model(config):
                     loss.cleanup()
                 valid_loss /= len(test_dataset)
 
+                sample_text = "HAMLET: To be or not to be"
+                assert isinstance(shakespeare.tokeniser, BPETokeniser)
+                predicted = get_sample(
+                    sample_text, model=model, tokeniser=shakespeare.tokeniser
+                )
+                model.zero_grad()
+
                 mlflow.log_metric("valid_loss", valid_loss, step=step)
+                mlflow.log_text(predicted, f"generated/{step}.txt")
                 train.report({"valid_loss": valid_loss})
 
-    # final loss
-    valid_loss = 0
-    for inputs, outputs in test_dataset:
-        logits = model(inputs)
-        loss = loss_fn(outputs, logits).from_vector().mean().mean()
-        valid_loss += float(loss.numpy())
-        loss.cleanup()
-    valid_loss /= len(test_dataset)
-    mlflow.log_metric("valid_loss", valid_loss, step=len(train_dataset))
+        # final loss
+        valid_loss = 0
+        for inputs, outputs in test_dataset:
+            logits = model(inputs)
+            loss = loss_fn(outputs, logits).from_vector().mean().mean()
+            valid_loss += float(loss.numpy())
+            loss.cleanup()
+        valid_loss /= len(test_dataset)
+        mlflow.log_metric("valid_loss", valid_loss, step=len(train_dataset))
 
-    # save the model
-    model_dir = Path(
-        f"/home/ben/Documents/Tricycle/results/{EXPERIMENT_NAME}/models"
-    )
-    model_dir.mkdir(parents=True, exist_ok=True)
-    with open(model_dir / f"lr_{config.train.learning_rate}.pkl", "wb") as f:
-        pickle.dump(model, f)
+        # save the model
+        model_dir = Path(
+            f"/home/ben/Documents/Tricycle/results/{EXPERIMENT_NAME}/models"
+        )
+        model_dir.mkdir(parents=True, exist_ok=True)
+        with open(
+            model_dir / f"lr_{config.train.learning_rate}.pkl", "wb"
+        ) as f:
+            pickle.dump(model, f)
 
     return {"valid_loss": valid_loss}
 
