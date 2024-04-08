@@ -52,7 +52,7 @@ class GPT(Layer):
         if tensor.ndim == 1:
             n_tokens = 1
             context_window = tensor.shape[-1]
-            tensor._data = np.expand_dims(tensor._data, 0)
+            tensor._data = xp.expand_dims(tensor._data, 0)
         else:
             n_tokens, context_window = tensor.shape
         assert n_tokens <= self.context_window, (

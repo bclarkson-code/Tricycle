@@ -478,7 +478,7 @@ def to_tensor(
     requires_grad: bool = True,
     is_vector: bool = False,
     _id: int | None = None,
-    dtype: np.dtype = np.float16,
+    dtype: np.dtype = np.float32,
     **kwargs,
 ) -> Tensor:
     """

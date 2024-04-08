@@ -105,7 +105,7 @@ class Dropout(Layer):
         self.probability = probability
 
     def forward(self, tensor: Tensor):
-        random_mask = np.random.binomial(
+        random_mask = tensor.xp.random.binomial(
             n=1, p=1 - self.probability, size=tensor.shape
         )
         random_mask = to_tensor(

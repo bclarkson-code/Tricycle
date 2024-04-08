@@ -45,7 +45,7 @@ class StochasticGradientDescent(Optimiser):
 
         if self.momentum is not None and self.momentum > 0:
             if tensor._id not in self.momentum_store:
-                last_momentum = to_tensor(np.zeros(grad.shape))
+                last_momentum = to_tensor(tensor.xp.zeros(grad.shape))
             else:
                 last_momentum = self.momentum_store[tensor._id]
 

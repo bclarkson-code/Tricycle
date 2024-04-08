@@ -50,7 +50,7 @@ class SmolGPTConfig(GPTConfig):
     weight_decay = 0
     momentum = 0
 
-    batch_size = 12
+    batch_size = 10
 
     debug = True
     mlflow_enabled = True
