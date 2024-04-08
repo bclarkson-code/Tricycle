@@ -98,6 +98,16 @@ def generate(text, model, tokeniser, sample=True):
         yield next_token
 
 
+def get_sample(sample_text, model, tokeniser, n_samples=50):
+    sampled = []
+    for i, next_token in enumerate(generate(sample_text, model, tokeniser)):
+        if i > n_samples:
+            break
+        sampled.append(next_token)
+    model.zero_grad()
+    return tokeniser.decode(sampled)
+
+
 if __name__ == "__main__":
     np.random.seed(0)
     tokeniser = load_tokeniser()
