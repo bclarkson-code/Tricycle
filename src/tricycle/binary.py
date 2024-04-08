@@ -21,7 +21,9 @@ def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
         shape_2 = tensor_2.shape
 
     if shape_1 != shape_2:
-        raise ValueError(f"Shapes {shape_1} and {shape_2} do not match")
+        raise ValueError(
+            f"Shapes {shape_1} and {shape_2} do not match: {tensor_1._data.shape}, {tensor_2._data.shape}"
+        )
     return shape_1 == shape_2
 
 

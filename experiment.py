@@ -16,6 +16,7 @@ from ray import train, tune
 from tqdm import tqdm
 
 from inference import get_sample
+from tricycle.binary import _shapes_match
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
 from tricycle.models import GPT
@@ -108,7 +109,7 @@ def train_model(config):
         .to_tensor()
         .to_vector()
     )
-    if config.shuffle:
+    if config.train.shuffle:
         train_dataset = train_dataset.shuffle()
     test_dataset = (
         CausalLMDataset(
@@ -173,7 +174,18 @@ def train_model(config):
                 valid_loss = 0
                 for inputs, outputs in test_dataset:
                     logits = model(inputs)
-                    loss = loss_fn(outputs, logits).from_vector().mean().mean()
+                    try:
+                        loss = (
+                            loss_fn(outputs, logits)
+                            .from_vector()
+                            .mean()
+                            .mean()
+                        )
+                    except Exception as e:
+                        raise Exception(
+                            inputs.shape, outputs.shape, logits.shape
+                        )
+
                     valid_loss += float(loss.numpy())
                     loss.cleanup()
                 valid_loss /= len(test_dataset)

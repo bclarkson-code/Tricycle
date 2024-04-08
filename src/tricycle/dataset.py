@@ -204,7 +204,9 @@ class CausalLMDataset:
 
     def batch(self):
         self.is_batch = True
-        self.batch_indices = list(range(len(self)))
+        self.batch_indices = list(
+            range(len(self.tokens) - self.context_window - 1)
+        )
         return self
 
     def unbatch(self):

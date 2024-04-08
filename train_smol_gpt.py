@@ -8,12 +8,10 @@ The hyperparams for this model are very much a work in progress
 
 import os
 import pickle
-from copy import copy
 from warnings import warn
 
-import cupy
 import mlflow
-import pandas as pd
+import numpy as np
 from tqdm import tqdm
 
 from inference import generate
@@ -25,7 +23,9 @@ from tricycle.optimisers import StochasticGradientDescent
 from tricycle.scheduler import lr_schedule
 from tricycle_datasets.shakespeare import Shakespeare
 
+np.random.seed(0)
 config = SmolGPTConfig()
+config.batch_size = 12
 model = GPT(config)
 model.display()
 
@@ -33,15 +33,15 @@ model.display()
 shakespeare = Shakespeare(vocab_size=config.vocab_size)
 dataset = (
     CausalLMDataset(
-        tokens=shakespeare.tokens,
+        tokens=shakespeare[-317:],
         vocab_size=config.vocab_size,
         batch_size=config.batch_size,
         context_window=config.context_window,
     )
     .batch()
-    .shuffle()
     .to_tensor()
     .to_vector()
+    .shuffle()
 )
 loss_fn = cross_entropy
 optimiser = StochasticGradientDescent(
