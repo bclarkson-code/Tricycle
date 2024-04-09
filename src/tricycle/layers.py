@@ -185,6 +185,56 @@ class Embedding(Layer):
         self.weights.from_gpu()
 
 
+class EmbeddingV2(Layer):
+    """
+    Convert an index to an embedding with a lookup (rather than a one-hot
+    encoding and a matrix multiplication)
+    """
+
+    def __init__(self, from_size: int, to_size: int, initialiser=init_xavier):
+        self.weights = initialiser((from_size, to_size))
+        self.vocab_size = from_size
+
+    def forward(self, tensor: Tensor):
+        assert (
+            tensor.requires_grad is False
+        ), "Cannot embed a differentiable tensor"
+
+        if tensor.is_vector:
+            result = tensor.xp.stack(
+                [self.weights._data[idx] for idx in tensor._data]
+            )
+            result = to_tensor(
+                result,
+                is_vector=True,
+            )
+        else:
+            result = to_tensor(self.weights[tensor._data], is_vector=False)
+
+        result.args = (tensor, self.weights)
+
+        def _embed_back_fn(grad: Tensor):
+            xp = grad.xp
+            if grad.is_vector:
+                out = xp.zeros((grad.shape[0], *self.weights.shape))
+            else:
+                out = xp.zeros(self.weights.shape)
+
+            if grad.is_vector:
+                for batch_idx, tokens in enumerate(tensor):
+                    for token_idx, token in enumerate(tokens):
+                        out[batch_idx][int(token._data)] += grad[batch_idx][
+                            token_idx
+                        ]._data
+            else:
+                for token_idx, token in enumerate(tensor):
+                    out[int(token._data)] += grad[token_idx]._data
+            return to_tensor(out)
+
+        result.back_fns = (nothing, _embed_back_fn)
+        return result
+
+
 class Sequential(Layer):
     def __init__(self, *layers: Layer):
         self.layers = layers
