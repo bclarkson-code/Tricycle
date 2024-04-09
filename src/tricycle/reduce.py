@@ -1,5 +1,3 @@
-import numpy as np
-
 from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import Tensor, to_tensor
 
@@ -40,13 +38,13 @@ def rmax(tensor: Tensor, subscript: str | Subscript):
     if not reduce_along_axes:
         return tensor
 
-    indicator = tensor._data == np.max(
+    indicator = tensor._data == tensor.xp.max(
         tensor._data, axis=tuple(reduce_along_axes), keepdims=True
     )
     indicator = to_tensor(
         indicator, requires_grad=False, is_vector=tensor.is_vector
     )
-    indicator._data = indicator._data.astype(np.int8)
+    indicator._data = indicator._data.astype(tensor.xp.int8)
 
     new_subscript = Subscript.from_split([idx, idx], subscript.output)
 
@@ -81,13 +79,13 @@ def rmin(tensor: Tensor, subscript: Subscript | str):
     if not reduce_along_axes:
         return tensor
 
-    indicator = tensor._data == np.min(
+    indicator = tensor._data == tensor.xp.min(
         tensor._data, axis=tuple(reduce_along_axes), keepdims=True
     )
     indicator = to_tensor(
         indicator, requires_grad=False, is_vector=tensor.is_vector
     )
-    indicator._data = indicator._data.astype(np.int8)
+    indicator._data = indicator._data.astype(tensor.xp.int8)
 
     new_subscript = Subscript.from_split([idx, idx], subscript.output)
 

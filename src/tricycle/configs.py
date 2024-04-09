@@ -43,15 +43,18 @@ class SmolGPTConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    learning_rate = 1e-4
+    max_learning_rate = 1e-3
+    min_learning_rate = 1e-4
+    warmup_steps = 100
+    steps = 25_000
     weight_decay = 0
     momentum = 0
 
-    batch_size = 8
+    batch_size = 10
 
     debug = True
     mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"
     mlflow_experiment_name = "Tricycle SmolGPT"
 
-    pad_token_id = -1
+    pad_token_id = 0

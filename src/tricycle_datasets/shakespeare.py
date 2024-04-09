@@ -21,6 +21,7 @@ class Shakespeare(abc.Sequence):
         vocab_size: int,
         token_path: Path | None = None,
         raw_data_path: Path = Path("datasets/shakespeare/raw_data.txt"),
+        tokeniser_path: Path = Path("datasets/shakespeare/tokeniser.pkl"),
     ):
         if token_path is None:
             token_path = Path(f"datasets/shakespeare/tokens_{vocab_size}.pkl")
@@ -28,32 +29,46 @@ class Shakespeare(abc.Sequence):
         self.vocab_size = vocab_size
         self.raw_data_path = raw_data_path
         self.token_path = token_path
-        self.tokeniser = None
+        self.tokeniser_path = tokeniser_path
+
+        if self.tokeniser_path.exists():
+            with open(self.tokeniser_path, "rb") as f:
+                self.tokeniser = pickle.load(f)
+        else:
+            self.tokeniser = None
 
         if not self.token_path.exists():
-            self.tokens = self.generate()
+            self.tokeniser = self.generate()
+            self.tokeniser_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.tokeniser_path, "wb") as f:
+                pickle.dump(self.tokeniser, f)
+
+            self.tokens = self.tokeniser.tokens
+            self.token_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.token_path, "wb") as f:
                 pickle.dump(self.tokens, f)
         else:
-            self.tokens = list(self.token_path.read_bytes())
+            with open(self.token_path, "rb") as f:
+                self.tokens = pickle.load(f)
 
     def download(self):
         """
         Download the shakespeare dataset
         """
         raw_data = httpx.get(self.url).text
-        with open(self.raw_data_path, "wb") as f:
-            f.write(raw_data.encode("utf-8"))
+        self.raw_data_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.raw_data_path, "w") as f:
+            f.write(raw_data)
 
-    def generate(self):
+    def generate(self) -> BPETokeniser:
         """
         Download and tokenise the shakespeare dataset
         """
         self.download()
         raw_data = list(self.raw_data_path.read_bytes())
-        self.tokeniser = BPETokeniser(self.vocab_size)
-        self.tokeniser.train_ints(raw_data)
-        return self.tokeniser.tokenise_ints(raw_data)
+        if self.tokeniser is None:
+            self.tokeniser = BPETokeniser(self.vocab_size)
+        return self.tokeniser.train_ints(raw_data, loading_bar=True)
 
     def __getitem__(self, idx: int) -> int | list[int]:
         return self.tokens[idx]

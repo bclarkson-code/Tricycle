@@ -105,7 +105,7 @@ class Dropout(Layer):
         self.probability = probability
 
     def forward(self, tensor: Tensor):
-        random_mask = np.random.binomial(
+        random_mask = tensor.xp.random.binomial(
             n=1, p=1 - self.probability, size=tensor.shape
         )
         random_mask = to_tensor(
@@ -129,11 +129,9 @@ class Embedding(Layer):
     encoding and a matrix multiplication)
     """
 
-    def __init__(
-        self, vocab_size: int, out_shape: int, initialiser=init_xavier
-    ):
-        self.weights = initialiser((vocab_size, out_shape))
-        self.vocab_size = vocab_size
+    def __init__(self, from_size: int, to_size: int, initialiser=init_xavier):
+        self.weights = initialiser((from_size, to_size))
+        self.vocab_size = from_size
 
     def forward(self, tensor: Tensor):
         assert (
@@ -141,7 +139,7 @@ class Embedding(Layer):
         ), "Cannot embed a differentiable tensor"
 
         if tensor.is_vector:
-            result = np.stack(
+            result = tensor.xp.stack(
                 [self.weights._data[idx] for idx in tensor._data]
             )
             result = to_tensor(
@@ -173,6 +171,18 @@ class Embedding(Layer):
         raise NotImplementedError(
             "2nd order derivatives for embedding are not yet implemented"
         )
+
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
+
+    def zero_grad(self):
+        self.weights.grad = None
+
+    def to_gpu(self):
+        self.weights.to_gpu()
+
+    def from_gpu(self):
+        self.weights.from_gpu()
 
 
 class Sequential(Layer):

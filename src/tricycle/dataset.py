@@ -112,6 +112,7 @@ class CausalLMDataset:
         self.context_window = context_window
         self.is_batch = False
         self._idx = 0
+        self.batch_indices = None
 
     def __len__(self):
         return (
@@ -139,9 +140,9 @@ class CausalLMDataset:
             raise IndexError(f"Index {idx} out of range")
 
         tokens = self.tokens[idx : idx + self.context_window + 1]
-        tokens = self.one_hot_encode(tokens)
+        encoded_tokens = self.one_hot_encode(tokens)
         inputs = tokens[:-1]
-        outputs = tokens[1:]
+        outputs = encoded_tokens[1:]
         return inputs, outputs
 
     def _get_batch(self, idx: int):
@@ -152,15 +153,20 @@ class CausalLMDataset:
             raise IndexError(f"Index {idx} out of range")
 
         start = idx * self.batch_size
-        end = start + self.context_window + self.batch_size + 1
-        tokens = self.tokens[start:end]
-        tokens = self.one_hot_encode(tokens)
+        end = start + self.batch_size
+        batch_indices = self.batch_indices[start:end]
+
+        tokens = [
+            self.tokens[batch_idx : batch_idx + self.context_window + 1]
+            for batch_idx in batch_indices
+        ]
+        encoded_tokens = [self.one_hot_encode(t) for t in tokens]
 
         inputs = []
         outputs = []
-        for i in range(self.batch_size):
-            inputs.append(tokens[i : i + self.context_window])
-            outputs.append(tokens[i + 1 : i + self.context_window + 1])
+        for token, encoded_token in zip(tokens, encoded_tokens):
+            inputs.append(token[:-1])
+            outputs.append(encoded_token[1:])
 
         inputs = np.array(inputs)
         outputs = np.array(outputs)
@@ -171,7 +177,9 @@ class CausalLMDataset:
             self._get_batch(idx) if self.is_batch else self._get_single(idx)
         )
         if self.as_tensor:
-            inputs = to_tensor(inputs, requires_grad=False, name="inputs")
+            inputs = to_tensor(
+                inputs, requires_grad=False, name="inputs", dtype=int
+            )
             output = to_tensor(output, requires_grad=False, name="output")
 
         if self.is_vector and not self.as_tensor:
@@ -196,10 +204,24 @@ class CausalLMDataset:
 
     def batch(self):
         self.is_batch = True
+        self.batch_indices = list(
+            range(len(self.tokens) - self.context_window - 1)
+        )
         return self
 
     def unbatch(self):
         self.is_batch = False
+        return self
+
+    def shuffle(self):
+        if not self.is_batch and self.batch_indices is not None:
+            raise NotImplementedError(
+                "Shuffling non-batched datasets is not currently supported"
+            )
+        else:
+            self.batch_indices = np.random.choice(
+                self.batch_indices, replace=False, size=len(self.batch_indices)
+            )
         return self
 
     def to_tensor(self):

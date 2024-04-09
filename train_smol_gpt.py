@@ -14,21 +14,26 @@ import mlflow
 import numpy as np
 from tqdm import tqdm
 
+from inference import generate
 from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
 from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
+from tricycle.scheduler import lr_schedule
 from tricycle_datasets.shakespeare import Shakespeare
 
+np.random.seed(0)
 config = SmolGPTConfig()
+config.batch_size = 12
 model = GPT(config)
 model.display()
 
-tokens = Shakespeare(vocab_size=config.vocab_size)
+
+shakespeare = Shakespeare(vocab_size=config.vocab_size)
 dataset = (
     CausalLMDataset(
-        tokens=tokens,
+        tokens=shakespeare[-317:],
         vocab_size=config.vocab_size,
         batch_size=config.batch_size,
         context_window=config.context_window,
@@ -36,23 +41,46 @@ dataset = (
     .batch()
     .to_tensor()
     .to_vector()
+    .shuffle()
 )
 loss_fn = cross_entropy
 optimiser = StochasticGradientDescent(
-    learning_rate=config.learning_rate,
+    learning_rate=lr_schedule(
+        0,
+        max_learning_rate=config.max_learning_rate,
+        min_learning_rate=config.min_learning_rate,
+        warmup_steps=config.warmup_steps,
+        total_steps=config.steps,
+    ),
     weight_decay=config.weight_decay,
     momentum=config.momentum,
 )
 
+
 model.to_gpu()
 
+
+def get_sample(sample_text, n_samples=50):
+    sampled = []
+    for i, next_token in tqdm(
+        enumerate(generate(sample_text, model, shakespeare.tokeniser)),
+        desc="evaulating",
+        total=n_samples,
+    ):
+        if i > n_samples:
+            break
+        sampled.append(next_token)
+    return shakespeare.tokeniser.decode(sampled)
+
+
 mlflow.set_tracking_uri("http://localhost:5000")
-mlflow.set_experiment("SmolGPT:debug")
+mlflow.set_experiment("SmolGPT:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 best_loss = float("inf")
 losses = []
-for step, (inputs, outputs) in tqdm(enumerate(dataset), total=len(dataset)):
+n_steps = 25_000
+for step, (inputs, outputs) in tqdm(enumerate(dataset), total=n_steps):
     inputs = inputs.to_gpu()
     outputs = outputs.to_gpu()
 
@@ -64,18 +92,35 @@ for step, (inputs, outputs) in tqdm(enumerate(dataset), total=len(dataset)):
     # clean up the computational graph
     loss.cleanup()
 
+    # step the learning rate
+    optimiser.learning_rate = lr_schedule(
+        step,
+        max_learning_rate=config.max_learning_rate,
+        min_learning_rate=config.min_learning_rate,
+        warmup_steps=config.warmup_steps,
+        total_steps=config.steps,
+    )
+
     if loss.numpy() > 1000:
         warn(f"Loss was {loss.numpy()} at step {step} - ")
+
+    # log the loss
     losses.append(loss.numpy())
     mlflow.log_metric("loss", float(loss.numpy()), step=step)
 
-    # save best model
-    if step % 250 == 0:
-        average_loss = np.mean(losses)
-        mlflow.log_metric("average_loss", float(average_loss), step=step)
-        if average_loss < best_loss:
-            best_loss = average_loss
+    # occasionally log some metrics
+    if step % 25 == 0:
+        sample_text = "To be or not to be"
+        predicted = get_sample(sample_text)
+        mlflow.log_text(predicted, f"generated/{step}.txt")
 
-            # save results
-            with open("shakespeare_model.pkl", "wb") as f:
-                pickle.dump(model, f)
+    # checkpoint
+    if loss < best_loss:
+        with open("model.pkl", "wb") as f:
+            pickle.dump(model, f)
+        best_loss = loss
+
+    if step >= n_steps:
+        break
+
+    step += 1
