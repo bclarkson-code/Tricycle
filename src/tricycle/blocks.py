@@ -3,7 +3,6 @@ Several layers can be grouped together into a single layer called a block
 """
 
 from math import sqrt
-from typing import Callable
 
 import numpy as np
 

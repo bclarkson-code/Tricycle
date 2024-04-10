@@ -2,9 +2,8 @@ import numpy as np
 
 from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
-from tricycle.layers import EmbeddingV2
 from tricycle.loss import cross_entropy
-from tricycle.models import GPT
+from tricycle.models import GPT, GPTV2
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import Shakespeare
 
@@ -14,7 +13,6 @@ config.batch_size = 2
 config.n_layers = 1
 
 config.n_heads = 2
-model = GPT(config)
 
 shakespeare = Shakespeare(vocab_size=config.vocab_size)
 dataset = (
@@ -38,12 +36,7 @@ optimiser = StochasticGradientDescent(
 
 
 def train_improved_model():
-    model.token_embedding = EmbeddingV2(
-        to_size=model.embedding_dim, from_size=config.vocab_size
-    )
-    model.position_embedding = EmbeddingV2(
-        to_size=model.embedding_dim, from_size=model.context_window
-    )
+    model = GPTV2(config)
     n_steps = 2
     for step, (inputs, outputs) in enumerate(dataset):
         logits = model(inputs)
@@ -61,6 +54,7 @@ def train_improved_model():
 
 
 def train_original_model():
+    model = GPT(config)
     n_steps = 2
     for step, (inputs, outputs) in enumerate(dataset):
         logits = model(inputs)

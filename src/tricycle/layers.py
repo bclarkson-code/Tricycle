@@ -2,9 +2,7 @@ from abc import ABC, abstractmethod
 from string import ascii_letters
 from typing import Sequence
 
-import numpy as np
-
-from tricycle.binary import bmul
+from tricycle.binary import bmask, bmul
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
@@ -111,6 +109,78 @@ class Dropout(Layer):
         random_mask = to_tensor(
             random_mask, requires_grad=False, is_vector=tensor.is_vector
         )
+        return bmul(tensor, random_mask)
+
+
+class DropoutV2(Layer):
+    def __init__(self, probability: float):
+        self.probability = probability
+
+    def forward(self, tensor: Tensor):
+        random_mask = tensor.xp.random.choice(
+            [True, False],
+            size=tensor.shape,
+            p=[self.probability, 1 - self.probability],
+        )
+        random_mask = to_tensor(
+            random_mask, requires_grad=False, is_vector=tensor.is_vector
+        )
+        return bmul(tensor, random_mask)
+
+
+class DropoutV3(Layer):
+    def __init__(self, probability: float):
+        self.probability = probability
+
+    def forward(self, tensor: Tensor):
+        random_mask = tensor.xp.random.binomial(
+            n=1, p=1 - self.probability, size=tensor.shape
+        )
+        random_mask = to_tensor(
+            random_mask, requires_grad=False, is_vector=tensor.is_vector
+        )
+        return bmask(tensor, random_mask)
+
+
+class DropoutV4(Layer):
+    def __init__(self, probability: float):
+        self.probability = probability
+
+    def forward(self, tensor: Tensor):
+        random_mask = to_tensor(
+            tensor.xp.random.choice(
+                [True, False],
+                size=tensor.shape,
+                p=[self.probability, 1 - self.probability],
+            ),
+            requires_grad=False,
+            is_vector=tensor.is_vector,
+        )
+        return bmask(tensor, random_mask)
+
+
+class DropoutV5(Layer):
+    def __init__(self, probability: float):
+        self.probability = probability
+
+    def forward(self, tensor: Tensor):
+        shape = tensor.shape[1:] if tensor.is_vector else tensor.shape
+        random_mask = tensor.xp.random.binomial(
+            n=1, p=1 - self.probability, size=shape
+        )
+        random_mask = to_tensor(random_mask, requires_grad=False)
+        return bmul(tensor, random_mask)
+
+
+class DropoutV6(Layer):
+    def __init__(self, probability: float):
+        self.probability = probability
+
+    def forward(self, tensor: Tensor):
+        random_mask = tensor.xp.random.binomial(
+            n=1, p=1 - self.probability, size=tensor.shape
+        ).astype(bool)
+        random_mask = to_tensor(random_mask, requires_grad=False, is_vector=tensor.is_vector)
         return bmul(tensor, random_mask)
 
 

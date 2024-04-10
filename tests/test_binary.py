@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle.binary import badd, bdiv, bmax, bmin, bmul, bsub
+from tricycle.binary import badd, bdiv, bmask, bmax, bmin, bmul, bsub
 from tricycle.tensor import to_tensor
 
 
@@ -147,3 +147,23 @@ def test_can_bmin():
     assert in_tensor_2.grad is not None
     assert in_tensor_1.grad.close_to(one_is_smaller)
     assert in_tensor_2.grad.close_to(two_is_smaller)
+
+
+def test_can_bmask():
+
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
+    mask = to_tensor(
+        [[0, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1]],
+        is_vector=True,
+        requires_grad=False,
+    )
+    out_tensor = bmask(in_tensor, mask)
+
+    assert out_tensor.shape == (3, 4)
+    assert out_tensor.close_to([[0, 0, 0, 0], [4, 0, 6, 0], [8, 9, 10, 11]])
+
+    out_tensor.backward()
+
+    assert mask.grad is None
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.close_to([[0, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1]])
