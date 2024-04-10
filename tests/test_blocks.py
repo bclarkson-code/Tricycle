@@ -82,7 +82,6 @@ def test_attention_individually():
     # tricycle
     mask = build_mask(context_window)
     attention = masked_fill(attention, (n_tokens, n_tokens), mask)
-    breakpoint()
 
     assert attention.close_to(att)
 

@@ -1,13 +1,13 @@
 import numpy as np
 
-from tricycle.functions import sigmoid, softmax, tanh
+from tricycle.functions import sigmoid, softmax_v2, tanh
 from tricycle.tensor import to_tensor
 
 
 def test_softmax():
     in_tensor = to_tensor([1, 2, 3, 1])
 
-    out_tensor = softmax(in_tensor)
+    out_tensor = softmax_v2(in_tensor)
 
     assert out_tensor.shape == (4,)
     out_tensor.backward()
@@ -25,13 +25,13 @@ def test_softmax():
 def test_softmax_multi_dimension():
     in_tensor = to_tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
 
-    out_tensor = softmax(in_tensor)
+    out_tensor = softmax_v2(in_tensor)
 
     assert out_tensor.shape == (2, 2, 2)
     assert out_tensor.close_to(
         [
-            [[0.26894142, 0.73105858], [0.26894142, 0.73105858]],
-            [[0.26894142, 0.73105858], [0.26894142, 0.73105858]],
+            [[5.7661277e-04, 1.5673960e-03], [4.2606238e-03, 1.1581578e-02]],
+            [[3.1481992e-02, 8.5576929e-02], [2.3262219e-01, 6.3233274e-01]],
         ],
     )
 

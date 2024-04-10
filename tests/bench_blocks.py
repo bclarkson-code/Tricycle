@@ -43,5 +43,5 @@ def new_MLP_block():
 
 
 __benchmarks__ = [
-    (original_MLP_block, new_MLP_block, "Base trial to find good params")
+    # (original_MLP_block, new_MLP_block, "Base trial to find good params")
 ]
