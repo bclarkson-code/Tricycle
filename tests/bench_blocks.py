@@ -19,9 +19,7 @@ def original_MLP_block():
     for _ in range(10):
         out = block(inputs)
         out.backward()
-        block = block.zero_grad()
         out = out.zero_grad()
-        inputs = inputs.zero_grad()
 
 
 def new_MLP_block():
@@ -44,6 +42,6 @@ def new_MLP_block():
         inputs.zero_grad()
 
 
-__benchmarks__ = [
-    (original_MLP_block, new_MLP_block, "Base trial to find good params")
-]
+# __benchmarks__ = [
+#     (original_MLP_block, new_MLP_block, "Base trial to find good params")
+# ]

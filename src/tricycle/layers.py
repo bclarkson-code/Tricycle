@@ -98,6 +98,71 @@ class Dense(Layer):
         self.weights.from_gpu()
 
 
+class DenseV2(Layer):
+    weights: Tensor
+    from_size: int
+    to_size: int
+    name: str | None
+
+    def __init__(
+        self, from_size: int, to_size: int, initialiser=init_xavier, name=None
+    ):
+        self.weights = initialiser(
+            (from_size, to_size), name="weights" if name is None else name
+        )
+        self.from_size = from_size
+        self.to_size = to_size
+        self.tensors = {"weights": self.weights}
+
+    def _build_missing_indices(
+        self, tensor: Tensor, initial_subscript: str
+    ) -> str:
+        """
+        In some circumstances, using ellipses with vectorised tensors
+        can be defined in the forward direction but not in reverse.
+
+        To fix this, we're building a string of indices that can be used
+        in place of an ellipsis. This is a bit of an ugly hack, but it
+        works for now.
+
+        TODO: fix this properly
+        """
+        n_untouched_indices = (
+            len(tensor.shape) - 2
+            if tensor.is_vector
+            else len(tensor.shape) - 1
+        )
+        untouched_indices = ""
+        i = 0
+        while len(untouched_indices) < n_untouched_indices:
+            next_idx = ascii_letters[i]
+            if (
+                next_idx not in untouched_indices
+                and next_idx != "z"
+                and next_idx not in initial_subscript
+            ):
+                untouched_indices += next_idx
+            i += 1
+        return untouched_indices
+
+    def forward(self, tensor: Tensor):
+        initial_subscript = "a,aB->B"
+        idx = self._build_missing_indices(tensor, initial_subscript)
+        return Einsum(f"{idx}a,aB->{idx}B")(tensor, self.weights)
+
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
+
+    def zero_grad(self):
+        self.weights.grad = None
+
+    def to_gpu(self):
+        self.weights.to_gpu()
+
+    def from_gpu(self):
+        self.weights.from_gpu()
+
+
 class Dropout(Layer):
     def __init__(self, probability: float):
         self.probability = probability
@@ -180,7 +245,9 @@ class DropoutV6(Layer):
         random_mask = tensor.xp.random.binomial(
             n=1, p=1 - self.probability, size=tensor.shape
         ).astype(bool)
-        random_mask = to_tensor(random_mask, requires_grad=False, is_vector=tensor.is_vector)
+        random_mask = to_tensor(
+            random_mask, requires_grad=False, is_vector=tensor.is_vector
+        )
         return bmul(tensor, random_mask)
 
 
