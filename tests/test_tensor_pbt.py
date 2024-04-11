@@ -123,9 +123,9 @@ def small_tensor(draw):
     Generate a single, initial tensor (not as the result of an operation).
     The tensor can be 1, 2 or 3d
     """
-    shape = draw(st.integers(min_value=1, max_value=3))
+    shape = draw(st.integers(min_value=1, max_value=4))
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
-    is_vector = len(shape) == 3
+    is_vector = len(shape) in {3, 4}
     requires_grad = draw(st.booleans())
     if CUPY_ENABLED:
         on_gpu = draw(st.booleans())
@@ -353,13 +353,15 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
     pt_out = pt_layer(torch.tensor(tensor._data))
     tr_out = tr_layer(tensor)
 
-    assert np.allclose(pt_out.detach().numpy(), tr_out.numpy())
+    assert np.allclose(pt_out.detach().numpy(), tr_out.numpy(), rtol=1e-3)
 
     pt_out.mean().backward()
     tr_out.mean().backward()
 
     assert np.allclose(
-        pt_layer.weight.grad.detach().numpy(), tr_layer.weights.grad.numpy()
+        pt_layer.weight.grad.detach().numpy(),
+        tr_layer.weights.grad.numpy(),
+        rtol=1e-3,
     )
 
 

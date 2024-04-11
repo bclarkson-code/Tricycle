@@ -202,7 +202,7 @@ def test_dense_hand_crafted_derivative():
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
-        requires_grad=False,
+        requires_grad=True,
     )
     inputs = inputs.to_vector()
     layer = DenseV3(from_size=256, to_size=256)
@@ -248,14 +248,14 @@ __benchmarks__ = [
     #         test_dropout_bool_mask,
     #         "Use dropout with bool mask",
     #     ),
-    (
-        test_dense_original,
-        test_dense_zero_grad_inputs,
-        "Not calculating derivative for inputs",
-    ),
-    (
-        test_dense_original,
-        test_dense_hand_crafted_derivative,
-        "Hand crafting derivatives",
-    ),
+    # (
+    #     test_dense_original,
+    #     test_dense_zero_grad_inputs,
+    #     "Not calculating derivative for inputs",
+    # ),
+    # (
+    #     test_dense_original,
+    #     test_dense_hand_crafted_derivative,
+    #     "Hand crafting derivatives",
+    # ),
 ]

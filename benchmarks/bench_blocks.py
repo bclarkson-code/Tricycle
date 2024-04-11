@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle.blocks import MLPBlock
+from tricycle.blocks import MLPBlock, MLPBlock2
 from tricycle.tensor import to_tensor
 
 
@@ -22,7 +22,7 @@ def original_MLP_block():
         out = out.zero_grad()
 
 
-def new_MLP_block():
+def MLP_block_new_dropout_and_new_dense():
     batch_size = 4
     embedding_dim = 128
     n_tokens = 128
@@ -32,7 +32,7 @@ def new_MLP_block():
         requires_grad=True,
     )
     inputs = inputs.to_vector()
-    block = MLPBlock(embedding_dim=embedding_dim, dropout_prob=0.2)
+    block = MLPBlock2(embedding_dim=embedding_dim, dropout_prob=0.2)
 
     for _ in range(10):
         out = block(inputs)
@@ -42,6 +42,10 @@ def new_MLP_block():
         inputs.zero_grad()
 
 
-# __benchmarks__ = [
-#     (original_MLP_block, new_MLP_block, "Base trial to find good params")
-# ]
+__benchmarks__ = [
+    (
+        original_MLP_block,
+        MLP_block_new_dropout_and_new_dense,
+        "Combining improvements in dropout and dense",
+    )
+]
