@@ -143,7 +143,6 @@ class Tensor:
             if hasattr(node, "grad") and node.grad is not None:
                 del node.grad
             del node
-        gc.collect()
 
     def backward(self):
         """

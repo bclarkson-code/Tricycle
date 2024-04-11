@@ -93,9 +93,11 @@ class Dense(Layer):
 
     def to_gpu(self):
         self.weights.to_gpu()
+        return self
 
     def from_gpu(self):
         self.weights.from_gpu()
+        return self
 
 
 class DenseV2(Layer):
@@ -158,9 +160,11 @@ class DenseV2(Layer):
 
     def to_gpu(self):
         self.weights.to_gpu()
+        return self
 
     def from_gpu(self):
         self.weights.from_gpu()
+        return self
 
 
 class DenseV3(Layer):
@@ -231,9 +235,67 @@ class DenseV3(Layer):
 
     def to_gpu(self):
         self.weights.to_gpu()
+        return self
 
     def from_gpu(self):
         self.weights.from_gpu()
+        return self
+
+
+class DenseV4(Layer):
+    weights: Tensor
+    from_size: int
+    to_size: int
+    name: str | None
+
+    def __init__(
+        self, from_size: int, to_size: int, initialiser=init_xavier, name=None
+    ):
+        self.weights = initialiser(
+            (from_size, to_size), name="weights" if name is None else name
+        )
+        self.from_size = from_size
+        self.to_size = to_size
+        self.tensors = {"weights": self.weights}
+
+    def _matmul(self, tensor):
+        def back_einsum(grad):
+            result = tensor.xp.matmul(
+                tensor._data.transpose(0, 2, 1), grad._data
+            )
+            return to_tensor(
+                result,
+                requires_grad=tensor.requires_grad,
+                name="back_dense",
+            )
+
+        return back_einsum
+
+    def forward(self, tensor: Tensor):
+        # TODO: figure out the right transpose ops for each circumstance
+        result = to_tensor(tensor.xp.matmul(tensor._data, self.weights._data))
+        weight_back_fn = self._matmul(tensor)
+        grad_back_fn = self._matmul(self.weights)
+        result.args = (self.weights, tensor)
+        result.back_fns = (weight_back_fn, grad_back_fn)
+        result.is_vector = tensor.is_vector
+
+        result.name = "dense"
+        return result
+
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
+
+    def zero_grad(self):
+        self.weights.grad = None
+
+    def to_gpu(self):
+        self.weights.to_gpu()
+        return self
+
+    def from_gpu(self):
+        self.weights.from_gpu()
+        return self
 
 
 class Dropout(Layer):
@@ -390,9 +452,11 @@ class Embedding(Layer):
 
     def to_gpu(self):
         self.weights.to_gpu()
+        return self
 
     def from_gpu(self):
         self.weights.from_gpu()
+        return self
 
 
 class EmbeddingV2(Layer):
