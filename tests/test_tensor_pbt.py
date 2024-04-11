@@ -4,12 +4,14 @@ from warnings import warn
 import hypothesis.strategies as st
 import numpy as np
 import pytest
+import torch
 from hypothesis import assume, example, given
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
 from tricycle.binary import _shapes_match, badd, bdiv, bmax, bmin, bmul, bsub
 from tricycle.einsum import EinsumBackOp
+from tricycle.layers import DenseV3
 from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
@@ -46,6 +48,11 @@ def scalar(draw):
 @st.composite
 def string(draw):
     return draw(st.text())
+
+
+@st.composite
+def integer(draw):
+    return draw(st.integers(min_value=1, max_value=1024))
 
 
 @st.composite
@@ -93,6 +100,32 @@ def tensor(draw):
     shape = draw(st.integers(min_value=1, max_value=10))
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
     is_vector = draw(st.booleans())
+    requires_grad = draw(st.booleans())
+    if CUPY_ENABLED:
+        on_gpu = draw(st.booleans())
+    else:
+        warn("CUPY_ENABLED = False so GPU tests have been disabled")
+        on_gpu = False
+
+    tensor = to_tensor(
+        data,
+        is_vector=is_vector,
+        requires_grad=requires_grad,
+    )
+    if on_gpu:
+        tensor = tensor.to_gpu()
+    return tensor
+
+
+@st.composite
+def small_tensor(draw):
+    """
+    Generate a single, initial tensor (not as the result of an operation).
+    The tensor can be 1, 2 or 3d
+    """
+    shape = draw(st.integers(min_value=1, max_value=3))
+    data = draw(xp.arrays(dtype=np.float64, shape=shape))
+    is_vector = len(shape) == 3
     requires_grad = draw(st.booleans())
     if CUPY_ENABLED:
         on_gpu = draw(st.booleans())
@@ -303,6 +336,31 @@ def test_tokeniser_train_encode_decode(text):
 
     decoded = tokeniser.decode(encoded)
     assert text == decoded
+
+
+@given(tensor(), integer())
+def test_tricycle_dense_matches_pytorch(tensor, out_shape):
+    assume(np.isfinite(tensor._data).all())
+
+    from_size = tensor.shape[-1]
+
+    pt_layer = torch.nn.Linear(
+        in_features=from_size, out_features=out_shape, bias=False
+    )
+    tr_layer = DenseV3(from_size=from_size, to_size=out_shape)
+    tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy())
+
+    pt_out = pt_layer(torch.tensor(tensor._data))
+    tr_out = tr_layer(tensor)
+
+    assert np.allclose(pt_out.detach().numpy(), tr_out.numpy())
+
+    pt_out.mean().backward()
+    tr_out.mean().backward()
+
+    assert np.allclose(
+        pt_layer.weight.grad.detach().numpy(), tr_layer.weights.grad.numpy()
+    )
 
 
 if __name__ == "__main__":

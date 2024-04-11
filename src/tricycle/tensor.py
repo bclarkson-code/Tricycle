@@ -457,7 +457,7 @@ class Tensor:
         return self
 
     def zero_grad(self):
-        self.grad= None
+        self.grad = None
         self.args = None
         self.back_fns = None
 

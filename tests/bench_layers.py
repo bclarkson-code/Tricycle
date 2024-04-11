@@ -5,6 +5,7 @@ import numpy as np
 from tricycle.layers import (
     Dense,
     DenseV2,
+    DenseV3,
     Dropout,
     DropoutV2,
     DropoutV3,
@@ -194,7 +195,8 @@ def test_dense_zero_grad_inputs():
         out.zero_grad()
         layer.zero_grad()
 
-def test_dense_new_einsum():
+
+def test_dense_hand_crafted_derivative():
     batch_size = 4
     shape = (256, 256)
 
@@ -203,13 +205,14 @@ def test_dense_new_einsum():
         requires_grad=False,
     )
     inputs = inputs.to_vector()
-    layer = DenseV2(from_size=256, to_size=256)
+    layer = DenseV3(from_size=256, to_size=256)
 
     for _ in range(10):
         out = layer(inputs)
         out.backward()
         out.zero_grad()
         layer.zero_grad()
+
 
 __benchmarks__ = [
     # (
@@ -248,6 +251,11 @@ __benchmarks__ = [
     (
         test_dense_original,
         test_dense_zero_grad_inputs,
-        "Initial trial of dense layer",
+        "Not calculating derivative for inputs",
+    ),
+    (
+        test_dense_original,
+        test_dense_hand_crafted_derivative,
+        "Hand crafting derivatives",
     ),
 ]
