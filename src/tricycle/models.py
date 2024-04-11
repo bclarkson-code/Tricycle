@@ -3,7 +3,7 @@ import numpy as np
 
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
-from tricycle.layers import Dense, Dropout, Embedding, Layer, EmbeddingV2
+from tricycle.layers import Dense, Dropout, Embedding, EmbeddingV2, Layer
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 

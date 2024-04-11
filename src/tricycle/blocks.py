@@ -10,7 +10,14 @@ from tricycle.activation import GeLU
 from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.initialisers import init_xavier
-from tricycle.layers import Dense, Dropout, Layer, LayerNorm
+from tricycle.layers import (  # noqa E501
+    Dense,
+    DenseV3,
+    Dropout,
+    DropoutV5,
+    Layer,
+    LayerNorm,
+)
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, select_backend, to_tensor
 
@@ -193,6 +200,84 @@ class MLPBlock(Layer):
             initialiser=init_xavier,
         )
         self.dropout = Dropout(dropout_prob)
+        if isinstance(activation_fn, str):
+            match activation_fn:
+                case "gelu":
+                    activation_fn = GeLU()
+                case _:
+                    raise NotImplementedError(
+                        f"Unknown activation function: {activation_fn}"
+                    )
+        self.activation_fn = activation_fn
+        self.layers = [
+            self.linear_1,
+            self.activation_fn,
+            self.linear_2,
+            self.dropout,
+        ]
+
+    def forward(self, x: Tensor):
+        x = self.linear_1(x)
+        x = self.activation_fn(x)
+        x = self.linear_2(x)
+        x = self.dropout(x)
+        return x
+
+    def update(self, optimiser: Optimiser):
+        self.linear_1.update(optimiser)
+        self.linear_2.update(optimiser)
+        return self
+
+    def zero_grad(self):
+        self.linear_1.zero_grad()
+        self.linear_2.zero_grad()
+        return self
+
+    def to_gpu(self):
+        self.linear_1.to_gpu()
+        self.linear_2.to_gpu()
+        return self
+
+    def from_gpu(self):
+        self.linear_1.from_gpu()
+        self.linear_2.from_gpu()
+        return self
+
+
+class MLPBlock2(Layer):
+    """
+    A simple GPT-2 style MLP block with 2 linear layers around an activation
+    function
+
+    The size of the hidden dimension is expansion_ratio * the size of the
+    input
+    """
+
+    embedding_dim: int
+    dropout_prob: float
+    expansion_ratio: float
+    activation_fn: Layer
+    linear_1: DenseV3
+    linear_2: DenseV3
+
+    def __init__(
+        self,
+        embedding_dim: int,
+        dropout_prob: float,
+        expansion_ratio: float = 4,
+        activation_fn: Layer = GeLU(),
+    ):
+        self.linear_1 = DenseV3(
+            from_size=embedding_dim,
+            to_size=int(expansion_ratio * embedding_dim),
+            initialiser=init_xavier,
+        )
+        self.linear_2 = DenseV3(
+            from_size=int(expansion_ratio * embedding_dim),
+            to_size=embedding_dim,
+            initialiser=init_xavier,
+        )
+        self.dropout = DropoutV5(dropout_prob)
         if isinstance(activation_fn, str):
             match activation_fn:
                 case "gelu":

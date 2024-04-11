@@ -61,11 +61,7 @@ class StochasticGradientDescent(Optimiser):
             _id=tensor._id,
         )
 
-        try:
-            assert result.shape == tensor.shape
-        except AssertionError as e:
-            breakpoint()
-            raise e
+        assert result.shape == tensor.shape
 
         del tensor
         del grad

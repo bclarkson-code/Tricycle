@@ -179,43 +179,11 @@ class DenseV3(Layer):
         self.to_size = to_size
         self.tensors = {"weights": self.weights}
 
-    def _build_missing_indices(
-        self, tensor: Tensor, initial_subscript: str
-    ) -> str:
-        """
-        In some circumstances, using ellipses with vectorised tensors
-        can be defined in the forward direction but not in reverse.
-
-        To fix this, we're building a string of indices that can be used
-        in place of an ellipsis. This is a bit of an ugly hack, but it
-        works for now.
-
-        TODO: fix this properly
-        """
-        n_untouched_indices = (
-            len(tensor.shape) - 2
-            if tensor.is_vector
-            else len(tensor.shape) - 1
-        )
-        untouched_indices = ""
-        i = 0
-        while len(untouched_indices) < n_untouched_indices:
-            next_idx = ascii_letters[i]
-            if (
-                next_idx not in untouched_indices
-                and next_idx != "z"
-                and next_idx not in initial_subscript
-            ):
-                untouched_indices += next_idx
-            i += 1
-        return untouched_indices
-
     def _einsum_fn(self, subscript, tensor):
         def back_einsum(grad):
             result = tensor.xp.einsum(subscript, tensor._data, grad._data)
             return to_tensor(
                 result,
-                is_vector=tensor.is_vector,
                 requires_grad=tensor.requires_grad,
                 name="back_dense",
             )
@@ -224,34 +192,35 @@ class DenseV3(Layer):
 
     def forward(self, tensor: Tensor):
         if tensor.ndim == 1:
-            result = to_tensor(
-                tensor.xp.einsum("a,Ba->B", tensor._data, self.weights._data)
-            )
-            weight_back_fn = self._einsum_fn("a,B->Ba", tensor)
-            grad_back_fn = self._einsum_fn("Ba,B->a", self.weights)
-            result.args = (self.weights, tensor)
-            result.back_fns = (weight_back_fn, grad_back_fn)
-
+            result = self._forward(tensor, "a,aB->B", "a,B->aB", "aB,B->a")
         elif tensor.ndim == 2:
-            result = to_tensor(
-                tensor.xp.einsum("Ab,Cb->AC", tensor._data, self.weights._data)
+            result = self._forward(
+                tensor, "Ab,bC->AC", "Ab,AC->bC", "bC,AC->Ab"
             )
-            weight_back_fn = self._einsum_fn("Ab,AC->Cb", tensor)
-            grad_back_fn = self._einsum_fn("Cb,AC->Ab", self.weights)
-            result.args = (self.weights, tensor)
-            result.back_fns = (weight_back_fn, grad_back_fn)
-        elif tensor.ndim == 3:
-            result = to_tensor(
-                tensor.xp.einsum(
-                    "zAb,Cb->zAC", tensor._data, self.weights._data
-                )
+        elif tensor.ndim == 3 and tensor.is_vector:
+            result = self._forward(
+                tensor, "zAb,bC->zAC", "zAb,zAC->bC", "bC,zAC->Ab"
             )
-            weight_back_fn = self._einsum_fn("zAb,zAC->Cb", tensor)
-            grad_back_fn = self._einsum_fn("Cb,zAC->Ab", self.weights)
-            result.args = (self.weights, tensor)
-            result.back_fns = (weight_back_fn, grad_back_fn)
+        else:
+            raise NotImplementedError(
+                f"Cannot pass tensor with shape {tensor.shape} "
+                f"and {tensor.is_vector=}"
+                "through a Dense layer"
+            )
 
         result.name = "dense"
+        return result
+
+    def _forward(self, tensor, subscript, weight_subscript, tensor_subscript):
+        result = to_tensor(
+            tensor.xp.einsum(subscript, tensor._data, self.weights._data)
+        )
+        weight_back_fn = self._einsum_fn(weight_subscript, tensor)
+        grad_back_fn = self._einsum_fn(tensor_subscript, self.weights)
+        result.args = (self.weights, tensor)
+        result.back_fns = (weight_back_fn, grad_back_fn)
+        result.is_vector = tensor.is_vector
+
         return result
 
     def update(self, optimiser: Optimiser):

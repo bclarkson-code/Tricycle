@@ -514,7 +514,7 @@ def vectorise(tensor: Tensor) -> Tensor:
     Tell Tricycle to treat this tensor as a group of vectors
     """
     if tensor.is_vector:
-        raise ValueError("Tensor is already vectorised")
+        return tensor
 
     result = to_tensor(
         tensor._data,
@@ -533,7 +533,7 @@ def unvectorise(tensor: Tensor) -> Tensor:
     (not a group of vectors)
     """
     if not tensor.is_vector:
-        raise ValueError("Tensor is not vectorised")
+        return tensor
 
     result = to_tensor(
         tensor._data,
