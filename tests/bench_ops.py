@@ -40,10 +40,10 @@ def softmax_new():
         out.zero_grad()
 
 
-__benchmarks__ = [
-    (
-        softmax_new,
-        softmax_original,
-        "Trial of softmax to tune params",
-    )
-]
+# __benchmarks__ = [
+#     (
+#         softmax_new,
+#         softmax_original,
+#         "Trial of softmax to tune params",
+#     )
+# ]

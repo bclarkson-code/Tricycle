@@ -22,7 +22,6 @@ class Tensor:
     """
 
     _id: int
-    _grad_fn: Optional[List[List[Op]]] = None
     _data: np.ndarray | ArrayLike
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
@@ -458,9 +457,10 @@ class Tensor:
         return self
 
     def zero_grad(self):
-        self._grad = None
+        self.grad= None
         self.args = None
         self.back_fns = None
+
         return self
 
     def numpy(self):

@@ -219,18 +219,22 @@ class MLPBlock(Layer):
     def update(self, optimiser: Optimiser):
         self.linear_1.update(optimiser)
         self.linear_2.update(optimiser)
+        return self
 
     def zero_grad(self):
         self.linear_1.zero_grad()
         self.linear_2.zero_grad()
+        return self
 
     def to_gpu(self):
         self.linear_1.to_gpu()
         self.linear_2.to_gpu()
+        return self
 
     def from_gpu(self):
         self.linear_1.from_gpu()
         self.linear_2.from_gpu()
+        return self
 
 
 class GPT2TransformerBlock(Layer):

@@ -6,26 +6,28 @@ from tricycle.tensor import to_tensor
 
 def original_MLP_block():
     batch_size = 4
-    embedding_dim = 32
-    n_tokens = 64
+    embedding_dim = 128
+    n_tokens = 128
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, n_tokens, embedding_dim)),
-        requires_grad=True,
+        requires_grad=False,
     )
     inputs = inputs.to_vector()
     block = MLPBlock(embedding_dim=embedding_dim, dropout_prob=0.2)
 
-    for _ in range(100):
+    for _ in range(10):
         out = block(inputs)
         out.backward()
-        out.zero_grad()
+        block = block.zero_grad()
+        out = out.zero_grad()
+        inputs = inputs.zero_grad()
 
 
 def new_MLP_block():
     batch_size = 4
-    embedding_dim = 32
-    n_tokens = 64
+    embedding_dim = 128
+    n_tokens = 128
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, n_tokens, embedding_dim)),
@@ -34,7 +36,7 @@ def new_MLP_block():
     inputs = inputs.to_vector()
     block = MLPBlock(embedding_dim=embedding_dim, dropout_prob=0.2)
 
-    for _ in range(100):
+    for _ in range(10):
         out = block(inputs)
         out.backward()
         block.zero_grad()
@@ -43,5 +45,5 @@ def new_MLP_block():
 
 
 __benchmarks__ = [
-    # (original_MLP_block, new_MLP_block, "Base trial to find good params")
+    (original_MLP_block, new_MLP_block, "Base trial to find good params")
 ]
