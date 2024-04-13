@@ -13,8 +13,11 @@ from tricycle.layers import (
     DropoutV4,
     DropoutV5,
     DropoutV6,
+    DropoutV7,
     Embedding,
     EmbeddingV2,
+    LayerNorm,
+    RMSNorm,
 )
 from tricycle.tensor import to_tensor
 
@@ -161,6 +164,23 @@ def test_dropout_bool_mask():
         out.zero_grad()
 
 
+def test_dropout_small_shape_and_bool_mask():
+    batch_size = 4
+    shape = (256, 256)
+
+    inputs = to_tensor(
+        np.random.random(size=(batch_size, *shape)),
+        requires_grad=True,
+    )
+    inputs = inputs.to_vector()
+    layer = DropoutV7(probability=0.2)
+
+    for _ in range(10):
+        out = layer(inputs)
+        out.backward()
+        out.zero_grad()
+
+
 def test_dense_original():
     batch_size = 12
     shape = (1024, 384)
@@ -169,9 +189,9 @@ def test_dense_original():
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=True,
-    ).to_gpu()
+    ).to_gpu(1)
     inputs = inputs.to_vector()
-    layer = Dense(from_size=shape[1], to_size=to_shape).to_gpu()
+    layer = Dense(from_size=shape[1], to_size=to_shape).to_gpu(1)
 
     for _ in range(100):
         out = layer(inputs)
@@ -189,9 +209,9 @@ def test_dense_zero_grad_inputs():
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=False,
-    ).to_gpu()
+    ).to_gpu(1)
     inputs = inputs.to_vector()
-    layer = DenseV2(from_size=shape[1], to_size=to_shape).to_gpu()
+    layer = DenseV2(from_size=shape[1], to_size=to_shape).to_gpu(1)
 
     for _ in range(100):
         out = layer(inputs)
@@ -209,9 +229,9 @@ def test_dense_hand_crafted_derivative():
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=True,
-    ).to_gpu()
+    ).to_gpu(1)
     inputs = inputs.to_vector()
-    layer = DenseV3(from_size=shape[1], to_size=to_shape).to_gpu()
+    layer = DenseV3(from_size=shape[1], to_size=to_shape).to_gpu(1)
 
     for _ in range(100):
         out = layer(inputs)
@@ -227,9 +247,44 @@ def test_dense_no_einsum():
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=True,
-    ).to_gpu()
+    ).to_gpu(1)
     inputs = inputs.to_vector()
-    layer = DenseV4(from_size=shape[1], to_size=to_shape).to_gpu()
+    layer = DenseV4(from_size=shape[1], to_size=to_shape).to_gpu(1)
+
+    for _ in range(100):
+        out = layer(inputs)
+        out.backward()
+        out.cleanup()
+
+
+def layer_norm_original():
+    batch_size = 12
+    shape = (1024, 384)
+
+    inputs = to_tensor(
+        np.random.random(size=(batch_size, *shape)),
+        requires_grad=True,
+    ).to_gpu(1)
+    inputs = inputs.to_vector()
+    layer = LayerNorm()
+
+    for _ in range(100):
+        out = layer(inputs)
+        out.backward()
+        out.cleanup()
+
+
+def rms_norm_original():
+    batch_size = 12
+    shape = (1024, 384)
+    to_shape = 384 * 4
+
+    inputs = to_tensor(
+        np.random.random(size=(batch_size, *shape)),
+        requires_grad=True,
+    ).to_gpu(1)
+    inputs = inputs.to_vector()
+    layer = RMSNorm()
 
     for _ in range(100):
         out = layer(inputs)
@@ -243,34 +298,39 @@ __benchmarks__ = [
     #     test_embedding_back_new,
     #     "Forward pass of embedding layer",
     # )
-    #     (
-    #         test_dropout_original,
-    #         test_dropout_choice,
-    #         "Use dropout with random.choice",
-    #     ),
-    #     (
-    #         test_dropout_original,
-    #         test_dropout_smaller_mask,
-    #         "Use dropout with smaller mask",
-    #     ),
-    #     (
-    #         test_dropout_original,
-    #         test_dropout_bmask,
-    #         "Use dropout with binary mask instead of mmul",
-    #     ),
-    #     (
-    #         test_dropout_original,
-    #         test_dropout_bmask_and_choice,
-    #         textwrap.dedent(
-    #             """Use dropout with binary mask instead of mmul
+    # (
+    #     test_dropout_original,
+    #     test_dropout_choice,
+    #     "Use dropout with random.choice",
+    # ),
+    # (
+    #     test_dropout_original,
+    #     test_dropout_smaller_mask,
+    #     "Use dropout with smaller mask",
+    # ),
+    # (
+    #     test_dropout_original,
+    #     test_dropout_bmask,
+    #     "Use dropout with binary mask instead of mmul",
+    # ),
+    # (
+    #     test_dropout_original,
+    #     test_dropout_bmask_and_choice,
+    #     textwrap.dedent(
+    #         """Use dropout with binary mask instead of mmul
     #         and choice instead of binomial"""
-    #         ),
     #     ),
-    #     (
-    #         test_dropout_original,
-    #         test_dropout_bool_mask,
-    #         "Use dropout with bool mask",
-    #     ),
+    # ),
+    # (
+    #     test_dropout_original,
+    #     test_dropout_bool_mask,
+    #     "Use dropout with bool mask",
+    # ),
+    # (
+    #     test_dropout_original,
+    #     test_dropout_small_shape_and_bool_mask,
+    #     "Use dropout with small shape and bool mask",
+    # ),
     # (
     #     test_dense_original,
     #     test_dense_zero_grad_inputs,
@@ -282,8 +342,13 @@ __benchmarks__ = [
     #     "Hand crafting derivatives",
     # ),
     # (
-    #     test_dense_no_einsum,
     #     test_dense_original,
+    #     test_dense_no_einsum,
     #     "No Einsum",
+    # ),
+    # (
+    #     layer_norm_original,
+    #     rms_norm_original,
+    #     "swapped layer norm for rms norm",
     # ),
 ]

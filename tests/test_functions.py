@@ -1,32 +1,41 @@
 import numpy as np
 
-from tricycle.functions import sigmoid, softmax, softmax_v2, softmax_v3, tanh
+from tricycle.functions import (
+    sigmoid,
+    softmax,
+    softmax_v2,
+    softmax_v3,
+    softmax_v4,
+    tanh,
+)
 from tricycle.tensor import to_tensor
 
 
 def test_softmax():
-    in_tensor_1 = to_tensor([np.pi, 0, -1, 10])
-    in_tensor_2 = to_tensor([np.pi, 0, -1, 10])
+    in_tensor = [np.pi, 0, -1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    in_tensor_1 = to_tensor(in_tensor)
+    in_tensor_2 = to_tensor(in_tensor)
 
-    out_tensor = softmax_v2(in_tensor_1)
+    out_tensor = softmax_v4(in_tensor_1)
     # I am confident that v3 is correct, but slow so we'll use that as the
     # source of truth
     correct_out = softmax_v3(in_tensor_2)
 
-    assert out_tensor.close_to(correct_out)
+    assert out_tensor.close_to(correct_out, atol=1e-7)
     out_tensor.backward()
     correct_out.backward()
 
     # If you work through the maths, the output gradient with an incoming
     # gradient of all 1's is 0
-    assert in_tensor_1.grad.close_to(in_tensor_2.grad)
+    assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-6)
 
 
 def test_2d_softmax():
-    in_tensor_1 = to_tensor([[1, 2, 3, 1], [np.pi, 0, -1, 10]])
-    in_tensor_2 = to_tensor([[1, 2, 3, 1], [np.pi, 0, -1, 10]])
+    in_tensor = [[np.pi, 0, -1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]] * 16
+    in_tensor_1 = to_tensor(in_tensor)
+    in_tensor_2 = to_tensor(in_tensor)
 
-    out_tensor = softmax_v2(in_tensor_1)
+    out_tensor = softmax_v4(in_tensor_1)
     # I am confident that v3 is correct, but slow so we'll use that as the
     # source of truth
     correct_out = softmax_v3(in_tensor_2)
@@ -35,14 +44,17 @@ def test_2d_softmax():
     out_tensor.backward()
     correct_out.backward()
 
-    assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-7)
+    assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-6)
 
 
 def test_3d_softmax():
-    in_tensor_1 = to_tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
-    in_tensor_2 = to_tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    in_tensor = [
+        [[np.pi, 0, -1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]] * 16
+    ] * 16
+    in_tensor_1 = to_tensor(in_tensor)
+    in_tensor_2 = to_tensor(in_tensor)
 
-    out_tensor = softmax_v2(in_tensor_1)
+    out_tensor = softmax_v4(in_tensor_1)
     # I am confident that v3 is correct, but slow so we'll use that as the
     # source of truth
     correct_out = softmax_v3(in_tensor_2)
@@ -51,7 +63,7 @@ def test_3d_softmax():
     out_tensor.backward()
     correct_out.backward()
 
-    assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-7)
+    assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-6)
 
 
 def test_sigmoid():

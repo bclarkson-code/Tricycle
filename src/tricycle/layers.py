@@ -7,6 +7,7 @@ from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, nothing, to_tensor
+from tricycle.unary import usqrt
 
 
 class Layer(ABC):
@@ -26,7 +27,7 @@ class Layer(ABC):
     def zero_grad(self):
         pass
 
-    def to_gpu(self):
+    def to_gpu(self, device: int = 0):
         pass
 
     def from_gpu(self):
@@ -91,8 +92,8 @@ class Dense(Layer):
     def zero_grad(self):
         self.weights.grad = None
 
-    def to_gpu(self):
-        self.weights.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
         return self
 
     def from_gpu(self):
@@ -158,8 +159,8 @@ class DenseV2(Layer):
     def zero_grad(self):
         self.weights.grad = None
 
-    def to_gpu(self):
-        self.weights.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
         return self
 
     def from_gpu(self):
@@ -233,8 +234,8 @@ class DenseV3(Layer):
     def zero_grad(self):
         self.weights.grad = None
 
-    def to_gpu(self):
-        self.weights.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
         return self
 
     def from_gpu(self):
@@ -294,8 +295,8 @@ class DenseV4(Layer):
     def zero_grad(self):
         self.weights.grad = None
 
-    def to_gpu(self):
-        self.weights.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
         return self
 
     def from_gpu(self):
@@ -391,6 +392,19 @@ class DropoutV6(Layer):
         return bmul(tensor, random_mask)
 
 
+class DropoutV7(Layer):
+    def __init__(self, probability: float):
+        self.probability = probability
+
+    def forward(self, tensor: Tensor):
+        shape = tensor.shape[1:] if tensor.is_vector else tensor.shape
+        random_mask = tensor.xp.random.binomial(
+            n=1, p=1 - self.probability, size=shape
+        ).astype(bool)
+        random_mask = to_tensor(random_mask, requires_grad=False)
+        return bmul(tensor, random_mask)
+
+
 class LayerNorm(Layer):
     """
     Normalise each tensor individually
@@ -398,6 +412,17 @@ class LayerNorm(Layer):
 
     def forward(self, tensor: Tensor):
         return tensor.normalise()
+
+
+class RMSNorm(Layer):
+    """
+    Normalise tensors by their sum of squares. This is similar to layer norm
+    but removes means
+    """
+
+    def forward(self, tensor: Tensor):
+        divisor = usqrt((tensor**2).mean()).repeat(tensor.shape[-1])
+        return tensor / divisor
 
 
 class Embedding(Layer):
@@ -455,8 +480,8 @@ class Embedding(Layer):
     def zero_grad(self):
         self.weights.grad = None
 
-    def to_gpu(self):
-        self.weights.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
         return self
 
     def from_gpu(self):
@@ -534,9 +559,9 @@ class Sequential(Layer):
         for layer in self.layers:
             layer.zero_grad()
 
-    def to_gpu(self):
+    def to_gpu(self, device: int = 0):
         for layer in self.layers:
-            layer.to_gpu()
+            layer.to_gpu(device)
 
     def from_gpu(self):
         for layer in self.layers:

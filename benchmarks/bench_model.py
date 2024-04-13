@@ -9,10 +9,10 @@ from tricycle_datasets.shakespeare import Shakespeare
 
 np.random.seed(0)
 config = SmolGPTConfig()
-config.batch_size = 2
-config.n_layers = 1
+config.batch_size = 16
+config.n_layers = 2
 
-config.n_heads = 2
+config.n_heads = 6
 
 shakespeare = Shakespeare(vocab_size=config.vocab_size)
 dataset = (
@@ -37,9 +37,12 @@ optimiser = StochasticGradientDescent(
 
 def train_improved_model():
     model = GPTV2(config)
+    model.to_gpu(1)
     n_steps = 2
     for step, (inputs, outputs) in enumerate(dataset):
         logits = model(inputs)
+        inputs.to_gpu(1)
+        outputs.to_gpu(1)
         loss = loss_fn(outputs, logits).from_vector().mean().mean()
         loss.backward()
         model.update(optimiser)
@@ -55,8 +58,11 @@ def train_improved_model():
 
 def train_original_model():
     model = GPT(config)
+    model.to_gpu(1)
     n_steps = 2
     for step, (inputs, outputs) in enumerate(dataset):
+        inputs.to_gpu(1)
+        outputs.to_gpu(1)
         logits = model(inputs)
         loss = loss_fn(outputs, logits).from_vector().mean().mean()
         loss.backward()
@@ -71,6 +77,6 @@ def train_original_model():
         step += 1
 
 
-# __benchmarks__ = [
-#     (train_improved_model, train_original_model, "Use improved embedding")
-# ]
+__benchmarks__ = [
+    (train_improved_model, train_original_model, "Use improved embedding")
+]

@@ -1,9 +1,17 @@
 import humanize
 import numpy as np
 
-from tricycle.blocks import GPT2TransformerBlock
+from tricycle.blocks import GPT2TransformerBlock, GPT2TransformerBlockV3
 from tricycle.configs import GPTConfig
-from tricycle.layers import Dense, Dropout, Embedding, EmbeddingV2, Layer
+from tricycle.layers import (
+    Dense,
+    DenseV3,
+    Dropout,
+    DropoutV7,
+    Embedding,
+    EmbeddingV2,
+    Layer,
+)
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -89,12 +97,12 @@ class GPT(Layer):
         for block in self.blocks:
             block.update(optimiser)
 
-    def to_gpu(self):
-        self.token_embedding.to_gpu()
-        self.position_embedding.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.token_embedding.to_gpu(device)
+        self.position_embedding.to_gpu(device)
         for block in self.blocks:
-            block.to_gpu()
-        self.head.to_gpu()
+            block.to_gpu(device)
+        self.head.to_gpu(device)
 
     def from_gpu(self):
         self.token_embedding.from_gpu()
@@ -144,10 +152,10 @@ class GPTV2(Layer):
         self.position_embedding = EmbeddingV2(
             to_size=self.embedding_dim, from_size=self.context_window
         )
-        self.input_dropout = DropoutV5(config.input_dropout_prob)
+        self.input_dropout = DropoutV7(config.input_dropout_prob)
 
         self.blocks = [
-            GPT2TransformerBlock(
+            GPT2TransformerBlockV3(
                 embedding_dim=self.embedding_dim,
                 n_heads=config.n_heads,
                 context_window=self.context_window,
@@ -158,7 +166,7 @@ class GPTV2(Layer):
             for _ in range(config.n_layers)
         ]
 
-        self.head = Dense(
+        self.head = DenseV3(
             to_size=config.vocab_size, from_size=self.embedding_dim
         )
         self.layers = [
@@ -215,12 +223,12 @@ class GPTV2(Layer):
         for block in self.blocks:
             block.update(optimiser)
 
-    def to_gpu(self):
-        self.token_embedding.to_gpu()
-        self.position_embedding.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.token_embedding.to_gpu(device)
+        self.position_embedding.to_gpu(device)
         for block in self.blocks:
-            block.to_gpu()
-        self.head.to_gpu()
+            block.to_gpu(device)
+        self.head.to_gpu(device)
 
     def from_gpu(self):
         self.token_embedding.from_gpu()

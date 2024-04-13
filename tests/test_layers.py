@@ -3,7 +3,14 @@ from copy import copy
 import numpy as np
 
 from tricycle.einsum import Einsum
-from tricycle.layers import Dense, Dropout, Embedding, LayerNorm, Sequential
+from tricycle.layers import (  # noqa: E501
+    Dense,
+    Dropout,
+    Embedding,
+    LayerNorm,
+    RMSNorm,
+    Sequential,
+)
 from tricycle.tensor import to_tensor
 
 
@@ -189,3 +196,19 @@ def test_embedding_matches_orignal_method():
     new_out = embedding_layer(tokens)
 
     assert original_out.close_to(new_out)
+
+
+def test_rms_norm():
+    np.random.seed(0)
+    in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
+    layer_norm = RMSNorm()
+    out_tensor = layer_norm(in_tensor.to_vector())
+
+    assert out_tensor.shape == in_tensor.shape
+    assert np.allclose((out_tensor._data**2).mean(), 1)
+    out_tensor.backward()
+
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.shape == in_tensor.shape
+
+    # TODO: do a proper check here
