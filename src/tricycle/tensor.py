@@ -429,7 +429,7 @@ class Tensor:
 
         return isinstance(self._data, cupy.ndarray)
 
-    def to_gpu(self):
+    def to_gpu(self, device: int = 0):
         """
         Move this tensor to the GPU
         """
@@ -439,6 +439,7 @@ class Tensor:
             )
         import cupy
 
+        cupy.cuda.Device(device).use()
         self._data = cupy.asarray(self._data)
         return self
 

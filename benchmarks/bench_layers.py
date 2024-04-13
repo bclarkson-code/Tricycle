@@ -164,13 +164,14 @@ def test_dropout_bool_mask():
 def test_dense_original():
     batch_size = 12
     shape = (1024, 384)
+    to_shape = 384 * 4
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=True,
     ).to_gpu()
     inputs = inputs.to_vector()
-    layer = Dense(from_size=shape[1], to_size=shape[0]).to_gpu()
+    layer = Dense(from_size=shape[1], to_size=to_shape).to_gpu()
 
     for _ in range(100):
         out = layer(inputs)
@@ -183,13 +184,14 @@ def test_dense_original():
 def test_dense_zero_grad_inputs():
     batch_size = 12
     shape = (1024, 384)
+    to_shape = 384 * 4
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=False,
     ).to_gpu()
     inputs = inputs.to_vector()
-    layer = DenseV2(from_size=shape[1], to_size=shape[0]).to_gpu()
+    layer = DenseV2(from_size=shape[1], to_size=to_shape).to_gpu()
 
     for _ in range(100):
         out = layer(inputs)
@@ -202,13 +204,14 @@ def test_dense_zero_grad_inputs():
 def test_dense_hand_crafted_derivative():
     batch_size = 12
     shape = (1024, 384)
+    to_shape = 384 * 4
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=True,
     ).to_gpu()
     inputs = inputs.to_vector()
-    layer = DenseV3(from_size=shape[1], to_size=shape[0]).to_gpu()
+    layer = DenseV3(from_size=shape[1], to_size=to_shape).to_gpu()
 
     for _ in range(100):
         out = layer(inputs)
@@ -219,13 +222,14 @@ def test_dense_hand_crafted_derivative():
 def test_dense_no_einsum():
     batch_size = 12
     shape = (1024, 384)
+    to_shape = 384 * 4
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
         requires_grad=True,
     ).to_gpu()
     inputs = inputs.to_vector()
-    layer = DenseV4(from_size=shape[1], to_size=shape[0]).to_gpu()
+    layer = DenseV4(from_size=shape[1], to_size=to_shape).to_gpu()
 
     for _ in range(100):
         out = layer(inputs)
@@ -277,9 +281,9 @@ __benchmarks__ = [
     #     test_dense_hand_crafted_derivative,
     #     "Hand crafting derivatives",
     # ),
-    (
-        test_dense_no_einsum,
-        test_dense_original,
-        "No Einsum",
-    ),
+    # (
+    #     test_dense_no_einsum,
+    #     test_dense_original,
+    #     "No Einsum",
+    # ),
 ]

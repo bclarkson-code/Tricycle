@@ -258,8 +258,10 @@ class DenseV4(Layer):
         self.to_size = to_size
         self.tensors = {"weights": self.weights}
 
-    def _matmul(self, tensor):
-        def back_einsum(grad):
+    def forward(self, tensor: Tensor):
+        result = to_tensor(tensor.xp.matmul(tensor._data, self.weights._data))
+
+        def weight_back_fn(grad):
             result = tensor.xp.matmul(
                 tensor._data.transpose(0, 2, 1), grad._data
             )
@@ -269,18 +271,21 @@ class DenseV4(Layer):
                 name="back_dense",
             )
 
-        return back_einsum
+        def input_back_fn(grad):
+            result = tensor.xp.matmul(
+                grad._data, self.weights._data.transpose()
+            )
+            return to_tensor(
+                result,
+                requires_grad=tensor.requires_grad,
+                name="back_dense",
+            )
 
-    def forward(self, tensor: Tensor):
-        # TODO: figure out the right transpose ops for each circumstance
-        result = to_tensor(tensor.xp.matmul(tensor._data, self.weights._data))
-        weight_back_fn = self._matmul(tensor)
-        grad_back_fn = self._matmul(self.weights)
         result.args = (self.weights, tensor)
-        result.back_fns = (weight_back_fn, grad_back_fn)
+        result.back_fns = (weight_back_fn, input_back_fn)
         result.is_vector = tensor.is_vector
-
         result.name = "dense"
+
         return result
 
     def update(self, optimiser: Optimiser):
