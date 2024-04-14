@@ -259,7 +259,6 @@ class EinsumV2:
         back_functions = []
         for idx in range(len(tensors)):
             # TODO: figure out how to avoid batch ops in the back direction
-            breakpoint()
             back_op = EinsumBackOp(idx, tensors, subscript)
             back_functions.append(back_op)
 

@@ -186,7 +186,6 @@ class DenseV3(Layer):
 
     def _einsum_fn(self, subscript, tensor):
         def back_einsum(grad):
-            breakpoint()
             result = tensor.xp.einsum(subscript, tensor._data, grad._data)
             return to_tensor(
                 result,

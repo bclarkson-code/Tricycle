@@ -12,7 +12,7 @@ from tricycle.tensor import to_tensor
 
 
 def test_softmax():
-    in_tensor = [np.pi, 0, -1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    in_tensor = [np.pi, 0, -1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] * 2
     in_tensor_1 = to_tensor(in_tensor)
     in_tensor_2 = to_tensor(in_tensor)
 
@@ -31,7 +31,9 @@ def test_softmax():
 
 
 def test_2d_softmax():
-    in_tensor = [[np.pi, 0, -1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]] * 16
+    in_tensor = [
+        [np.pi, 0, -1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] * 2
+    ] * 32
     in_tensor_1 = to_tensor(in_tensor)
     in_tensor_2 = to_tensor(in_tensor)
 
