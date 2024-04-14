@@ -78,5 +78,5 @@ def train_original_model():
 
 
 __benchmarks__ = [
-    (train_improved_model, train_original_model, "Use improved embedding")
+    (train_original_model, train_improved_model, "Optimised multiple blocks")
 ]

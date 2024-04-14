@@ -18,6 +18,7 @@ from tricycle.layers import (
     EmbeddingV2,
     LayerNorm,
     RMSNorm,
+    RMSNormV2,
 )
 from tricycle.tensor import to_tensor
 
@@ -268,7 +269,7 @@ def layer_norm_original():
     inputs = inputs.to_vector()
     layer = LayerNorm()
 
-    for _ in range(100):
+    for _ in range(10):
         out = layer(inputs)
         out.backward()
         out.cleanup()
@@ -277,7 +278,6 @@ def layer_norm_original():
 def rms_norm_original():
     batch_size = 12
     shape = (1024, 384)
-    to_shape = 384 * 4
 
     inputs = to_tensor(
         np.random.random(size=(batch_size, *shape)),
@@ -286,7 +286,24 @@ def rms_norm_original():
     inputs = inputs.to_vector()
     layer = RMSNorm()
 
-    for _ in range(100):
+    for _ in range(10):
+        out = layer(inputs)
+        out.backward()
+        out.cleanup()
+
+
+def rms_norm_hand_crafted_derivative():
+    batch_size = 12
+    shape = (1024, 384)
+
+    inputs = to_tensor(
+        np.random.random(size=(batch_size, *shape)),
+        requires_grad=True,
+    ).to_gpu(1)
+    inputs = inputs.to_vector()
+    layer = RMSNormV2()
+
+    for _ in range(10):
         out = layer(inputs)
         out.backward()
         out.cleanup()
@@ -350,5 +367,10 @@ __benchmarks__ = [
     #     layer_norm_original,
     #     rms_norm_original,
     #     "swapped layer norm for rms norm",
+    # ),
+    # (
+    #     rms_norm_original,
+    #     rms_norm_hand_crafted_derivative,
+    #     "Hand crafted rms norm",
     # ),
 ]

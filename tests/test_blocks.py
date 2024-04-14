@@ -351,9 +351,7 @@ def test_GPT2TransformerBlock():
     n_heads = 3
     embedding_dim = 7 * n_heads
 
-    in_tensor = to_tensor(
-        np.random.random((batch_size, n_tokens, embedding_dim))
-    )
+    in_tensor = to_tensor(np.random.random((batch_size, n_tokens)))
     block = GPT2TransformerBlock(
         embedding_dim=embedding_dim,
         n_heads=3,

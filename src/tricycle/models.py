@@ -1,7 +1,7 @@
 import humanize
 import numpy as np
 
-from tricycle.blocks import GPT2TransformerBlock, GPT2TransformerBlockV3
+from tricycle.blocks import GPT2TransformerBlock, GPT2TransformerBlockV4
 from tricycle.configs import GPTConfig
 from tricycle.layers import (
     Dense,
@@ -58,14 +58,14 @@ class GPT(Layer):
         """
         xp = tensor.xp
         if tensor.ndim == 1:
-            n_tokens = 1
+            n_batches = 1
             context_window = tensor.shape[-1]
             tensor._data = xp.expand_dims(tensor._data, 0)
         else:
-            n_tokens, context_window = tensor.shape
-        assert n_tokens <= self.context_window, (
+            n_batches, context_window = tensor.shape
+        assert n_batches <= self.context_window, (
             "Can't have more tokens than context window. ",
-            f"Found {n_tokens=} and {self.context_window=}",
+            f"Found {n_batches=} and {self.context_window=}",
         )
 
         position = to_tensor(
@@ -155,7 +155,7 @@ class GPTV2(Layer):
         self.input_dropout = DropoutV7(config.input_dropout_prob)
 
         self.blocks = [
-            GPT2TransformerBlockV3(
+            GPT2TransformerBlockV4(
                 embedding_dim=self.embedding_dim,
                 n_heads=config.n_heads,
                 context_window=self.context_window,

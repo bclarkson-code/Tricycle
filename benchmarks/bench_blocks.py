@@ -4,6 +4,7 @@ from tricycle.blocks import (
     GPT2TransformerBlock,
     GPT2TransformerBlockV2,
     GPT2TransformerBlockV3,
+    GPT2TransformerBlockV4,
     MLPBlock,
     MLPBlock2,
     MLPBlock3,
@@ -278,6 +279,33 @@ def new_transformer_block_and_rms_norm():
         out.cleanup()
 
 
+def new_transformer_block_and_fast_rms_norm():
+    batch_size = 16
+    embedding_dim = 384
+    n_heads = 6
+    dropout = 0.2
+    context_window = 128
+
+    inputs = to_tensor(
+        np.random.random(size=(batch_size, context_window, embedding_dim)),
+        requires_grad=False,
+    ).to_gpu(1)
+    inputs = inputs.to_vector()
+    block = GPT2TransformerBlockV4(
+        embedding_dim=embedding_dim,
+        n_heads=n_heads,
+        context_window=context_window,
+        attention_dropout_prob=dropout,
+        residual_dropout_prob=dropout,
+    )
+    block.to_gpu(1)
+
+    for _ in range(N_LOOPS):
+        out = block(inputs)
+        out.backward()
+        out.cleanup()
+
+
 __benchmarks__ = [
     # (
     #     original_MLP_block,
@@ -318,5 +346,10 @@ __benchmarks__ = [
     #     original_transformer_block,
     #     new_transformer_block_and_rms_norm,
     #     "Optimised every layer + swapped layer norm for rms",
+    # ),
+    # (
+    #     original_transformer_block,
+    #     new_transformer_block_and_fast_rms_norm,
+    #     "Optimised every layer + swapped layer norm for fast rms",
     # ),
 ]

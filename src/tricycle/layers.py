@@ -186,6 +186,7 @@ class DenseV3(Layer):
 
     def _einsum_fn(self, subscript, tensor):
         def back_einsum(grad):
+            breakpoint()
             result = tensor.xp.einsum(subscript, tensor._data, grad._data)
             return to_tensor(
                 result,
@@ -425,6 +426,42 @@ class RMSNorm(Layer):
         return tensor / divisor
 
 
+class RMSNormV2(Layer):
+    """
+    Normalise tensors by their sum of squares. This is similar to layer norm
+    but removes means
+    """
+
+    def build_back_fn(self, square_sum, result, is_vector=False):
+        def rm_back_fn(grad):
+            xp = grad.xp
+            left = grad._data / result
+            right = grad._data / xp.repeat(
+                square_sum, result.shape[-1]
+            ).reshape(result.shape)
+
+            out = (left - right) * grad._data
+            return to_tensor(out, is_vector=is_vector)
+
+        return rm_back_fn
+
+    def forward(self, tensor: Tensor):
+        xp = tensor.xp
+        square_sum = (tensor._data * tensor._data).mean(axis=-1)
+        divisor = xp.sqrt(square_sum)
+        divisor = xp.repeat(divisor, tensor.shape[-1]).reshape(tensor.shape)
+        result = xp.divide(tensor._data, divisor)
+
+        back_fn = self.build_back_fn(
+            square_sum, result, is_vector=tensor.is_vector
+        )
+        result = to_tensor(result, is_vector=tensor.is_vector)
+        result.back_fns = (back_fn,)
+        result.args = (tensor,)
+
+        return result
+
+
 class Embedding(Layer):
     """
     Convert an index to an embedding with a lookup (rather than a one-hot
@@ -537,6 +574,20 @@ class EmbeddingV2(Layer):
 
         result.back_fns = (nothing, _embed_back_fn)
         return result
+
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
+
+    def zero_grad(self):
+        self.weights.grad = None
+
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
+        return self
+
+    def from_gpu(self):
+        self.weights.from_gpu()
+        return self
 
 
 class Sequential(Layer):
