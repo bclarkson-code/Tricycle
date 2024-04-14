@@ -12,7 +12,7 @@ from tricycle import CUPY_ENABLED
 from tricycle.binary import _shapes_match, badd, bdiv, bmax, bmin, bmul, bsub
 from tricycle.einsum import EinsumBackOp
 from tricycle.layers import DenseV3
-from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
+from tricycle.tensor import Tensor, nothing, to_tensor, unvectorise, vectorise
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
     uadd,
@@ -339,6 +339,7 @@ def test_tokeniser_train_encode_decode(text):
 
 
 @given(tensor(), integer())
+# @example(tensor=to_tensor([0.0], dtype=np.float32), out_shape=1)
 def test_tricycle_dense_matches_pytorch(tensor, out_shape):
     assume(np.isfinite(tensor._data).all())
 
@@ -348,18 +349,18 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
         in_features=from_size, out_features=out_shape, bias=False
     )
     tr_layer = DenseV3(from_size=from_size, to_size=out_shape)
-    tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy())
+    tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy().T)
 
     pt_out = pt_layer(torch.tensor(tensor._data))
     tr_out = tr_layer(tensor)
 
     assert np.allclose(pt_out.detach().numpy(), tr_out.numpy(), rtol=1e-3)
 
-    pt_out.mean().backward()
-    tr_out.mean().backward()
+    pt_out.sum().backward()
+    tr_out.from_vector().e("...a->").backward()
 
     assert np.allclose(
-        pt_layer.weight.grad.detach().numpy(),
+        pt_layer.weight.grad.detach().numpy().T,
         tr_layer.weights.grad.numpy(),
         rtol=1e-3,
     )

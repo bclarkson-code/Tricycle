@@ -116,10 +116,14 @@ class Tensor:
                 arg.parents.remove(node)
 
                 # calculate gradients
-                if arg.grad is None:
-                    arg.grad = back_fns(node.grad)
-                else:
-                    arg.grad += back_fns(node.grad)
+                try:
+                    if arg.grad is None:
+                        arg.grad = back_fns(node.grad)
+                    else:
+                        arg.grad += back_fns(node.grad)
+                except Exception as e:
+                    breakpoint()
+                    raise e
 
                 # only move to arg if we have been to all of its parents
                 if len(arg.parents) == 0:

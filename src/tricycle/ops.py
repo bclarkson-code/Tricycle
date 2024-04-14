@@ -105,6 +105,8 @@ def mean(tensor: Tensor) -> Tensor:
     """
     Find the mean of a tensor
     """
+    if tensor.ndim == 1 and tensor.shape[0] == 1:
+        return tensor
     return tensor.e("...a->...") / tensor.shape[-1]
 
 

@@ -186,6 +186,8 @@ class DenseV3(Layer):
 
     def _einsum_fn(self, subscript, tensor):
         def back_einsum(grad):
+            self.weights
+            breakpoint()
             result = tensor.xp.einsum(subscript, tensor._data, grad._data)
             return to_tensor(
                 result,
@@ -197,14 +199,14 @@ class DenseV3(Layer):
 
     def forward(self, tensor: Tensor):
         if tensor.ndim == 1:
-            result = self._forward(tensor, "a,aB->B", "a,B->aB", "aB,B->a")
+            result = self._forward(tensor, "a,aW->W", "a,W->aW", "aW,W->a")
         elif tensor.ndim == 2:
             result = self._forward(
-                tensor, "Ab,bC->AC", "Ab,AC->bC", "bC,AC->Ab"
+                tensor, "Tb,bW->TW", "Tb,TW->bW", "bW,TW->Tb"
             )
         elif tensor.ndim == 3 and tensor.is_vector:
             result = self._forward(
-                tensor, "zAb,bC->zAC", "zAb,zAC->bC", "bC,zAC->Ab"
+                tensor, "zTb,bW->zTW", "zTb,zTW->bW", "bW,zTW->zTb"
             )
         else:
             raise NotImplementedError(
@@ -218,7 +220,11 @@ class DenseV3(Layer):
 
     def _forward(self, tensor, subscript, weight_subscript, tensor_subscript):
         result = to_tensor(
-            tensor.xp.einsum(subscript, tensor._data, self.weights._data)
+            tensor.xp.einsum(
+                subscript,
+                tensor._data,
+                self.weights._data,
+            )
         )
         weight_back_fn = self._einsum_fn(weight_subscript, tensor)
         grad_back_fn = self._einsum_fn(tensor_subscript, self.weights)
