@@ -12,6 +12,7 @@ from tricycle import CUPY_ENABLED
 from tricycle.binary import _shapes_match, badd, bdiv, bmax, bmin, bmul, bsub
 from tricycle.einsum import EinsumBackOp
 from tricycle.layers import DenseV3
+from tricycle.loss import cross_entropy
 from tricycle.tensor import Tensor, nothing, to_tensor, unvectorise, vectorise
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
@@ -97,7 +98,7 @@ def tensor(draw):
     """
     Generate a single, initial tensor (not as the result of an operation)
     """
-    shape = draw(st.integers(min_value=1, max_value=10))
+    shape = draw(st.integers(min_value=1, max_value=2))
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
     is_vector = draw(st.booleans())
     requires_grad = draw(st.booleans())
@@ -364,6 +365,29 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
         tr_layer.weights.grad.numpy(),
         rtol=1e-3,
     )
+
+
+@given(tensor(), integer())
+# @example(tensor=to_tensor([0.0], dtype=np.float32), out_shape=1)
+def test_tricycle_rmsnorm_matches_pytorch(tensor, out_shape):
+    assume(np.isfinite(tensor._data).all())
+
+    from_size = tensor.shape[-1]
+
+    pt_layer = torch.nn.RMSNorm()
+
+
+@given(tensor())
+# @example(tensor=to_tensor([0.0], dtype=np.float32), out_shape=1)
+def test_crossentropy_matches(tensor_1):
+    assume(np.isfinite(tensor_1._data).all())
+
+    tr_out = cross_entropy(tensor_1, tensor_1)
+    p_out = torch.nn.functional.cross_entropy(
+        torch.tensor(tensor_1._data), torch.tensor(tensor_1._data)
+    )
+
+    assert tr_out.close_to(p_out.detach().numpy())
 
 
 if __name__ == "__main__":

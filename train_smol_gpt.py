@@ -77,7 +77,7 @@ def get_sample(sample_text, n_samples=50):
 
 
 mlflow.set_tracking_uri("http://localhost:5000")
-mlflow.set_experiment("SmolGPT:character:debug")
+mlflow.set_experiment("SmolGPT:character:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 best_loss = float("inf")

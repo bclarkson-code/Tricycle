@@ -41,14 +41,19 @@ optimiser = StochasticGradientDescent(
 
 def train_improved_model():
     model = GPTV2(config)
-    model.to_gpu(1)
+    model.to_gpu(0)
     n_steps = 2
     for step, (inputs, outputs) in enumerate(dataset):
         logits = model(inputs)
-        inputs.to_gpu(1)
-        outputs.to_gpu(1)
+        inputs.to_gpu(0)
+        outputs.to_gpu(0)
         loss = loss_fn(outputs, logits).from_vector().mean().mean()
         loss.backward(clip=1)
+        import pickle
+
+        with open("model.pkl", "wb") as f:
+            pickle.dump(model, f)
+        exit()
         model.update(optimiser)
 
         # clean up the computational graph
@@ -103,6 +108,6 @@ def train_original_model_gpu_0():
 
 
 __benchmarks__ = [
-    (train_original_model, train_improved_model, "Optimised multiple blocks")
+    (train_improved_model, train_improved_model, "Optimised multiple blocks")
     # (train_original_model, train_original_model_gpu_0, "Switched to GPU 0")
 ]

@@ -11,6 +11,7 @@ from tricycle.layers import (
     Embedding,
     EmbeddingV2,
     Layer,
+    RMSNormV2,
 )
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
@@ -175,11 +176,13 @@ class GPTV2(Layer):
             from_size=self.embedding_dim,
             name="head",
         )
+        self.layer_norm = RMSNormV2()
         self.layers = [
             self.token_embedding,
             self.position_embedding,
             self.input_dropout,
             *self.blocks,
+            self.layer_norm,
             self.head,
         ]
 
@@ -213,7 +216,10 @@ class GPTV2(Layer):
         for block in self.blocks:
             embedding = block(embedding)
 
-        return self.head(embedding)
+        embedding = self.layer_norm(embedding)
+
+        embedding = self.head(embedding)
+        return embedding
 
     def zero_grad(self):
         self.token_embedding.zero_grad()
@@ -244,6 +250,9 @@ class GPTV2(Layer):
         self.head.from_gpu()
 
     def display(self):
+        print(self)
+
+    def __str__(self):
         stack = [(self, 0)]
 
         contents = []
@@ -257,18 +266,20 @@ class GPTV2(Layer):
 
             stack.extend((layer, indent + 1) for layer in node.layers[::-1])
 
+        string = ""
         total = 0
         for layer, size, n_indent in contents:
             total += size
             size = humanize.scientific(size) if size else ""
             indent = "  " * n_indent
 
-            print(f"{indent}{layer}({size})")
+            string += f"{indent}{layer}({size})\n"
+        return string
 
-        PARAM_SIZE = self.head.weights[0][0].dtype.itemsize
-        total *= PARAM_SIZE
-
-        print("\nTotal size:")
-        print(f"  - {humanize.naturalsize(total)}")
-        print("Total parameters:")
-        print(f"  - {humanize.intword(total/PARAM_SIZE)}")
+        # PARAM_SIZE = self.head.weights[0][0].dtype.itemsize
+        # total *= PARAM_SIZE
+        #
+        # print("\nTotal size:")
+        # print(f"  - {humanize.naturalsize(total)}")
+        # print("Total parameters:")
+        # print(f"  - {humanize.intword(total/PARAM_SIZE)}")

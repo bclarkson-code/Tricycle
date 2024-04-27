@@ -34,14 +34,14 @@ class SmolGPTConfig(GPTConfig):
     context_window = 256
     vocab_size = 65
     n_heads = 6
-    n_layers = 6
+    n_layers = 1
     expansion_ratio = 4
     activation_fn = GeLU()
 
-    input_dropout_prob = 0.2
-    attention_dropout_prob = 0.2
-    residual_dropout_prob = 0.2
-    linear_dropout_prob = 0.2
+    input_dropout_prob = 0.0
+    attention_dropout_prob = 0.0
+    residual_dropout_prob = 0.0
+    linear_dropout_prob = 0.0
 
     max_learning_rate = 1e-3
     min_learning_rate = 1e-4

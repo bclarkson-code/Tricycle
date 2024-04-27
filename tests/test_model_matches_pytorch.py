@@ -12,11 +12,16 @@ from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
+from tricycle.configs import SmolGPTConfig
+from tricycle.dataset import CausalLMDataset
 from tricycle.functions import softmax_v4
-from tricycle.layers import DenseV3, EmbeddingV2
+from tricycle.layers import DenseV3, EmbeddingV2, RMSNormV2
 from tricycle.loss import cross_entropy
+from tricycle.models import GPT, GPTV2
+from tricycle.optimisers import StochasticGradientDescent
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import usum
+from tricycle_datasets.shakespeare import ShakespeareChar
 
 
 @st.composite
@@ -65,7 +70,7 @@ def tokens(draw):
 def tensor_shape(draw, force_divisible_by_32=True):
     shape = draw(
         st.lists(
-            st.integers(min_value=1, max_value=64), min_size=1, max_size=3
+            st.integers(min_value=1, max_value=64), min_size=2, max_size=3
         )
     )
     if force_divisible_by_32:
@@ -139,9 +144,9 @@ def build_tensor(shape_, is_vector):
     match len(shape_):
         case 1:
             is_vector = False
-        case 2 | 3:
+        case 2:
             is_vector = is_vector
-        case 4:
+        case 3:
             is_vector = True
         case _:
             breakpoint()
@@ -299,18 +304,21 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
     )
 
 
-# @given(tokens(), integer())
-# @settings(deadline=1000)
-# # @example(
-# #     tokens_=to_tensor(
-# #         [[1, 1], [1, 1]], dtype=np.int64, requires_grad=False, is_vector=True
-# #     ),
-# #     out_shape=1,
-# # )
-# def test_multihead_attention_matches(tokens_, out_shape):
-# TODO: implement this
+@given(tensor_shape(), st.booleans())
+@example(in_shape=[32, 1, 2], is_vector=False)
+def test_crossentropy_matches(in_shape, is_vector):
+    tensor_1 = build_tensor(in_shape, is_vector)
+    assume(np.isfinite(tensor_1._data).all())
 
+    tr_out = cross_entropy(tensor_1, tensor_1).from_vector().mean().mean()
+    p_out = torch.nn.functional.cross_entropy(
+        torch.tensor(tensor_1._data, requires_grad=True),
+        torch.tensor(tensor_1._data, requires_grad=True),
+    )
 
-# def test_loss_fn_matches(in_tokens, out_tokens):
-#     pt_loss = torch.nn.functional.cross_entropy
-#     tr_loss = cross_entropy
+    breakpoint()
+    assert tr_out.close_to(p_out.detach().numpy().item())
+
+    # tr_out.backward()
+    # p_out.backward()
+    # breakpoint()

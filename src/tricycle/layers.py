@@ -449,7 +449,7 @@ class RMSNormV2(Layer):
     but removes means
     """
 
-    REALLY_SMALL_NUMBER = 1e-7
+    REALLY_SMALL_NUMBER = 1e-6
 
     def build_back_fn(self, square_sum, result, is_vector=False):
         def rm_back_fn(grad):
@@ -468,9 +468,8 @@ class RMSNormV2(Layer):
     def forward(self, tensor: Tensor):
         xp = tensor.xp
         square_sum = (tensor._data * tensor._data).mean(axis=-1)
-        divisor = xp.sqrt(square_sum)
-        divisor = xp.repeat(divisor, tensor.shape[-1]).reshape(tensor.shape)
-        result = xp.divide(tensor._data, divisor)
+        divisor = xp.expand_dims(xp.sqrt(square_sum), -1)
+        result = xp.divide(tensor._data, (divisor + self.REALLY_SMALL_NUMBER))
 
         back_fn = self.build_back_fn(
             square_sum, result, is_vector=tensor.is_vector
@@ -478,7 +477,6 @@ class RMSNormV2(Layer):
         result = to_tensor(result, is_vector=tensor.is_vector)
         result.back_fns = (back_fn,)
         result.args = (tensor,)
-
         return result
 
 
