@@ -147,10 +147,14 @@ class GPTV2(Layer):
         self.embedding_dim = config.embedding_dim
         self.context_window = config.context_window
         self.token_embedding = EmbeddingV2(
-            to_size=self.embedding_dim, from_size=config.vocab_size
+            to_size=self.embedding_dim,
+            from_size=config.vocab_size,
+            name="token_embedding",
         )
         self.position_embedding = EmbeddingV2(
-            to_size=self.embedding_dim, from_size=self.context_window
+            to_size=self.embedding_dim,
+            from_size=self.context_window,
+            name="position_embedding",
         )
         self.input_dropout = DropoutV7(config.input_dropout_prob)
 
@@ -167,7 +171,9 @@ class GPTV2(Layer):
         ]
 
         self.head = DenseV3(
-            to_size=config.vocab_size, from_size=self.embedding_dim
+            to_size=config.vocab_size,
+            from_size=self.embedding_dim,
+            name="head",
         )
         self.layers = [
             self.token_embedding,

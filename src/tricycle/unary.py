@@ -156,6 +156,7 @@ def ulog(tensor: Tensor) -> Tensor:
     """
     Raise every element of a tensor to the power of e
     """
+    REALLY_SMALL_NUMBER = 1e-8
     xp = tensor.xp
 
     result = to_tensor(xp.log(tensor._data))
@@ -166,7 +167,7 @@ def ulog(tensor: Tensor) -> Tensor:
     result.back_fns = (
         partial(
             bmul,
-            udiv(1, tensor),
+            udiv(1, tensor + REALLY_SMALL_NUMBER),
         ),
     )
     result.name = "log"
@@ -236,5 +237,29 @@ def uerf(tensor: Tensor) -> Tensor:
     result.args = (tensor,)
     result.name = "erf"
     result.back_fns = (lambda x: (x * -2) / SQRT_PI,)
+
+    return result
+
+
+def usum(tensor: Tensor) -> Tensor:
+    """
+    Sum all the elements of a tensor into a single value
+    """
+    xp = tensor.xp
+    if tensor.is_vector:
+        raise NotImplementedError(
+            "Sum is not yet implemented for vectorised tensors"
+        )
+    result = to_tensor(xp.sum(tensor._data))
+    result.args = (tensor,)
+
+    def sum_back_fn(grad):
+        xp = grad.xp
+        result = xp.full_like(tensor._data, grad._data)
+        return to_tensor(result)
+
+    result.back_fns = (sum_back_fn,)
+    result.name = "sum"
+    result.is_vector = False
 
     return result

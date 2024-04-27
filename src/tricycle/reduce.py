@@ -51,7 +51,7 @@ def rmax(tensor: Tensor, subscript: str | Subscript):
     # we're allowed to replace inf with a large number here because
     # we're multiplying with a binary vector. In other circumstances
     # this would might break things
-    result = Einsum(new_subscript)(tensor, indicator, replace_inf=True)
+    result = Einsum(new_subscript)(tensor, indicator)
     result.name = f"min({new_subscript})"
 
     return result

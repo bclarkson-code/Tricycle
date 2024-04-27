@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-import cupy as cp
 import numpy as np
 
 from tricycle.configs import SmolGPTConfig

@@ -32,7 +32,7 @@ class GPTConfig:
 class SmolGPTConfig(GPTConfig):
     embedding_dim = 384
     context_window = 256
-    vocab_size = 1024
+    vocab_size = 65
     n_heads = 6
     n_layers = 6
     expansion_ratio = 4
@@ -46,11 +46,11 @@ class SmolGPTConfig(GPTConfig):
     max_learning_rate = 1e-3
     min_learning_rate = 1e-4
     warmup_steps = 100
-    steps = 25_000
+    steps = 5_000
     weight_decay = 0
     momentum = 0
 
-    batch_size = 10
+    batch_size = 24
 
     debug = True
     mlflow_enabled = True

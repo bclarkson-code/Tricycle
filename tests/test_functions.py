@@ -68,6 +68,24 @@ def test_3d_softmax():
     assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-6)
 
 
+def test_binary_softmax():
+    in_tensor = [[[1.0] + [0.0] * 127] * 16]
+    in_tensor_1 = to_tensor(in_tensor).to_gpu(1)
+    in_tensor_2 = to_tensor(in_tensor).to_gpu(1)
+
+    out_tensor = softmax_v4(in_tensor_1)
+    # I am confident that v3 is correct, but slow so we'll use that as the
+    # source of truth
+    correct_out = softmax_v3(in_tensor_2)
+
+    assert out_tensor.close_to(correct_out)
+    out_tensor.backward()
+    correct_out.backward()
+
+    breakpoint()
+    assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-6)
+
+
 def test_sigmoid():
     in_tensor = to_tensor([0, 1, 2, 3])
     out_tensor = sigmoid(in_tensor)

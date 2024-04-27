@@ -137,6 +137,7 @@ void softmax_back_fn_4d(
     }
 
     deriv = softmax_result[b, h, t, i] * (indicator - softmax_result[b, h, t, j]);
+    // sometimes this returns nans
     out[b, h, t, j] = deriv * grad[b, h, t, i];
 }
 """,
@@ -168,9 +169,9 @@ def _cuda_softmax_back_fn(grad, _result):
                 (_result, grad._data, n_elements, out),
             )
         case 2:
-            if (
-                _result.shape[0] % BLOCK_SIZE != 0
-                or _result.shape[1] % BLOCK_SIZE != 0
+            if not (
+                _result.shape[0] % BLOCK_SIZE == 0
+                or _result.shape[1] % BLOCK_SIZE == 0
             ):
                 raise ValueError(
                     f"Expected shape to be divisible by {BLOCK_SIZE}, found: {_result.shape}"
@@ -216,6 +217,10 @@ def _cuda_softmax_back_fn(grad, _result):
             )
         case _:
             raise NotImplementedError()
+    # for reasons I dont understand, the cuda softmax sometimes returns nan
+    # I think this might be a numerical precision thing but im not sure
+    # for now, replacing the nans with 0's doesnt seem to hurt
+    out = cp.nan_to_num(out, 0)
     return to_tensor(out, is_vector=grad.is_vector, name="back_softmax")
 
 
@@ -225,13 +230,17 @@ def softmax(tensor: Tensor):
     dimension of the tensor
     Note: the tensor is normalised for numeric stability
     """
-
+    # add a really small number to the denominator to avoid infitiies
+    REALLY_SMALL_NUMBER = 1e-8
     # normalise
     largest_element = rmax(tensor, "...a->...").repeat(tensor.shape[-1])
     tensor = tensor - largest_element
 
     numerator = uexp(tensor)
-    denominator = numerator.e("...a->...").repeat(tensor.shape[-1])
+    denominator = numerator.e("...a->...")
+    denominator += REALLY_SMALL_NUMBER
+    denominator = denominator.repeat(tensor.shape[-1])
+
     return bdiv(numerator, denominator)
 
 

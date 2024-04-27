@@ -184,15 +184,14 @@ class DenseV3(Layer):
         self.to_size = to_size
         self.tensors = {"weights": self.weights}
 
-    def _einsum_fn(self, subscript, tensor):
+    def _einsum_fn(self, subscript, tensor, is_vector: bool):
         def back_einsum(grad):
-            self.weights
-            breakpoint()
             result = tensor.xp.einsum(subscript, tensor._data, grad._data)
             return to_tensor(
                 result,
-                requires_grad=tensor.requires_grad,
+                requires_grad=grad.requires_grad,
                 name="back_dense",
+                is_vector=is_vector,
             )
 
         return back_einsum
@@ -206,7 +205,10 @@ class DenseV3(Layer):
             )
         elif tensor.ndim == 3 and tensor.is_vector:
             result = self._forward(
-                tensor, "zTb,bW->zTW", "zTb,zTW->bW", "bW,zTW->zTb"
+                tensor,
+                "zTb,bW->zTW",
+                "zTb,zTW->bW",
+                "bW,zTW->zTb",
             )
         else:
             raise NotImplementedError(
@@ -218,7 +220,13 @@ class DenseV3(Layer):
         result.name = "dense"
         return result
 
-    def _forward(self, tensor, subscript, weight_subscript, tensor_subscript):
+    def _forward(
+        self,
+        tensor,
+        subscript,
+        weight_subscript,
+        tensor_subscript,
+    ):
         result = to_tensor(
             tensor.xp.einsum(
                 subscript,
@@ -226,8 +234,12 @@ class DenseV3(Layer):
                 self.weights._data,
             )
         )
-        weight_back_fn = self._einsum_fn(weight_subscript, tensor)
-        grad_back_fn = self._einsum_fn(tensor_subscript, self.weights)
+        weight_back_fn = self._einsum_fn(
+            weight_subscript, tensor, is_vector=False
+        )
+        grad_back_fn = self._einsum_fn(
+            tensor_subscript, self.weights, is_vector=tensor.is_vector
+        )
         result.args = (self.weights, tensor)
         result.back_fns = (weight_back_fn, grad_back_fn)
         result.is_vector = tensor.is_vector
@@ -437,13 +449,16 @@ class RMSNormV2(Layer):
     but removes means
     """
 
+    REALLY_SMALL_NUMBER = 1e-7
+
     def build_back_fn(self, square_sum, result, is_vector=False):
         def rm_back_fn(grad):
             xp = grad.xp
-            left = grad._data / result
-            right = grad._data / xp.repeat(
-                square_sum, result.shape[-1]
-            ).reshape(result.shape)
+            left = grad._data / (result + self.REALLY_SMALL_NUMBER)
+            right = grad._data / (
+                xp.repeat(square_sum, result.shape[-1]).reshape(result.shape)
+                + self.REALLY_SMALL_NUMBER
+            )
 
             out = (left - right) * grad._data
             return to_tensor(out, is_vector=is_vector)
@@ -537,8 +552,16 @@ class EmbeddingV2(Layer):
     encoding and a matrix multiplication)
     """
 
-    def __init__(self, from_size: int, to_size: int, initialiser=init_xavier):
-        self.weights = initialiser((from_size, to_size))
+    def __init__(
+        self,
+        from_size: int,
+        to_size: int,
+        name: str | None = None,
+        initialiser=init_xavier,
+    ):
+        self.weights = initialiser(
+            (from_size, to_size), name=name or "weights"
+        )
         self.vocab_size = from_size
 
     def forward(self, tensor: Tensor):
@@ -561,15 +584,12 @@ class EmbeddingV2(Layer):
 
         def _embed_back_fn(grad: Tensor):
             xp = grad.xp
-            if grad.is_vector:
-                out = xp.zeros((grad.shape[0], *self.weights.shape))
-            else:
-                out = xp.zeros(self.weights.shape)
+            out = xp.zeros(self.weights.shape)
 
             if grad.is_vector:
                 for batch_idx, tokens in enumerate(tensor):
                     for token_idx, token in enumerate(tokens):
-                        out[batch_idx][int(token._data)] += grad[batch_idx][
+                        out[int(token._data)] += grad[batch_idx][
                             token_idx
                         ]._data
             else:

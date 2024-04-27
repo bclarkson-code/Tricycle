@@ -218,10 +218,8 @@ class Einsum:
 
         return processed
 
-    def __call__(self, *tensors: Tensor, replace_inf=False):
+    def __call__(self, *tensors: Tensor):
         xp = select_backend(*tensors)
-        if replace_inf:
-            tensors = self._replace_infinity(tensors)
         subscript, tensors, vectorise_output = self._handle_vectorised(
             self.subscript, tensors
         )
@@ -329,32 +327,8 @@ class EinsumV2:
         subscript = Subscript.from_split(inputs, output)
         return subscript, tensors, vectorise_output
 
-    def _replace_infinity(self, tensors: Sequence[Tensor]):
-        """
-        If tensors contain infinity, temporarily replace them with the max
-        value for that datatype
-        """
+    def __call__(self, *tensors: Tensor):
         xp = select_backend(*tensors)
-        processed = []
-        for tensor in tensors:
-            if not xp.isinf(tensor._data).any():
-                processed.append(tensor)
-                continue
-
-            new_tensor = to_tensor(
-                xp.nan_to_num(tensor._data), is_vector=tensor.is_vector
-            )
-            new_tensor.args = tensor.args
-            new_tensor.back_fns = tensor.back_fns
-            new_tensor.name = tensor.name
-            processed.append(new_tensor)
-
-        return processed
-
-    def __call__(self, *tensors: Tensor, replace_inf=False):
-        xp = select_backend(*tensors)
-        if replace_inf:
-            tensors = self._replace_infinity(tensors)
         subscript, tensors, vectorise_output = self._handle_vectorised(
             self.subscript, tensors
         )

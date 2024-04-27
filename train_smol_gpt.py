@@ -10,7 +10,7 @@ import os
 import pickle
 from warnings import warn
 
-# import mlflow
+import mlflow
 import numpy as np
 from tqdm import tqdm
 
@@ -21,21 +21,20 @@ from tricycle.loss import cross_entropy
 from tricycle.models import GPTV2
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle.scheduler import lr_schedule
-from tricycle_datasets.shakespeare import Shakespeare
+from tricycle_datasets.shakespeare import ShakespeareChar
 
 np.random.seed(0)
 config = SmolGPTConfig()
-config.batch_size = 12
-config.n_layers = 1
 model = GPTV2(config)
 model.display()
 
 
-shakespeare = Shakespeare(vocab_size=config.vocab_size)
+shakespeare = ShakespeareChar()
+shakespeare.vocab_size = 65
 dataset = (
     CausalLMDataset(
         tokens=shakespeare,
-        vocab_size=config.vocab_size,
+        vocab_size=shakespeare.vocab_size,
         batch_size=config.batch_size,
         context_window=config.context_window,
     )
@@ -64,24 +63,26 @@ model.to_gpu()
 def get_sample(sample_text, n_samples=50):
     sampled = []
     for i, next_token in tqdm(
-        enumerate(generate(sample_text, model, shakespeare.tokeniser)),
+        enumerate(generate(sample_text, model, shakespeare)),
         desc="evaulating",
         total=n_samples,
     ):
         if i > n_samples:
             break
         sampled.append(next_token)
-    return shakespeare.tokeniser.decode(sampled)
+    decoded = shakespeare.decode(sampled)
+    if not isinstance(decoded, str):
+        decoded = "".join([chr(i) for i in decoded])
+    return decoded
 
 
-# mlflow.set_tracking_uri("http://localhost:5000")
-# mlflow.set_experiment("SmolGPT:base")
-# os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
+mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_experiment("SmolGPT:character:debug")
+os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 best_loss = float("inf")
 losses = []
-n_steps = 3
-for step, (inputs, outputs) in tqdm(enumerate(dataset), total=n_steps):
+for step, (inputs, outputs) in tqdm(enumerate(dataset), total=config.steps):
     inputs = inputs.to_gpu()
     outputs = outputs.to_gpu()
 
@@ -107,21 +108,22 @@ for step, (inputs, outputs) in tqdm(enumerate(dataset), total=n_steps):
 
     # log the loss
     losses.append(loss.numpy())
-    # mlflow.log_metric("loss", float(loss.numpy()), step=step)
+    mlflow.log_metric("loss", float(loss.numpy()), step=step)
+    mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
 
-    # # occasionally log some metrics
-    # if step % 25 == 0:
-    #     sample_text = "To be or not to be"
-    #     predicted = get_sample(sample_text)
-    #     mlflow.log_text(predicted, f"generated/{step}.txt")
+    # occasionally try generating some text
+    if step % 50 == 0:
+        sample_text = "To be or not to be"
+        predicted = get_sample(sample_text)
+        mlflow.log_text(predicted, f"generated/{step}.txt")
 
-    # # checkpoint
-    # if loss < best_loss:
-    #     with open("model.pkl", "wb") as f:
-    #         pickle.dump(model, f)
-    #     best_loss = loss
+    # checkpoint
+    if loss < best_loss:
+        with open("model.pkl", "wb") as f:
+            pickle.dump(model, f)
+        best_loss = loss
 
-    if step >= n_steps:
+    if step >= config.steps:
         break
 
     step += 1

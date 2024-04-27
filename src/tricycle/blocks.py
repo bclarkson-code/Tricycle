@@ -29,7 +29,7 @@ def build_mask(context_window: int) -> Tensor:
     Build an attention mask to stop the model from being able to see
     future tokens
     """
-    NEGATIVE_INFINITY = -np.inf
+    NEGATIVE_INFINITY = -10_000
     mask = np.ones((context_window, context_window))
     idx = np.tril(mask.astype(bool))
     mask[~idx] = NEGATIVE_INFINITY
@@ -49,7 +49,9 @@ def masked_fill(
         [full_mask[: mask_shape[0], : mask_shape[1]]._data] * repeats
     )
     mask = to_tensor(mask, requires_grad=False, name="mask")
-    return tensor + mask
+    result = tensor + mask
+    result.name = "masked"
+    return result
 
 
 class MultiHeadSelfAttention(Layer):
@@ -311,11 +313,13 @@ class MLPBlock(Layer):
             from_size=embedding_dim,
             to_size=int(expansion_ratio * embedding_dim),
             initialiser=init_xavier,
+            name="linear_1",
         )
         self.linear_2 = Dense(
             from_size=int(expansion_ratio * embedding_dim),
             to_size=embedding_dim,
             initialiser=init_xavier,
+            name="linear_2",
         )
         self.dropout = Dropout(dropout_prob)
         if isinstance(activation_fn, str):
@@ -389,11 +393,13 @@ class MLPBlock2(Layer):
             from_size=embedding_dim,
             to_size=int(expansion_ratio * embedding_dim),
             initialiser=init_xavier,
+            name="linear_1",
         )
         self.linear_2 = DenseV3(
             from_size=int(expansion_ratio * embedding_dim),
             to_size=embedding_dim,
             initialiser=init_xavier,
+            name="linear_2",
         )
         self.dropout = DropoutV7(dropout_prob)
         if isinstance(activation_fn, str):
@@ -545,11 +551,13 @@ class MLPBlock4(Layer):
             from_size=embedding_dim,
             to_size=int(expansion_ratio * embedding_dim),
             initialiser=init_xavier,
+            name="linear_1",
         )
         self.linear_2 = DenseV3(
             from_size=int(expansion_ratio * embedding_dim),
             to_size=embedding_dim,
             initialiser=init_xavier,
+            name="linear_2",
         )
         self.dropout = DropoutV7(dropout_prob)
         if isinstance(activation_fn, str):

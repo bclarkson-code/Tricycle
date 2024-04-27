@@ -78,7 +78,7 @@ class Tensor:
                     stack.append(arg)
                     arg.parents.add(node)
 
-    def _calculate_gradients(self):
+    def _calculate_gradients(self, clip: float | None = None):
         """
         Traverse through the graph, calculating gradients along the way such
         that a child is only visited if the entirety of its parent's gradient
@@ -117,12 +117,22 @@ class Tensor:
 
                 # calculate gradients
                 try:
+                    grad = back_fns(node.grad)
+                    if clip is not None:
+                        grad._data = grad.xp.clip(grad._data, -clip, clip)
                     if arg.grad is None:
-                        arg.grad = back_fns(node.grad)
+                        arg.grad = grad
                     else:
-                        arg.grad += back_fns(node.grad)
+                        arg.grad += grad
+                    if (abs(arg.grad._data) > 1e6).sum() > 0:
+                        breakpoint()
+                    if node.xp.isneginf(arg.grad._data).sum() > 0:
+                        breakpoint()
+                    if node.xp.isinf(arg.grad._data).sum() > 0:
+                        breakpoint()
+                    if node.xp.isnan(arg.grad._data).sum() > 0:
+                        breakpoint()
                 except Exception as e:
-                    breakpoint()
                     raise e
 
                 # only move to arg if we have been to all of its parents
@@ -148,13 +158,13 @@ class Tensor:
                 del node.grad
             del node
 
-    def backward(self):
+    def backward(self, clip: float | None = None):
         """
         Perform a backward pass through the graph, calculating the gradient
         for each parameter
         """
         self._attach_parents()
-        self._calculate_gradients()
+        self._calculate_gradients(clip=clip)
 
     def __hash__(self) -> int:
         return id(self)
