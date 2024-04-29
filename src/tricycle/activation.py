@@ -39,23 +39,29 @@ class GeLU(Layer):
         super().__init__(*args, **kwargs)
         self.approximate = approximate
 
-    def backward(self, grad: Tensor):
-        xp = grad.xp
+    def build_backward(self, x: Tensor):
+        x = x._data
 
-        x = grad._data
-        inner = self.CONST_1 * x * (1 + self.CONST_2 * x**2)
-        coef = self.CONST_1 * x * (1 + self.CONST_2 * 3 * x**2)
+        def backward(grad: Tensor):
+            xp = grad.xp
 
-        left = xp.tanh(inner)
-        cosh = xp.cosh(inner)
-        right = coef / (cosh * cosh)
-        result = 0.5 * (1 + left + right) * x
+            inner = self.CONST_1 * x * (1 + self.CONST_2 * x**2)
+            coef = self.CONST_1 * x * (1 + self.CONST_2 * 3 * x**2)
 
-        result = to_tensor(
-            result, is_vector=grad.is_vector, requires_grad=grad.requires_grad
-        )
-        result.name = "gelu_back"
-        return result
+            left = xp.tanh(inner)
+            cosh = xp.cosh(inner)
+            right = coef / (cosh * cosh)
+            result = 0.5 * (1 + left + right) * grad._data
+
+            result = to_tensor(
+                result,
+                is_vector=grad.is_vector,
+                requires_grad=grad.requires_grad,
+            )
+            result.name = "gelu_back"
+            return result
+
+        return backward
 
     def forward(self, x: Tensor):
         xp = x.xp
@@ -67,7 +73,8 @@ class GeLU(Layer):
         )
         result.name = "gelu"
         result.args = (x,)
-        result.back_fns = (self.backward,)
+        backward = self.build_backward(x)
+        result.back_fns = (backward,)
         return result
 
 
