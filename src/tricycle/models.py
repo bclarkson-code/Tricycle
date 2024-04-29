@@ -11,6 +11,8 @@ from tricycle.layers import (
     Embedding,
     EmbeddingV2,
     Layer,
+    LayerNorm,
+    RMSNorm,
     RMSNormV2,
 )
 from tricycle.optimisers import Optimiser
@@ -176,7 +178,7 @@ class GPTV2(Layer):
             from_size=self.embedding_dim,
             name="head",
         )
-        self.layer_norm = RMSNormV2()
+        self.layer_norm = RMSNorm()
         self.layers = [
             self.token_embedding,
             self.position_embedding,
@@ -202,28 +204,37 @@ class GPTV2(Layer):
             "Can't have more tokens than context window. ",
             f"Found {n_tokens=} and {self.context_window=}",
         )
+        grads = {}
 
         position = to_tensor(
             xp.arange(context_window), requires_grad=False, dtype=int
         )
 
         pos_embedding = self.position_embedding(position)
+        grads["pos_embedding"] = pos_embedding
         token_embedding = self.token_embedding(tensor)
+        grads["token_embedding"] = token_embedding
 
         embedding = token_embedding + pos_embedding
+
         embedding = self.input_dropout(embedding)
+        grads["input"] = embedding
 
         for block in self.blocks:
-            embedding = block(embedding)
+            embedding, grads = block(embedding, grads)
 
+        grads["before_ln"] = embedding
         embedding = self.layer_norm(embedding)
+        grads["before_head"] = embedding
 
         embedding = self.head(embedding)
-        return embedding
+        grads["logits"] = embedding
+        return embedding, grads
 
     def zero_grad(self):
         self.token_embedding.zero_grad()
         self.position_embedding.zero_grad()
+        self.layer_norm.zero_grad()
         self.head.zero_grad()
         for block in self.blocks:
             block.zero_grad()
@@ -231,6 +242,7 @@ class GPTV2(Layer):
     def update(self, optimiser: Optimiser):
         self.token_embedding.update(optimiser)
         self.position_embedding.update(optimiser)
+        self.layer_norm.update(optimiser)
         self.head.update(optimiser)
         for block in self.blocks:
             block.update(optimiser)
@@ -240,6 +252,7 @@ class GPTV2(Layer):
         self.position_embedding.to_gpu(device)
         for block in self.blocks:
             block.to_gpu(device)
+        self.layer_norm.to_gpu(device)
         self.head.to_gpu(device)
 
     def from_gpu(self):
@@ -247,6 +260,7 @@ class GPTV2(Layer):
         self.position_embedding.from_gpu()
         for block in self.blocks:
             block.from_gpu()
+        self.layer_norm.from_gpu()
         self.head.from_gpu()
 
     def display(self):

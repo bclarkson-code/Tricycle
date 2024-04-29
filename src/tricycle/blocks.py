@@ -576,12 +576,15 @@ class MLPBlock4(Layer):
             self.dropout,
         ]
 
-    def forward(self, x: Tensor):
+    def forward(self, x: Tensor, grads: dict | None = None):
         x = self.linear_1(x)
+        grads["before_gelu"] = x
         x = self.activation_fn(x)
+        grads["before_linear_2"] = x
         x = self.linear_2(x)
+        grads["after_linear_2"] = x
         x = self.dropout(x)
-        return x
+        return x, grads
 
     def update(self, optimiser: Optimiser):
         self.linear_1.update(optimiser)
@@ -832,8 +835,8 @@ class GPT2TransformerBlockV4(Layer):
             expansion_ratio,
             activation_fn,
         )
-        self.layer_norm_1 = RMSNormV2()
-        self.layer_norm_2 = RMSNormV2()
+        self.layer_norm_1 = RMSNorm()
+        self.layer_norm_2 = RMSNorm()
 
         self.layers = [
             self.layer_norm_1,
@@ -842,23 +845,41 @@ class GPT2TransformerBlockV4(Layer):
             self.mlp_block,
         ]
 
-    def forward(self, x: Tensor):
-        x = self.attention_block(self.layer_norm_1(x)) + x
-        x = self.mlp_block(self.layer_norm_2(x)) + x
-        return x
+    def forward(self, x: Tensor, grads: dict):
+        attn = self.attention_block(self.layer_norm_1(x)) + x
+        grads["after_attn_resid"] = attn
+
+        x = self.layer_norm_2(attn)
+        grads["after_mlp_ln"] = attn
+
+        x, grads = self.mlp_block(x, grads)
+        grads["before_mlp_resid"] = x
+
+        x += attn
+        grads["after_mlp_resid"] = x
+
+        return x, grads
 
     def update(self, optimiser: Optimiser):
         self.attention_block.update(optimiser)
         self.mlp_block.update(optimiser)
+        self.layer_norm_1.update(optimiser)
+        self.layer_norm_2.update(optimiser)
 
     def zero_grad(self):
         self.attention_block.zero_grad()
         self.mlp_block.zero_grad()
+        self.layer_norm_1.zero_grad()
+        self.layer_norm_2.zero_grad()
 
     def to_gpu(self, device: int = 0):
         self.attention_block.to_gpu(device)
         self.mlp_block.to_gpu(device)
+        self.layer_norm_1.to_gpu(device)
+        self.layer_norm_2.to_gpu(device)
 
     def from_gpu(self):
         self.attention_block.from_gpu()
         self.mlp_block.from_gpu()
+        self.layer_norm_1.from_gpu()
+        self.layer_norm_1.from_gpu()

@@ -118,12 +118,18 @@ class Tensor:
                 # calculate gradients
                 try:
                     grad = back_fns(node.grad)
+
+                    # gradient clipping
                     if clip is not None:
                         grad._data = grad.xp.clip(grad._data, -clip, clip)
+
+                    # add gradient
                     if arg.grad is None:
                         arg.grad = grad
                     else:
                         arg.grad += grad
+
+                    # debugging - find invalid gradients
                     if (abs(arg.grad._data) > 1e6).sum() > 0:
                         breakpoint()
                     if node.xp.isneginf(arg.grad._data).sum() > 0:

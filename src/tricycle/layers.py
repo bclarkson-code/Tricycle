@@ -18,8 +18,8 @@ class Layer(ABC):
     def forward(self, tensor: Tensor):
         raise NotImplementedError
 
-    def __call__(self, tensor: Tensor):
-        return self.forward(tensor)
+    def __call__(self, tensor: Tensor, *args, **kwargs):
+        return self.forward(tensor, *args, **kwargs)
 
     def update(self, optimiser: Optimiser):
         pass
@@ -180,6 +180,7 @@ class DenseV3(Layer):
         self.weights = initialiser(
             (from_size, to_size), name="weights" if name is None else name
         )
+        self.name = name
         self.from_size = from_size
         self.to_size = to_size
         self.tensors = {"weights": self.weights}
@@ -451,33 +452,73 @@ class RMSNormV2(Layer):
 
     REALLY_SMALL_NUMBER = 1e-6
 
-    def build_back_fn(self, square_sum, result, is_vector=False):
-        def rm_back_fn(grad):
+    def __init__(self, to_size: int):
+        import numpy as np
+
+        self.weights = to_tensor(np.ones(to_size))
+
+    def build_back_fn(self, rms, input_, is_vector=False):
+        def rmsnorm_weight_back_fn(grad):
             xp = grad.xp
-            left = grad._data / (result + self.REALLY_SMALL_NUMBER)
-            right = grad._data / (
-                xp.repeat(square_sum, result.shape[-1]).reshape(result.shape)
-                + self.REALLY_SMALL_NUMBER
-            )
+            result = xp.sum(input_ / rms, axis=-2).sum(0).squeeze()
+            return to_tensor(result, is_vector=False)
 
-            out = (left - right) * grad._data
-            return to_tensor(out, is_vector=is_vector)
+        def rmsnorm_back_fn(grad):
+            xp = grad.xp
+            scaled_grad = xp.multiply(grad._data, self.weights._data)
 
-        return rm_back_fn
+            left = scaled_grad / rms
+
+            coef = scaled_grad / (384 * rms**3)
+
+            square_prod = xp.einsum("zAB,zAc->zAB", input_, input_)
+            # square_prod = xp.power(input_, 2) / self.weights.shape[-1]
+
+            right = square_prod * coef
+            print(left[0][0][:10])
+            print(right[0][0][:10])
+            print((left - right)[0][0][:10])
+            print()
+            return to_tensor(left - right, is_vector=grad.is_vector)
+
+        return rmsnorm_weight_back_fn, rmsnorm_back_fn
 
     def forward(self, tensor: Tensor):
         xp = tensor.xp
         square_sum = (tensor._data * tensor._data).mean(axis=-1)
-        divisor = xp.expand_dims(xp.sqrt(square_sum), -1)
-        result = xp.divide(tensor._data, (divisor + self.REALLY_SMALL_NUMBER))
+        rms = xp.sqrt(square_sum)
+        rms = xp.expand_dims(rms, -1)
+        result = xp.divide(tensor._data, (rms + self.REALLY_SMALL_NUMBER))
+        result = xp.einsum("...a,a->...a", result, self.weights._data)
 
-        back_fn = self.build_back_fn(
-            square_sum, result, is_vector=tensor.is_vector
+        weight_back_fn, back_fn = self.build_back_fn(
+            rms=rms, input_=tensor._data, is_vector=tensor.is_vector
         )
-        result = to_tensor(result, is_vector=tensor.is_vector)
-        result.back_fns = (back_fn,)
-        result.args = (tensor,)
+        result = to_tensor(result, is_vector=tensor.is_vector, name="rmsnorm")
+        result.back_fns = (
+            weight_back_fn,
+            back_fn,
+        )
+        result.args = (
+            self.weights,
+            tensor,
+        )
+
         return result
+
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
+
+    def zero_grad(self):
+        self.weights.grad = None
+
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
+        return self
+
+    def from_gpu(self):
+        self.weights.from_gpu()
+        return self
 
 
 class Embedding(Layer):

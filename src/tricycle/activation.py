@@ -1,5 +1,6 @@
 import numpy as np
 
+from tricycle import CUPY_ENABLED
 from tricycle.functions import sigmoid, tanh
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
@@ -27,23 +28,47 @@ class GeLU(Layer):
     """
     A GeLU activation function.
 
-    Because the default version uses erf, which involves an integral,
-    we also provide a fast approximation of the function
+    Because the 100% accurate version uses erf, which involves an integral,
+    we provide a fast approximation of the function
     """
 
-    approximate: bool
+    CONST_1 = 0.7978845608028654
+    CONST_2 = 0.044715
 
     def __init__(self, *args, approximate: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         self.approximate = approximate
 
-    def forward(self, x: Tensor):
-        if not self.approximate:
-            SQRT_2 = 1.4142135623730951
-            return x * 0.5 * (1 + uerf(x / SQRT_2))
+    def backward(self, grad: Tensor):
+        xp = grad.xp
 
-        inner = 0.7978845608028654 * (x + 0.044715 * x**3)
-        return x * 0.5 * (1 + tanh(inner))
+        x = grad._data
+        inner = self.CONST_1 * x * (1 + self.CONST_2 * x**2)
+        coef = self.CONST_1 * x * (1 + self.CONST_2 * 3 * x**2)
+
+        left = xp.tanh(inner)
+        cosh = xp.cosh(inner)
+        right = coef / (cosh * cosh)
+        result = 0.5 * (1 + left + right) * x
+
+        result = to_tensor(
+            result, is_vector=grad.is_vector, requires_grad=grad.requires_grad
+        )
+        result.name = "gelu_back"
+        return result
+
+    def forward(self, x: Tensor):
+        xp = x.xp
+        inner = self.CONST_1 * (x._data + self.CONST_2 * x._data**3)
+        result = x._data * 0.5 * (1 + xp.tanh(inner))
+
+        result = to_tensor(
+            result, is_vector=x.is_vector, requires_grad=x.requires_grad
+        )
+        result.name = "gelu"
+        result.args = (x,)
+        result.back_fns = (self.backward,)
+        return result
 
 
 class GLU(Layer):
