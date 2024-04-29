@@ -69,6 +69,38 @@ void softmax_back_fn_2d(
     "softmax_back_fn_2d",
 )
 
+softmax_back_fn_3d_a = cp.RawKernel(
+"""
+// parallelize across t,b,h
+__global__ void softmax_autoregressive_backward_kernel2(
+    const float* grad,
+    const float* softmax_result,
+    int n_batches, 
+    int n_tokens, 
+    int n_elements, 
+    float* out, 
+) {
+    int t3 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx = blockIdx.y * n_tokens * n_tokens;
+    if (t3 >= n_tokens) { return; }
+
+    for (int t = t3; t < n_tokens; t++) {
+        float result = 0.0;
+        const float* softmax_result_bth = softmax_result + idx + t*n_tokens;
+        const float* grad_bth = grad + idx + t*n_tokens;
+        float* out_bth = out + idx + t*n_tokens;
+
+        for (int t2 = 0; t2 <= t; t2++) {
+            float indicator = t2 == t3 ? 1.0f : 0.0f;
+            float local_derivative = softmax_result_bth[t2] * (indicator - softmax_result_bth[t3]);
+            result += local_derivative * grad_bth[t2];
+        }
+
+        out_bth[t3] = result;
+    }
+}
+""")
+
 softmax_back_fn_3d = cp.RawKernel(
     """
 extern "C" __global__
