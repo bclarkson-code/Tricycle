@@ -416,6 +416,8 @@ class DropoutV7(Layer):
         self.probability = probability
 
     def forward(self, tensor: Tensor):
+        if self.probability == 0:
+            return tensor
         shape = tensor.shape[1:] if tensor.is_vector else tensor.shape
         random_mask = tensor.xp.random.binomial(
             n=1, p=1 - self.probability, size=shape
@@ -431,6 +433,132 @@ class LayerNorm(Layer):
 
     def forward(self, tensor: Tensor):
         return tensor.normalise()
+
+
+class LayerNormV2(Layer):
+    def __init__(self, embedding_dim: int, eps=1e-5):
+        import numpy as np
+
+        self.eps = eps
+        self.gamma = to_tensor(
+            np.ones((embedding_dim,)), requires_grad=True, is_vector=False
+        )
+        self.beta = to_tensor(
+            np.zeros((embedding_dim,)), requires_grad=True, is_vector=False
+        )
+
+    def forward(self, tensor: Tensor):
+        """
+        Performs Layer Normalization on the input tensor x.
+
+        Args:
+            x (numpy.ndarray): Input tensor of shape (batch_size, *).
+
+        Returns:
+            numpy.ndarray: Normalized tensor of the same shape as x.
+        """
+        xp = tensor.xp
+        x = tensor._data
+
+        # Compute mean and variance along the feature dimension
+        mean = x.mean(axis=-1, keepdims=True)
+        var = x.var(axis=-1, keepdims=True)
+
+        # Normalize and scale
+        x_norm = (x - mean) / xp.sqrt(var + self.eps)
+        output = self.gamma._data * x_norm + self.beta._data
+
+        self.cache = x, mean, var
+
+        output = to_tensor(
+            output,
+            is_vector=tensor.is_vector,
+            requires_grad=tensor.requires_grad,
+        )
+        back_fn, beta_back_fn, gamma_back_fn = self.build_back_fns(
+            x, mean, var
+        )
+        output.back_fns = (back_fn, beta_back_fn, gamma_back_fn)
+        output.args = (tensor, self.beta, self.gamma)
+        output.name = "layer_norm"
+
+        return output
+
+    def build_back_fns(self, x, mean, var):
+        def gamma_back_fn(grad: Tensor):
+            """
+            backward pass for grad
+            """
+            xp = grad.xp
+
+            # Compute intermediate values
+            x_norm = (x - mean) / xp.sqrt(var + self.eps)
+            axes = list(range(grad.ndim - 1))
+            result = xp.sum(grad._data * x_norm, axis=axes)
+            return to_tensor(result, is_vector=False)
+
+        def beta_back_fn(grad: Tensor):
+            """
+            backward pass for grad
+            """
+            xp = grad.xp
+
+            # Compute intermediate values
+            axes = list(range(grad.ndim - 1))
+            result = xp.sum(grad._data, axis=axes)
+            return to_tensor(result, is_vector=False)
+
+        def back_fn(grad: Tensor):
+            """
+            backward pass for grad
+            """
+            xp = grad.xp
+
+            # Compute intermediate values
+            n = x.shape[-1]
+
+            # Gradients with respect to x
+            dx_norm = grad._data * self.gamma._data
+            dvar = xp.sum(
+                dx_norm * (x - mean) * -0.5 * xp.power(var + self.eps, -1.5),
+                axis=-1,
+                keepdims=True,
+            )
+            dmean = xp.sum(
+                dx_norm * -1 / xp.sqrt(var + self.eps), axis=-1, keepdims=True
+            ) + dvar * xp.mean(-2 * (x - mean) / n, axis=-1, keepdims=True)
+            result = (
+                dx_norm / xp.sqrt(var + self.eps)
+                + dvar * 2 * (x - mean) / n
+                + dmean / n
+            )
+
+            return to_tensor(
+                result,
+                is_vector=grad.is_vector,
+                requires_grad=grad.requires_grad,
+                name="back_ln",
+            )
+
+        return back_fn, beta_back_fn, gamma_back_fn
+
+    def update(self, optimiser: Optimiser):
+        self.gamma = optimiser(self.gamma)
+        self.beta = optimiser(self.beta)
+
+    def zero_grad(self):
+        self.gamma.grad = None
+        self.beta.grad = None
+
+    def to_gpu(self, device: int = 0):
+        self.gamma.to_gpu(device)
+        self.beta.to_gpu(device)
+        return self
+
+    def from_gpu(self):
+        self.gamma.from_gpu()
+        self.beta.from_gpu()
+        return self
 
 
 class RMSNorm(Layer):

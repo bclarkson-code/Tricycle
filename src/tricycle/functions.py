@@ -144,17 +144,47 @@ void softmax_back_fn_4d(
     "softmax_back_fn_4d",
 )
 
+softmax_back_fn_3d_a = cp.RawKernel(
+    """
+extern "C" __global__
+void softmax_back_fn_3d_a(
+    const float* grad,
+    const float* softmax_result,
+    const int n_batches,
+    const int n_tokens,
+    const int n_elements,
+    float* out
+) {
+    int t3 = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx = blockIdx.y * n_tokens * n_tokens;
+    if (t3 >= n_tokens) { return; }
+    for (int t = t3; t < n_tokens; t++) {
+        float result = 0.0;
+        const float* softmax_result_bth = softmax_result + idx + t*n_tokens;
+        const float* grad_bth = grad + idx + t*n_tokens;
+        float* out_bth = out + idx + t*n_tokens;
+        for (int t2 = 0; t2 <= t; t2++) {
+            float indicator = t2 == t3 ? 1.0f : 0.0f;
+            float local_derivative = softmax_result_bth[t2] * (indicator - softmax_result_bth[t3]);
+            result += local_derivative * grad_bth[t2];
+        }
+        out_bth[t3] = result;
+    }
+}
+""",
+    "softmax_back_fn_3d_a",
+)
+
 
 def _cuda_softmax_back_fn(grad, _result):
     import cupy as cp
-
-    BLOCK_SIZE = 32
 
     out = cp.zeros(_result.shape)
     _result = cp.asarray(_result)
     grad._data = cp.asarray(grad._data)
     n_elements = cp.int8(_result.shape[-1])
 
+    BLOCK_SIZE = 32
     match _result.ndim:
         case 1:
             if _result.shape[0] % BLOCK_SIZE != 0:
@@ -169,9 +199,9 @@ def _cuda_softmax_back_fn(grad, _result):
                 (_result, grad._data, n_elements, out),
             )
         case 2:
-            if not (
-                _result.shape[0] % BLOCK_SIZE == 0
-                or _result.shape[1] % BLOCK_SIZE == 0
+            if (
+                _result.shape[0] % BLOCK_SIZE != 0
+                and _result.shape[1] % BLOCK_SIZE != 0
             ):
                 raise ValueError(
                     f"Expected shape to be divisible by {BLOCK_SIZE}, found: {_result.shape}"
@@ -210,10 +240,10 @@ def _cuda_softmax_back_fn(grad, _result):
                 n_elements // BLOCK_SIZE,
             )
             block_size = (BLOCK_SIZE, BLOCK_SIZE)
-            softmax_back_fn_4d(
+            softmax_back_fn_3d_a(
                 grid_size,
                 block_size,
-                (_result, grad._data, n_heads, n_tokens, n_elements, out),
+                (grad._data, _result, n_batches, n_tokens, n_elements, out),
             )
         case _:
             raise NotImplementedError()

@@ -17,6 +17,7 @@ from tricycle.layers import (  # noqa E501
     DropoutV7,
     Layer,
     LayerNorm,
+    LayerNormV2,
     RMSNorm,
     RMSNormV2,
 )
@@ -223,7 +224,9 @@ class MultiHeadSelfAttentionV2(Layer):
             self.out_projection,
         ]
 
-    def _attention(self, key: Tensor, query: Tensor, value: Tensor):
+    def _attention(
+        self, key: Tensor, query: Tensor, value: Tensor, grads: dict | None
+    ):
         xp = select_backend(key._data, query._data, value._data)
         # reshape into n_heads x embedding_dim
         head_size = self.embedding_dim // self.n_heads
@@ -246,26 +249,41 @@ class MultiHeadSelfAttentionV2(Layer):
 
         # mask and softmax
         attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
-        attention = softmax_v4(attention)
+        grads["after_masked_fill"] = attention
+
+        attention = softmax(attention)
+        grads["after_softmax"] = attention
+
         attention = self.attention_dropout(attention)
+        grads["after_attn_dropout"] = attention
 
         # smush the heads back together
         out_shape = (n_tokens, self.embedding_dim)
         out = Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
-        out = self.residual_dropout(out)
+
+        if grads is not None:
+            return out, grads
         return out
 
-    def forward(self, x: Tensor):
+    def forward(self, x: Tensor, grads: dict | None = None):
         # use the projection layer to expand the inoput embedding
         x = self.in_projection(x)
 
         # split the embedding into key, query and value
         query, key, value = x.split(3, axis=1)
 
-        attention = self._attention(key, query, value)
+        if grads is not None:
+            attention, grads = self._attention(key, query, value, grads)
+        else:
+            attention = self._attention(key, query, value, grads=None)
 
         # project back
-        return self.out_projection(attention)
+        projected = self.out_projection(attention)
+        grads["after_out_proj"] = projected
+
+        projected = self.residual_dropout(projected)
+
+        return (projected, grads) if grads is not None else projected
 
     def update(self, optimiser: Optimiser):
         self.in_projection.update(optimiser)
@@ -577,6 +595,7 @@ class MLPBlock4(Layer):
         ]
 
     def forward(self, x: Tensor, grads: dict | None = None):
+        grads["before_linear_1"] = x
         x = self.linear_1(x)
         grads["before_gelu"] = x
         x = self.activation_fn(x)
@@ -835,8 +854,8 @@ class GPT2TransformerBlockV4(Layer):
             expansion_ratio,
             activation_fn,
         )
-        self.layer_norm_1 = RMSNorm()
-        self.layer_norm_2 = RMSNorm()
+        self.layer_norm_1 = LayerNormV2(embedding_dim)
+        self.layer_norm_2 = LayerNormV2(embedding_dim)
 
         self.layers = [
             self.layer_norm_1,
@@ -846,14 +865,20 @@ class GPT2TransformerBlockV4(Layer):
         ]
 
     def forward(self, x: Tensor, grads: dict):
-        attn = self.attention_block(self.layer_norm_1(x)) + x
+        normed = self.layer_norm_1(x)
+        grads["after_attn_ln"] = normed
+
+        attn, grads = self.attention_block(normed, grads)
+        grads["after_attn"] = attn
+
+        attn += x
         grads["after_attn_resid"] = attn
 
         x = self.layer_norm_2(attn)
-        grads["after_mlp_ln"] = attn
+        grads["after_mlp_ln"] = x
 
         x, grads = self.mlp_block(x, grads)
-        grads["before_mlp_resid"] = x
+        grads["after_mlp"] = x
 
         x += attn
         grads["after_mlp_resid"] = x

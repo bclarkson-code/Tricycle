@@ -8,6 +8,7 @@ The hyperparams for this model are very much a work in progress
 
 import os
 import pickle
+import uuid
 from warnings import warn
 
 import mlflow
@@ -19,11 +20,12 @@ from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
 from tricycle.models import GPTV2
-from tricycle.optimisers import StochasticGradientDescent
+from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
 from tricycle_datasets.shakespeare import ShakespeareChar
 
 np.random.seed(0)
+device = 0
 config = SmolGPTConfig()
 model = GPTV2(config)
 model.display()
@@ -44,7 +46,7 @@ dataset = (
     .shuffle()
 )
 loss_fn = cross_entropy
-optimiser = StochasticGradientDescent(
+optimiser = AdamW(
     learning_rate=lr_schedule(
         0,
         max_learning_rate=config.max_learning_rate,
@@ -53,11 +55,11 @@ optimiser = StochasticGradientDescent(
         total_steps=config.steps,
     ),
     weight_decay=config.weight_decay,
-    momentum=config.momentum,
+    betas=(config.beta1, config.beta2),
 )
 
 
-model.to_gpu()
+model.to_gpu(device)
 
 
 def get_sample(sample_text, n_samples=50):
@@ -79,21 +81,31 @@ def get_sample(sample_text, n_samples=50):
 mlflow.set_tracking_uri("http://localhost:5000")
 mlflow.set_experiment("SmolGPT:character:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
+unique_id = uuid.uuid4()
 
 best_loss = float("inf")
 losses = []
-for step, (inputs, outputs) in tqdm(enumerate(dataset), total=config.steps):
-    inputs = inputs.to_gpu()
-    outputs = outputs.to_gpu()
+for step in tqdm(range(config.steps)):
+    optimiser.step()
+    batch_loss = 0
+    for _ in range(config.gradient_accumulation_steps):
+        inputs, outputs = next(dataset)
+        inputs = inputs.to_gpu(device)
+        outputs = outputs.to_gpu(device)
 
-    logits = model(inputs)
-    loss = loss_fn(outputs, logits).from_vector().mean().mean()
-    loss.backward()
+        logits, _ = model(inputs)
+        loss = (
+            loss_fn(outputs, logits).from_vector().mean().mean()
+            / config.gradient_accumulation_steps
+        )
+        batch_loss += float(loss.numpy())
+        loss.backward()
+
+        loss.cleanup()
+    mlflow.log_metric("loss", batch_loss, step=step)
     model.update(optimiser)
 
     # clean up the computational graph
-    loss.cleanup()
-
     # step the learning rate
     optimiser.learning_rate = lr_schedule(
         step,
@@ -108,7 +120,6 @@ for step, (inputs, outputs) in tqdm(enumerate(dataset), total=config.steps):
 
     # log the loss
     losses.append(loss.numpy())
-    mlflow.log_metric("loss", float(loss.numpy()), step=step)
     mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
 
     # occasionally try generating some text
@@ -117,11 +128,12 @@ for step, (inputs, outputs) in tqdm(enumerate(dataset), total=config.steps):
         predicted = get_sample(sample_text)
         mlflow.log_text(predicted, f"generated/{step}.txt")
 
-    # checkpoint
-    if loss < best_loss:
-        with open("model.pkl", "wb") as f:
-            pickle.dump(model, f)
-        best_loss = loss
+        # checkpoint
+        avg_loss = np.mean(losses[-50:])
+        if avg_loss < best_loss:
+            with open(f"models/model_{unique_id}_{step}.pkl", "wb") as f:
+                pickle.dump(model, f)
+            best_loss = avg_loss
 
     if step >= config.steps:
         break

@@ -12,6 +12,7 @@ from tricycle.layers import (
     EmbeddingV2,
     Layer,
     LayerNorm,
+    LayerNormV2,
     RMSNorm,
     RMSNormV2,
 )
@@ -178,7 +179,7 @@ class GPTV2(Layer):
             from_size=self.embedding_dim,
             name="head",
         )
-        self.layer_norm = RMSNorm()
+        self.layer_norm = LayerNormV2(self.embedding_dim)
         self.layers = [
             self.token_embedding,
             self.position_embedding,
@@ -211,7 +212,7 @@ class GPTV2(Layer):
         )
 
         pos_embedding = self.position_embedding(position)
-        grads["pos_embedding"] = pos_embedding
+        grads["position_embedding"] = pos_embedding
         token_embedding = self.token_embedding(tensor)
         grads["token_embedding"] = token_embedding
 

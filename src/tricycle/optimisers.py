@@ -7,6 +7,12 @@ class Optimiser:
     def __call__(self, tensor: Tensor) -> Tensor:
         raise NotImplementedError
 
+    def _reset_grad(self, tensor: Tensor):
+        tensor.grad = None
+        tensor.args = None
+        tensor.back_fns = None
+        return tensor
+
 
 class StochasticGradientDescent(Optimiser):
     def __init__(
@@ -20,12 +26,6 @@ class StochasticGradientDescent(Optimiser):
         self.momentum = momentum
 
         self.momentum_store = {}
-
-    def _reset_grad(self, tensor: Tensor):
-        tensor.grad = None
-        tensor.args = None
-        tensor.back_fns = None
-        return tensor
 
     def update_weight(self, tensor: Tensor):
         """
@@ -65,6 +65,80 @@ class StochasticGradientDescent(Optimiser):
 
         del tensor
         del grad
+
+        return result
+
+    def __call__(self, tensor: Tensor) -> Tensor:
+        return self._reset_grad(self.update_weight(tensor))
+
+
+class AdamW(Optimiser):
+    def __init__(
+        self,
+        learning_rate=1e-3,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=0.01,
+    ):
+        self.learning_rate = learning_rate
+        self.betas = betas
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self.t = 0
+
+        self.m = {}
+        self.v = {}
+
+    def step(self):
+        # we compute the updates dynamically so we'll need to remember to
+        # call this
+        self.t += 1
+
+    def update_weight(self, tensor: Tensor) -> Tensor:
+        key = tensor._id
+        xp = tensor.xp
+
+        # initialise stores
+        if key not in self.m:
+            self.m[key] = xp.zeros_like(tensor._data)
+        if key not in self.v:
+            self.v[key] = tensor.xp.zeros_like(tensor._data)
+
+        try:
+            self.m[key] = (
+                self.betas[0] * self.m[key]
+                + (1 - self.betas[0]) * tensor.grad._data
+            )
+        except:
+            breakpoint()
+
+        try:
+            self.v[key] = self.betas[1] * self.v[key] + (1 - self.betas[1]) * (
+                tensor.grad._data**2
+            )
+        except:
+            breakpoint()
+
+        m_hat = self.m[key] / (1 - self.betas[0] ** self.t)
+        v_hat = self.v[key] / (1 - self.betas[1] ** self.t)
+
+        result = tensor._data - self.learning_rate * (
+            m_hat / (xp.sqrt(v_hat) + self.eps)
+            + self.weight_decay * tensor._data
+        )
+        result = to_tensor(
+            result,
+            requires_grad=tensor.requires_grad,
+            name=tensor.name,
+            is_vector=tensor.is_vector,
+            _id=tensor._id,
+        )
+
+        assert result.shape == tensor.shape
+
+        # not sure if we need to do this
+        del tensor.grad
+        del tensor
 
         return result
 

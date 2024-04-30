@@ -38,19 +38,23 @@ class SmolGPTConfig(GPTConfig):
     expansion_ratio = 4
     activation_fn = GeLU()
 
-    input_dropout_prob = 0.0
-    attention_dropout_prob = 0.0
-    residual_dropout_prob = 0.0
-    linear_dropout_prob = 0.0
+    input_dropout_prob = 0
+    attention_dropout_prob = 0
+    residual_dropout_prob = 0
+    linear_dropout_prob = 0
 
     max_learning_rate = 1e-3
     min_learning_rate = 1e-4
     warmup_steps = 100
     steps = 5_000
-    weight_decay = 0
+    weight_decay = 1e-1
     momentum = 0
 
-    batch_size = 24
+    beta1 = 0.9
+    beta2 = 0.99
+    gradient_accumulation_steps = 1
+
+    batch_size = 16
 
     debug = True
     mlflow_enabled = True

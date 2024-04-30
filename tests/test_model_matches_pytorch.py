@@ -3,6 +3,7 @@ The hardest part of this project is correctness. To ensure that we are correct
 we can use hypothesis to compare tricycle functions with pytorch equivalents
 """
 
+from copy import copy
 from warnings import warn
 
 import hypothesis.strategies as st
@@ -70,7 +71,7 @@ def tokens(draw):
 def tensor_shape(draw, force_divisible_by_32=True):
     shape = draw(
         st.lists(
-            st.integers(min_value=1, max_value=64), min_size=2, max_size=3
+            st.integers(min_value=1, max_value=64), min_size=1, max_size=3
         )
     )
     if force_divisible_by_32:
@@ -305,20 +306,37 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
 
 
 @given(tensor_shape(), st.booleans())
-@example(in_shape=[32, 1, 2], is_vector=False)
 def test_crossentropy_matches(in_shape, is_vector):
-    tensor_1 = build_tensor(in_shape, is_vector)
-    assume(np.isfinite(tensor_1._data).all())
+    y_pred = build_tensor(in_shape, is_vector)
+    y_true = copy(y_pred)
+    y_true._data = y_pred.xp.zeros_like(y_true._data)
+    one_idx = y_pred.xp.random.choice(range(in_shape[-1]))
+    match len(in_shape):
+        case 1:
+            y_true[one_idx] = 1
+        case 2:
+            y_true[:, one_idx] = 1
+    assume(np.isfinite(y_pred._data).all())
 
-    tr_out = cross_entropy(tensor_1, tensor_1).from_vector().mean().mean()
+    tr_out = cross_entropy(y_true, y_pred).from_vector()
+    match len(in_shape):
+        case 1:
+            pass
+        case 2:
+            tr_out = tr_out.mean()
+        case 3:
+            tr_out = tr_out.mean().mean()
+
+    p_y_pred = torch.tensor(y_pred._data, requires_grad=True)
+    p_y_true = torch.tensor(y_true._data, requires_grad=False)
     p_out = torch.nn.functional.cross_entropy(
-        torch.tensor(tensor_1._data, requires_grad=True),
-        torch.tensor(tensor_1._data, requires_grad=True),
+        input=p_y_pred,
+        target=p_y_true,
     )
 
-    breakpoint()
     assert tr_out.close_to(p_out.detach().numpy().item())
 
-    # tr_out.backward()
-    # p_out.backward()
-    # breakpoint()
+    tr_out.backward()
+    p_out.backward()
+
+    assert y_pred.grad.close_to(p_y_pred.grad.detach().numpy())

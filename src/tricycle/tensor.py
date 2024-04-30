@@ -158,6 +158,8 @@ class Tensor:
             if node.args:
                 stack.extend(iter(node.args))
                 del node.args
+            else:
+                continue
 
             # delete node
             if hasattr(node, "grad") and node.grad is not None:
