@@ -6,7 +6,7 @@ Ever wanted to learn how a deep learning framework *actually* works under the ho
 ## Overview
 Tricycle is a minimal framework for deep learning. The goal of this library is
 not to match the speed or complexity or Pytorch or Tensorflow, but instead to get a good understanding of how
-deep learning actually works at every level: from automatic differentiation all the way up to modern Transformers. It is built using nothing but standard
+deep learning actually works at every level: from automatic differentiation all the way up to modern Language Models. It is built using nothing but standard
 Python and Numpy which means that everything be understandable to anyone who knows a bit of Python.
 
 Here are some things you can do with Tricycle:
@@ -16,7 +16,7 @@ Here are some things you can do with Tricycle:
 - Manipulate tensors with [einstein notation](https://en.wikipedia.org/wiki/Einstein_notation)
 - Successfully train deep learning models
 - Use a GPU
-- Train a Transformer (!)
+- Train a Transformer to produce infinite shakespeare(!)
 
 Here are some things you can't do with Tricycle (yet):
 - Do anything at the speed of pytorch
@@ -36,14 +36,14 @@ from tqdm import tqdm
 from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
-from tricycle.models import GPT
+from tricycle.models import GPTV2
 from tricycle.optimisers import StochasticGradientDescent
-from tricycle_datasets.shakespeare import Shakespeare
+from tricycle_datasets.shakespeare import ShakespeareChar
 
 config = SmolGPTConfig()
 model = GPT(config)
 
-tokens = Shakespeare(vocab_size=config.vocab_size)
+tokens = ShakespeareChar(vocab_size=config.vocab_size)
 dataset = (
     CausalLMDataset(
         tokens=tokens,
@@ -56,25 +56,52 @@ dataset = (
     .to_vector()
 )
 loss_fn = cross_entropy
-optimiser = StochasticGradientDescent(
-    learning_rate=config.learning_rate,
+optimiser = AdamW(
+    learning_rate=lr_schedule(
+        0,
+        max_learning_rate=config.max_learning_rate,
+        min_learning_rate=config.min_learning_rate,
+        warmup_steps=config.warmup_steps,
+        total_steps=config.steps,
+    ),
     weight_decay=config.weight_decay,
-    momentum=config.momentum,
+    betas=(config.beta1, config.beta2),
 )
 
 model.to_gpu()
 
-for inputs, outputs in tqdm(dataset):
-    inputs = inputs.to_gpu()
-    outputs = outputs.to_gpu()
+best_loss = float("inf")
+losses = []
+for step in tqdm(range(config.steps)):
+    optimiser.step()
+    batch_loss = 0
+    for _ in range(config.gradient_accumulation_steps):
+        inputs, outputs = next(dataset)
+        inputs = inputs.to_gpu(device)
+        outputs = outputs.to_gpu(device)
 
-    logits = model(inputs)
-    loss = loss_fn(outputs, logits).from_vector().mean().mean()
-    loss.backward()
+        logits, _ = model(inputs)
+        loss = (
+            loss_fn(outputs, logits).from_vector().mean().mean()
+            / config.gradient_accumulation_steps
+        )
+        batch_loss += float(loss.numpy())
+        loss.backward()
+
+        loss.cleanup()
+    mlflow.log_metric("loss", batch_loss, step=step)
     model.update(optimiser)
 
     # clean up the computational graph
-    loss.cleanup()
+    # step the learning rate
+    optimiser.learning_rate = lr_schedule(
+        step,
+        max_learning_rate=config.max_learning_rate,
+        min_learning_rate=config.min_learning_rate,
+        warmup_steps=config.warmup_steps,
+        total_steps=config.steps,
+    )
+
 
 # save results
 with open("model.pkl", "wb") as f:
