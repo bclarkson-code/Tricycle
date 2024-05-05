@@ -1,7 +1,3 @@
-from tricycle.activation import GeLU
-from tricycle.layers import Layer
-
-
 class GPTConfig:
     embedding_dim: int
     context_window: int
@@ -9,7 +5,7 @@ class GPTConfig:
     n_heads: int
     n_layers: int
     expansion_ratio: float
-    activation_fn: float
+    activation_fn: str
 
     input_dropout_prob: float
     attention_dropout_prob: float

@@ -52,122 +52,6 @@ def masked_fill(
     return result
 
 
-class MultiHeadSelfAttention(Layer):
-    """
-    Multi-head self-attention
-    """
-
-    embedding_dim: int
-    n_heads: int
-    dropout: float
-    context_window: int
-
-    def __init__(
-        self,
-        embedding_dim: int,
-        n_heads: int,
-        context_window: int,
-        attention_dropout_prob: float,
-        residual_dropout_prob: float,
-        initialiser=init_xavier,
-    ):
-        # set the constants
-        self.embedding_dim = embedding_dim
-        self.n_heads = n_heads
-        self.context_window = context_window
-
-        # Project the embedding into 3 embeddings. One for each of key, query
-        # and value
-        self.in_projection = Dense(
-            from_size=self.embedding_dim,
-            to_size=self.embedding_dim * 3,
-            initialiser=initialiser,
-            name="in_projection",
-        )
-
-        # Pass the final embedding through a linear layer
-        self.out_projection = Dense(
-            from_size=self.embedding_dim,
-            to_size=self.embedding_dim,
-            initialiser=initialiser,
-            name="out_projection",
-        )
-
-        # build a mask to make attention causal
-        self.mask = build_mask(self.context_window)
-
-        self.attention_dropout = Dropout(attention_dropout_prob)
-        self.residual_dropout = Dropout(residual_dropout_prob)
-        self.layers = [
-            self.in_projection,
-            self.attention_dropout,
-            self.residual_dropout,
-            self.out_projection,
-        ]
-
-    def _attention(self, key: Tensor, query: Tensor, value: Tensor):
-        xp = select_backend(key._data, query._data, value._data)
-        # reshape into n_heads x embedding_dim
-        head_size = self.embedding_dim // self.n_heads
-        n_tokens = key.shape[1] if key.is_vector else key.shape[0]
-        head_shape = (
-            n_tokens,  # number of tokens
-            self.n_heads,  # number of heads
-            head_size,  # embedding per head
-        )
-        out_shape = (n_tokens, self.embedding_dim)
-
-        # reshape and reorder the heads
-        key = key.reshape(head_shape).e("TNH -> NTH")
-        query = query.reshape(head_shape).e("TNH -> NTH")
-        value = value.reshape(head_shape).e("TNH -> NTH")
-
-        # attend
-        divisor = sqrt(head_size)
-        attention = Einsum("NIh, NJh -> NIJ")(query, key) / divisor
-
-        # mask and softmax
-        attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
-        attention = softmax(attention)
-        attention = self.attention_dropout(attention)
-
-        # smush the heads back together
-        out_shape = (n_tokens, self.embedding_dim)
-        out = Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
-        out = self.residual_dropout(out)
-        return out
-
-    def forward(self, x: Tensor):
-        # use the projection layer to expand the inoput embedding
-        x = self.in_projection(x)
-
-        # split the embedding into key, query and value
-        query, key, value = x.split(3, axis=1)
-
-        attention = self._attention(key, query, value)
-
-        # project back
-        return self.out_projection(attention)
-
-    def update(self, optimiser: Optimiser):
-        self.in_projection.update(optimiser)
-        self.out_projection.update(optimiser)
-
-    def zero_grad(self):
-        self.in_projection.zero_grad()
-        self.out_projection.zero_grad()
-
-    def to_gpu(self, device: int = 0):
-        self.in_projection.to_gpu(device)
-        self.out_projection.to_gpu(device)
-        self.mask.to_gpu(device)
-
-    def from_gpu(self):
-        self.in_projection.from_gpu()
-        self.out_projection.from_gpu()
-        self.mask.from_gpu()
-
-
 class MultiHeadSelfAttentionV2(Layer):
     """
     Multi-head self-attention
@@ -625,7 +509,7 @@ class GPT2TransformerBlock_(Layer):
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
     ):
-        self.attention_block = MultiHeadSelfAttention(
+        self.attention_block = MultiHeadSelfAttentionV2(
             embedding_dim,
             n_heads=n_heads,
             context_window=context_window,
