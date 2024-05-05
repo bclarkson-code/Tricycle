@@ -15,7 +15,6 @@ from tricycle.layers import (  # noqa E501
     Dropout,
     Layer,
     LayerNorm,
-    LayerNormV2,
     RMSNorm,
     RMSNormV2,
 )
@@ -657,9 +656,8 @@ class GPT2TransformerBlock(Layer):
             expansion_ratio,
             activation_fn,
         )
-        self.layer_norm_1 = LayerNorm()
-        self.layer_norm_2 = LayerNorm()
-
+        self.layer_norm_1 = LayerNorm(embedding_dim)
+        self.layer_norm_2 = LayerNorm(embedding_dim)
         self.layers = [
             self.layer_norm_1,
             self.attention_block,
@@ -722,9 +720,8 @@ class GPT2TransformerBlockV2(Layer):
             expansion_ratio,
             activation_fn,
         )
-        self.layer_norm_1 = LayerNorm()
-        self.layer_norm_2 = LayerNorm()
-
+        self.layer_norm_1 = LayerNorm(embedding_dim)
+        self.layer_norm_2 = LayerNorm(embedding_dim)
         self.layers = [
             self.layer_norm_1,
             self.attention_block,
@@ -852,8 +849,8 @@ class GPT2TransformerBlockV4(Layer):
             expansion_ratio,
             activation_fn,
         )
-        self.layer_norm_1 = LayerNormV2(embedding_dim)
-        self.layer_norm_2 = LayerNormV2(embedding_dim)
+        self.layer_norm_1 = LayerNorm(embedding_dim)
+        self.layer_norm_2 = LayerNorm(embedding_dim)
 
         self.layers = [
             self.layer_norm_1,

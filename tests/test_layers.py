@@ -75,7 +75,7 @@ def test_dropout():  # sourcery skip: square-identity
 def test_layer_norm():
     np.random.seed(0)
     in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
-    layer_norm = LayerNorm()
+    layer_norm = LayerNorm(100)
     out_tensor = layer_norm(in_tensor.to_vector())
 
     assert out_tensor.shape == in_tensor.shape

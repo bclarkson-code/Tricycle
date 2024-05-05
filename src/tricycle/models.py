@@ -9,7 +9,6 @@ from tricycle.layers import (
     Embedding,
     Layer,
     LayerNorm,
-    LayerNormV2,
     RMSNorm,
     RMSNormV2,
 )
@@ -50,7 +49,7 @@ class GPT(Layer):
             from_size=self.embedding_dim,
             name="head",
         )
-        self.layer_norm = LayerNormV2(self.embedding_dim)
+        self.layer_norm = LayerNorm(self.embedding_dim)
         self.layers = [
             self.token_embedding,
             self.position_embedding,

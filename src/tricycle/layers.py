@@ -151,15 +151,6 @@ class Dropout(Layer):
 
 
 class LayerNorm(Layer):
-    """
-    Normalise each tensor individually
-    """
-
-    def forward(self, tensor: Tensor):
-        return tensor.normalise()
-
-
-class LayerNormV2(Layer):
     def __init__(self, embedding_dim: int, eps=1e-5):
         import numpy as np
 
@@ -217,7 +208,7 @@ class LayerNormV2(Layer):
 
             # Compute intermediate values
             x_norm = (x - mean) / xp.sqrt(var + self.eps)
-            axes = list(range(grad.ndim - 1))
+            axes = tuple(range(grad.ndim - 1))
             result = xp.sum(grad._data * x_norm, axis=axes)
             return to_tensor(result, is_vector=False)
 
@@ -228,7 +219,7 @@ class LayerNormV2(Layer):
             xp = grad.xp
 
             # Compute intermediate values
-            axes = list(range(grad.ndim - 1))
+            axes = tuple(range(grad.ndim - 1))
             result = xp.sum(grad._data, axis=axes)
             return to_tensor(result, is_vector=False)
 
