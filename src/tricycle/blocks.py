@@ -172,7 +172,7 @@ class MultiHeadSelfAttention(Layer):
         self.mask.from_gpu()
 
 
-class MLPBlock4(Layer):
+class MLPBlock(Layer):
     """
     A simple GPT-2 style MLP block with 2 linear layers around an activation
     function
@@ -252,199 +252,6 @@ class MLPBlock4(Layer):
         return self
 
 
-class GPT2TransformerBlock_(Layer):
-    embedding_dim: int
-    expansion_ratio: float
-    activation_fn: Layer
-    attention_dropout_prob: float
-    residual_dropout_prob: float
-    linear_dropout_prob: float
-
-    def __init__(
-        self,
-        embedding_dim: int,
-        n_heads: int,
-        context_window: int,
-        expansion_ratio: float = 4,
-        activation_fn: Layer = GeLU(),
-        attention_dropout_prob: float = 0,
-        residual_dropout_prob: float = 0,
-        linear_dropout_prob: float = 0,
-    ):
-        self.attention_block = MultiHeadSelfAttention(
-            embedding_dim,
-            n_heads=n_heads,
-            context_window=context_window,
-            attention_dropout_prob=attention_dropout_prob,
-            residual_dropout_prob=residual_dropout_prob,
-            initialiser=init_xavier,
-        )
-        self.mlp_block = MLPBlock(
-            embedding_dim,
-            linear_dropout_prob,
-            expansion_ratio,
-            activation_fn,
-        )
-        self.layer_norm_1 = LayerNorm(embedding_dim)
-        self.layer_norm_2 = LayerNorm(embedding_dim)
-        self.layers = [
-            self.layer_norm_1,
-            self.attention_block,
-            self.layer_norm_2,
-            self.mlp_block,
-        ]
-
-    def forward(self, x: Tensor):
-        x = self.attention_block(self.layer_norm_1(x)) + x
-        x = self.mlp_block(self.layer_norm_2(x)) + x
-        return x
-
-    def update(self, optimiser: Optimiser):
-        self.attention_block.update(optimiser)
-        self.mlp_block.update(optimiser)
-
-    def zero_grad(self):
-        self.attention_block.zero_grad()
-        self.mlp_block.zero_grad()
-
-    def to_gpu(self, device: int = 0):
-        self.attention_block.to_gpu(device)
-        self.mlp_block.to_gpu(device)
-
-    def from_gpu(self):
-        self.attention_block.from_gpu()
-        self.mlp_block.from_gpu()
-
-
-class GPT2TransformerBlockV2(Layer):
-    embedding_dim: int
-    expansion_ratio: float
-    activation_fn: Layer
-    attention_dropout_prob: float
-    residual_dropout_prob: float
-    linear_dropout_prob: float
-
-    def __init__(
-        self,
-        embedding_dim: int,
-        n_heads: int,
-        context_window: int,
-        expansion_ratio: float = 4,
-        activation_fn: Layer = GeLU(),
-        attention_dropout_prob: float = 0,
-        residual_dropout_prob: float = 0,
-        linear_dropout_prob: float = 0,
-    ):
-        self.attention_block = MultiHeadSelfAttention(
-            embedding_dim,
-            n_heads=n_heads,
-            context_window=context_window,
-            attention_dropout_prob=attention_dropout_prob,
-            residual_dropout_prob=residual_dropout_prob,
-            initialiser=init_xavier,
-        )
-        self.mlp_block = MLPBlock4(
-            embedding_dim,
-            linear_dropout_prob,
-            expansion_ratio,
-            activation_fn,
-        )
-        self.layer_norm_1 = LayerNorm(embedding_dim)
-        self.layer_norm_2 = LayerNorm(embedding_dim)
-        self.layers = [
-            self.layer_norm_1,
-            self.attention_block,
-            self.layer_norm_2,
-            self.mlp_block,
-        ]
-
-    def forward(self, x: Tensor):
-        x = self.attention_block(self.layer_norm_1(x)) + x
-        x = self.mlp_block(self.layer_norm_2(x)) + x
-        return x
-
-    def update(self, optimiser: Optimiser):
-        self.attention_block.update(optimiser)
-        self.mlp_block.update(optimiser)
-
-    def zero_grad(self):
-        self.attention_block.zero_grad()
-        self.mlp_block.zero_grad()
-
-    def to_gpu(self, device: int = 0):
-        self.attention_block.to_gpu(device)
-        self.mlp_block.to_gpu(device)
-
-    def from_gpu(self):
-        self.attention_block.from_gpu()
-        self.mlp_block.from_gpu()
-
-
-class GPT2TransformerBlockV3(Layer):
-    embedding_dim: int
-    expansion_ratio: float
-    activation_fn: Layer
-    attention_dropout_prob: float
-    residual_dropout_prob: float
-    linear_dropout_prob: float
-
-    def __init__(
-        self,
-        embedding_dim: int,
-        n_heads: int,
-        context_window: int,
-        expansion_ratio: float = 4,
-        activation_fn: Layer = GeLU(),
-        attention_dropout_prob: float = 0,
-        residual_dropout_prob: float = 0,
-        linear_dropout_prob: float = 0,
-    ):
-        self.attention_block = MultiHeadSelfAttention(
-            embedding_dim,
-            n_heads=n_heads,
-            context_window=context_window,
-            attention_dropout_prob=attention_dropout_prob,
-            residual_dropout_prob=residual_dropout_prob,
-            initialiser=init_xavier,
-        )
-        self.mlp_block = MLPBlock4(
-            embedding_dim,
-            linear_dropout_prob,
-            expansion_ratio,
-            activation_fn,
-        )
-        self.layer_norm_1 = RMSNorm()
-        self.layer_norm_2 = RMSNorm()
-
-        self.layers = [
-            self.layer_norm_1,
-            self.attention_block,
-            self.layer_norm_2,
-            self.mlp_block,
-        ]
-
-    def forward(self, x: Tensor):
-        x = self.attention_block(self.layer_norm_1(x)) + x
-        x = self.mlp_block(self.layer_norm_2(x)) + x
-        return x
-
-    def update(self, optimiser: Optimiser):
-        self.attention_block.update(optimiser)
-        self.mlp_block.update(optimiser)
-
-    def zero_grad(self):
-        self.attention_block.zero_grad()
-        self.mlp_block.zero_grad()
-
-    def to_gpu(self, device: int = 0):
-        self.attention_block.to_gpu(device)
-        self.mlp_block.to_gpu(device)
-
-    def from_gpu(self):
-        self.attention_block.from_gpu()
-        self.mlp_block.from_gpu()
-
-
 class GPT2TransformerBlock(Layer):
     embedding_dim: int
     expansion_ratio: float
@@ -472,7 +279,7 @@ class GPT2TransformerBlock(Layer):
             residual_dropout_prob=residual_dropout_prob,
             initialiser=init_xavier,
         )
-        self.mlp_block = MLPBlock4(
+        self.mlp_block = MLPBlock(
             embedding_dim,
             linear_dropout_prob,
             expansion_ratio,

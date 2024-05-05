@@ -5,7 +5,7 @@ import torch
 
 from tricycle.blocks import (
     GPT2TransformerBlock,
-    MLPBlock4,
+    MLPBlock,
     MultiHeadSelfAttention,
     build_mask,
     masked_fill,
@@ -313,7 +313,7 @@ def test_attention_block():
 def test_MLPBlock():
     np.random.seed(0)
     in_tensor = to_tensor(np.arange(12, dtype=float).reshape(3, 4))
-    block = MLPBlock4(embedding_dim=4, expansion_ratio=4, dropout_prob=0.5)
+    block = MLPBlock(embedding_dim=4, expansion_ratio=4, dropout_prob=0.5)
 
     assert block.linear_1.weights.shape == (4, 16)
     assert block.linear_2.weights.shape == (16, 4)
