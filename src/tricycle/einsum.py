@@ -218,10 +218,8 @@ class Einsum:
 
         return processed
 
-    def __call__(self, *tensors: Tensor, replace_inf=False):
+    def __call__(self, *tensors: Tensor):
         xp = select_backend(*tensors)
-        if replace_inf:
-            tensors = self._replace_infinity(tensors)
         subscript, tensors, vectorise_output = self._handle_vectorised(
             self.subscript, tensors
         )

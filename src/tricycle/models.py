@@ -3,7 +3,7 @@ import numpy as np
 
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
-from tricycle.layers import Dense, Dropout, Embedding, Layer
+from tricycle.layers import Dense, Dropout, Embedding, Layer, LayerNorm
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -13,10 +13,14 @@ class GPT(Layer):
         self.embedding_dim = config.embedding_dim
         self.context_window = config.context_window
         self.token_embedding = Embedding(
-            to_size=self.embedding_dim, from_size=config.vocab_size
+            to_size=self.embedding_dim,
+            from_size=config.vocab_size,
+            name="token_embedding",
         )
         self.position_embedding = Embedding(
-            to_size=self.embedding_dim, from_size=self.context_window
+            to_size=self.embedding_dim,
+            from_size=self.context_window,
+            name="position_embedding",
         )
         self.input_dropout = Dropout(config.input_dropout_prob)
 
@@ -33,13 +37,17 @@ class GPT(Layer):
         ]
 
         self.head = Dense(
-            to_size=config.vocab_size, from_size=self.embedding_dim
+            to_size=config.vocab_size,
+            from_size=self.embedding_dim,
+            name="head",
         )
+        self.layer_norm = LayerNorm(self.embedding_dim)
         self.layers = [
             self.token_embedding,
             self.position_embedding,
             self.input_dropout,
             *self.blocks,
+            self.layer_norm,
             self.head,
         ]
 
@@ -68,16 +76,21 @@ class GPT(Layer):
         token_embedding = self.token_embedding(tensor)
 
         embedding = token_embedding + pos_embedding
+
         embedding = self.input_dropout(embedding)
 
         for block in self.blocks:
             embedding = block(embedding)
 
-        return self.head(embedding)
+        embedding = self.layer_norm(embedding)
+
+        embedding = self.head(embedding)
+        return embedding
 
     def zero_grad(self):
         self.token_embedding.zero_grad()
         self.position_embedding.zero_grad()
+        self.layer_norm.zero_grad()
         self.head.zero_grad()
         for block in self.blocks:
             block.zero_grad()
@@ -85,25 +98,31 @@ class GPT(Layer):
     def update(self, optimiser: Optimiser):
         self.token_embedding.update(optimiser)
         self.position_embedding.update(optimiser)
+        self.layer_norm.update(optimiser)
         self.head.update(optimiser)
         for block in self.blocks:
             block.update(optimiser)
 
-    def to_gpu(self):
-        self.token_embedding.to_gpu()
-        self.position_embedding.to_gpu()
+    def to_gpu(self, device: int = 0):
+        self.token_embedding.to_gpu(device)
+        self.position_embedding.to_gpu(device)
         for block in self.blocks:
-            block.to_gpu()
-        self.head.to_gpu()
+            block.to_gpu(device)
+        self.layer_norm.to_gpu(device)
+        self.head.to_gpu(device)
 
     def from_gpu(self):
         self.token_embedding.from_gpu()
         self.position_embedding.from_gpu()
         for block in self.blocks:
             block.from_gpu()
+        self.layer_norm.from_gpu()
         self.head.from_gpu()
 
     def display(self):
+        print(self)
+
+    def __str__(self):
         stack = [(self, 0)]
 
         contents = []
@@ -117,18 +136,20 @@ class GPT(Layer):
 
             stack.extend((layer, indent + 1) for layer in node.layers[::-1])
 
+        string = ""
         total = 0
         for layer, size, n_indent in contents:
             total += size
             size = humanize.scientific(size) if size else ""
             indent = "  " * n_indent
 
-            print(f"{indent}{layer}({size})")
+            string += f"{indent}{layer}({size})\n"
 
         PARAM_SIZE = self.head.weights[0][0].dtype.itemsize
         total *= PARAM_SIZE
 
-        print("\nTotal size:")
-        print(f"  - {humanize.naturalsize(total)}")
-        print("Total parameters:")
-        print(f"  - {humanize.intword(total/PARAM_SIZE)}")
+        string += "Total size:\n"
+        string += f"  - {humanize.naturalsize(total)}\n"
+        string += "Total parameters:\n"
+        string += f"  - {humanize.intword(total/PARAM_SIZE)}\n"
+        return string

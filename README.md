@@ -6,7 +6,7 @@ Ever wanted to learn how a deep learning framework *actually* works under the ho
 ## Overview
 Tricycle is a minimal framework for deep learning. The goal of this library is
 not to match the speed or complexity or Pytorch or Tensorflow, but instead to get a good understanding of how
-deep learning actually works at every level: from automatic differentiation all the way up to modern Transformers. It is built using nothing but standard
+deep learning actually works at every level: from automatic differentiation all the way up to modern Language Models. It is built using nothing but standard
 Python and Numpy which means that everything be understandable to anyone who knows a bit of Python.
 
 Here are some things you can do with Tricycle:
@@ -16,7 +16,7 @@ Here are some things you can do with Tricycle:
 - Manipulate tensors with [einstein notation](https://en.wikipedia.org/wiki/Einstein_notation)
 - Successfully train deep learning models
 - Use a GPU
-- Train a Transformer (!)
+- Train a Transformer to produce infinite shakespeare(!)
 
 Here are some things you can't do with Tricycle (yet):
 - Do anything at the speed of pytorch
@@ -26,7 +26,7 @@ If you want to do these things, you should check out [pytorch](https://pytorch.o
 If you would like to learn more about the process of building tricycle, you can check out my [blog](http://bclarkson-code.com)
 
 ## Usage
-Theoretically, as a fully functional deep learning library, you can build any modern Deep Learning model with Tricycle. For example, this is how you can train a (very) small language model on the shakespeare dataset:
+Theoretically, as a fully functional deep learning library, you can build any modern Deep Learning model with Tricycle. For example, this is how you can train a small language model on the shakespeare dataset:
 
 ```python
 import pickle
@@ -37,13 +37,13 @@ from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
 from tricycle.models import GPT
-from tricycle.optimisers import StochasticGradientDescent
-from tricycle_datasets.shakespeare import Shakespeare
+from tricycle.optimisers import AdamW
+from tricycle_datasets.shakespeare import ShakespeareChar
 
 config = SmolGPTConfig()
 model = GPT(config)
 
-tokens = Shakespeare(vocab_size=config.vocab_size)
+tokens = ShakespeareChar(vocab_size=config.vocab_size)
 dataset = (
     CausalLMDataset(
         tokens=tokens,
@@ -56,25 +56,34 @@ dataset = (
     .to_vector()
 )
 loss_fn = cross_entropy
-optimiser = StochasticGradientDescent(
-    learning_rate=config.learning_rate,
+optimiser = AdamW(
+    learning_rate=config.max_learning_rate,
     weight_decay=config.weight_decay,
-    momentum=config.momentum,
+    betas=(config.beta1, config.beta2),
 )
 
 model.to_gpu()
 
-for inputs, outputs in tqdm(dataset):
+best_loss = float("inf")
+losses = []
+for step in tqdm(range(config.steps)):
+    optimiser.step()
+    batch_loss = 0
+    inputs, outputs = next(dataset)
     inputs = inputs.to_gpu()
     outputs = outputs.to_gpu()
 
     logits = model(inputs)
-    loss = loss_fn(outputs, logits).from_vector().mean().mean()
+    loss = (
+        loss_fn(outputs, logits).from_vector().mean().mean()
+        / config.gradient_accumulation_steps
+    )
+    batch_loss += float(loss.numpy())
     loss.backward()
-    model.update(optimiser)
 
-    # clean up the computational graph
     loss.cleanup()
+
+    model.update(optimiser)
 
 # save results
 with open("model.pkl", "wb") as f:

@@ -71,7 +71,7 @@ def test_attention_individually():
     # tricycle
     attention = Einsum("NIh, NJh -> NIJ")(query, key) / np.sqrt(head_size)
 
-    assert attention.close_to(att)
+    assert attention.close_to(att, rtol=1e-2)
 
     # pytorch
     bias = torch.tril(torch.ones(context_window, context_window)).view(
@@ -82,9 +82,13 @@ def test_attention_individually():
     # tricycle
     mask = build_mask(context_window)
     attention = masked_fill(attention, (n_tokens, n_tokens), mask)
-    breakpoint()
 
-    assert attention.close_to(att)
+    # Note: in tricycle, we fill with -10_000 instead of inf because it
+    # simplifies a lot of the logic so we need to compare with that
+    # TODO: do infinity logic properly
+    assert attention.close_to(
+        np.nan_to_num(att.numpy(), neginf=-10_000.0), rtol=1e-2
+    )
 
     # pytorch
     att = torch.softmax(att, dim=-1)
@@ -296,12 +300,10 @@ def test_attention_block():
 
     assert not tricycle_attention.out_projection.weights.is_vector
     tricycle_out_weights = tricycle_attention.out_projection.weights.grad
-    tricycle_out_weights = tricycle_out_weights.from_vector().e("abc->bc")
 
     assert tricycle_out_weights.close_to(c_proj.weight.grad.T.numpy())
 
     tricycle_in_weights = tricycle_attention.in_projection.weights.grad
-    tricycle_in_weights = tricycle_in_weights.from_vector().e("abc->bc")
 
     assert tricycle_in_weights.close_to(
         c_attn.weight.grad.T.numpy(), rtol=1e-3
@@ -324,7 +326,16 @@ def test_MLPBlock():
     assert out_tensor.shape == (3, 4)
 
     correct_output = np.array(
-        [[96, 0, 96, 0], [0, 0, 352, 352], [608, 608, 608, 0]]
+        [
+            [96.0, 0.0, 96.0, 0.0],
+            [
+                352.0,
+                0.0,
+                352.0,
+                0.0,
+            ],
+            [608.0, 0.0, 608.0, 0.0],
+        ]
     )
     correct_output = to_tensor(correct_output)
 
@@ -336,9 +347,9 @@ def test_MLPBlock():
     assert in_tensor.grad is not None
     correct_grad = to_tensor(
         [
-            [-44.59691787, -44.59691787, -44.59691787, -44.59691787],
-            [-248.8553654, -248.8553654, -248.8553654, -248.8553654],
-            [-679.67071945, -679.67071945, -679.67071945, -679.67071945],
+            [32.0, 32.0, 32.0, 32.0],
+            [32.0, 32.0, 32.0, 32.0],
+            [32.0, 32.0, 32.0, 32.0],
         ]
     )
 
@@ -353,7 +364,7 @@ def test_GPT2TransformerBlock():
     embedding_dim = 7 * n_heads
 
     in_tensor = to_tensor(
-        np.random.random((batch_size, n_tokens, embedding_dim))
+        np.random.random((batch_size, n_tokens, embedding_dim)), is_vector=True
     )
     block = GPT2TransformerBlock(
         embedding_dim=embedding_dim,

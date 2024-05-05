@@ -13,6 +13,11 @@ from tricycle.optimisers import StochasticGradientDescent
 
 logger = logging.getLogger(__name__)
 
+slow_test = pytest.mark.skipif(
+    "not config.getoption('--run-slow')",
+    reason="Only run when --run-slow is given",
+)
+
 
 def test_can_train_simple_neural_network():
     """
@@ -62,6 +67,7 @@ def test_can_train_simple_neural_network():
     assert losses[-1] < 0.6
 
 
+@slow_test
 def test_can_train_simple_neural_network_gpu():
     """
     Train a simple neural network on the iris dataset

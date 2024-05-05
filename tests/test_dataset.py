@@ -13,14 +13,14 @@ def test_can_build_causal_lm_dataset():
 
     assert len(inputs) == 10
     expected_tokens = tokens[:11]
-    expected_vectors = np.zeros((11, 100))
-    expected_vectors[np.arange(11), expected_tokens] = 1
+    expected_output = np.zeros((10, 100))
+    expected_output[np.arange(10), expected_tokens[1:]] = 1
 
-    assert np.allclose(inputs, expected_vectors[:10])
-    assert np.allclose(output, expected_vectors[1:11])
+    assert np.allclose(inputs, expected_tokens[:10])
+    assert np.allclose(output, expected_output)
 
     dataset.batch()
 
     inputs, outputs = dataset._get_batch(0)
-    assert inputs.shape == (10, 10, 100)
+    assert inputs.shape == (10, 10)
     assert outputs.shape == (10, 10, 100)

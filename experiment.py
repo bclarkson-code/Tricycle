@@ -43,8 +43,8 @@ search_space = {
         "batch_size": 12,
     },
     "train": {
-        "max_learning_rate": 1e-4,
-        "min_learning_rate": tune.grid_search([1e-4, 1e-5]),
+        "max_learning_rate": 1e-3,
+        "min_learning_rate": 1e-4,
         "warmup_steps": 100,
         "weight_decay": 0,
         "momentum": 0,

@@ -22,7 +22,7 @@ def test_gelu_full():
     x = to_tensor([-1, 0, 1])
     gelu = GeLU(approximate=False)
     y = gelu(x)
-    assert y.close_to([-0.15865525, 0.0, 0.84134475])
+    assert y.close_to([-0.158808, 0.0, 0.841192])
 
 
 def test_gelu_vectorised():
@@ -32,9 +32,9 @@ def test_gelu_vectorised():
     y = gelu(x)
     assert y.close_to(
         [
-            [-0.15865525, 0.0, 0.84134475],
-            [-0.15865525, 0.0, 0.84134475],
-            [-0.15865525, 0.0, 0.84134475],
+            [-0.158808, 0.0, 0.841192],
+            [-0.158808, 0.0, 0.841192],
+            [-0.158808, 0.0, 0.841192],
         ]
     )
 

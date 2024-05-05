@@ -3,6 +3,7 @@ import logging
 import numbers
 import uuid
 from typing import Callable, List, Optional, Sequence, Union
+from warnings import warn
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -22,7 +23,6 @@ class Tensor:
     """
 
     _id: int
-    _grad_fn: Optional[List[List[Op]]] = None
     _data: np.ndarray | ArrayLike
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
@@ -79,7 +79,7 @@ class Tensor:
                     stack.append(arg)
                     arg.parents.add(node)
 
-    def _calculate_gradients(self):
+    def _calculate_gradients(self, clip: float | None = None):
         """
         Traverse through the graph, calculating gradients along the way such
         that a child is only visited if the entirety of its parent's gradient
@@ -117,10 +117,28 @@ class Tensor:
                 arg.parents.remove(node)
 
                 # calculate gradients
-                if arg.grad is None:
-                    arg.grad = back_fns(node.grad)
-                else:
-                    arg.grad += back_fns(node.grad)
+                try:
+                    grad = back_fns(node.grad)
+
+                    # gradient clipping
+                    if clip is not None:
+                        grad._data = grad.xp.clip(grad._data, -clip, clip)
+
+                    # add gradient
+                    if arg.grad is None:
+                        arg.grad = grad
+                    else:
+                        arg.grad += grad
+
+                    # find invalid gradients
+                    if node.xp.isneginf(arg.grad._data).sum() > 0:
+                        warn("Found -inf in gradient")
+                    if node.xp.isinf(arg.grad._data).sum() > 0:
+                        warn("Found inf in gradient")
+                    if node.xp.isnan(arg.grad._data).sum() > 0:
+                        warn("Found nan in gradient")
+                except Exception as e:
+                    raise e
 
                 # only move to arg if we have been to all of its parents
                 if len(arg.parents) == 0:
@@ -139,20 +157,21 @@ class Tensor:
             if node.args:
                 stack.extend(iter(node.args))
                 del node.args
+            else:
+                continue
 
             # delete node
             if hasattr(node, "grad") and node.grad is not None:
                 del node.grad
             del node
-        gc.collect()
 
-    def backward(self):
+    def backward(self, clip: float | None = None):
         """
         Perform a backward pass through the graph, calculating the gradient
         for each parameter
         """
         self._attach_parents()
-        self._calculate_gradients()
+        self._calculate_gradients(clip=clip)
 
     def __hash__(self) -> int:
         return id(self)
@@ -431,7 +450,7 @@ class Tensor:
 
         return isinstance(self._data, cupy.ndarray)
 
-    def to_gpu(self):
+    def to_gpu(self, device: int = 0):
         """
         Move this tensor to the GPU
         """
@@ -441,6 +460,7 @@ class Tensor:
             )
         import cupy
 
+        cupy.cuda.Device(device).use()
         self._data = cupy.asarray(self._data)
         return self
 
@@ -458,9 +478,10 @@ class Tensor:
         return self
 
     def zero_grad(self):
-        self._grad = None
+        self.grad = None
         self.args = None
         self.back_fns = None
+
         return self
 
     def numpy(self):
@@ -514,7 +535,7 @@ def vectorise(tensor: Tensor) -> Tensor:
     Tell Tricycle to treat this tensor as a group of vectors
     """
     if tensor.is_vector:
-        raise ValueError("Tensor is already vectorised")
+        return tensor
 
     result = to_tensor(
         tensor._data,
@@ -533,7 +554,7 @@ def unvectorise(tensor: Tensor) -> Tensor:
     (not a group of vectors)
     """
     if not tensor.is_vector:
-        raise ValueError("Tensor is not vectorised")
+        return tensor
 
     result = to_tensor(
         tensor._data,

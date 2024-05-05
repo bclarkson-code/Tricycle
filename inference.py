@@ -1,65 +1,31 @@
 import pickle
 import sys
 from pathlib import Path
-from typing import Sequence
 
-import cupy as cp
 import numpy as np
 
 from tricycle.configs import SmolGPTConfig
 from tricycle.functions import softmax
-from tricycle.layers import Dropout
-from tricycle.models import GPT
+from tricycle.layers import Dropout, Layer
 from tricycle.tensor import to_tensor
-from tricycle_datasets.shakespeare import Shakespeare
+from tricycle_datasets.shakespeare import ShakespeareChar
 
 config = SmolGPTConfig()
 
 
-def load_tokeniser():
-    tokeniser_path = Path("tokeniser.pkl")
-    if not tokeniser_path.exists():
-        dataset = Shakespeare(vocab_size=1024, token_path=Path("invalid_path"))
-        tokeniser = dataset.tokeniser
-        with open(tokeniser_path, "wb") as f:
-            pickle.dump(tokeniser, f)
-    else:
-        with open(tokeniser_path, "rb") as f:
-            tokeniser = pickle.load(f)
-    return tokeniser
+def load_model(path: str | Path) -> Layer:
+    print(f"LOADING MODEL: {path}")
+    with open(
+        path,
+        "rb",
+    ) as f:
+        return pickle.load(f)
 
 
-def one_hot_encode(
-    tokens: Sequence[int],
-    vocab_size=config.vocab_size,
-    pad_token_id=config.pad_token_id,
-):
+def deactivate_dropout(model: Layer) -> Layer:
     """
-    One hot encode some tokens into one-hot vectors
+    Traverse through the model and deactivate any dropout layers
     """
-    one_hot = np.zeros((len(tokens), vocab_size))
-
-    for i, token in enumerate(tokens):
-        if token == pad_token_id:
-            continue
-        one_hot[i, token] = 1
-    return one_hot
-
-
-def pad(
-    tokens: list[int],
-    context_window=config.context_window,
-    pad_token_id=config.pad_token_id,
-):
-    n_padding_tokens = max(0, context_window - len(tokens))
-    return tokens + [pad_token_id] * n_padding_tokens
-
-
-def load_model():
-    return GPT(config)
-
-
-def deactivate_dropout(model):
     stack = [model]
 
     while stack:
@@ -71,21 +37,31 @@ def deactivate_dropout(model):
             continue
 
         stack.extend(iter(node.layers))
+    return model
 
 
-def generate(text, model, tokeniser, sample=True):
+def generate(text, model, tokeniser, sample=True, temperature=0.8):
+    """
+    Given a prompt, yield next token predictions for a model
+    """
     tokens = tokeniser.encode(text)
     while True:
-        n_tokens = len(tokens)
-        tokens = pad(tokens)
+        tokens = tokens[-config.context_window :]
+        assert len(tokens) == config.context_window
 
         encoded = to_tensor(
             [tokens], dtype=int, requires_grad=False
         ).to_vector()
 
         pred = model(encoded)
-        pred = softmax(pred)
-        probabilities = pred.xp.asnumpy(pred._data[0][n_tokens])
+        pred = softmax(pred / temperature)
+
+        if pred.on_gpu:
+            probabilities = pred.xp.asnumpy(
+                pred._data[0][config.context_window - 1]
+            )
+        else:
+            probabilities = pred._data[0][config.context_window - 1]
 
         # sample according to probabilities
         if sample:
@@ -94,7 +70,7 @@ def generate(text, model, tokeniser, sample=True):
             )
         else:
             next_token = np.argmax(probabilities)
-        tokens = tokens[:n_tokens]
+        tokens.append(next_token)
         yield next_token
 
 
@@ -110,14 +86,34 @@ def get_sample(sample_text, model, tokeniser, n_samples=50):
 
 if __name__ == "__main__":
     np.random.seed(0)
-    tokeniser = load_tokeniser()
-    model = load_model()
-    model.to_gpu()
+
+    config = SmolGPTConfig()
+    shakespeare = ShakespeareChar()
+    shakespeare.vocab_size = 65
+
+    tokeniser = shakespeare
+    model = load_model(sys.argv[1])
+    model.to_gpu(1)
 
     deactivate_dropout(model)
 
-    sample_text = "Here is some example text"
-    print(sample_text, end="", flush=True)
+    sample_text = """'er my head
+As is a winged messenger of heaven
+Unto the white-upturned wondering eyes
+Of mortals that fall back to gaze on him
+When he bestrides the lazy-pacing clouds
+And sails upon the bosom of the air.
+
+JULIET:
+O Romeo, Romeo! wherefore art thou Romeo?
+"""
+    print(
+        f"------------PROMPT-------------\n{sample_text}\n--------------RESPONSE-----------",
+        flush=True,
+    )
     sys.stdout.flush()
-    for token in generate(sample_text, model, sample=False):
-        print(tokeniser.decode(token), end="", flush=True)
+    for token in generate(sample_text, model, tokeniser, sample=True):
+        token = int(token)
+        token = tokeniser.decode([token])[0]
+        token = chr(token)
+        print(token, end="", flush=True)

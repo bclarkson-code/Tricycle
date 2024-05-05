@@ -72,7 +72,6 @@ def split(tensor: Tensor, n_splits: int, axis: int = 0) -> Sequence[Tensor]:
             result_grad = to_tensor(
                 xp.zeros(tensor.shape), is_vector=result.is_vector
             )
-            tensor.xp
             result_grad[tuple(idx)] = grad._data
             return result_grad
 
@@ -105,6 +104,8 @@ def mean(tensor: Tensor) -> Tensor:
     """
     Find the mean of a tensor
     """
+    if tensor.ndim == 1 and tensor.shape[0] == 1:
+        return tensor
     return tensor.e("...a->...") / tensor.shape[-1]
 
 

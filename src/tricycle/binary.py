@@ -132,3 +132,23 @@ def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
     result.is_vector = tensor_1.is_vector or tensor_2.is_vector
 
     return result
+
+
+def bmask(tensor: Tensor, mask: Tensor) -> Tensor:
+    """
+    Apply a binary mask to a numpy array, setting values to 0 where
+    the mask is True
+    """
+    xp = select_backend(tensor._data, mask._data)
+    assert _shapes_match(tensor, mask)
+    assert (
+        mask.requires_grad == False
+    ), "Cannot compute gradient of a binary mask"
+
+    result = to_tensor(xp.where(mask._data, tensor._data, 0))
+
+    result.args = (tensor,)
+    result.back_fns = (lambda grad: bmask(grad, mask),)
+    result.name = "bmask"
+    result.is_vector = tensor.is_vector
+    return result

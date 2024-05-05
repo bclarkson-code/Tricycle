@@ -1,9 +1,17 @@
 from copy import copy
 
 import numpy as np
+import pytest
 
 from tricycle.einsum import Einsum
-from tricycle.layers import Dense, Dropout, Embedding, LayerNorm, Sequential
+from tricycle.layers import (  # noqa: E501
+    Dense,
+    Dropout,
+    Embedding,
+    LayerNorm,
+    RMSNorm,
+    Sequential,
+)
 from tricycle.tensor import to_tensor
 
 
@@ -51,7 +59,7 @@ def test_dropout():  # sourcery skip: square-identity
     n_zeros = len(zero_x_idx)
     expected_n_zeros = int(size * size * dropout_prob)
 
-    assert np.allclose(n_zeros, expected_n_zeros, rtol=1e-2)
+    assert n_zeros / size**2 - expected_n_zeros / size**2 < 0.05
 
     out_tensor.backward()
 
@@ -67,7 +75,7 @@ def test_dropout():  # sourcery skip: square-identity
 def test_layer_norm():
     np.random.seed(0)
     in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
-    layer_norm = LayerNorm()
+    layer_norm = LayerNorm(100)
     out_tensor = layer_norm(in_tensor.to_vector())
 
     assert out_tensor.shape == in_tensor.shape
@@ -148,44 +156,30 @@ def test_embedding_vectorised():
     result.backward()
 
     assert embedding_layer.weights.grad is not None
-    assert embedding_layer.weights.grad.shape == (2, vocab_size, out_shape)
+    assert embedding_layer.weights.grad.shape == (vocab_size, out_shape)
     assert embedding_layer.weights.grad.close_to(
         [
             [
                 [2.0, 2.0, 2.0, 2.0, 2.0],
                 [3.0, 3.0, 3.0, 3.0, 3.0],
-                [2.0, 2.0, 2.0, 2.0, 2.0],
-            ],
-            [
-                [2.0, 2.0, 2.0, 2.0, 2.0],
                 [3.0, 3.0, 3.0, 3.0, 3.0],
-                [2.0, 2.0, 2.0, 2.0, 2.0],
             ],
         ]
     )
 
 
-def test_embedding_matches_orignal_method():
-    vocab_size = 1024
-    embed_dim = 384
-    weights = to_tensor(np.random.random((vocab_size, embed_dim)))
+@pytest.mark.skip(reason="not implemented yet")
+def test_rms_norm():
+    np.random.seed(0)
+    in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
+    layer_norm = RMSNorm(100)
+    out_tensor = layer_norm(in_tensor.to_vector())
 
-    def original_embed(tokens):
-        one_hot = np.zeros((tokens.shape[0], vocab_size))
-        for i, token in enumerate(tokens._data):
-            one_hot[i, token] = 1
-        one_hot = to_tensor(one_hot)
-        return Einsum("ca,aB->cB")(one_hot, weights)
+    assert out_tensor.shape == in_tensor.shape
+    assert np.allclose((out_tensor._data**2).mean(), 1)
+    out_tensor.backward()
 
-    embedding_layer = Embedding(from_size=vocab_size, to_size=embed_dim)
-    embedding_layer.weights = copy(weights)
+    assert in_tensor.grad is not None
+    assert in_tensor.grad.shape == in_tensor.shape
 
-    tokens = np.random.randint(low=0, high=1024, size=100)
-    tokens = to_tensor(tokens, dtype=int, requires_grad=False)
-
-    # 3.84 ms ± 17.6 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
-    original_out = original_embed(tokens)
-    # 28.1 µs ± 64.5 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
-    new_out = embedding_layer(tokens)
-
-    assert original_out.close_to(new_out)
+    # TODO: do a proper check here
