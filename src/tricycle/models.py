@@ -1,17 +1,9 @@
 import humanize
 import numpy as np
 
-from tricycle.blocks import GPT2TransformerBlock, GPT2TransformerBlockV4
+from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
-from tricycle.layers import (
-    Dense,
-    Dropout,
-    Embedding,
-    Layer,
-    LayerNorm,
-    RMSNorm,
-    RMSNormV2,
-)
+from tricycle.layers import Dense, Dropout, Embedding, Layer, LayerNorm
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -33,7 +25,7 @@ class GPT(Layer):
         self.input_dropout = Dropout(config.input_dropout_prob)
 
         self.blocks = [
-            GPT2TransformerBlockV4(
+            GPT2TransformerBlock(
                 embedding_dim=self.embedding_dim,
                 n_heads=config.n_heads,
                 context_window=self.context_window,
