@@ -6,7 +6,7 @@ from tricycle.einsum import Einsum
 from tricycle.layers import (  # noqa: E501
     Dense,
     Dropout,
-    EmbeddingV2,
+    Embedding,
     LayerNorm,
     RMSNorm,
     RMSNormV2,
@@ -101,7 +101,7 @@ def test_embedding():
         dtype=int,
     )
 
-    embedding_layer = EmbeddingV2(from_size=vocab_size, to_size=out_shape)
+    embedding_layer = Embedding(from_size=vocab_size, to_size=out_shape)
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )
@@ -134,7 +134,7 @@ def test_embedding_vectorised():
         dtype=np.int8,
     ).to_vector()
 
-    embedding_layer = EmbeddingV2(from_size=vocab_size, to_size=out_shape)
+    embedding_layer = Embedding(from_size=vocab_size, to_size=out_shape)
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )

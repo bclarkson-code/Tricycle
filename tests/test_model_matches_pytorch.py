@@ -14,7 +14,7 @@ from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
 from tricycle.functions import softmax_v4
-from tricycle.layers import DenseV3, EmbeddingV2
+from tricycle.layers import DenseV3, Embedding
 from tricycle.loss import cross_entropy
 from tricycle.tensor import to_tensor
 from tricycle.unary import usum
@@ -244,7 +244,7 @@ def test_embedding_matches(tokens_, out_shape):
     pt_layer = torch.nn.Embedding(
         num_embeddings=vocab_size, embedding_dim=out_shape
     )
-    tr_layer = EmbeddingV2(from_size=vocab_size, to_size=out_shape)
+    tr_layer = Embedding(from_size=vocab_size, to_size=out_shape)
     tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy())
 
     pt_out = pt_layer(torch.tensor(tokens_._data))

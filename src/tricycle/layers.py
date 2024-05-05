@@ -662,71 +662,7 @@ class RMSNormV2(Layer):
         return self
 
 
-class DEPRACATED_EMBEDDING(Layer):
-    """
-    Convert an index to an embedding with a lookup (rather than a one-hot
-    encoding and a matrix multiplication)
-    """
-
-    def __init__(self, from_size: int, to_size: int, initialiser=init_xavier):
-        self.weights = initialiser((from_size, to_size))
-        self.vocab_size = from_size
-
-    def forward(self, tensor: Tensor):
-        assert (
-            tensor.requires_grad is False
-        ), "Cannot embed a differentiable tensor"
-
-        if tensor.is_vector:
-            result = tensor.xp.stack(
-                [self.weights._data[idx] for idx in tensor._data]
-            )
-            result = to_tensor(
-                result,
-                is_vector=True,
-            )
-        else:
-            result = to_tensor(self.weights[tensor._data], is_vector=False)
-
-        result.args = (tensor, self.weights)
-
-        def _embed_back_fn(grad: Tensor):
-            xp = grad.xp
-            coef = xp.zeros((tensor.shape[-1], self.vocab_size))
-            indices = xp.arange(tensor.shape[-1])
-
-            coef[indices, tensor._data] = 1
-            coef = to_tensor(coef, requires_grad=False)
-            return Einsum("aB,aC->BC")(coef, grad)
-
-        result.back_fns = (nothing, _embed_back_fn)
-        return result
-
-    def _raise_exception(self, *args):
-        """
-        I haven't figured out how 2nd order derivatives work yet so we'll
-        raise an exception for now
-        """
-        raise NotImplementedError(
-            "2nd order derivatives for embedding are not yet implemented"
-        )
-
-    def update(self, optimiser: Optimiser):
-        self.weights = optimiser(self.weights)
-
-    def zero_grad(self):
-        self.weights.grad = None
-
-    def to_gpu(self, device: int = 0):
-        self.weights.to_gpu(device)
-        return self
-
-    def from_gpu(self):
-        self.weights.from_gpu()
-        return self
-
-
-class EmbeddingV2(Layer):
+class Embedding(Layer):
     """
     Convert an index to an embedding with a lookup (rather than a one-hot
     encoding and a matrix multiplication)

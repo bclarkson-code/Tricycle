@@ -4,7 +4,7 @@ from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.layers import RMSNormV2
 from tricycle.loss import cross_entropy
-from tricycle.models import GPT, GPTV2
+from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import ShakespeareChar
 
@@ -39,8 +39,8 @@ optimiser = StochasticGradientDescent(
 )
 
 
-def train_improved_model():
-    model = GPTV2(config)
+def train_model():
+    model = GPT(config)
     model.to_gpu(0)
     n_steps = 2
     for step, (inputs, outputs) in enumerate(dataset):
@@ -49,53 +49,6 @@ def train_improved_model():
         outputs.to_gpu(0)
         loss = loss_fn(outputs, logits).from_vector().mean().mean()
         loss.backward(clip=1)
-        import pickle
-
-        with open("model.pkl", "wb") as f:
-            pickle.dump(model, f)
-        exit()
-        model.update(optimiser)
-
-        # clean up the computational graph
-        loss.cleanup()
-
-        if step >= n_steps:
-            break
-
-        step += 1
-
-
-def train_original_model():
-    model = GPT(config)
-    model.to_gpu(1)
-    n_steps = 2
-    for step, (inputs, outputs) in enumerate(dataset):
-        inputs.to_gpu(1)
-        outputs.to_gpu(1)
-        logits = model(inputs)
-        loss = loss_fn(outputs, logits).from_vector().mean().mean()
-        loss.backward()
-        model.update(optimiser)
-
-        # clean up the computational graph
-        loss.cleanup()
-
-        if step >= n_steps:
-            break
-
-        step += 1
-
-
-def train_original_model_gpu_0():
-    model = GPT(config)
-    model.to_gpu(0)
-    n_steps = 2
-    for step, (inputs, outputs) in enumerate(dataset):
-        inputs.to_gpu(0)
-        outputs.to_gpu(0)
-        logits = model(inputs)
-        loss = loss_fn(outputs, logits).from_vector().mean().mean()
-        loss.backward()
         model.update(optimiser)
 
         # clean up the computational graph
@@ -108,6 +61,6 @@ def train_original_model_gpu_0():
 
 
 __benchmarks__ = [
-    (train_improved_model, train_improved_model, "Optimised multiple blocks")
+    (train_model, train_model, "Optimised multiple blocks")
     # (train_original_model, train_original_model_gpu_0, "Switched to GPU 0")
 ]

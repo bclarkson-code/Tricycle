@@ -36,7 +36,7 @@ from tqdm import tqdm
 from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
-from tricycle.models import GPTV2
+from tricycle.models import GPT
 from tricycle.optimisers import StochasticGradientDescent
 from tricycle_datasets.shakespeare import ShakespeareChar
 

@@ -69,7 +69,7 @@ def test_3d_softmax():
 
 
 def test_binary_softmax():
-    in_tensor = [[[1.0] + [0.0] * 127] * 16]
+    in_tensor = [[[1.0] + [0.0] * 15] * 16]
     in_tensor_1 = to_tensor(in_tensor).to_gpu(1)
     in_tensor_2 = to_tensor(in_tensor).to_gpu(1)
 

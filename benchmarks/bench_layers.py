@@ -3,7 +3,6 @@ import textwrap
 import numpy as np
 
 from tricycle.layers import (
-    DEPRACATED_EMBEDDING,
     Dense,
     DenseV2,
     DenseV3,
@@ -15,7 +14,7 @@ from tricycle.layers import (
     DropoutV5,
     DropoutV6,
     DropoutV7,
-    EmbeddingV2,
+    Embedding,
     LayerNorm,
     RMSNorm,
     RMSNormV2,
@@ -35,27 +34,7 @@ def test_embedding_back_new():
         dtype=int,
     )
     inputs = inputs.to_vector()
-    layer = EmbeddingV2(from_size=vocab_size, to_size=embed_dim)
-
-    for _ in range(10):
-        out = layer(inputs)
-        out.backward()
-        out.zero_grad()
-
-
-def test_embedding_original():
-    n_tokens = 100
-    vocab_size = 1024
-    batch_size = 4
-    embed_dim = 384
-
-    inputs = to_tensor(
-        np.random.randint(0, vocab_size, (batch_size, n_tokens)),
-        requires_grad=False,
-        dtype=int,
-    )
-    inputs = inputs.to_vector()
-    layer = DEPRACATED_EMBEDDING(from_size=vocab_size, to_size=embed_dim)
+    layer = Embedding(from_size=vocab_size, to_size=embed_dim)
 
     for _ in range(10):
         out = layer(inputs)

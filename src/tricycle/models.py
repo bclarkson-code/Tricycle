@@ -4,12 +4,11 @@ import numpy as np
 from tricycle.blocks import GPT2TransformerBlock, GPT2TransformerBlockV4
 from tricycle.configs import GPTConfig
 from tricycle.layers import (
-    DEPRACATED_EMBEDDING,
     Dense,
     DenseV3,
     Dropout,
     DropoutV7,
-    EmbeddingV2,
+    Embedding,
     Layer,
     LayerNorm,
     LayerNormV2,
@@ -20,16 +19,16 @@ from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
 
-class GPTV2(Layer):
+class GPT(Layer):
     def __init__(self, config: GPTConfig):
         self.embedding_dim = config.embedding_dim
         self.context_window = config.context_window
-        self.token_embedding = EmbeddingV2(
+        self.token_embedding = Embedding(
             to_size=self.embedding_dim,
             from_size=config.vocab_size,
             name="token_embedding",
         )
-        self.position_embedding = EmbeddingV2(
+        self.position_embedding = Embedding(
             to_size=self.embedding_dim,
             from_size=self.context_window,
             name="position_embedding",
