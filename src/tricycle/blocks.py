@@ -10,14 +10,7 @@ from tricycle.activation import GeLU, ReLU
 from tricycle.einsum import Einsum
 from tricycle.functions import softmax, softmax_v4
 from tricycle.initialisers import init_xavier
-from tricycle.layers import (  # noqa E501
-    Dense,
-    Dropout,
-    Layer,
-    LayerNorm,
-    RMSNorm,
-    RMSNormV2,
-)
+from tricycle.layers import Dense, Dropout, Layer, LayerNorm  # noqa E501
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, select_backend, to_tensor
 

@@ -282,17 +282,6 @@ class RMSNorm(Layer):
     but removes means
     """
 
-    def forward(self, tensor: Tensor):
-        divisor = usqrt((tensor**2).mean()).repeat(tensor.shape[-1])
-        return tensor / divisor
-
-
-class RMSNormV2(Layer):
-    """
-    Normalise tensors by their sum of squares. This is similar to layer norm
-    but removes means
-    """
-
     REALLY_SMALL_NUMBER = 1e-6
 
     def __init__(self, to_size: int):
@@ -300,7 +289,7 @@ class RMSNormV2(Layer):
 
         self.weights = to_tensor(np.ones(to_size))
 
-    def build_back_fn(self, rms, input_, is_vector=False):
+    def build_back_fn(self, rms, input_):
         def rmsnorm_weight_back_fn(grad):
             xp = grad.xp
             result = xp.sum(input_ / rms, axis=-2).sum(0).squeeze()
@@ -325,8 +314,6 @@ class RMSNormV2(Layer):
                     raise NotImplementedError(
                         f"RMSNorm with tensors of size {input_.ndim} are not yet supported"
                     )
-            # square_prod = xp.power(input_, 2) / self.weights.shape[-1]
-
             right = square_prod * coef
             return to_tensor(left - right, is_vector=grad.is_vector)
 

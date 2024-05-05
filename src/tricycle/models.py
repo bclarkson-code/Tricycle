@@ -2,7 +2,7 @@ import humanize
 import numpy as np
 
 from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
-from tricycle.blocks import GPT2TransformerBlock
+from tricycle.blocks import GPT2TransformerBlock_
 from tricycle.configs import GPTConfig
 from tricycle.layers import Dense, Dropout, Embedding, Layer, LayerNorm
 from tricycle.optimisers import Optimiser
@@ -42,7 +42,7 @@ class GPT(Layer):
                     "yet implemented"
                 )
         self.blocks = [
-            GPT2TransformerBlock(
+            GPT2TransformerBlock_(
                 embedding_dim=self.embedding_dim,
                 n_heads=config.n_heads,
                 context_window=self.context_window,
