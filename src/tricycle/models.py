@@ -67,32 +67,25 @@ class GPT(Layer):
             "Can't have more tokens than context window. ",
             f"Found {n_tokens=} and {self.context_window=}",
         )
-        grads = {}
 
         position = to_tensor(
             xp.arange(context_window), requires_grad=False, dtype=int
         )
 
         pos_embedding = self.position_embedding(position)
-        grads["position_embedding"] = pos_embedding
         token_embedding = self.token_embedding(tensor)
-        grads["token_embedding"] = token_embedding
 
         embedding = token_embedding + pos_embedding
 
         embedding = self.input_dropout(embedding)
-        grads["input"] = embedding
 
         for block in self.blocks:
-            embedding, grads = block(embedding, grads)
+            embedding = block(embedding)
 
-        grads["before_ln"] = embedding
         embedding = self.layer_norm(embedding)
-        grads["before_head"] = embedding
 
         embedding = self.head(embedding)
-        grads["logits"] = embedding
-        return embedding, grads
+        return embedding
 
     def zero_grad(self):
         self.token_embedding.zero_grad()

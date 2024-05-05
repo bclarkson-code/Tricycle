@@ -80,7 +80,7 @@ for step in tqdm(range(config.steps)):
         inputs = inputs.to_gpu(device)
         outputs = outputs.to_gpu(device)
 
-        logits, _ = model(inputs)
+        logits = model(inputs)
         loss = (
             loss_fn(outputs, logits).from_vector().mean().mean()
             / config.gradient_accumulation_steps
