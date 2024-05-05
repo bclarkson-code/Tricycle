@@ -1,6 +1,7 @@
 import humanize
 import numpy as np
 
+from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
 from tricycle.layers import Dense, Dropout, Embedding, Layer, LayerNorm
@@ -24,13 +25,29 @@ class GPT(Layer):
         )
         self.input_dropout = Dropout(config.input_dropout_prob)
 
+        match config.activation_fn:
+            case "gelu":
+                activation_fn = GeLU
+            case "relu":
+                activation_fn = ReLU
+            case "swish":
+                activation_fn = Swish
+            case "glu":
+                activation_fn = GLU
+            case "swiglu":
+                activation_fn = SwiGLU
+            case _:
+                raise NotImplementedError(
+                    f"Activation function {config.activation_fn} is not "
+                    "yet implemented"
+                )
         self.blocks = [
             GPT2TransformerBlock(
                 embedding_dim=self.embedding_dim,
                 n_heads=config.n_heads,
                 context_window=self.context_window,
                 expansion_ratio=config.expansion_ratio,
-                activation_fn=config.activation_fn,
+                activation_fn=activation_fn,
                 attention_dropout_prob=config.attention_dropout_prob,
             )
             for _ in range(config.n_layers)
