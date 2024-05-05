@@ -6,7 +6,7 @@ import torch
 from tricycle.blocks import (
     GPT2TransformerBlock,
     MLPBlock,
-    MultiHeadSelfAttentionV2,
+    MultiHeadSelfAttention,
     build_mask,
     masked_fill,
 )
@@ -206,7 +206,7 @@ def test_attention_combined():
         block_size=context_window,
     )
 
-    tricycle_attention = MultiHeadSelfAttentionV2(
+    tricycle_attention = MultiHeadSelfAttention(
         embedding_dim=embedding_dim,
         n_heads=n_heads,
         context_window=context_window,
@@ -254,7 +254,7 @@ def test_attention_block():
         0, 1, (embedding_dim, embedding_dim)
     )
 
-    tricycle_attention = MultiHeadSelfAttentionV2(
+    tricycle_attention = MultiHeadSelfAttention(
         embedding_dim=embedding_dim,
         n_heads=n_heads,
         context_window=context_window,

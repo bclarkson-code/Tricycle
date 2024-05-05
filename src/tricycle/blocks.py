@@ -52,7 +52,7 @@ def masked_fill(
     return result
 
 
-class MultiHeadSelfAttentionV2(Layer):
+class MultiHeadSelfAttention(Layer):
     """
     Multi-head self-attention
     """
@@ -509,7 +509,7 @@ class GPT2TransformerBlock_(Layer):
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
     ):
-        self.attention_block = MultiHeadSelfAttentionV2(
+        self.attention_block = MultiHeadSelfAttention(
             embedding_dim,
             n_heads=n_heads,
             context_window=context_window,
@@ -573,7 +573,7 @@ class GPT2TransformerBlockV2(Layer):
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
     ):
-        self.attention_block = MultiHeadSelfAttentionV2(
+        self.attention_block = MultiHeadSelfAttention(
             embedding_dim,
             n_heads=n_heads,
             context_window=context_window,
@@ -637,7 +637,7 @@ class GPT2TransformerBlockV3(Layer):
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
     ):
-        self.attention_block = MultiHeadSelfAttentionV2(
+        self.attention_block = MultiHeadSelfAttention(
             embedding_dim,
             n_heads=n_heads,
             context_window=context_window,
@@ -702,7 +702,7 @@ class GPT2TransformerBlock(Layer):
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
     ):
-        self.attention_block = MultiHeadSelfAttentionV2(
+        self.attention_block = MultiHeadSelfAttention(
             embedding_dim,
             n_heads=n_heads,
             context_window=context_window,
