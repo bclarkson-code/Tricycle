@@ -1,6 +1,7 @@
 from copy import copy
 
 import numpy as np
+import pytest
 
 from tricycle.einsum import Einsum
 from tricycle.layers import (  # noqa: E501
@@ -8,7 +9,7 @@ from tricycle.layers import (  # noqa: E501
     Dropout,
     Embedding,
     LayerNorm,
-    RMSNormV2,
+    RMSNorm,
     Sequential,
 )
 from tricycle.tensor import to_tensor
@@ -167,10 +168,11 @@ def test_embedding_vectorised():
     )
 
 
+@pytest.mark.skip(reason="not implemented yet")
 def test_rms_norm():
     np.random.seed(0)
     in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
-    layer_norm = RMSNormV2(100)
+    layer_norm = RMSNorm(100)
     out_tensor = layer_norm(in_tensor.to_vector())
 
     assert out_tensor.shape == in_tensor.shape

@@ -285,6 +285,9 @@ class RMSNorm(Layer):
     REALLY_SMALL_NUMBER = 1e-6
 
     def __init__(self, to_size: int):
+        raise NotImplementedError(
+            "RMSNorm is still in development and not ready for use"
+        )
         import numpy as np
 
         self.weights = to_tensor(np.ones(to_size))
