@@ -1,71 +1,31 @@
 import pickle
 import sys
 from pathlib import Path
-from typing import Sequence
 
 import numpy as np
 
 from tricycle.configs import SmolGPTConfig
 from tricycle.functions import softmax
-from tricycle.layers import Dropout
-from tricycle.models import GPT
+from tricycle.layers import Dropout, Layer
 from tricycle.tensor import to_tensor
-from tricycle_datasets.shakespeare import Shakespeare, ShakespeareChar
+from tricycle_datasets.shakespeare import ShakespeareChar
 
 config = SmolGPTConfig()
 
 
-def load_tokeniser():
-    tokeniser_path = Path("tokeniser.pkl")
-    if not tokeniser_path.exists():
-        dataset = Shakespeare(vocab_size=1024, token_path=Path("invalid_path"))
-        tokeniser = dataset.tokeniser
-        with open(tokeniser_path, "wb") as f:
-            pickle.dump(tokeniser, f)
-    else:
-        with open(tokeniser_path, "rb") as f:
-            tokeniser = pickle.load(f)
-    return tokeniser
-
-
-def one_hot_encode(
-    tokens: Sequence[int],
-    vocab_size=config.vocab_size,
-    pad_token_id=config.pad_token_id,
-):
-    """
-    One hot encode some tokens into one-hot vectors
-    """
-    one_hot = np.zeros((len(tokens), vocab_size))
-
-    for i, token in enumerate(tokens):
-        if token == pad_token_id:
-            continue
-        one_hot[i, token] = 1
-    return one_hot
-
-
-def pad(
-    tokens: list[int],
-    context_window=config.context_window,
-    pad_token_id=config.pad_token_id,
-):
-    n_padding_tokens = max(0, context_window - len(tokens))
-    return tokens + [pad_token_id] * n_padding_tokens
-
-
-def load_model(version):
-    print(
-        f"LOADING MODEL: model_b30dc841-05f2-4e48-b0bc-49c2401f19e3_{version}"
-    )
+def load_model(path: str | Path) -> Layer:
+    print(f"LOADING MODEL: {path}")
     with open(
-        f"models/model_b30dc841-05f2-4e48-b0bc-49c2401f19e3_{version}.pkl",
+        path,
         "rb",
     ) as f:
         return pickle.load(f)
 
 
-def deactivate_dropout(model):
+def deactivate_dropout(model: Layer) -> Layer:
+    """
+    Traverse through the model and deactivate any dropout layers
+    """
     stack = [model]
 
     while stack:
@@ -77,22 +37,31 @@ def deactivate_dropout(model):
             continue
 
         stack.extend(iter(node.layers))
+    return model
 
 
-def generate(text, model, tokeniser, sample=True):
+def generate(text, model, tokeniser, sample=True, temperature=0.8):
+    """
+    Given a prompt, yield next token predictions for a model
+    """
     tokens = tokeniser.encode(text)
     while True:
         tokens = tokens[-config.context_window :]
-        n_tokens = len(tokens)
-        tokens = pad(tokens)
+        assert len(tokens) == config.context_window
 
         encoded = to_tensor(
             [tokens], dtype=int, requires_grad=False
         ).to_vector()
 
         pred, _ = model(encoded)
-        pred = softmax(pred)
-        probabilities = pred.xp.asnumpy(pred._data[0][n_tokens - 1])
+        pred = softmax(pred / temperature)
+
+        if pred.on_gpu:
+            probabilities = pred.xp.asnumpy(
+                pred._data[0][config.context_window - 1]
+            )
+        else:
+            probabilities = pred._data[0][config.context_window - 1]
 
         # sample according to probabilities
         if sample:
@@ -123,11 +92,7 @@ if __name__ == "__main__":
     shakespeare.vocab_size = 65
 
     tokeniser = shakespeare
-    try:
-        version = int(sys.argv[1])
-    except:
-        version = 2750
-    model = load_model(version)
+    model = load_model(sys.argv[1])
     model.to_gpu(1)
 
     deactivate_dropout(model)
