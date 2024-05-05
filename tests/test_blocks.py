@@ -82,6 +82,7 @@ def test_attention_individually():
     # tricycle
     mask = build_mask(context_window)
     attention = masked_fill(attention, (n_tokens, n_tokens), mask)
+    breakpoint()
 
     # Note: in tricycle, we fill with -10_000 instead of inf because it
     # simplifies a lot of the logic so we need to compare with that
