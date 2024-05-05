@@ -310,7 +310,7 @@ def softmax(tensor: Tensor):
     return bdiv(numerator, denominator)
 
 
-def softmax(tensor: Tensor):
+def softmax_v2(tensor: Tensor):
     """
     Apply softmax. The softmax is only applied to the final
     dimension of the tensor
