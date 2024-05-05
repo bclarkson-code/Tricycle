@@ -8,7 +8,7 @@ import numpy as np
 
 from tricycle.activation import GeLU, ReLU
 from tricycle.einsum import Einsum
-from tricycle.functions import softmax, softmax_v4
+from tricycle.functions import softmax, softmax_v2
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Dropout, Layer, LayerNorm  # noqa E501
 from tricycle.optimisers import Optimiser

@@ -13,7 +13,7 @@ from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
-from tricycle.functions import softmax_v4
+from tricycle.functions import softmax
 from tricycle.layers import Dense, Embedding
 from tricycle.loss import cross_entropy
 from tricycle.tensor import to_tensor
@@ -274,7 +274,7 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
     tensor.requires_grad = True
 
     pt_layer = torch.nn.functional.softmax
-    tr_layer = softmax_v4
+    tr_layer = softmax
 
     pt_input = torch.tensor(tensor._data, requires_grad=True)
 
