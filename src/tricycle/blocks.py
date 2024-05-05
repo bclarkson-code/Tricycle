@@ -12,7 +12,6 @@ from tricycle.functions import softmax, softmax_v4
 from tricycle.initialisers import init_xavier
 from tricycle.layers import (  # noqa E501
     Dense,
-    DenseV3,
     Dropout,
     DropoutV7,
     Layer,
@@ -197,7 +196,7 @@ class MultiHeadSelfAttentionV2(Layer):
 
         # Project the embedding into 3 embeddings. One for each of key, query
         # and value
-        self.in_projection = DenseV3(
+        self.in_projection = Dense(
             from_size=self.embedding_dim,
             to_size=self.embedding_dim * 3,
             initialiser=initialiser,
@@ -205,7 +204,7 @@ class MultiHeadSelfAttentionV2(Layer):
         )
 
         # Pass the final embedding through a linear layer
-        self.out_projection = DenseV3(
+        self.out_projection = Dense(
             from_size=self.embedding_dim,
             to_size=self.embedding_dim,
             initialiser=initialiser,
@@ -397,8 +396,8 @@ class MLPBlock2(Layer):
     dropout_prob: float
     expansion_ratio: float
     activation_fn: Layer
-    linear_1: DenseV3
-    linear_2: DenseV3
+    linear_1: Dense
+    linear_2: Dense
 
     def __init__(
         self,
@@ -407,13 +406,13 @@ class MLPBlock2(Layer):
         expansion_ratio: float = 4,
         activation_fn: Layer = GeLU(),
     ):
-        self.linear_1 = DenseV3(
+        self.linear_1 = Dense(
             from_size=embedding_dim,
             to_size=int(expansion_ratio * embedding_dim),
             initialiser=init_xavier,
             name="linear_1",
         )
-        self.linear_2 = DenseV3(
+        self.linear_2 = Dense(
             from_size=int(expansion_ratio * embedding_dim),
             to_size=embedding_dim,
             initialiser=init_xavier,
@@ -477,8 +476,8 @@ class MLPBlock3(Layer):
     dropout_prob: float
     expansion_ratio: float
     activation_fn: Layer
-    linear_1: DenseV3
-    linear_2: DenseV3
+    linear_1: Dense
+    linear_2: Dense
 
     def __init__(
         self,
@@ -487,12 +486,12 @@ class MLPBlock3(Layer):
         expansion_ratio: float = 4,
         activation_fn: Layer = GeLU(approximate=True),
     ):
-        self.linear_1 = DenseV3(
+        self.linear_1 = Dense(
             from_size=embedding_dim,
             to_size=int(expansion_ratio * embedding_dim),
             initialiser=init_xavier,
         )
-        self.linear_2 = DenseV3(
+        self.linear_2 = Dense(
             from_size=int(expansion_ratio * embedding_dim),
             to_size=embedding_dim,
             initialiser=init_xavier,
@@ -555,8 +554,8 @@ class MLPBlock4(Layer):
     dropout_prob: float
     expansion_ratio: float
     activation_fn: Layer
-    linear_1: DenseV3
-    linear_2: DenseV3
+    linear_1: Dense
+    linear_2: Dense
 
     def __init__(
         self,
@@ -565,13 +564,13 @@ class MLPBlock4(Layer):
         expansion_ratio: float = 4,
         activation_fn: Layer = ReLU(),
     ):
-        self.linear_1 = DenseV3(
+        self.linear_1 = Dense(
             from_size=embedding_dim,
             to_size=int(expansion_ratio * embedding_dim),
             initialiser=init_xavier,
             name="linear_1",
         )
-        self.linear_2 = DenseV3(
+        self.linear_2 = Dense(
             from_size=int(expansion_ratio * embedding_dim),
             to_size=embedding_dim,
             initialiser=init_xavier,

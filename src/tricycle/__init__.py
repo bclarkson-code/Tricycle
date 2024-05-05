@@ -3,7 +3,7 @@ from warnings import warn
 try:
     import cupy
 
-    cupy.array([1, 2, 3])
+    cupy.array([1, 2, 3]) * 2
     CUPY_ENABLED = True
 except ImportError:
     warn("Could not find CuPY, disabling GPU features")

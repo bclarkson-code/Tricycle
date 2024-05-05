@@ -5,7 +5,6 @@ from tricycle.blocks import GPT2TransformerBlock, GPT2TransformerBlockV4
 from tricycle.configs import GPTConfig
 from tricycle.layers import (
     Dense,
-    DenseV3,
     Dropout,
     DropoutV7,
     Embedding,
@@ -47,7 +46,7 @@ class GPT(Layer):
             for _ in range(config.n_layers)
         ]
 
-        self.head = DenseV3(
+        self.head = Dense(
             to_size=config.vocab_size,
             from_size=self.embedding_dim,
             name="head",

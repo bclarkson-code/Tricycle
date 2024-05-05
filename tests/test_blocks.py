@@ -300,12 +300,10 @@ def test_attention_block():
 
     assert not tricycle_attention.out_projection.weights.is_vector
     tricycle_out_weights = tricycle_attention.out_projection.weights.grad
-    tricycle_out_weights = tricycle_out_weights.from_vector().e("abc->bc")
 
     assert tricycle_out_weights.close_to(c_proj.weight.grad.T.numpy())
 
     tricycle_in_weights = tricycle_attention.in_projection.weights.grad
-    tricycle_in_weights = tricycle_in_weights.from_vector().e("abc->bc")
 
     assert tricycle_in_weights.close_to(
         c_attn.weight.grad.T.numpy(), rtol=1e-3

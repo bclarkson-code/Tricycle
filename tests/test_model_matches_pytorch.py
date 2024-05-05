@@ -14,7 +14,7 @@ from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
 from tricycle.functions import softmax_v4
-from tricycle.layers import DenseV3, Embedding
+from tricycle.layers import Dense, Embedding
 from tricycle.loss import cross_entropy
 from tricycle.tensor import to_tensor
 from tricycle.unary import usum
@@ -211,7 +211,7 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
     pt_layer = torch.nn.Linear(
         in_features=from_size, out_features=out_shape, bias=False
     )
-    tr_layer = DenseV3(from_size=from_size, to_size=out_shape)
+    tr_layer = Dense(from_size=from_size, to_size=out_shape)
     tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy().T)
 
     pt_out = pt_layer(torch.tensor(tensor._data))

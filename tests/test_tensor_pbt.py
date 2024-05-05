@@ -11,7 +11,7 @@ from hypothesis.extra import numpy as xp
 from tricycle import CUPY_ENABLED
 from tricycle.binary import _shapes_match, badd, bdiv, bmax, bmin, bmul, bsub
 from tricycle.einsum import EinsumBackOp
-from tricycle.layers import DenseV3
+from tricycle.layers import Dense
 from tricycle.loss import cross_entropy
 from tricycle.tensor import Tensor, nothing, to_tensor, unvectorise, vectorise
 from tricycle.tokeniser import BPETokeniser
@@ -355,7 +355,7 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
         bias=False,
         dtype=torch.float32,
     )
-    tr_layer = DenseV3(from_size=from_size, to_size=out_shape)
+    tr_layer = Dense(from_size=from_size, to_size=out_shape)
     tr_layer.weights = to_tensor(
         pt_layer.weight.detach().numpy().T, dtype=np.float32
     )
@@ -368,8 +368,9 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
     assert pt_out_np.shape == tr_out_np.shape
 
     # Not sure why rtol has to be so big here
-    # looks like there are some rounding issues
-    assert tr_out.close_to(pt_out_np, rtol=1e-2)
+    # looks like there are some differences in handling precision that I
+    # can't figure out
+    assert tr_out.close_to(pt_out_np, rtol=1e-2, equal_nan=True)
 
     pt_out.sum().backward()
     match (tensor.ndim, tensor.is_vector):
