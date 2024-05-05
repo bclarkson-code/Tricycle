@@ -3,6 +3,7 @@ import logging
 import numbers
 import uuid
 from typing import Callable, List, Optional, Sequence, Union
+from warnings import warn
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -129,15 +130,13 @@ class Tensor:
                     else:
                         arg.grad += grad
 
-                    # debugging - find invalid gradients
-                    if (abs(arg.grad._data) > 1e6).sum() > 0:
-                        breakpoint()
+                    # find invalid gradients
                     if node.xp.isneginf(arg.grad._data).sum() > 0:
-                        breakpoint()
+                        warn("Found -inf in gradient")
                     if node.xp.isinf(arg.grad._data).sum() > 0:
-                        breakpoint()
+                        warn("Found inf in gradient")
                     if node.xp.isnan(arg.grad._data).sum() > 0:
-                        breakpoint()
+                        warn("Found nan in gradient")
                 except Exception as e:
                     raise e
 

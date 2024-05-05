@@ -31,4 +31,12 @@ def cross_entropy(y_true: Tensor, y_pred: Tensor) -> Tensor:
     product = bmul(y_true, y_pred)
     product *= -1
 
-    return product.e("...a->...")
+    match product.ndim:
+        case 1:
+            return product.e("...a->...")
+        case 2:
+            return product.e("...a->...")
+        case 3:
+            return product.e("...a->...")
+        case 4:
+            return product.e("...a->...")

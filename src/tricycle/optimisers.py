@@ -104,20 +104,14 @@ class AdamW(Optimiser):
         if key not in self.v:
             self.v[key] = tensor.xp.zeros_like(tensor._data)
 
-        try:
-            self.m[key] = (
-                self.betas[0] * self.m[key]
-                + (1 - self.betas[0]) * tensor.grad._data
-            )
-        except:
-            breakpoint()
+        self.m[key] = (
+            self.betas[0] * self.m[key]
+            + (1 - self.betas[0]) * tensor.grad._data
+        )
 
-        try:
-            self.v[key] = self.betas[1] * self.v[key] + (1 - self.betas[1]) * (
-                tensor.grad._data**2
-            )
-        except:
-            breakpoint()
+        self.v[key] = self.betas[1] * self.v[key] + (1 - self.betas[1]) * (
+            tensor.grad._data**2
+        )
 
         m_hat = self.m[key] / (1 - self.betas[0] ** self.t)
         v_hat = self.v[key] / (1 - self.betas[1] ** self.t)

@@ -3,6 +3,7 @@ import textwrap
 import numpy as np
 
 from tricycle.layers import (
+    DEPRACATED_EMBEDDING,
     Dense,
     DenseV2,
     DenseV3,
@@ -14,7 +15,6 @@ from tricycle.layers import (
     DropoutV5,
     DropoutV6,
     DropoutV7,
-    Embedding,
     EmbeddingV2,
     LayerNorm,
     RMSNorm,
@@ -55,7 +55,7 @@ def test_embedding_original():
         dtype=int,
     )
     inputs = inputs.to_vector()
-    layer = Embedding(from_size=vocab_size, to_size=embed_dim)
+    layer = DEPRACATED_EMBEDDING(from_size=vocab_size, to_size=embed_dim)
 
     for _ in range(10):
         out = layer(inputs)

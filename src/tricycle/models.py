@@ -4,11 +4,11 @@ import numpy as np
 from tricycle.blocks import GPT2TransformerBlock, GPT2TransformerBlockV4
 from tricycle.configs import GPTConfig
 from tricycle.layers import (
+    DEPRACATED_EMBEDDING,
     Dense,
     DenseV3,
     Dropout,
     DropoutV7,
-    Embedding,
     EmbeddingV2,
     Layer,
     LayerNorm,

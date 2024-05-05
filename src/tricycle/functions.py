@@ -293,7 +293,13 @@ def softmax(tensor: Tensor):
     # add a really small number to the denominator to avoid infitiies
     REALLY_SMALL_NUMBER = 1e-8
     # normalise
-    largest_element = rmax(tensor, "...a->...").repeat(tensor.shape[-1])
+    match tensor.ndim:
+        case 1:
+            largest_element = rmax(tensor, "a->").repeat(tensor.shape[-1])
+        case _:
+            largest_element = rmax(tensor, "...a->...").repeat(
+                tensor.shape[-1]
+            )
     tensor = tensor - largest_element
 
     numerator = uexp(tensor)

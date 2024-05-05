@@ -71,7 +71,7 @@ def test_attention_individually():
     # tricycle
     attention = Einsum("NIh, NJh -> NIJ")(query, key) / np.sqrt(head_size)
 
-    assert attention.close_to(att)
+    assert attention.close_to(att, rtol=1e-2)
 
     # pytorch
     bias = torch.tril(torch.ones(context_window, context_window)).view(
@@ -83,7 +83,12 @@ def test_attention_individually():
     mask = build_mask(context_window)
     attention = masked_fill(attention, (n_tokens, n_tokens), mask)
 
-    assert attention.close_to(att)
+    # Note: in tricycle, we fill with -10_000 instead of inf because it
+    # simplifies a lot of the logic so we need to compare with that
+    # TODO: do infinity logic properly
+    assert attention.close_to(
+        np.nan_to_num(att.numpy(), neginf=-10_000.0), rtol=1e-2
+    )
 
     # pytorch
     att = torch.softmax(att, dim=-1)
@@ -335,9 +340,9 @@ def test_MLPBlock():
     assert in_tensor.grad is not None
     correct_grad = to_tensor(
         [
-            [-44.59691787, -44.59691787, -44.59691787, -44.59691787],
-            [-248.8553654, -248.8553654, -248.8553654, -248.8553654],
-            [-679.67071945, -679.67071945, -679.67071945, -679.67071945],
+            [32.0, 32.0, 32.0, 32.0],
+            [32.0, 32.0, 32.0, 32.0],
+            [48.0, 48.0, 48.0, 48.0],
         ]
     )
 

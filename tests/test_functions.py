@@ -82,7 +82,6 @@ def test_binary_softmax():
     out_tensor.backward()
     correct_out.backward()
 
-    breakpoint()
     assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-6)
 
 

@@ -95,8 +95,6 @@ def tensor(draw):
             is_vector = draw(st.booleans())
         case 3:
             is_vector = True
-        case _:
-            breakpoint()
     requires_grad = True
     if CUPY_ENABLED:
         on_gpu = draw(st.booleans())
@@ -144,8 +142,6 @@ def build_tensor(shape_, is_vector):
             is_vector = is_vector
         case 3:
             is_vector = True
-        case _:
-            breakpoint()
     requires_grad = True
 
     return to_tensor(

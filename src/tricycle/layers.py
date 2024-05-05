@@ -198,26 +198,33 @@ class DenseV3(Layer):
         return back_einsum
 
     def forward(self, tensor: Tensor):
-        if tensor.ndim == 1:
-            result = self._forward(tensor, "a,aW->W", "a,W->aW", "aW,W->a")
-        elif tensor.ndim == 2:
-            result = self._forward(
-                tensor, "Tb,bW->TW", "Tb,TW->bW", "bW,TW->Tb"
-            )
-        elif tensor.ndim == 3 and tensor.is_vector:
-            result = self._forward(
-                tensor,
-                "zTb,bW->zTW",
-                "zTb,zTW->bW",
-                "bW,zTW->zTb",
-            )
-        else:
-            raise NotImplementedError(
-                f"Cannot pass tensor with shape {tensor.shape} "
-                f"and {tensor.is_vector=}"
-                "through a Dense layer"
-            )
-
+        match tensor.ndim:
+            case 1:
+                result = self._forward(tensor, "a,aW->W", "a,W->aW", "aW,W->a")
+            case 2:
+                result = self._forward(
+                    tensor, "Tb,bW->TW", "Tb,TW->bW", "bW,TW->Tb"
+                )
+            case 3:
+                result = self._forward(
+                    tensor,
+                    "zTb,bW->zTW",
+                    "zTb,zTW->bW",
+                    "bW,zTW->zTb",
+                )
+            case 4:
+                result = self._forward(
+                    tensor,
+                    "zxTb,bW->zxTW",
+                    "zxTb,zxTW->bW",
+                    "bW,zxTW->zxTb",
+                )
+            case _:
+                raise NotImplementedError(
+                    f"Cannot pass tensor with shape {tensor.shape} "
+                    f"and {tensor.is_vector=}"
+                    "through a Dense layer"
+                )
         result.name = "dense"
         return result
 
@@ -599,14 +606,20 @@ class RMSNormV2(Layer):
 
             coef = scaled_grad / (384 * rms**3)
 
-            square_prod = xp.einsum("zAB,zAc->zAB", input_, input_)
+            match input_.ndim:
+                case 2:
+                    square_prod = xp.einsum("AB,Ac->AB", input_, input_)
+                case 3:
+                    square_prod = xp.einsum("zAB,zAc->zAB", input_, input_)
+                case 4:
+                    square_prod = xp.einsum("zxAB,zxAc->zxAB", input_, input_)
+                case _:
+                    raise NotImplementedError(
+                        f"RMSNorm with tensors of size {input_.ndim} are not yet supported"
+                    )
             # square_prod = xp.power(input_, 2) / self.weights.shape[-1]
 
             right = square_prod * coef
-            print(left[0][0][:10])
-            print(right[0][0][:10])
-            print((left - right)[0][0][:10])
-            print()
             return to_tensor(left - right, is_vector=grad.is_vector)
 
         return rmsnorm_weight_back_fn, rmsnorm_back_fn
@@ -649,7 +662,7 @@ class RMSNormV2(Layer):
         return self
 
 
-class Embedding(Layer):
+class DEPRACATED_EMBEDDING(Layer):
     """
     Convert an index to an embedding with a lookup (rather than a one-hot
     encoding and a matrix multiplication)
