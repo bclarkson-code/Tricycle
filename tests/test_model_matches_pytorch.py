@@ -13,16 +13,11 @@ from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
-from tricycle.configs import SmolGPTConfig
-from tricycle.dataset import CausalLMDataset
 from tricycle.functions import softmax_v4
-from tricycle.layers import DenseV3, EmbeddingV2, RMSNormV2
+from tricycle.layers import DenseV3, EmbeddingV2
 from tricycle.loss import cross_entropy
-from tricycle.models import GPT, GPTV2
-from tricycle.optimisers import StochasticGradientDescent
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import to_tensor
 from tricycle.unary import usum
-from tricycle_datasets.shakespeare import ShakespeareChar
 
 
 @st.composite

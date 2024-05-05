@@ -6,7 +6,7 @@ from tricycle.einsum import Einsum
 from tricycle.layers import (  # noqa: E501
     Dense,
     Dropout,
-    Embedding,
+    EmbeddingV2,
     LayerNorm,
     RMSNorm,
     RMSNormV2,
@@ -101,7 +101,7 @@ def test_embedding():
         dtype=int,
     )
 
-    embedding_layer = Embedding(from_size=vocab_size, to_size=out_shape)
+    embedding_layer = EmbeddingV2(from_size=vocab_size, to_size=out_shape)
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )
@@ -134,7 +134,7 @@ def test_embedding_vectorised():
         dtype=np.int8,
     ).to_vector()
 
-    embedding_layer = Embedding(from_size=vocab_size, to_size=out_shape)
+    embedding_layer = EmbeddingV2(from_size=vocab_size, to_size=out_shape)
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )
@@ -180,7 +180,7 @@ def test_embedding_matches_orignal_method():
         one_hot = to_tensor(one_hot)
         return Einsum("ca,aB->cB")(one_hot, weights)
 
-    embedding_layer = Embedding(from_size=vocab_size, to_size=embed_dim)
+    embedding_layer = EmbeddingV2(from_size=vocab_size, to_size=embed_dim)
     embedding_layer.weights = copy(weights)
 
     tokens = np.random.randint(low=0, high=1024, size=100)

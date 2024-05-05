@@ -1,10 +1,6 @@
 import cupy as cp
-import numpy as np
-from numba import njit
-from scipy.special import softmax as scipy_softmax
 
 from tricycle.binary import bdiv
-from tricycle.einsum import Einsum
 from tricycle.reduce import rmax
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import udiv, uexp
@@ -70,15 +66,15 @@ void softmax_back_fn_2d(
 )
 
 softmax_back_fn_3d_a = cp.RawKernel(
-"""
+    """
 // parallelize across t,b,h
 __global__ void softmax_autoregressive_backward_kernel2(
     const float* grad,
     const float* softmax_result,
-    int n_batches, 
-    int n_tokens, 
-    int n_elements, 
-    float* out, 
+    int n_batches,
+    int n_tokens,
+    int n_elements,
+    float* out,
 ) {
     int t3 = blockIdx.x * blockDim.x + threadIdx.x;
     int idx = blockIdx.y * n_tokens * n_tokens;
@@ -99,7 +95,9 @@ __global__ void softmax_autoregressive_backward_kernel2(
         out_bth[t3] = result;
     }
 }
-""")
+""",
+    "softmax_back_fn_3d_a",
+)
 
 softmax_back_fn_3d = cp.RawKernel(
     """
@@ -282,7 +280,7 @@ def _cuda_softmax_back_fn(grad, _result):
     # for reasons I dont understand, the cuda softmax sometimes returns nan
     # I think this might be a numerical precision thing but im not sure
     # for now, replacing the nans with 0's doesnt seem to hurt
-    out = cp.nan_to_num(out, 0)
+    out = cp.nan_to_num(out, nan=0)
     return to_tensor(out, is_vector=grad.is_vector, name="back_softmax")
 
 
@@ -439,7 +437,8 @@ def softmax_v4(tensor: Tensor):
 
     _result = softmax_fn(tensor._data, axis=-1)
 
-    softmax_back_fn = lambda grad: _cuda_softmax_back_fn(grad, _result)
+    def softmax_back_fn(grad):
+        return _cuda_softmax_back_fn(grad, _result)
 
     result = to_tensor(_result)
     result.args = (tensor,)
