@@ -10,6 +10,8 @@ import os
 import pickle
 import uuid
 
+import cupy
+import humanize
 import mlflow
 import numpy as np
 from tqdm import tqdm
@@ -21,13 +23,17 @@ from tricycle.loss import cross_entropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
+from tricycle.utils import log_gpu_memory
 from tricycle_datasets.shakespeare import ShakespeareChar
 
 np.random.seed(0)
 config = SmolGPTConfig()
 config.batch_size = 12
+config.n_layers = 1
 model = GPT(config)
-model.display()
+
+
+log_gpu_memory("initialisation")
 
 
 dataset = ShakespeareChar()
@@ -44,6 +50,7 @@ dataloader = (
     .to_vector()
     .shuffle()
 )
+
 loss_fn = cross_entropy
 optimiser = AdamW(
     learning_rate=lr_schedule(
@@ -59,6 +66,7 @@ optimiser = AdamW(
 
 
 model.to_gpu(config.device_idx)
+log_gpu_memory("init_model")
 
 
 def get_sample(sample_text: str | None = None, n_samples: int = 50) -> str:
@@ -93,66 +101,80 @@ O Romeo, Romeo! wherefore art thou Romeo?
     return decoded
 
 
-mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:character:base")
-os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
-unique_id = uuid.uuid4()
+# mlflow.set_tracking_uri(config.mlflow_tracking_uri)
+# mlflow.set_experiment("SmolGPT:character:base")
+# os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
+# unique_id = uuid.uuid4()
 
 best_loss = float("inf")
 losses = []
-for step in tqdm(range(config.steps)):
+for step in tqdm(range(1)):
     optimiser.step()
+    log_gpu_memory("start_loop")
     batch_loss = 0
+
     # perform several forward and backward passes before doing a gradient
     # update to increase the effective batch size
-    for _ in range(config.gradient_accumulation_steps):
+    for i in range(config.gradient_accumulation_steps):
         inputs, outputs = next(dataloader)
+        log_gpu_memory("start_loop")
         inputs = inputs.to_gpu(config.device_idx)
         outputs = outputs.to_gpu(config.device_idx)
+        log_gpu_memory("load_data")
 
         # forward and backward pass
         logits = model(inputs)
+        log_gpu_memory("forward_pass")
         loss = loss_fn(outputs, logits).from_vector().e("ab->") / (
             config.gradient_accumulation_steps
             * config.batch_size
             * config.context_window
         )
+        log_gpu_memory("calculate_loss")
         batch_loss += float(loss.numpy())
         loss.backward()
+        log_gpu_memory("backward_pass")
 
         # delete intermediate values we dont need any more
         # TODO: statically allocate objects to avoid this
         loss.cleanup()
+        log_gpu_memory("cleanup")
 
     # Use the optimiser to update weights
     model.update(optimiser)
+    log_gpu_memory("update")
 
-    # clean up the computational graph
-    # step the learning rate
-    optimiser.learning_rate = lr_schedule(
-        step,
-        max_learning_rate=config.max_learning_rate,
-        min_learning_rate=config.min_learning_rate,
-        warmup_steps=config.warmup_steps,
-        total_steps=config.steps,
-    )
+    #
+    #     # clean up the computational graph
+    #     # step the learning rate
+    #     optimiser.learning_rate = lr_schedule(
+    #         step,
+    #         max_learning_rate=config.max_learning_rate,
+    #         min_learning_rate=config.min_learning_rate,
+    #         warmup_steps=config.warmup_steps,
+    #         total_steps=config.steps,
+    #     )
+    #
+    #     # log the loss
+    #     losses.append(batch_loss)
+    #     mlflow.log_metric("loss", batch_loss, step=step)
+    #     mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
+    #
+    #     if step % config.eval_interval == 0:
+    #         # generate some text
+    #         predicted = get_sample()
+    #         mlflow.log_text(predicted, f"generated/{step}.txt")
+    #
+    #         # checkpoint
+    #         avg_loss = np.mean(losses[-config.eval_interval :])
+    #         if avg_loss < best_loss:
+    #             with open(f"models/model_{unique_id}_{step}.pkl", "wb") as f:
+    #                 pickle.dump(model, f)
+    #             best_loss = avg_loss
+    #
+import pandas as pd
 
-    # log the loss
-    losses.append(batch_loss)
-    mlflow.log_metric("loss", batch_loss, step=step)
-    mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
-
-    if step % config.eval_interval == 0:
-        # generate some text
-        predicted = get_sample()
-        mlflow.log_text(predicted, f"generated/{step}.txt")
-
-        # checkpoint
-        avg_loss = np.mean(losses[-config.eval_interval :])
-        if avg_loss < best_loss:
-            with open(f"models/model_{unique_id}_{step}.pkl", "wb") as f:
-                pickle.dump(model, f)
-            best_loss = avg_loss
-
-    if step >= config.steps:
-        break
+df = pd.read_csv("memory.log")
+df["diff"] = df["used_bytes"] - df["used_bytes"].shift()
+df["diff_human"] = df["diff"].apply(humanize.naturalsize)
+print(df)

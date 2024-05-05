@@ -13,6 +13,7 @@ from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Dropout, Layer, LayerNorm  # noqa E501
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, select_backend, to_tensor
+from tricycle.utils import log_gpu_memory
 
 
 def build_mask(context_window: int) -> Tensor:
@@ -114,35 +115,49 @@ class MultiHeadSelfAttention(Layer):
         key = key.reshape(head_shape).e("TNH -> NTH")
         query = query.reshape(head_shape).e("TNH -> NTH")
         value = value.reshape(head_shape).e("TNH -> NTH")
+        log_gpu_memory("reshape + reorder")
 
         # attend
         divisor = sqrt(head_size)
-        attention = Einsum("NIh, NJh -> NIJ")(query, key) / divisor
+        attention = Einsum("NIh, NJh -> NIJ")(query, key)
+        log_gpu_memory("attend")
+        attention = attention / divisor
+        log_gpu_memory("divide")
 
         # mask and softmax
         attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
+        log_gpu_memory("masked_fill")
 
         attention = softmax(attention)
+        log_gpu_memory("softmax")
 
         attention = self.attention_dropout(attention)
+        log_gpu_memory("dropout")
 
         # smush the heads back together
         out_shape = (n_tokens, self.embedding_dim)
-        return Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
+        out = Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
+        log_gpu_memory("recombine")
+        return out
 
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding
         x = self.in_projection(x)
+        log_gpu_memory("in_projection")
 
         # split the embedding into key, query and value
         query, key, value = x.split(3, axis=1)
+        log_gpu_memory("split")
 
         attention = self._attention(key, query, value)
+        log_gpu_memory("attention")
 
         # project back
         projected = self.out_projection(attention)
+        log_gpu_memory("out_projection")
 
         projected = self.residual_dropout(projected)
+        log_gpu_memory("dropout")
 
         return projected
 
@@ -230,9 +245,13 @@ class MLPBlock(Layer):
 
     def forward(self, x: Tensor):
         x = self.linear_1(x)
+        log_gpu_memory("linear_1")
         x = self.activation_fn(x)
+        log_gpu_memory("gelu")
         x = self.linear_2(x)
+        log_gpu_memory("linear_2")
         x = self.dropout(x)
+        log_gpu_memory("dropout")
         return x
 
     def update(self, optimiser: Optimiser):

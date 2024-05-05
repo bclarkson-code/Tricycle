@@ -1,6 +1,8 @@
 from abc import abstractmethod
+from pathlib import Path
 from typing import Iterable
 
+import humanize
 import numpy as np
 
 
@@ -43,3 +45,23 @@ def r_squared(actual_values, predicted_values):
     rss = np.sum((actual_values - predicted_values) ** 2)
 
     return 1 - (rss / tss)
+
+
+def log_gpu_memory(stage: str, path: Path = Path("memory.log")):
+    """
+    Log the current GPU memory usage to a file
+    """
+    import cupy
+
+    if not path.exists():
+        path.write_text(
+            "stage,used_bytes_human,total_bytes_human,used_bytes,total_bytes\n"
+        )
+
+    pool = cupy.get_default_memory_pool()
+    used_bytes = humanize.naturalsize(pool.used_bytes())
+    total_bytes = humanize.naturalsize(pool.total_bytes())
+    with open(path, "a") as f:
+        f.write(
+            f"{stage},{used_bytes},{total_bytes},{pool.used_bytes()},{pool.total_bytes()}\n"
+        )

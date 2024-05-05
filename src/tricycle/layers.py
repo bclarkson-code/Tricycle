@@ -428,18 +428,6 @@ class Embedding(Layer):
         self.weights.from_gpu()
         return self
 
-    def update(self, optimiser: Optimiser):
-        self.weights = optimiser(self.weights)
-
-    def zero_grad(self):
-        self.weights.grad = None
-
-    def to_gpu(self):
-        self.weights.to_gpu()
-
-    def from_gpu(self):
-        self.weights.from_gpu()
-
 
 class Sequential(Layer):
     def __init__(self, *layers: Layer):
