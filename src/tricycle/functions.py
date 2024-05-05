@@ -32,6 +32,8 @@ __global__ void softmax_back_fn_1d(const float *softmax_result,
 }
 }
 """
+# THIS kernel does not return the correct gradient
+# TODO: fix
 softmax_3d_kernel = r"""
 extern "C" __global__
 void softmax_back_fn_3d(const float *softmax_result,
