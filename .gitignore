@@ -20,9 +20,15 @@ output.bin
 
 # experiment results
 *.csv
-resuls/*
+results/*
 .hypothesis
 results
 models
 benchmarks/.profiles
 tests/.profiles
+
+richbench*.json
+python*.json
+
+# binaries
+*.pkl
