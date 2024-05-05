@@ -111,9 +111,10 @@ for step in tqdm(range(config.steps)):
 
         # forward and backward pass
         logits = model(inputs)
-        loss = (
-            loss_fn(outputs, logits).from_vector().mean().mean()
-            / config.gradient_accumulation_steps
+        loss = loss_fn(outputs, logits).from_vector().e("ab->") / (
+            config.gradient_accumulation_steps
+            * config.batch_size
+            * config.context_window
         )
         batch_loss += float(loss.numpy())
         loss.backward()

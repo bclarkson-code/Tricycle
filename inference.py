@@ -53,7 +53,7 @@ def generate(text, model, tokeniser, sample=True, temperature=0.8):
             [tokens], dtype=int, requires_grad=False
         ).to_vector()
 
-        pred, _ = model(encoded)
+        pred = model(encoded)
         pred = softmax(pred / temperature)
 
         if pred.on_gpu:

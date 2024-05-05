@@ -26,7 +26,7 @@ If you want to do these things, you should check out [pytorch](https://pytorch.o
 If you would like to learn more about the process of building tricycle, you can check out my [blog](http://bclarkson-code.com)
 
 ## Usage
-Theoretically, as a fully functional deep learning library, you can build any modern Deep Learning model with Tricycle. For example, this is how you can train a (very) small language model on the shakespeare dataset:
+Theoretically, as a fully functional deep learning library, you can build any modern Deep Learning model with Tricycle. For example, this is how you can train a small language model on the shakespeare dataset:
 
 ```python
 import pickle
@@ -37,7 +37,7 @@ from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import cross_entropy
 from tricycle.models import GPT
-from tricycle.optimisers import StochasticGradientDescent
+from tricycle.optimisers import AdamW
 from tricycle_datasets.shakespeare import ShakespeareChar
 
 config = SmolGPTConfig()
@@ -57,13 +57,7 @@ dataset = (
 )
 loss_fn = cross_entropy
 optimiser = AdamW(
-    learning_rate=lr_schedule(
-        0,
-        max_learning_rate=config.max_learning_rate,
-        min_learning_rate=config.min_learning_rate,
-        warmup_steps=config.warmup_steps,
-        total_steps=config.steps,
-    ),
+    learning_rate=config.max_learning_rate,
     weight_decay=config.weight_decay,
     betas=(config.beta1, config.beta2),
 )
@@ -75,33 +69,21 @@ losses = []
 for step in tqdm(range(config.steps)):
     optimiser.step()
     batch_loss = 0
-    for _ in range(config.gradient_accumulation_steps):
-        inputs, outputs = next(dataset)
-        inputs = inputs.to_gpu(device)
-        outputs = outputs.to_gpu(device)
+    inputs, outputs = next(dataset)
+    inputs = inputs.to_gpu()
+    outputs = outputs.to_gpu()
 
-        logits = model(inputs)
-        loss = (
-            loss_fn(outputs, logits).from_vector().mean().mean()
-            / config.gradient_accumulation_steps
-        )
-        batch_loss += float(loss.numpy())
-        loss.backward()
-
-        loss.cleanup()
-    mlflow.log_metric("loss", batch_loss, step=step)
-    model.update(optimiser)
-
-    # clean up the computational graph
-    # step the learning rate
-    optimiser.learning_rate = lr_schedule(
-        step,
-        max_learning_rate=config.max_learning_rate,
-        min_learning_rate=config.min_learning_rate,
-        warmup_steps=config.warmup_steps,
-        total_steps=config.steps,
+    logits = model(inputs)
+    loss = (
+        loss_fn(outputs, logits).from_vector().mean().mean()
+        / config.gradient_accumulation_steps
     )
+    batch_loss += float(loss.numpy())
+    loss.backward()
 
+    loss.cleanup()
+
+    model.update(optimiser)
 
 # save results
 with open("model.pkl", "wb") as f:

@@ -6,7 +6,7 @@ from math import sqrt
 
 import numpy as np
 
-from tricycle.activation import GeLU, ReLU
+from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
 from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.initialisers import init_xavier
@@ -186,7 +186,7 @@ class MLPBlock(Layer):
         embedding_dim: int,
         dropout_prob: float,
         expansion_ratio: float = 4,
-        activation_fn: Layer = ReLU(),
+        activation_fn: Layer | str = GeLU(),
     ):
         self.linear_1 = Dense(
             from_size=embedding_dim,
@@ -205,9 +205,20 @@ class MLPBlock(Layer):
             match activation_fn:
                 case "gelu":
                     activation_fn = GeLU()
+                case "relu":
+                    activation_fn = ReLU()
+                case "swish":
+                    activation_fn = Swish()
+                case "glu":
+                    activation_fn = GLU(int(expansion_ratio * embedding_dim))
+                case "swiglu":
+                    activation_fn = SwiGLU(
+                        int(expansion_ratio * embedding_dim)
+                    )
                 case _:
                     raise NotImplementedError(
-                        f"Unknown activation function: {activation_fn}"
+                        f"Activation function {activation_fn} is not "
+                        "yet implemented"
                     )
         self.activation_fn = activation_fn
         self.layers = [
@@ -259,7 +270,7 @@ class GPT2TransformerBlock(Layer):
         n_heads: int,
         context_window: int,
         expansion_ratio: float = 4,
-        activation_fn: Layer = GeLU(),
+        activation_fn: Layer | str = GeLU(),
         attention_dropout_prob: float = 0,
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
