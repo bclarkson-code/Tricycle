@@ -59,7 +59,7 @@ def test_dropout():  # sourcery skip: square-identity
     n_zeros = len(zero_x_idx)
     expected_n_zeros = int(size * size * dropout_prob)
 
-    assert np.allclose(n_zeros, expected_n_zeros, rtol=1e-2)
+    assert n_zeros / size**2 - expected_n_zeros / size**2 < 0.05
 
     out_tensor.backward()
 

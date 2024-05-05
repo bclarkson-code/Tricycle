@@ -6,7 +6,6 @@ from tricycle.configs import GPTConfig
 from tricycle.layers import (
     Dense,
     Dropout,
-    DropoutV7,
     Embedding,
     Layer,
     LayerNorm,
@@ -32,7 +31,7 @@ class GPT(Layer):
             from_size=self.context_window,
             name="position_embedding",
         )
-        self.input_dropout = DropoutV7(config.input_dropout_prob)
+        self.input_dropout = Dropout(config.input_dropout_prob)
 
         self.blocks = [
             GPT2TransformerBlockV4(

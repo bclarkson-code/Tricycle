@@ -13,7 +13,6 @@ from tricycle.initialisers import init_xavier
 from tricycle.layers import (  # noqa E501
     Dense,
     Dropout,
-    DropoutV7,
     Layer,
     LayerNorm,
     LayerNormV2,
@@ -214,8 +213,8 @@ class MultiHeadSelfAttentionV2(Layer):
         # build a mask to make attention causal
         self.mask = build_mask(self.context_window)
 
-        self.attention_dropout = DropoutV7(attention_dropout_prob)
-        self.residual_dropout = DropoutV7(residual_dropout_prob)
+        self.attention_dropout = Dropout(attention_dropout_prob)
+        self.residual_dropout = Dropout(residual_dropout_prob)
         self.layers = [
             self.in_projection,
             self.attention_dropout,
@@ -418,7 +417,7 @@ class MLPBlock2(Layer):
             initialiser=init_xavier,
             name="linear_2",
         )
-        self.dropout = DropoutV7(dropout_prob)
+        self.dropout = Dropout(dropout_prob)
         if isinstance(activation_fn, str):
             match activation_fn:
                 case "gelu":
@@ -496,7 +495,7 @@ class MLPBlock3(Layer):
             to_size=embedding_dim,
             initialiser=init_xavier,
         )
-        self.dropout = DropoutV7(dropout_prob)
+        self.dropout = Dropout(dropout_prob)
         if isinstance(activation_fn, str):
             match activation_fn:
                 case "gelu":
@@ -576,7 +575,7 @@ class MLPBlock4(Layer):
             initialiser=init_xavier,
             name="linear_2",
         )
-        self.dropout = DropoutV7(dropout_prob)
+        self.dropout = Dropout(dropout_prob)
         if isinstance(activation_fn, str):
             match activation_fn:
                 case "gelu":
