@@ -202,7 +202,7 @@ def softmax_old(tensor: Tensor):
     return bdiv(numerator, denominator)
 
 
-def softmax_v2(tensor: Tensor):
+def softmax(tensor: Tensor):
     """
     Apply softmax. The softmax is only applied to the final
     dimension of the tensor
@@ -219,9 +219,8 @@ def softmax_v2(tensor: Tensor):
     _result = softmax_fn(tensor._data, axis=-1)
 
     def softmax_back_fn(grad):
-        out = _result * (
-            grad._data - grad.xp.sum(grad._data * _result, keepdims=True)
-        )
+        inner = grad.xp.sum(grad._data * _result, axis=-1, keepdims=True)
+        out = _result * (grad._data - inner)
         return to_tensor(
             out, is_vector=grad.is_vector, requires_grad=grad.requires_grad
         )
@@ -235,7 +234,7 @@ def softmax_v2(tensor: Tensor):
     return result
 
 
-def softmax(tensor: Tensor):
+def softmax_v2(tensor: Tensor):
     """
     Apply softmax. The softmax is only applied to the final
     dimension of the tensor

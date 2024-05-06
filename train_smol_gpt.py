@@ -25,7 +25,6 @@ from tricycle_datasets.shakespeare import Shakespeare
 
 np.random.seed(0)
 config = SmolGPTConfig()
-config.batch_size = 12
 model = GPT(config)
 model.display()
 

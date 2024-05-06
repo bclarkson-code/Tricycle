@@ -27,7 +27,9 @@ def cross_entropy(y_true: Tensor, y_pred: Tensor) -> Tensor:
     Calculate the cross entropy loss
     """
     REALLY_SMALL_NUMBER = 1e-8
-    # normalise and log
+    # normalise
+    y_pred = softmax(y_pred)
+
     xp = y_pred.xp
     y_pred._data = y_pred._data.clip(min=REALLY_SMALL_NUMBER, max=None)
     indicator = xp.where(y_true._data == 1, -xp.log(y_pred._data), 0)
@@ -53,7 +55,6 @@ def cross_entropy_(y_true: Tensor, y_pred: Tensor) -> Tensor:
     Calculate the cross entropy loss
     """
     # normalise and log
-    breakpoint()
     assert _shapes_match(y_true, y_pred)
     y_pred = ulog(softmax(y_pred))
     product = bmul(y_true, y_pred)

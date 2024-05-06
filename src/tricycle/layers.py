@@ -400,15 +400,17 @@ class Embedding(Layer):
             xp = grad.xp
             out = xp.zeros(self.weights.shape)
 
-            if grad.is_vector:
-                for batch_idx, tokens in enumerate(tensor):
-                    for token_idx, token in enumerate(tokens):
-                        out[int(token._data)] += grad[batch_idx][
-                            token_idx
-                        ]._data
-            else:
-                for token_idx, token in enumerate(tensor):
-                    out[int(token._data)] += grad[token_idx]._data
+            match grad.ndim, tensor.ndim:
+                case 3, 1:
+                    for batch in range(grad._data.shape[0]):
+                        xp.add.at(out, tensor._data, grad._data[batch])
+                case 3, 2:
+                    xp.add.at(out, tensor._data, grad._data)
+                case _:
+                    raise NotImplementedError(
+                        f"{grad.ndim=}, {tensor.ndim=} are not supported"
+                    )
+
             return to_tensor(out)
 
         result.back_fns = (nothing, _embed_back_fn)

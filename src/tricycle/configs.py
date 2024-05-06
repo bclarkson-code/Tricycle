@@ -55,7 +55,7 @@ class SmolGPTConfig(GPTConfig):
 
     steps = 5_000
     eval_interval = 50
-    batch_size = 16
+    batch_size = 32
     gradient_accumulation_steps = 1
 
     device_idx = 0

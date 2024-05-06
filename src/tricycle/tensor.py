@@ -130,13 +130,6 @@ class Tensor:
                     else:
                         arg.grad += grad
 
-                    # find invalid gradients
-                    if node.xp.isneginf(arg.grad._data).sum() > 0:
-                        warn("Found -inf in gradient")
-                    if node.xp.isinf(arg.grad._data).sum() > 0:
-                        warn("Found inf in gradient")
-                    if node.xp.isnan(arg.grad._data).sum() > 0:
-                        warn("Found nan in gradient")
                 except Exception as e:
                     raise e
 

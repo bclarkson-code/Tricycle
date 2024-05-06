@@ -46,7 +46,6 @@ def generate(text, model, tokeniser, sample=True, temperature=0.8):
     """
     tokens = tokeniser.encode(text)
     while True:
-        breakpoint()
         tokens = tokens[-config.context_window :]
         assert len(tokens) == config.context_window
 
