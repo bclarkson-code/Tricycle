@@ -179,7 +179,7 @@ def _cuda_softmax_back_fn(grad, _result):
     return out
 
 
-def softmax_old(tensor: Tensor):
+def softmax(tensor: Tensor):
     """
     Apply softmax. The softmax is only applied to the final
     dimension of the tensor
@@ -205,7 +205,7 @@ def softmax_old(tensor: Tensor):
     return bdiv(numerator, denominator)
 
 
-def softmax(tensor: Tensor):
+def softmax_new(tensor: Tensor):
     """
     Apply softmax. The softmax is only applied to the final
     dimension of the tensor

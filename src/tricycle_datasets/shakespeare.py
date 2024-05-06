@@ -76,6 +76,12 @@ class Shakespeare(abc.Sequence):
     def __len__(self) -> int:
         return len(self.tokens)
 
+    def encode(self, *args):
+        return self.tokeniser.encode(*args)
+
+    def decode(self, *args):
+        return self.tokeniser.decode(*args)
+
 
 class ShakespeareChar(abc.Sequence):
     url: str = (
