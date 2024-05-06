@@ -86,7 +86,7 @@ class Tensor:
         has been computed
         """
         self.grad = to_tensor(
-            self.xp.ones(self._data.shape),
+            self.xp.ones(self._data.shape, dtype=self.dtype),
             requires_grad=False,
             is_vector=self.is_vector,
         )

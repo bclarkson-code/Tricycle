@@ -125,7 +125,7 @@ O Romeo, Romeo! wherefore art thou Romeo?
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:tokeniser_1024:base")
+mlflow.set_experiment("SmolGPT:tokeniser_1024:debug")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 unique_id = uuid.uuid4()
 

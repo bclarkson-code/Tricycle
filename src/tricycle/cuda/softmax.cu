@@ -1,22 +1,46 @@
 // Kernels for efficiently computing softmax derivatives
-extern "C" {
-__global__ void softmax_back_fn_1d(const float *softmax_result,
-                                   const float *grad, const int n_elements,
-                                   float *out) {
-  int indicator, deriv;
-  int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  int i = tid / n_elements;
-  int j = tid % n_elements;
+extern "C" __global__ void
+softmax_back_fn_3d(const float *softmax_result, const float *grad,
+                   const int n_batches, const int n_tokens,
+                   const int n_elements, float *out) {
+  // find indices for batch and token
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
 
-  if (i == j) {
-    indicator = 1;
-  } else {
-    indicator = 0;
+  if (i < n_batches * n_tokens * n_tokens * n_elements) {
+    int batch_idx = i / (n_tokens * n_tokens * n_elements);
+    int head_idx = (i / (n_tokens * n_elements)) % n_tokens;
+    int token_idx = (i / n_elements) % n_tokens;
+    int element_idx = i % n_elements;
+
+    int offset = batch_idx * n_tokens * n_elements * n_elements +
+                 head_idx * n_tokens * n_elements + token_idx * n_elements;
+
+    float *out_idx = out + offset;
+    const float *softmax_idx = softmax_result + offset;
+    const float *grad_idx = grad + offset;
+
+    float result = 0.0;
+    for (int j = 0; j < n_elements; j++) {
+      float indicator = j == element_idx ? 1.0f : 0.0f;
+      float deriv = softmax_idx[element_idx] * (indicator - softmax_idx[j]);
+      result += deriv * grad_idx[element_idx];
+    }
+    out_idx[element_idx] = result;
   }
 
-  deriv = softmax_result[i] * (indicator - softmax_result[j]);
-  out[j] = deriv * grad[i];
-}
+  /*
+  for (int i = 0; i < n_elements; i++) {
+    float result = 0.0;
+
+    for (int j = 0; j < n_elements; j++) {
+      float indicator = i == j ? 1.0f : 0.0f;
+      float deriv = softmax_idx[i] * (indicator - softmax_idx[j]);
+      result += deriv * grad_idx[i];
+    }
+    out_id[i] =  __float2int_rn(i);
+  }
+  */
+  out_id[0] = 1.0;
 }
 // __global__ void softmax_back_fn_2d(const float *softmax_result,
 //                                    const float *grad, const int n_elements,
@@ -42,8 +66,8 @@ __global__ void softmax_back_fn_1d(const float *softmax_result,
 // }
 //
 // __global__ void softmax_autoregressive_backward_kernel2(
-//     const float *grad, const float *softmax_result, int n_batches, int n_tokens,
-//     int n_elements, float *out, ) {
+//     const float *grad, const float *softmax_result, int n_batches, int
+//     n_tokens, int n_elements, float *out, ) {
 //   int t3 = blockIdx.x * blockDim.x + threadIdx.x;
 //   int idx = blockIdx.y * n_tokens * n_tokens;
 //   if (t3 >= n_tokens) {
@@ -116,7 +140,8 @@ __global__ void softmax_back_fn_1d(const float *softmax_result,
 //     indicator = 0;
 //   }
 //
-//   deriv = softmax_result[b, h, t, i] * (indicator - softmax_result[b, h, t, j]);
+//   deriv = softmax_result[b, h, t, i] * (indicator - softmax_result[b, h, t,
+//   j]);
 //   // sometimes this returns nans
 //   out[b, h, t, j] = deriv * grad[b, h, t, i];
 // }

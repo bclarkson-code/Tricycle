@@ -24,7 +24,7 @@ from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
 from tricycle.utils import log_gpu_memory
-from tricycle_datasets.shakespeare import ShakespeareChar
+from tricycle_datasets.shakespeare import Shakespeare
 
 np.random.seed(0)
 config = SmolGPTConfig()
@@ -36,8 +36,8 @@ model = GPT(config)
 log_gpu_memory("initialisation")
 
 
-dataset = ShakespeareChar()
-dataset.vocab_size = 65
+dataset = Shakespeare(config.vocab_size)
+# dataset.vocab_size = 65
 dataloader = (
     CausalLMDataset(
         tokens=dataset,

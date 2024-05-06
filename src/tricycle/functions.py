@@ -38,69 +38,74 @@ softmax_3d_kernel = r"""
 extern "C" __global__
 void softmax_back_fn_3d(const float *softmax_result,
                                    const float *grad,
-
+                                   const int n_batches,
                                    const int n_tokens, const int n_elements,
                                    float *out) {
-  int indicator, i, j, b, t, deriv;
-
   // find indices for batch and token
-  int xid = blockDim.x * blockIdx.x + threadIdx.x;
-  b = xid / n_tokens;
-  t = xid % n_tokens;
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
 
-  // index for element in vector
-  int tid = blockDim.y * blockIdx.y + threadIdx.y;
-  i = tid / n_elements;
-  j = tid % n_elements;
+  if (i < n_batches * n_tokens * n_elements) {
+    int batch_idx = i / (n_tokens * n_elements);
+    int token_idx = (i / n_elements) % n_tokens;
+    int element_idx = i % n_elements;
+    int offset = batch_idx * n_tokens * n_elements + token_idx * n_elements;
 
-  if (i == j) {
-    indicator = 1;
-  } else {
-    indicator = 0;
+    float *out_idx = out + offset;
+    const float *softmax_idx = softmax_result + offset;
+    const float *grad_idx = grad + offset;
+
+    float result = 0.0;
+    for (int j = 0; j < n_elements; j++) {
+      float indicator = j == element_idx ? 1.0f : 0.0f;
+      float deriv = softmax_idx[element_idx] * (indicator - softmax_idx[j]);
+      result += deriv * grad_idx[element_idx];
+    }
+    out_idx[element_idx] = result;
   }
-
-  deriv = softmax_result[b, t, i] * (indicator - softmax_result[b, t, j]);
-  out[b, t, j] = deriv * grad[b, t, i];
 }
 """
-softmax_andrej_kernel = r"""
+softmax_4d_kernel = r"""
 extern "C" __global__
-void softmax_back_fn_4d_a(const float *grad,
-                                     const float *softmax_result,
-                                     const int n_batches, const int n_tokens,
-                                     const int n_elements, float *out) {
-  int t3 = blockIdx.x * blockDim.x + threadIdx.x;
-  int idx = blockIdx.y * n_tokens * n_tokens;
-  if (t3 >= n_tokens) {
-    return;
-  }
-  for (int t = t3; t < n_tokens; t++) {
+void softmax_back_fn_4d(const float *softmax_result,
+                                   const float *grad,
+                                   const int n_batches,
+                                   const int n_tokens, const int n_elements,
+                                   float *out) {
+  // find indices for batch and token
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
+
+  if (i < n_batches * n_tokens * n_tokens * n_elements) {
+    int batch_idx = i / (n_tokens * n_tokens * n_elements);
+    int head_idx = (i / (n_tokens * n_elements)) % n_tokens;
+    int token_idx = (i / n_elements) % n_tokens;
+    int element_idx = i % n_elements;
+
+    int offset = batch_idx * n_tokens * n_elements * n_elements +
+                 head_idx * n_tokens * n_elements + token_idx * n_elements;
+
+    float *out_idx = out + offset;
+    const float *softmax_idx = softmax_result + offset;
+    const float *grad_idx = grad + offset;
+
     float result = 0.0;
-    const float *softmax_result_bth = softmax_result + idx + t * n_tokens;
-    const float *grad_bth = grad + idx + t * n_tokens;
-    float *out_bth = out + idx + t * n_tokens;
-    for (int t2 = 0; t2 <= t; t2++) {
-      float indicator = t2 == t3 ? 1.0f : 0.0f;
-      float local_derivative =
-          softmax_result_bth[t2] * (indicator - softmax_result_bth[t3]);
-      result += local_derivative * grad_bth[t2];
+    for (int j = 0; j < n_elements; j++) {
+      float indicator = j == element_idx ? 1.0f : 0.0f;
+      float deriv = softmax_idx[element_idx] * (indicator - softmax_idx[j]);
+      result += deriv * grad_idx[element_idx];
     }
-    out_bth[t3] = result;
+    out_idx[element_idx] = result;
   }
 }
 """
 softmax_back_fn_1d = cp.RawKernel(softmax_1d_kernel, "softmax_back_fn_1d")
 softmax_back_fn_3d = cp.RawKernel(softmax_3d_kernel, "softmax_back_fn_3d")
-
-softmax_back_fn_4d = cp.RawKernel(
-    softmax_andrej_kernel, "softmax_back_fn_4d_a"
-)
+softmax_back_fn_4d = cp.RawKernel(softmax_4d_kernel, "softmax_back_fn_4d")
 
 
 def _cuda_softmax_back_fn(grad, _result):
     import cupy as cp
 
-    out = cp.zeros(_result.shape)
+    out = cp.zeros(_result.shape, dtype=grad._data.dtype)
     _result = cp.asarray(_result)
     grad._data = cp.asarray(grad._data)
     n_elements = cp.int8(_result.shape[-1])
@@ -140,29 +145,22 @@ def _cuda_softmax_back_fn(grad, _result):
             )
         case 3:
             n_batches, n_tokens, n_elements = _result.shape
-            # for some reason, 3d blocks aren;t working for me so we'll use a
-            # 2d one instead
-            grid_size = (
-                (n_batches * n_tokens) // BLOCK_SIZE,
-                n_elements // BLOCK_SIZE,
-            )
-            block_size = (BLOCK_SIZE, BLOCK_SIZE)
-            breakpoint()
+            grid_size = ((n_batches * n_tokens * n_elements) // BLOCK_SIZE,)
+            block_size = (BLOCK_SIZE,)
+            grad._data = grad.xp.ones_like(grad._data)
             softmax_back_fn_3d(
                 grid_size,
                 block_size,
-                (_result, grad._data, n_tokens, n_elements, out),
+                (_result, grad._data, n_batches, n_tokens, n_elements, out),
             )
         case 4:
             n_batches, n_heads, n_tokens, n_elements = _result.shape
             # for some reason, 3d blocks aren;t working for me so we'll use a
             # 2d one instead
             grid_size = (
-                (n_batches * n_heads * n_tokens) // BLOCK_SIZE,
-                n_elements // BLOCK_SIZE,
+                (n_batches * n_heads * n_tokens * n_elements) // BLOCK_SIZE,
             )
-            block_size = (BLOCK_SIZE, BLOCK_SIZE)
-            breakpoint()
+            block_size = (BLOCK_SIZE,)
             softmax_back_fn_4d(
                 grid_size,
                 block_size,
@@ -175,11 +173,10 @@ def _cuda_softmax_back_fn(grad, _result):
     # for now, replacing the nans with 0's doesnt seem to hurt
     out = cp.nan_to_num(out, nan=0)
     out = to_tensor(out, is_vector=grad.is_vector, name="back_softmax")
-    breakpoint()
     return out
 
 
-def softmax(tensor: Tensor):
+def softmax_old(tensor: Tensor):
     """
     Apply softmax. The softmax is only applied to the final
     dimension of the tensor
@@ -205,7 +202,40 @@ def softmax(tensor: Tensor):
     return bdiv(numerator, denominator)
 
 
-def softmax_new(tensor: Tensor):
+def softmax_v2(tensor: Tensor):
+    """
+    Apply softmax. The softmax is only applied to the final
+    dimension of the tensor
+    Note: the tensor is normalised for numeric stability
+
+    Note: This function is in development and not yet ready for use
+    """
+
+    if tensor.on_gpu:
+        from cupyx.scipy.special import softmax as softmax_fn
+    else:
+        from scipy.special import softmax as softmax_fn
+
+    _result = softmax_fn(tensor._data, axis=-1)
+
+    def softmax_back_fn(grad):
+        out = _result * (
+            grad._data - grad.xp.sum(grad._data * _result, keepdims=True)
+        )
+        return to_tensor(
+            out, is_vector=grad.is_vector, requires_grad=grad.requires_grad
+        )
+
+    result = to_tensor(_result)
+    result.args = (tensor,)
+    result.name = "softmax"
+    result.is_vector = tensor.is_vector
+    result.back_fns = (softmax_back_fn,)
+
+    return result
+
+
+def softmax(tensor: Tensor):
     """
     Apply softmax. The softmax is only applied to the final
     dimension of the tensor
@@ -224,7 +254,7 @@ def softmax_new(tensor: Tensor):
     def softmax_back_fn(grad):
         return _cuda_softmax_back_fn(grad, _result)
 
-    result = to_tensor(_result)
+    result = to_tensor(_result, dtype=tensor._data.dtype)
     result.args = (tensor,)
     result.name = "softmax"
     result.is_vector = tensor.is_vector

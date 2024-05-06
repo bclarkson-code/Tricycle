@@ -20,7 +20,7 @@ def uadd(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert isinstance(constant, numbers.Number)
 
-    result = to_tensor(xp.add(tensor._data, constant))
+    result = to_tensor(xp.add(tensor._data, constant, dtype=tensor.dtype))
     result.args = (tensor,)
     result.back_fns = (nothing,)
     result.name = f"+ {constant}"
@@ -39,7 +39,7 @@ def umul(tensor: Tensor, constant: float) -> Tensor:
     assert xp.isscalar(constant)
 
     constant_tensor = to_tensor(
-        xp.full(shape=tensor.shape, fill_value=constant, dtype=float),
+        xp.full(shape=tensor.shape, fill_value=constant, dtype=tensor.dtype),
         requires_grad=False,
         is_vector=tensor.is_vector,
     )
@@ -70,7 +70,8 @@ def upow(tensor: Tensor, constant: float) -> Tensor:
     result = to_tensor(xp.power(tensor._data, constant))
     result.args = (tensor,)
     coef = to_tensor(
-        xp.power(tensor._data, constant - 1), is_vector=tensor.is_vector
+        xp.power(tensor._data, constant - 1, dtype=tensor.dtype),
+        is_vector=tensor.is_vector,
     )
     result.back_fns = (partial(bmul, umul(coef, constant)),)
     result.name = f"^ {constant}"
@@ -97,7 +98,7 @@ def umax(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert xp.isscalar(constant)
 
-    result = to_tensor(xp.maximum(tensor._data, constant))
+    result = to_tensor(xp.maximum(tensor._data, constant, dtype=tensor.dtype))
 
     from tricycle.binary import bmul
 
@@ -121,7 +122,7 @@ def umin(tensor: Tensor, constant: float) -> Tensor:
     assert isinstance(tensor, Tensor)
     assert xp.isscalar(constant)
 
-    result = to_tensor(xp.minimum(tensor._data, constant))
+    result = to_tensor(xp.minimum(tensor._data, constant, dtype=tensor.dtype))
 
     from tricycle.binary import bmul
 
