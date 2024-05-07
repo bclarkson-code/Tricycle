@@ -1,9 +1,9 @@
 import logging
 
-from tricycle.binary import _shapes_match, bmul
+from tricycle.binary import BMul, _shapes_match
 from tricycle.functions import softmax
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import ulog
+from tricycle.unary import ULog
 from tricycle.utils import log_gpu_memory
 
 logger = logging.getLogger(__name__)
@@ -56,8 +56,8 @@ def cross_entropy_(y_true: Tensor, y_pred: Tensor) -> Tensor:
     """
     # normalise and log
     assert _shapes_match(y_true, y_pred)
-    y_pred = ulog(softmax(y_pred))
-    product = bmul(y_true, y_pred)
+    y_pred = ULog(softmax(y_pred))
+    product = BMul(y_true, y_pred)
     product *= -1
 
     match product.ndim:

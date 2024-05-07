@@ -2,10 +2,10 @@ from pathlib import Path
 
 import cupy as cp
 
-from tricycle.binary import bdiv
-from tricycle.reduce import rmax
+from tricycle.binary import BDiv
+from tricycle.reduce import RMax
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import udiv, uexp
+from tricycle.unary import UDiv, UExp
 
 softmax_kernel_path = Path(__file__).parent / "cuda/softmax.cu"
 # module = cp.RawModule(path=str(softmax_kernel_path.absolute()))
@@ -187,19 +187,19 @@ def softmax_old(tensor: Tensor):
     # normalise
     match tensor.ndim:
         case 1:
-            largest_element = rmax(tensor, "a->").repeat(tensor.shape[-1])
+            largest_element = RMax(tensor, "a->").repeat(tensor.shape[-1])
         case _:
-            largest_element = rmax(tensor, "...a->...").repeat(
+            largest_element = RMax(tensor, "...a->...").repeat(
                 tensor.shape[-1]
             )
     tensor = tensor - largest_element
 
-    numerator = uexp(tensor)
+    numerator = UExp()(tensor)
     denominator = numerator.e("...a->...")
     denominator += REALLY_SMALL_NUMBER
     denominator = denominator.repeat(tensor.shape[-1])
 
-    return bdiv(numerator, denominator)
+    return BDiv(numerator, denominator)
 
 
 def softmax(tensor: Tensor):
@@ -266,13 +266,13 @@ def sigmoid(tensor: Tensor):
     """
     Apply the sigmoid function
     """
-    return udiv(1, (uexp(-tensor) + 1))
+    return UDiv()(1, (UExp()(-tensor) + 1))
 
 
 def tanh(tensor: Tensor):
     """
     Apply the tanh function
     """
-    numerator = uexp(tensor * 2) - 1
-    denominator = uexp(tensor * 2) + 1
-    return bdiv(numerator, denominator)
+    numerator = UExp(tensor * 2) - 1
+    denominator = UExp(tensor * 2) + 1
+    return BDiv(numerator, denominator)

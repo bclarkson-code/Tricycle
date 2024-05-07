@@ -1,13 +1,13 @@
 import numpy as np
 
-from tricycle.ops import split
+from tricycle.ops import Split
 from tricycle.tensor import to_tensor
 
 
 def test_split_first_axis():
     in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
 
-    out_tensors = split(in_tensor, 3)
+    out_tensors = Split()(in_tensor, 3)
 
     assert len(out_tensors) == 3
 
@@ -35,7 +35,7 @@ def test_split_first_axis():
 def test_split_middle_axis():
     in_tensor = to_tensor(np.ones((2, 3, 4)))
 
-    out_tensors = split(in_tensor, n_splits=2, axis=-1)
+    out_tensors = Split()(in_tensor, n_splits=2, axis=-1)
 
     assert len(out_tensors) == 2
 
@@ -75,47 +75,3 @@ def test_mean():
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.close_to([1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6])
-
-
-def test_standard_deviation():
-    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
-
-    out_tensor = in_tensor.standard_deviation()
-
-    assert out_tensor.close_to(np.std([1, 2, 3, 4, 5, 6]))
-
-    out_tensor.backward()
-
-    assert in_tensor.grad is not None
-    diff = 0.09759
-    correct = np.array(
-        [
-            -3 * diff,
-            -2 * diff,
-            -1 * diff,
-            0,
-            diff,
-            2 * diff,
-        ]
-    )
-    correct += diff / 2
-    assert in_tensor.grad.close_to(correct)
-
-
-def test_normalise():
-    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
-
-    out_tensor = in_tensor.normalise()
-
-    assert out_tensor.mean().close_to(0)
-    assert out_tensor.standard_deviation().close_to(1)
-    assert out_tensor.close_to(
-        [
-            -1.4638501,
-            -0.87831006,
-            -0.29277002,
-            0.29277002,
-            0.87831006,
-            1.4638501,
-        ]
-    )

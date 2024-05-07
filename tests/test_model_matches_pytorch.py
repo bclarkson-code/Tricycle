@@ -17,7 +17,6 @@ from tricycle.functions import softmax
 from tricycle.layers import Dense, Embedding
 from tricycle.loss import cross_entropy
 from tricycle.tensor import to_tensor
-from tricycle.unary import usum
 
 
 @st.composite
@@ -222,7 +221,7 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
     )
 
     pt_out.sum().backward()
-    usum(tr_out.from_vector()).backward()
+    Einsum("...,...->")(tr_out.from_vector()).backward()
 
     assert np.allclose(
         pt_layer.weight.grad.detach().numpy().T,
@@ -255,7 +254,7 @@ def test_embedding_matches(tokens_, out_shape):
     )
 
     pt_out.sum().backward()
-    usum(tr_out.from_vector()).backward()
+    USum()(tr_out.from_vector()).backward()
 
     assert np.allclose(
         pt_layer.weight.grad.detach().numpy(),
@@ -286,7 +285,7 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
     )
 
     pt_out.sum().backward()
-    usum(tr_out.from_vector()).backward()
+    USum()(tr_out.from_vector()).backward()
 
     assert np.allclose(
         pt_input.grad.detach().numpy(),

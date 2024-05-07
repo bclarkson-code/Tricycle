@@ -1,17 +1,14 @@
-import numpy as np
-
-from tricycle import CUPY_ENABLED
-from tricycle.functions import sigmoid, tanh
+from tricycle.functions import sigmoid
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import uerf, umax
+from tricycle.unary import UMax
 
 
 class ReLU(Layer):
     def forward(self, x: Tensor):
-        return umax(x, 0)
+        return UMax()(x, 0)
 
 
 class Swish(Layer):
