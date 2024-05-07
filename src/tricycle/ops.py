@@ -1,8 +1,23 @@
+from abc import abstractmethod
 from typing import Sequence
+
+from numpy.typing import ArrayLike
 
 from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import usqrt
+
+
+class Op:
+    """
+    Base class for operations
+    """
+
+    _out: ArrayLike | None = None
+    _grad: ArrayLike | None = None
+
+    @abstractmethod
+    def __call__(self, tensor: Tensor, *args, **kwargs) -> Tensor:
+        raise NotImplementedError()
 
 
 def repeat(tensor: Tensor, repeats: int):
@@ -119,6 +134,8 @@ def standard_deviation(tensor: Tensor) -> Tensor:
     """
     Find the standard deviation of a tensor
     """
+    from tricycle.unary import usqrt
+
     return usqrt(variance(tensor))
 
 
