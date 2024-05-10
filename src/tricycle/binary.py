@@ -4,7 +4,7 @@ from numpy.typing import ArrayLike
 
 from tricycle.ops import Einsum, Op
 from tricycle.tensor import Tensor, nothing, select_backend, to_tensor
-from tricycle.unary import UDiv, UMul
+from tricycle.unary import UnaryDivide, UnaryMultiply
 
 
 def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
@@ -29,8 +29,8 @@ def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
     return shape_1 == shape_2
 
 
-class BAdd(Op):
-    def __call__(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+class BinaryAdd(Op):
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         """
         Applies the cosine function, elementwise, to a tensor
         """
@@ -50,14 +50,14 @@ class BAdd(Op):
         return result
 
 
-class BSub(Op):
+class BinarySubtract(Op):
     def back_fn_2(self, grad: Tensor) -> Tensor:
         self._grad = -grad._data
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         """
         Subtract one tensor from another
         """
@@ -77,8 +77,8 @@ class BSub(Op):
         return result
 
 
-class BMul(Op):
-    def __call__(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+class BinaryMultiply(Op):
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         """
         Multiply the elements of two tensors together, elementwise
 
@@ -91,20 +91,20 @@ class BMul(Op):
         return result
 
 
-class BDiv(Op):
-    def __call__(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+class BinaryDivide(Op):
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         """
         Divide the elements of two tensors together, elementwise
 
         The two tensors must have the same shape
         """
-        mul = BMul()
-        div = UDiv()
+        mul = BinaryMultiply()
+        div = UnaryDivide()
 
         return mul(tensor_1, div(1, tensor_2))
 
 
-class BMax(Op):
+class BinaryMax(Op):
     _is_bigger_1: ArrayLike | None
     _is_bigger_2: ArrayLike | None
 
@@ -120,7 +120,7 @@ class BMax(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         """
         Compare two tensors elementwise, returning the maximum
         of each pair of elements
@@ -144,7 +144,7 @@ class BMax(Op):
         return result
 
 
-class BMin(Op):
+class BinaryMin(Op):
     _is_smaller_1: Tensor | None
     _is_smaller_2: Tensor | None
 
@@ -160,7 +160,7 @@ class BMin(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
         """
         Compare two tensors elementwise, returning the maximum
         of each pair of elements
@@ -184,7 +184,7 @@ class BMin(Op):
         return result
 
 
-class BMask(Op):
+class BinaryMask(Op):
     _mask: ArrayLike | None = None
 
     def back_fn(self, grad: Tensor) -> Tensor:
@@ -195,7 +195,7 @@ class BMask(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor, mask: Tensor) -> Tensor:
+    def forward(self, tensor: Tensor, mask: Tensor) -> Tensor:
         """
         Apply a binary mask to a numpy array, setting values to 0 where
         the mask is True

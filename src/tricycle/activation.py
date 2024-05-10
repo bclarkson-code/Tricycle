@@ -3,12 +3,12 @@ from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import UMax
+from tricycle.unary import UnaryMax
 
 
 class ReLU(Layer):
     def forward(self, x: Tensor):
-        return UMax()(x, 0)
+        return UnaryMax()(x, 0)
 
 
 class Swish(Layer):

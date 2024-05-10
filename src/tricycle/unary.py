@@ -1,17 +1,15 @@
 import numbers
 
 from numpy.typing import ArrayLike
-from scipy.special import erf as np_erf
 
-from tricycle import CUPY_ENABLED
 from tricycle.ops import Op
 from tricycle.tensor import Tensor, nothing, to_tensor
 
 grad = False
 
 
-class UAdd(Op):
-    def __call__(self, tensor: Tensor, constant: float) -> Tensor:
+class UnaryAdd(Op):
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
         """
         Add a constant, elementwise, to a tensor. The constant is not
         differentiable.
@@ -31,7 +29,7 @@ class UAdd(Op):
         return result
 
 
-class UMul(Op):
+class UnaryMultiply(Op):
     _constant: float
 
     def back_fn(self, grad: Tensor) -> Tensor:
@@ -42,7 +40,7 @@ class UMul(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor, constant: float) -> Tensor:
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
         """
         Multiply a constant, elementwise, to a tensor. The constant is not
         differentiable.
@@ -63,16 +61,16 @@ class UMul(Op):
         return result
 
 
-class USub(Op):
-    def __call__(self, tensor: Tensor, constant: float) -> Tensor:
+class UnarySubtract(Op):
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
         """
         Subtract a constant, elementwise, from a tensor. The constant is not
         differentiable.
         """
-        return UAdd()(tensor, -constant)
+        return UnaryAdd()(tensor, -constant)
 
 
-class UPow(Op):
+class UnaryPower(Op):
     input: ArrayLike
     constant: float
 
@@ -88,7 +86,7 @@ class UPow(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor, constant: float) -> Tensor:
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
         """
         Raise a tensor to a constant, elementwise. The constant is not
         differentiable.
@@ -111,19 +109,19 @@ class UPow(Op):
         return result
 
 
-class UDiv(Op):
+class UnaryDivide(Op):
     # TODO: manually define the derivative instead of using other operations
-    def __call__(self, constant: float, tensor: Tensor) -> Tensor:
+    def forward(self, constant: float, tensor: Tensor) -> Tensor:
         """
         Divide a constant by a tensor, elementwise. The constant is not
         differentiable.
         """
-        upow = UPow()
-        umul = UMul()
+        upow = UnaryPower()
+        umul = UnaryMultiply()
         return umul(upow(tensor, -1.0), constant)
 
 
-class UMax(Op):
+class UnaryMax(Op):
     is_bigger: Tensor
 
     def back_fn(self, grad: Tensor) -> Tensor:
@@ -133,7 +131,7 @@ class UMax(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor, constant: float) -> Tensor:
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
         """
         Return the max of the tensor and the constant,
         elementwise. The constant is not differentiable.
@@ -157,7 +155,7 @@ class UMax(Op):
         return result
 
 
-class UMin(Op):
+class UnaryMin(Op):
     is_smaller: Tensor
 
     def back_fn(self, grad: Tensor) -> Tensor:
@@ -167,7 +165,7 @@ class UMin(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor, constant: float) -> Tensor:
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
         """
         Return the max of the tensor and the constant,
         elementwise. The constant is not differentiable.
@@ -191,7 +189,7 @@ class UMin(Op):
         return result
 
 
-class UExp(Op):
+class UnaryExp(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         self._grad = grad._data * self._out
 
@@ -199,7 +197,7 @@ class UExp(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor) -> Tensor:
+    def forward(self, tensor: Tensor) -> Tensor:
         """
         Raise every element of a tensor to the power of e
         """
@@ -215,7 +213,7 @@ class UExp(Op):
         return result
 
 
-class ULog(Op):
+class UnaryLog(Op):
     REALLY_SMALL_NUMBER = 1e-8
 
     _input: ArrayLike | None = None
@@ -229,7 +227,7 @@ class ULog(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor) -> Tensor:
+    def forward(self, tensor: Tensor) -> Tensor:
         """
         Raise every element of a tensor to the power of e
         """
@@ -247,7 +245,7 @@ class ULog(Op):
         return result
 
 
-class USin(Op):
+class UnarySin(Op):
     _input: ArrayLike | None = None
 
     def back_fn(self, grad: Tensor) -> Tensor:
@@ -259,7 +257,7 @@ class USin(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor) -> Tensor:
+    def forward(self, tensor: Tensor) -> Tensor:
         """
         Applies the sine function, elementwise, to a tensor
         """
@@ -276,7 +274,7 @@ class USin(Op):
         return result
 
 
-class UCos(Op):
+class UnaryCos(Op):
     _input: ArrayLike | None = None
 
     def back_fn(self, grad: Tensor) -> Tensor:
@@ -288,7 +286,7 @@ class UCos(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor) -> Tensor:
+    def forward(self, tensor: Tensor) -> Tensor:
         """
         Applies the cosine function, elementwise, to a tensor
         """
@@ -305,10 +303,10 @@ class UCos(Op):
         return result
 
 
-class USqrt(Op):
-    def __call__(self, tensor: Tensor):
+class UnarySquareRoot(Op):
+    def forward(self, tensor: Tensor):
         """
         Apply the square root function
         """
-        upow = UPow()
+        upow = UnaryPower()
         return upow(tensor, 0.5)

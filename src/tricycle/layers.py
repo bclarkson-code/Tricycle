@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Sequence
 
-from tricycle.binary import BMul
+from tricycle.binary import BinaryMultiply
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, nothing, to_tensor
@@ -144,7 +144,7 @@ class Dropout(Layer):
             n=1, p=1 - self.probability, size=shape
         ).astype(bool)
         random_mask = to_tensor(random_mask, requires_grad=False)
-        return BMul(tensor, random_mask)
+        return BinaryMultiply(tensor, random_mask)
 
 
 class LayerNorm(Layer):

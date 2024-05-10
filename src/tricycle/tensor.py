@@ -1,9 +1,7 @@
-import gc
 import logging
 import numbers
 import uuid
 from typing import Callable, List, Optional, Sequence, Union
-from warnings import warn
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -171,13 +169,13 @@ class Tensor:
 
     def __add__(self, other: Union[float, "Tensor"]) -> "Tensor":
         if isinstance(other, numbers.Number):
-            from tricycle.unary import UAdd
+            from tricycle.unary import UnaryAdd
 
-            return UAdd()(self, other)
+            return UnaryAdd()(self, other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import BAdd
+            from tricycle.binary import BinaryAdd
 
-            return BAdd(self, other)
+            return BinaryAdd()(self, other)
         else:
             raise NotImplementedError(
                 f"Cannot add {type(self)} and {type(other)}"
@@ -195,13 +193,13 @@ class Tensor:
         ):
             other = to_tensor(other)
         if self.xp.isscalar(other):
-            from tricycle.unary import USub
+            from tricycle.unary import UnarySubtract
 
-            return USub()(self, other)
+            return UnarySubtract()(self, other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import BSub
+            from tricycle.binary import BinarySubtract
 
-            return BSub()(self, other)
+            return BinarySubtract()(self, other)
 
         else:
             raise NotImplementedError(
@@ -220,14 +218,14 @@ class Tensor:
         ):
             other = to_tensor(other)
         if self.xp.isscalar(other) or other.shape == ():
-            from tricycle.unary import UMul
+            from tricycle.unary import UnaryMultiply
 
-            return UMul()(self, other)
+            return UnaryMultiply()(self, other)
 
         elif isinstance(other, Tensor):
-            from tricycle.binary import BMul
+            from tricycle.binary import BinaryMultiply
 
-            return BMul()(self, other)
+            return BinaryMultiply()(self, other)
 
         else:
             raise NotImplementedError(
@@ -245,13 +243,13 @@ class Tensor:
 
     def __truediv__(self, other):
         if self.xp.isscalar(other):
-            from tricycle.unary import UMul
+            from tricycle.unary import UnaryMultiply
 
-            return UMul()(self, 1 / other)
+            return UnaryMultiply()(self, 1 / other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import BDiv
+            from tricycle.binary import BinaryDivide
 
-            return BDiv()(self, other)
+            return BinaryDivide()(self, other)
 
         else:
             raise NotImplementedError(
@@ -260,13 +258,13 @@ class Tensor:
 
     def __rtruediv__(self, other):
         if self.xp.isscalar(other):
-            from tricycle.unary import UDiv
+            from tricycle.unary import UnaryDivide
 
-            return UDiv()(other, self)
+            return UnaryDivide()(other, self)
         elif isinstance(other, Tensor):
-            from tricycle.binary import BDiv
+            from tricycle.binary import BinaryDivide
 
-            return BDiv()(other, self)
+            return BinaryDivide()(other, self)
 
     def __itruediv__(self, other):
         return self / other
@@ -289,12 +287,13 @@ class Tensor:
         ):
             other = to_tensor(other)
         if self.xp.isscalar(other):
-            from tricycle.unary import UPow
+            from tricycle.unary import UnaryPower
 
-            return UPow(self, other)
+            return UnaryPower()(self, other)
         elif isinstance(other, Tensor):
             raise NotImplementedError(
-                f"Cannot power two tensors of shape: {self.shape}, {other.shape}"
+                "Cannot power two tensors of shape: "
+                f"{self.shape}, {other.shape}"
             )
         else:
             raise NotImplementedError(
@@ -375,7 +374,7 @@ class Tensor:
 
         return Reshape()(self, shape)
 
-    def split(self, n_splits: int, axis: int = 0) -> List["Tensor"]:
+    def split(self, n_splits: int, axis: int = -1) -> List["Tensor"]:
         from tricycle.ops import Split
 
         return Split()(self, n_splits=n_splits, axis=axis)

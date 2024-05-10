@@ -2,24 +2,24 @@ import numpy as np
 
 from tricycle.tensor import to_tensor
 from tricycle.unary import (
-    UAdd,
-    UCos,
-    UDiv,
-    UExp,
-    ULog,
-    UMax,
-    UMin,
-    UMul,
-    UPow,
-    USin,
-    USqrt,
-    USub,
+    UnaryAdd,
+    UnaryCos,
+    UnaryDivide,
+    UnaryExp,
+    UnaryLog,
+    UnaryMax,
+    UnaryMin,
+    UnaryMultiply,
+    UnaryPower,
+    UnarySin,
+    UnarySquareRoot,
+    UnarySubtract,
 )
 
 
 def test_can_add():
     in_tensor = to_tensor([0, 1, 2, 3])
-    out_tensor = UAdd()(in_tensor, 1)
+    out_tensor = UnaryAdd()(in_tensor, 1)
 
     correct = np.array([1, 2, 3, 4])
 
@@ -34,7 +34,7 @@ def test_can_add():
 
 def test_can_umul():
     in_tensor = to_tensor([0, 1, 2, 3])
-    out_tensor = UMul()(in_tensor, 2)
+    out_tensor = UnaryMultiply()(in_tensor, 2)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to(np.array([0, 2, 4, 6]))
@@ -49,7 +49,7 @@ def test_can_usub():
     in_tensor = to_tensor([1, 2, 3, 4])
 
     # subtract 1 from each element
-    out_tensor = USub()(in_tensor, 1)
+    out_tensor = UnarySubtract()(in_tensor, 1)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to(np.array([0, 1, 2, 3]))
@@ -63,7 +63,7 @@ def test_can_usub():
 
 def test_can_upow():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = UPow()(in_tensor, 3)
+    out_tensor = UnaryPower()(in_tensor, 3)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to(np.array([1, 8, 27, 64]))
@@ -79,7 +79,7 @@ def test_can_udiv():
     # 2 divided by each element
     in_tensor = to_tensor(np.arange(12, dtype=float).reshape(3, 4))
     with np.errstate(divide="ignore"):
-        out_tensor = UDiv()(2, in_tensor)
+        out_tensor = UnaryDivide()(2, in_tensor)
 
     assert out_tensor.shape == (3, 4)
     assert out_tensor.close_to(
@@ -99,7 +99,7 @@ def test_can_udiv():
 
 def test_can_umax():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = UMax()(in_tensor, 2)
+    out_tensor = UnaryMax()(in_tensor, 2)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to([2, 2, 3, 4])
@@ -114,7 +114,7 @@ def test_can_umax():
 
 def test_can_umin():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = UMin()(in_tensor, 3)
+    out_tensor = UnaryMin()(in_tensor, 3)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to([1, 2, 3, 3])
@@ -129,7 +129,7 @@ def test_can_umin():
 
 def test_can_uexp():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = UExp()(in_tensor)
+    out_tensor = UnaryExp()(in_tensor)
 
     assert out_tensor.shape == (4,)
 
@@ -146,7 +146,7 @@ def test_can_uexp():
 
 def test_can_ulog():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = ULog()(in_tensor)
+    out_tensor = UnaryLog()(in_tensor)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to([0, np.log(2), np.log(3), np.log(4)])
@@ -161,7 +161,7 @@ def test_can_ulog():
 
 def test_can_usin():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = USin()(in_tensor)
+    out_tensor = UnarySin()(in_tensor)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to([np.sin(1), np.sin(2), np.sin(3), np.sin(4)])
@@ -176,7 +176,7 @@ def test_can_usin():
 
 def test_can_ucos():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = UCos()(in_tensor)
+    out_tensor = UnaryCos()(in_tensor)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to([np.cos(1), np.cos(2), np.cos(3), np.cos(4)])
@@ -191,7 +191,7 @@ def test_can_ucos():
 
 def test_can_usqrt():
     in_tensor = to_tensor([1, 2, 3, 4])
-    out_tensor = USqrt()(in_tensor)
+    out_tensor = UnarySquareRoot()(in_tensor)
 
     assert out_tensor.shape == (4,)
     assert out_tensor.close_to([1, np.sqrt(2), np.sqrt(3), np.sqrt(4)])

@@ -16,13 +16,16 @@ class Op:
     _out: ArrayLike | None = None
     _grad: ArrayLike | None = None
 
-    @abstractmethod
     def __call__(self, tensor: Tensor, *args, **kwargs) -> Tensor:
+        return self.forward(tensor, *args, **kwargs)
+
+    @abstractmethod
+    def forward(self, tensor: Tensor, *args, **kwargs) -> Tensor:
         raise NotImplementedError()
 
 
 class Repeat(Op):
-    def __class__(self, tensor: Tensor, repeats: int):
+    def forward(self, tensor: Tensor, repeats: int):
         """
         Repeat a tensor along its final axis
         This is done my multiplying with a ones tensor the same shape as the
@@ -60,6 +63,7 @@ class Split(Op):
         [1, 1, 0, 0]
         """
         xp = grad.xp
+        breakpoint()
         self._grad[idx] = xp.zeros(self._in_shape)
 
         indices = []
@@ -71,18 +75,17 @@ class Split(Op):
                 indices.append(slice(start, end))
             else:
                 indices.append(slice(None))
-        breakpoint()
         self._grad[idx][tuple(indices)] = grad._data
 
         result = to_tensor(self._grad[idx])
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(
-        self, tensor: Tensor, n_splits: int, axis: int = 0
+    def forward(
+        self, tensor: Tensor, n_splits: int, axis: int = -1
     ) -> Sequence[Tensor]:
         """
-        Split a tensor along its first axis into n_splits partitions
+        Split a tensor along an axis into n_splits partitions
         """
         xp = tensor.xp
 
@@ -96,9 +99,12 @@ class Split(Op):
 
         results = []
         for idx, result in enumerate(self._out):
+            # the back_fn depends on index so we need to
+            # dynamically create this function
+            def back_fn(grad, idx=idx):
+                return self.back_fn(grad, idx=idx)
+
             result = to_tensor(result)
-            print(idx)
-            back_fn = lambda grad: self.back_fn(grad, idx=copy(idx))
             result.back_fns = (back_fn,)
             result.args = (tensor,)
             result.is_vector = tensor.is_vector
@@ -121,7 +127,7 @@ class Reshape(Op):
         result.is_vector = grad.is_vector
         return result
 
-    def __call__(self, tensor: Tensor, shape: Sequence[int]) -> Tensor:
+    def forward(self, tensor: Tensor, shape: Sequence[int]) -> Tensor:
         xp = tensor.xp
         if tensor.is_vector:
             shape = [tensor.shape[0]] + list(shape)
@@ -138,7 +144,7 @@ class Reshape(Op):
 
 
 class Mean(Op):
-    def __call__(self, tensor: Tensor) -> Tensor:
+    def forward(self, tensor: Tensor) -> Tensor:
         """
         Find the mean of a tensor
         """

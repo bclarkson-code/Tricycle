@@ -9,24 +9,31 @@ from hypothesis import assume, given
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
-from tricycle.binary import BAdd, BDiv, BMax, BMin, BMul, BSub, _shapes_match
+from tricycle.binary import (
+    BinaryAdd,
+    BinaryDivide,
+    BinaryMax,
+    BinaryMin,
+    BinaryMultiply,
+    BinarySubtract,
+    _shapes_match,
+)
 from tricycle.einsum import EinsumBackOp
 from tricycle.layers import Dense
 from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
-    UAdd,
-    UCos,
-    UDiv,
-    UExp,
-    ULog,
-    UMax,
-    UMin,
-    UMul,
-    UPow,
-    USin,
-    USqrt,
-    USub,
+    UnaryAdd,
+    UnaryCos,
+    UnaryDivide,
+    UnaryExp,
+    UnaryLog,
+    UnaryMax,
+    UnaryMin,
+    UnaryMultiply,
+    UnaryPower,
+    UnarySin,
+    UnarySquareRoot,
 )
 
 
@@ -60,20 +67,28 @@ def unary_op(draw):
     Generate a single, initial unary operation
     """
     ops = [
-        UAdd(),
-        UCos(),
-        UDiv(),
-        UExp(),
-        ULog(),
-        UMax(),
-        UMin(),
-        UMul(),
-        UPow(),
-        USin(),
-        USqrt(),
-        USub(),
+        UnaryAdd(),
+        UnaryCos(),
+        UnaryDivide(),
+        UnaryExp(),
+        UnaryLog(),
+        UnaryMax(),
+        UnaryMin(),
+        UnaryMultiply(),
+        UnaryPower(),
+        UnarySin(),
+        UnarySquareRoot(),
+        UnaryCos(),
     ]
-    needs_constant = [UAdd(), UMul(), USub(), UPow(), UDiv(), UMax(), UMin()]
+    needs_constant = [
+        UnaryAdd(),
+        UnaryMultiply(),
+        UnaryCos(),
+        UnaryPower(),
+        UnaryDivide(),
+        UnaryMax(),
+        UnaryMin(),
+    ]
     op = draw(st.sampled_from(ops))
     if op in needs_constant:
         constant = draw(scalar())
@@ -86,7 +101,14 @@ def binary_op(draw):
     """
     Generate a single, initial binary operation
     """
-    ops = [BAdd(), BDiv(), BMax(), BMin(), BMul(), BSub()]
+    ops = [
+        BinaryAdd(),
+        BinaryDivide(),
+        BinaryMax(),
+        BinaryMin(),
+        BinaryMultiply(),
+        BinarySubtract(),
+    ]
     return draw(st.sampled_from(ops))
 
 

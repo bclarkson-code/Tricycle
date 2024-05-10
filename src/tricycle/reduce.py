@@ -3,7 +3,7 @@ from tricycle.ops import Op
 from tricycle.tensor import Tensor, to_tensor
 
 
-class RMax(Op):
+class ReduceMax(Op):
     def __call__(self, tensor: Tensor, subscript: Subscript | str):
         """
         Generate an indicator tensor that, when einsummed with the tensor,
@@ -42,7 +42,7 @@ class RMax(Op):
         return result
 
 
-class RMin(Op):
+class ReduceMin(Op):
     def __call__(self, tensor: Tensor, subscript: Subscript | str):
         """
         Generate an indicator tensor that, when einsummed with the tensor, results
