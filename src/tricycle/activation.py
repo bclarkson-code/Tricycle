@@ -1,17 +1,14 @@
-import numpy as np
-
-from tricycle import CUPY_ENABLED
-from tricycle.functions import sigmoid, tanh
+from tricycle.functions import sigmoid
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import uerf, umax
+from tricycle.unary import UnaryMax
 
 
 class ReLU(Layer):
     def forward(self, x: Tensor):
-        return umax(x, 0)
+        return UnaryMax()(x, 0)
 
 
 class Swish(Layer):
@@ -39,42 +36,47 @@ class GeLU(Layer):
         super().__init__(*args, **kwargs)
         self.approximate = approximate
 
-    def build_backward(self, x: Tensor):
-        x = x._data
+    def backward(self, grad: Tensor):
+        xp = grad.xp
 
-        def backward(grad: Tensor):
-            xp = grad.xp
+        inner = (
+            self.CONST_1 * self._input * (1 + self.CONST_2 * self._input**2)
+        )
+        coef = (
+            self.CONST_1
+            * self._input
+            * (1 + self.CONST_2 * 3 * self._input**2)
+        )
 
-            inner = self.CONST_1 * x * (1 + self.CONST_2 * x**2)
-            coef = self.CONST_1 * x * (1 + self.CONST_2 * 3 * x**2)
-
-            left = xp.tanh(inner)
-            cosh = xp.cosh(inner)
-            right = coef / (cosh * cosh)
-            result = 0.5 * (1 + left + right) * grad._data
-
-            result = to_tensor(
-                result,
-                is_vector=grad.is_vector,
-                requires_grad=grad.requires_grad,
-            )
-            result.name = "gelu_back"
-            return result
-
-        return backward
-
-    def forward(self, x: Tensor):
-        xp = x.xp
-        inner = self.CONST_1 * (x._data + self.CONST_2 * x._data**3)
-        result = x._data * 0.5 * (1 + xp.tanh(inner))
+        left = xp.tanh(inner)
+        cosh = xp.cosh(inner)
+        right = coef / (cosh * cosh)
+        self._grad = 0.5 * (1 + left + right) * grad._data
 
         result = to_tensor(
-            result, is_vector=x.is_vector, requires_grad=x.requires_grad
+            self._grad,
+            is_vector=grad.is_vector,
+            requires_grad=grad.requires_grad,
+        )
+        result.name = "gelu_back"
+        return result
+
+    def forward(self, tensor: Tensor):
+        xp = tensor.xp
+        self._input = tensor._data
+        inner = self.CONST_1 * (
+            tensor._data + self.CONST_2 * tensor._data**3
+        )
+        result = tensor._data * 0.5 * (1 + xp.tanh(inner))
+
+        result = to_tensor(
+            result,
+            is_vector=tensor.is_vector,
+            requires_grad=tensor.requires_grad,
         )
         result.name = "gelu"
-        result.args = (x,)
-        backward = self.build_backward(x)
-        result.back_fns = (backward,)
+        result.args = (tensor,)
+        result.back_fns = (self.backward,)
         return result
 
 

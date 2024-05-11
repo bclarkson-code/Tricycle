@@ -40,8 +40,8 @@ def test_attention_individually():
 
     x = torch.from_numpy(in_tensor._data)
 
-    qu, k, v = x.split(embedding_dim, dim=1)  # pytorch
-    query, key, value = in_tensor.split(3, axis=1)  # tricycle
+    qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch
+    query, key, value = in_tensor.split(3, axis=-1)  # tricycle
 
     assert query.close_to(qu)
     assert key.close_to(k)
@@ -178,7 +178,7 @@ def test_attention_combined():
     x = torch.from_numpy(in_tensor._data)
 
     qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch
-    query, key, value = in_tensor.split(3, axis=1)  # tricycle
+    query, key, value = in_tensor.split(3, axis=-1)  # tricycle
 
     assert query.close_to(qu)
     assert key.close_to(k)
@@ -228,7 +228,7 @@ def andrej_attention_block(
     """
     Andrej Karpathy's implementation of an attention block from nanogpt
     """
-    q, k, v = c_attn(x).split(n_embd, dim=2)
+    q, k, v = c_attn(x).split(n_embd, dim=-1)
     y = andrej_attention(q, k, v, B, T, C, n_head, block_size)
     return c_proj(y)
 

@@ -1,6 +1,14 @@
 import numpy as np
 
-from tricycle.binary import badd, bdiv, bmask, bmax, bmin, bmul, bsub
+from tricycle.binary import (
+    BinaryAdd,
+    BinaryDivide,
+    BinaryMask,
+    BinaryMax,
+    BinaryMin,
+    BinaryMultiply,
+    BinarySubtract,
+)
 from tricycle.tensor import to_tensor
 
 
@@ -8,7 +16,7 @@ def test_can_badd():  # sourcery skip: extract-duplicate-method
     in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4))
     in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4))
 
-    out_tensor = badd(in_tensor_1, in_tensor_2)
+    out_tensor = BinaryAdd()(in_tensor_1, in_tensor_2)
 
     assert out_tensor.shape == (3, 4)
 
@@ -34,7 +42,7 @@ def test_can_bsub():  # sourcery skip: extract-duplicate-method
     in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
     in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_vector=True)
 
-    out_tensor = bsub(in_tensor_1, in_tensor_2)
+    out_tensor = BinarySubtract()(in_tensor_1, in_tensor_2)
 
     assert out_tensor.shape == (3, 4)
     correct = to_tensor([[-1, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1]])
@@ -63,7 +71,7 @@ def test_can_bmul():
     in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
     in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_vector=True)
 
-    out_tensor = bmul(in_tensor_1, in_tensor_2)
+    out_tensor = BinaryMultiply()(in_tensor_1, in_tensor_2)
 
     assert out_tensor.shape == (3, 4)
     correct = to_tensor([[0, 2, 6, 12], [20, 30, 42, 56], [72, 90, 110, 132]])
@@ -81,7 +89,7 @@ def test_can_bdiv():
     in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
     in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_vector=True)
 
-    out_tensor = bdiv(in_tensor_1, in_tensor_2)
+    out_tensor = BinaryDivide()(in_tensor_1, in_tensor_2)
 
     assert out_tensor.shape == (3, 4)
     correct = to_tensor(
@@ -98,9 +106,11 @@ def test_can_bdiv():
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None
-    assert in_tensor_1.grad.close_to(1 / in_tensor_2)
+    assert in_tensor_1.grad.close_to(1 / in_tensor_2._data)
 
-    assert in_tensor_2.grad.close_to(-in_tensor_1 / (in_tensor_2**2))
+    assert in_tensor_2.grad.close_to(
+        -in_tensor_1._data / (in_tensor_2._data**2)
+    )
 
 
 def test_can_bmax():
@@ -109,7 +119,7 @@ def test_can_bmax():
         [[0, 0, 0, 0], [100, 100, 100, 100], [8, 9, 10, 11]], is_vector=True
     )
 
-    out_tensor = bmax(in_tensor_1, in_tensor_2)
+    out_tensor = BinaryMax()(in_tensor_1, in_tensor_2)
 
     assert out_tensor.shape == (3, 4)
     correct = to_tensor([[0, 1, 2, 3], [100, 100, 100, 100], [8, 9, 10, 11]])
@@ -132,7 +142,7 @@ def test_can_bmin():
         [[0, 0, 0, 0], [100, 100, 100, 100], [8, 9, 10, 11]], is_vector=True
     )
 
-    out_tensor = bmin(in_tensor_1, in_tensor_2)
+    out_tensor = BinaryMin()(in_tensor_1, in_tensor_2)
 
     assert out_tensor.shape == (3, 4)
     correct = to_tensor([[0, 0, 0, 0], [4, 5, 6, 7], [8, 9, 10, 11]])
@@ -150,14 +160,13 @@ def test_can_bmin():
 
 
 def test_can_bmask():
-
     in_tensor = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
     mask = to_tensor(
         [[0, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1]],
         is_vector=True,
         requires_grad=False,
     )
-    out_tensor = bmask(in_tensor, mask)
+    out_tensor = BinaryMask()(in_tensor, mask)
 
     assert out_tensor.shape == (3, 4)
     assert out_tensor.close_to([[0, 0, 0, 0], [4, 0, 6, 0], [8, 9, 10, 11]])

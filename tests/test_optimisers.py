@@ -4,7 +4,7 @@ from sklearn.datasets import load_iris
 from tricycle.activation import ReLU
 from tricycle.dataset import InfiniteBatchDataset
 from tricycle.layers import Dense, Sequential
-from tricycle.loss import cross_entropy
+from tricycle.loss import CrossEntropy
 from tricycle.optimisers import StochasticGradientDescent
 
 
@@ -28,7 +28,7 @@ def test_can_train_simple_neural_network_no_wd():
     layer_2 = Dense(16, 3)
     relu = ReLU()
     model = Sequential(layer_1, relu, layer_2)
-    loss_fn = cross_entropy
+    loss_fn = CrossEntropy()
     optimiser = StochasticGradientDescent(learning_rate=1e-2)
 
     losses = []
@@ -70,7 +70,7 @@ def test_can_train_simple_neural_network_wd():
     layer_2 = Dense(16, 3)
     relu = ReLU()
     model = Sequential(layer_1, relu, layer_2)
-    loss_fn = cross_entropy
+    loss_fn = CrossEntropy()
     optimiser = StochasticGradientDescent(learning_rate=1e-2, weight_decay=1e1)
 
     losses = []
@@ -112,7 +112,7 @@ def test_can_train_simple_neural_network_momentum():
     layer_2 = Dense(16, 3)
     relu = ReLU()
     model = Sequential(layer_1, relu, layer_2)
-    loss_fn = cross_entropy
+    loss_fn = CrossEntropy()
     optimiser = StochasticGradientDescent(learning_rate=1e-2, momentum=0.9)
 
     losses = []

@@ -1,13 +1,10 @@
 from abc import ABC, abstractmethod
-from string import ascii_letters
 from typing import Sequence
 
-from tricycle.binary import bmask, bmul
-from tricycle.einsum import Einsum
+from tricycle.binary import BinaryMultiply
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, nothing, to_tensor
-from tricycle.unary import usqrt
 
 
 class Layer(ABC):
@@ -147,7 +144,7 @@ class Dropout(Layer):
             n=1, p=1 - self.probability, size=shape
         ).astype(bool)
         random_mask = to_tensor(random_mask, requires_grad=False)
-        return bmul(tensor, random_mask)
+        return BinaryMultiply()(tensor, random_mask)
 
 
 class LayerNorm(Layer):
@@ -378,40 +375,40 @@ class Embedding(Layer):
         )
         self.vocab_size = from_size
 
+    def back_fn(self, grad: Tensor):
+        xp = grad.xp
+        out = xp.zeros(self.weights.shape)
+
+        match grad.ndim - self.input.ndim:
+            case 1:
+                xp.add.at(out, self.input._data, grad._data)
+            case 2:
+                for batch in range(grad._data.shape[0]):
+                    xp.add.at(out, self.input._data, grad._data[batch])
+            case _:
+                raise NotImplementedError(
+                    f"{grad.ndim=}, {self.input.ndim=} are not supported"
+                )
+
+        return to_tensor(out)
+
     def forward(self, tensor: Tensor):
         assert (
             tensor.requires_grad is False
         ), "Cannot embed a differentiable tensor"
 
+        self.input = tensor
         if tensor.is_vector:
-            result = tensor.xp.stack(
+            self._out = tensor.xp.stack(
                 [self.weights._data[idx] for idx in tensor._data]
             )
-            result = to_tensor(
-                result,
-                is_vector=True,
-            )
         else:
-            result = to_tensor(self.weights[tensor._data], is_vector=False)
+            self._out = self.weights[tensor._data]
+        result = to_tensor(self._out, is_vector=tensor.is_vector)
 
         result.args = (tensor, self.weights)
 
-        def _embed_back_fn(grad: Tensor):
-            xp = grad.xp
-            out = xp.zeros(self.weights.shape)
-
-            if grad.is_vector:
-                for batch_idx, tokens in enumerate(tensor):
-                    for token_idx, token in enumerate(tokens):
-                        out[int(token._data)] += grad[batch_idx][
-                            token_idx
-                        ]._data
-            else:
-                for token_idx, token in enumerate(tensor):
-                    out[int(token._data)] += grad[token_idx]._data
-            return to_tensor(out)
-
-        result.back_fns = (nothing, _embed_back_fn)
+        result.back_fns = (nothing, self.back_fn)
         return result
 
     def update(self, optimiser: Optimiser):
@@ -427,18 +424,6 @@ class Embedding(Layer):
     def from_gpu(self):
         self.weights.from_gpu()
         return self
-
-    def update(self, optimiser: Optimiser):
-        self.weights = optimiser(self.weights)
-
-    def zero_grad(self):
-        self.weights.grad = None
-
-    def to_gpu(self):
-        self.weights.to_gpu()
-
-    def from_gpu(self):
-        self.weights.from_gpu()
 
 
 class Sequential(Layer):

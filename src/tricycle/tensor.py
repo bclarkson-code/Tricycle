@@ -1,9 +1,7 @@
-import gc
 import logging
 import numbers
 import uuid
 from typing import Callable, List, Optional, Sequence, Union
-from warnings import warn
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -86,7 +84,7 @@ class Tensor:
         has been computed
         """
         self.grad = to_tensor(
-            self.xp.ones(self._data.shape),
+            self.xp.ones(self._data.shape, dtype=self.dtype),
             requires_grad=False,
             is_vector=self.is_vector,
         )
@@ -130,13 +128,6 @@ class Tensor:
                     else:
                         arg.grad += grad
 
-                    # find invalid gradients
-                    if node.xp.isneginf(arg.grad._data).sum() > 0:
-                        warn("Found -inf in gradient")
-                    if node.xp.isinf(arg.grad._data).sum() > 0:
-                        warn("Found inf in gradient")
-                    if node.xp.isnan(arg.grad._data).sum() > 0:
-                        warn("Found nan in gradient")
                 except Exception as e:
                     raise e
 
@@ -178,13 +169,13 @@ class Tensor:
 
     def __add__(self, other: Union[float, "Tensor"]) -> "Tensor":
         if isinstance(other, numbers.Number):
-            from tricycle.unary import uadd
+            from tricycle.unary import UnaryAdd
 
-            return uadd(self, other)
+            return UnaryAdd()(self, other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import badd
+            from tricycle.binary import BinaryAdd
 
-            return badd(self, other)
+            return BinaryAdd()(self, other)
         else:
             raise NotImplementedError(
                 f"Cannot add {type(self)} and {type(other)}"
@@ -202,13 +193,13 @@ class Tensor:
         ):
             other = to_tensor(other)
         if self.xp.isscalar(other):
-            from tricycle.unary import usub
+            from tricycle.unary import UnarySubtract
 
-            return usub(self, other)
+            return UnarySubtract()(self, other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import bsub
+            from tricycle.binary import BinarySubtract
 
-            return bsub(self, other)
+            return BinarySubtract()(self, other)
 
         else:
             raise NotImplementedError(
@@ -227,14 +218,14 @@ class Tensor:
         ):
             other = to_tensor(other)
         if self.xp.isscalar(other) or other.shape == ():
-            from tricycle.unary import umul
+            from tricycle.unary import UnaryMultiply
 
-            return umul(self, other)
+            return UnaryMultiply()(self, other)
 
         elif isinstance(other, Tensor):
-            from tricycle.binary import bmul
+            from tricycle.binary import BinaryMultiply
 
-            return bmul(self, other)
+            return BinaryMultiply()(self, other)
 
         else:
             raise NotImplementedError(
@@ -252,13 +243,13 @@ class Tensor:
 
     def __truediv__(self, other):
         if self.xp.isscalar(other):
-            from tricycle.unary import umul
+            from tricycle.unary import UnaryMultiply
 
-            return umul(self, 1 / other)
+            return UnaryMultiply()(self, 1 / other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import bdiv
+            from tricycle.binary import BinaryDivide
 
-            return bdiv(self, other)
+            return BinaryDivide()(self, other)
 
         else:
             raise NotImplementedError(
@@ -267,13 +258,13 @@ class Tensor:
 
     def __rtruediv__(self, other):
         if self.xp.isscalar(other):
-            from tricycle.unary import udiv
+            from tricycle.unary import UnaryDivide
 
-            return udiv(other, self)
+            return UnaryDivide()(other, self)
         elif isinstance(other, Tensor):
-            from tricycle.binary import bdiv
+            from tricycle.binary import BinaryDivide
 
-            return bdiv(other, self)
+            return BinaryDivide()(other, self)
 
     def __itruediv__(self, other):
         return self / other
@@ -296,12 +287,13 @@ class Tensor:
         ):
             other = to_tensor(other)
         if self.xp.isscalar(other):
-            from tricycle.unary import upow
+            from tricycle.unary import UnaryPower
 
-            return upow(self, other)
+            return UnaryPower()(self, other)
         elif isinstance(other, Tensor):
             raise NotImplementedError(
-                f"Cannot power two tensors of shape: {self.shape}, {other.shape}"
+                "Cannot power two tensors of shape: "
+                f"{self.shape}, {other.shape}"
             )
         else:
             raise NotImplementedError(
@@ -361,9 +353,9 @@ class Tensor:
         return Einsum(subscript)(self)
 
     def repeat(self, n_repeats: int) -> "Tensor":
-        from tricycle.ops import repeat
+        from tricycle.ops import Repeat
 
-        return repeat(self, n_repeats)
+        return Repeat()(self, n_repeats)
 
     @property
     def shape(self) -> Sequence[int]:
@@ -378,34 +370,27 @@ class Tensor:
         return self._data.dtype
 
     def reshape(self, shape: Sequence[int]) -> "Tensor":
-        from tricycle.ops import reshape
+        from tricycle.ops import Reshape
 
-        return reshape(self, shape)
+        return Reshape()(self, shape)
 
-    def split(self, n_splits: int, axis: int = 0) -> List["Tensor"]:
-        from tricycle.ops import split
+    def split(self, n_splits: int, axis: int = -1) -> List["Tensor"]:
+        from tricycle.ops import Split
 
-        return split(self, n_splits, axis)
+        return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        from tricycle.ops import mean
+        # from tricycle.ops import Mean
 
-        return mean(self)
+        # return Mean()(self)
+        return self.sum() / self.shape[-1]
 
-    def variance(self) -> "Tensor":
-        from tricycle.ops import variance
-
-        return variance(self)
-
-    def standard_deviation(self) -> "Tensor":
-        from tricycle.ops import standard_deviation
-
-        return standard_deviation(self)
-
-    def normalise(self) -> "Tensor":
-        from tricycle.ops import normalise
-
-        return normalise(self)
+    def sum(self) -> "Tensor":
+        if self.is_vector:
+            indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim - 1]
+        else:
+            indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim]
+        return self.e(f"{indices}->")
 
     def close_to(
         self,

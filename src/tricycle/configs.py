@@ -34,7 +34,7 @@ class GPTConfig:
 class SmolGPTConfig(GPTConfig):
     embedding_dim = 384
     context_window = 256
-    vocab_size = 65
+    vocab_size = 1024
     n_heads = 6
     n_layers = 6
     expansion_ratio = 4
@@ -55,7 +55,7 @@ class SmolGPTConfig(GPTConfig):
 
     steps = 5_000
     eval_interval = 50
-    batch_size = 16
+    batch_size = 32
     gradient_accumulation_steps = 1
 
     device_idx = 0

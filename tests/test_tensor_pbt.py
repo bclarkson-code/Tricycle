@@ -5,30 +5,36 @@ import hypothesis.strategies as st
 import numpy as np
 import pytest
 import torch
-from hypothesis import assume, example, given, settings
+from hypothesis import assume, given
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
-from tricycle.binary import _shapes_match, badd, bdiv, bmax, bmin, bmul, bsub
+from tricycle.binary import (
+    BinaryAdd,
+    BinaryDivide,
+    BinaryMax,
+    BinaryMin,
+    BinaryMultiply,
+    BinarySubtract,
+    _shapes_match,
+)
 from tricycle.einsum import EinsumBackOp
 from tricycle.layers import Dense
-from tricycle.loss import cross_entropy
-from tricycle.tensor import Tensor, nothing, to_tensor, unvectorise, vectorise
+from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
-    uadd,
-    ucos,
-    udiv,
-    uerf,
-    uexp,
-    ulog,
-    umax,
-    umin,
-    umul,
-    upow,
-    usin,
-    usqrt,
-    usub,
+    UnaryAdd,
+    UnaryCos,
+    UnaryDivide,
+    UnaryExp,
+    UnaryLog,
+    UnaryMax,
+    UnaryMin,
+    UnaryMultiply,
+    UnaryPower,
+    UnarySin,
+    UnarySquareRoot,
+    UnarySubtract,
 )
 
 
@@ -62,21 +68,21 @@ def unary_op(draw):
     Generate a single, initial unary operation
     """
     ops = [
-        uadd,
-        ucos,
-        udiv,
-        uerf,
-        uexp,
-        ulog,
-        umax,
-        umin,
-        umul,
-        upow,
-        usin,
-        usqrt,
-        usub,
+        UnarySin(),
+        UnaryCos(),
+        UnaryExp(),
+        UnaryLog(),
+        UnarySquareRoot(),
     ]
-    needs_constant = [uadd, umul, usub, upow, udiv, umax, umin]
+    needs_constant = [
+        UnaryAdd(),
+        UnarySubtract(),
+        UnaryMultiply(),
+        UnaryPower(),
+        UnaryDivide(),
+        UnaryMax(),
+        UnaryMin(),
+    ]
     op = draw(st.sampled_from(ops))
     if op in needs_constant:
         constant = draw(scalar())
@@ -89,7 +95,14 @@ def binary_op(draw):
     """
     Generate a single, initial binary operation
     """
-    ops = [badd, bdiv, bmax, bmin, bmul, bsub]
+    ops = [
+        BinaryAdd(),
+        BinaryDivide(),
+        BinaryMax(),
+        BinaryMin(),
+        BinaryMultiply(),
+        BinarySubtract(),
+    ]
     return draw(st.sampled_from(ops))
 
 

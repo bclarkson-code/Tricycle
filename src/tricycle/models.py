@@ -6,6 +6,7 @@ from tricycle.configs import GPTConfig
 from tricycle.layers import Dense, Dropout, Embedding, Layer, LayerNorm
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
+from tricycle.utils import log_memory_and_time
 
 
 class GPT(Layer):
@@ -73,18 +74,25 @@ class GPT(Layer):
         )
 
         pos_embedding = self.position_embedding(position)
+        log_memory_and_time("position_embedding")
         token_embedding = self.token_embedding(tensor)
+        log_memory_and_time("token_embedding")
 
         embedding = token_embedding + pos_embedding
+        log_memory_and_time("combined_embedding")
 
         embedding = self.input_dropout(embedding)
+        log_memory_and_time("dropout")
 
-        for block in self.blocks:
+        for i, block in enumerate(self.blocks):
             embedding = block(embedding)
+            log_memory_and_time(f"block_{i}")
 
         embedding = self.layer_norm(embedding)
+        log_memory_and_time("layer_norm")
 
         embedding = self.head(embedding)
+        log_memory_and_time("head")
         return embedding
 
     def zero_grad(self):

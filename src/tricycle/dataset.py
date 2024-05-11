@@ -105,6 +105,7 @@ class CausalLMDataset:
         vocab_size: int,
         batch_size: int,
         context_window: int,
+        should_one_hot_encode: bool = True,
     ):
         self.tokens = tokens
         self.vocab_size = vocab_size
@@ -113,6 +114,7 @@ class CausalLMDataset:
         self.is_batch = False
         self._idx = 0
         self.batch_indices = None
+        self.should_one_hot_encode = should_one_hot_encode
 
     def __len__(self):
         return (
@@ -156,21 +158,17 @@ class CausalLMDataset:
         end = start + self.batch_size
         batch_indices = self.batch_indices[start:end]
 
-        tokens = [
-            self.tokens[batch_idx : batch_idx + self.context_window + 1]
-            for batch_idx in batch_indices
-        ]
-        encoded_tokens = [self.one_hot_encode(t) for t in tokens]
+        tokens = np.array(
+            [
+                self.tokens[batch_idx : batch_idx + self.context_window + 1]
+                for batch_idx in batch_indices
+            ]
+        )
+        if self.should_one_hot_encode:
+            outputs = np.identity(self.vocab_size)[tokens[:, 1:]]
 
-        inputs = []
-        outputs = []
-        for token, encoded_token in zip(tokens, encoded_tokens):
-            inputs.append(token[:-1])
-            outputs.append(encoded_token[1:])
-
-        inputs = np.array(inputs)
-        outputs = np.array(outputs)
-        return inputs, outputs
+            return tokens[:, :-1], outputs
+        return tokens[:, :-1], tokens[:, 1:]
 
     def __getitem__(self, idx: int):
         inputs, output = (
@@ -180,7 +178,9 @@ class CausalLMDataset:
             inputs = to_tensor(
                 inputs, requires_grad=False, name="inputs", dtype=int
             )
-            output = to_tensor(output, requires_grad=False, name="output")
+            output = to_tensor(
+                output, requires_grad=False, name="output", dtype=int
+            )
 
         if self.is_vector and not self.as_tensor:
             raise ValueError("Cannot vectorise an unbatched dataset")

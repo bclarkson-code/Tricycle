@@ -82,7 +82,7 @@ def test_layer_norm():
     out_tensor.backward()
 
     assert copy(out_tensor).mean().close_to([0] * 100, atol=1e-7)
-    assert copy(out_tensor).standard_deviation().close_to([1] * 100, atol=1e-7)
+    assert np.allclose(np.std(out_tensor._data), [1] * 100, atol=1e-7)
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.shape == in_tensor.shape

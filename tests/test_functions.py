@@ -1,5 +1,3 @@
-import numpy as np
-
 from tricycle.functions import sigmoid, tanh
 from tricycle.tensor import to_tensor
 
@@ -80,8 +78,8 @@ from tricycle.tensor import to_tensor
 #     correct_out.backward()
 #
 #     assert in_tensor_1.grad.close_to(in_tensor_2.grad, atol=1e-6)
-#
-#
+
+
 def test_sigmoid():
     in_tensor = to_tensor([0, 1, 2, 3])
     out_tensor = sigmoid(in_tensor)
