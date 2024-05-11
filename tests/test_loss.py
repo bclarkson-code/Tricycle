@@ -5,7 +5,7 @@ from sklearn.preprocessing import RobustScaler
 
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
-from tricycle.loss import cross_entropy, mean_square_error
+from tricycle.loss import CrossEntropy, mean_square_error
 from tricycle.tensor import to_tensor
 from tricycle.utils import r_squared, smooth
 
@@ -24,16 +24,16 @@ def test_can_mean_square_error():
     assert mse.close_to(1 / 6)
 
 
-def test_can_cross_entropy():
+def test_can_CrossEntropy():
     y_true = to_tensor([0, 0, 1])
     y_pred = to_tensor([0, 0, 0])
 
-    loss = cross_entropy(y_true, y_pred)
+    loss = CrossEntropy()(y_true, y_pred)
 
     assert loss.close_to(1.0986122886681098)
 
 
-def test_cross_entropy_vectorised():
+def test_CrossEntropy_vectorised():
     batch_size = 3
     n_tokens = 5
     vocab_size = 7
@@ -44,7 +44,7 @@ def test_cross_entropy_vectorised():
     y_true = to_tensor(y_true).to_vector()
     y_pred = to_tensor(y_pred).to_vector()
 
-    loss = cross_entropy(y_true, y_pred)
+    loss = CrossEntropy()(y_true, y_pred)
 
     assert loss.shape == (batch_size, n_tokens)
 
@@ -254,7 +254,7 @@ def test_linear_regression_multi_input_output():
 
 
 @slow_test
-def test_cross_entropy():
+def test_CrossEntropy():
     """
     This is a really slow test, preserved for reference
     """
@@ -280,7 +280,7 @@ def test_cross_entropy():
     for idx in range(loops):
         for x_in, y_in in zip(X, y):
             y_pred = Einsum("i,ij->j")(x_in, slope) + intercept
-            loss = cross_entropy(y_in, y_pred)
+            loss = CrossEntropy()(y_in, y_pred)
             losses[idx] += loss
             loss.backward()
 
@@ -293,7 +293,7 @@ def test_cross_entropy():
 
 
 @slow_test
-def test_cross_entropy_minibatch():
+def test_CrossEntropy_minibatch():
     """
     This is a really slow test, preserved for reference
     """
@@ -329,7 +329,7 @@ def test_cross_entropy_minibatch():
             y_in = to_tensor(y_in)
 
             y_pred = Einsum("i,ij->j")(x_in, slope) + intercept
-            loss = cross_entropy(y_in, y_pred)
+            loss = CrossEntropy()(y_in, y_pred)
             batch_loss += loss
             loss.backward()
 

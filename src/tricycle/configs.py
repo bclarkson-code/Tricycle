@@ -36,7 +36,7 @@ class SmolGPTConfig(GPTConfig):
     context_window = 256
     vocab_size = 1024
     n_heads = 6
-    n_layers = 1
+    n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
 

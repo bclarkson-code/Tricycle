@@ -17,10 +17,11 @@ from tqdm import tqdm
 from inference import generate
 from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
-from tricycle.loss import cross_entropy
+from tricycle.loss import BinaryCrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
+from tricycle.utils import log_memory_and_time
 from tricycle_datasets.shakespeare import Shakespeare
 
 np.random.seed(0)
@@ -36,13 +37,14 @@ dataloader = (
         vocab_size=dataset.vocab_size,
         batch_size=config.batch_size,
         context_window=config.context_window,
+        should_one_hot_encode=False,
     )
     .batch()
     .to_tensor()
     .to_vector()
     .shuffle()
 )
-loss_fn = cross_entropy
+loss_fn = BinaryCrossEntropy()
 optimiser = AdamW(
     learning_rate=lr_schedule(
         0,
@@ -136,9 +138,11 @@ for step in tqdm(range(config.steps)):
     # perform several forward and backward passes before doing a gradient
     # update to increase the effective batch size
     for _ in range(config.gradient_accumulation_steps):
+        log_memory_and_time("start")
         inputs, outputs = next(dataloader)
         inputs = inputs.to_gpu(config.device_idx)
         outputs = outputs.to_gpu(config.device_idx)
+        log_memory_and_time("load_data")
 
         # forward and backward pass
         logits = model(inputs)
@@ -147,15 +151,19 @@ for step in tqdm(range(config.steps)):
             * config.batch_size
             * config.context_window
         )
+        log_memory_and_time("loss")
         batch_loss += float(loss.numpy())
         loss.backward()
+        log_memory_and_time("backward")
 
         # delete intermediate values we dont need any more
         # TODO: statically allocate objects to avoid this
         loss.cleanup()
+        log_memory_and_time("cleanup")
 
     # Use the optimiser to update weights
     model.update(optimiser)
+    log_memory_and_time("update_weights")
 
     # clean up the computational graph
     # step the learning rate

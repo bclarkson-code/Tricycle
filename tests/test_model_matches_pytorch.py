@@ -13,10 +13,9 @@ from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
-from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.layers import Dense, Embedding
-from tricycle.loss import cross_entropy
+from tricycle.loss import CrossEntropy
 from tricycle.tensor import to_tensor
 
 
@@ -310,7 +309,7 @@ def test_crossentropy_matches(in_shape, is_vector):
             y_true[:, one_idx] = 1
     assume(np.isfinite(y_pred._data).all())
 
-    tr_out = cross_entropy(y_true, y_pred).from_vector()
+    tr_out = CrossEntropy()(y_true, y_pred).from_vector()
     if len(in_shape) > 1:
         tr_out = tr_out.mean()
 

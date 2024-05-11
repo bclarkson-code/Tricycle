@@ -4,7 +4,7 @@ from tricycle.activation import ReLU
 from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.layers import Dense, Sequential
-from tricycle.loss import cross_entropy, mean_square_error
+from tricycle.loss import CrossEntropy, mean_square_error
 from tricycle.tensor import to_tensor, unvectorise, vectorise
 
 
@@ -93,9 +93,9 @@ def test_can_vectorise_cross_entropy():
     input_2 = to_tensor(np.arange(2, 6))
     input_3 = to_tensor(np.arange(3, 7))
 
-    output_1 = cross_entropy(y_true, input_1)
-    output_2 = cross_entropy(y_true, input_2)
-    output_3 = cross_entropy(y_true, input_3)
+    output_1 = CrossEntropy()(y_true, input_1)
+    output_2 = CrossEntropy()(y_true, input_2)
+    output_3 = CrossEntropy()(y_true, input_3)
 
     input_y_true = to_tensor(np.array([y_true._data] * 3))
     input_vector = to_tensor(
@@ -107,7 +107,7 @@ def test_can_vectorise_cross_entropy():
 
     input_y_true = vectorise(input_y_true)
     input_vector = vectorise(input_vector)
-    output_vector = cross_entropy(input_y_true, input_vector)
+    output_vector = CrossEntropy()(input_y_true, input_vector)
     output_vector = unvectorise(output_vector)
 
     assert output_vector.close_to(correct_output)
