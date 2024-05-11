@@ -19,7 +19,7 @@ class UnaryAdd(Op):
         assert isinstance(tensor, Tensor)
         assert isinstance(constant, numbers.Number)
 
-        self._out = xp.add(tensor._data, constant, dtype=tensor.dtype)
+        self._out = xp.add(tensor._data, constant)
 
         result = to_tensor(self._out)
         result.args = (tensor,)

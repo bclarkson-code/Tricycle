@@ -159,5 +159,4 @@ def test_can_vectorise_split():
     out_tensors[0].backward()
 
     assert in_tensor.grad is not None
-    breakpoint()
     assert in_tensor.grad.close_to([[1, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]])

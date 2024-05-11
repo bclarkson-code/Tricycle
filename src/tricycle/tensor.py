@@ -380,9 +380,17 @@ class Tensor:
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        from tricycle.ops import Mean
+        # from tricycle.ops import Mean
 
-        return Mean()(self)
+        # return Mean()(self)
+        return self.sum() / self.shape[-1]
+
+    def sum(self) -> "Tensor":
+        if self.is_vector:
+            indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim - 1]
+        else:
+            indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim]
+        return self.e(f"{indices}->")
 
     def close_to(
         self,

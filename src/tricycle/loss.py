@@ -1,6 +1,6 @@
 import logging
 
-from tricycle.binary import BinaryMultiply, _shapes_match
+from tricycle.binary import _shapes_match
 from tricycle.functions import softmax
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import UnaryLog
@@ -26,17 +26,21 @@ def cross_entropy(y_true: Tensor, y_pred: Tensor) -> Tensor:
     Calculate the cross entropy loss
     """
     REALLY_SMALL_NUMBER = 1e-8
+    REALLY_BIG_NUMBER = 1e8
     # normalise
     y_pred = softmax(y_pred)
 
     xp = y_pred.xp
-    y_pred._data = y_pred._data.clip(min=REALLY_SMALL_NUMBER, max=None)
+    y_pred._data = y_pred._data.clip(
+        min=REALLY_SMALL_NUMBER, max=REALLY_BIG_NUMBER
+    )
     indicator = xp.where(y_true._data == 1, -xp.log(y_pred._data), 0)
 
     out = indicator.sum(axis=-1)
 
     def cross_entropy_back_fn(grad):
         result = xp.where(y_true._data == 1, -1 / y_pred._data, 0)
+        result *= xp.expand_dims(grad._data, -1)
         return to_tensor(result, is_vector=grad.is_vector)
 
     out = to_tensor(out, is_vector=y_pred.is_vector)
@@ -55,16 +59,10 @@ def cross_entropy_(y_true: Tensor, y_pred: Tensor) -> Tensor:
     """
     # normalise and log
     assert _shapes_match(y_true, y_pred)
-    y_pred = UnaryLog(softmax(y_pred))
-    product = BinaryMultiply(y_true, y_pred)
-    product *= -1
+    y_pred = UnaryLog()(softmax(y_pred))
+    product = y_true * y_pred * -1
 
-    match product.ndim:
-        case 1:
-            return product.e("...a->...")
-        case 2:
-            return product.e("...a->...")
-        case 3:
-            return product.e("...a->...")
-        case 4:
-            return product.e("...a->...")
+    indices = "bcdefghijklmnopqrstuvwx"[
+        : product.ndim - 1 - int(product.is_vector)
+    ]
+    return product.e(f"{indices}a->{indices}")

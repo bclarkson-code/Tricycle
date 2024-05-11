@@ -63,15 +63,14 @@ class Split(Op):
         [1, 1, 0, 0]
         """
         xp = grad.xp
-        breakpoint()
         self._grad[idx] = xp.zeros(self._in_shape)
 
         indices = []
         for i in range(self._grad[idx].ndim):
             if i == self._axis % self._grad[idx].ndim:
                 step = self._in_shape[i] // self._n_splits
-                start = step * i
-                end = step * (i + 1)
+                start = step * idx
+                end = step * (idx + 1)
                 indices.append(slice(start, end))
             else:
                 indices.append(slice(None))
@@ -117,12 +116,8 @@ class Reshape(Op):
 
     def back_fn(self, grad: Tensor) -> Tensor:  # sourcery skip: assign-if-exp
         xp = grad.xp
-        if grad.is_vector:
-            shape = self._original_shape[1:]
-        else:
-            shape = self._original_shape
 
-        self._grad = xp.reshape(grad._data, shape)
+        self._grad = xp.reshape(grad._data, self._original_shape)
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
         return result
@@ -146,7 +141,7 @@ class Reshape(Op):
 class Mean(Op):
     def forward(self, tensor: Tensor) -> Tensor:
         """
-        Find the mean of a tensor
+        Find the mean of a tensor along the final axis
         """
         if tensor.ndim == 1 and tensor.shape[0] == 1:
             return tensor

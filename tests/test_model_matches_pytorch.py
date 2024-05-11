@@ -13,6 +13,7 @@ from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
+from tricycle.einsum import Einsum
 from tricycle.functions import softmax
 from tricycle.layers import Dense, Embedding
 from tricycle.loss import cross_entropy
@@ -221,7 +222,7 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
     )
 
     pt_out.sum().backward()
-    Einsum("...,...->")(tr_out.from_vector()).backward()
+    tr_out.from_vector().sum().backward()
 
     assert np.allclose(
         pt_layer.weight.grad.detach().numpy().T,
@@ -254,7 +255,7 @@ def test_embedding_matches(tokens_, out_shape):
     )
 
     pt_out.sum().backward()
-    USum()(tr_out.from_vector()).backward()
+    tr_out.from_vector().sum().backward()
 
     assert np.allclose(
         pt_layer.weight.grad.detach().numpy(),
@@ -285,7 +286,7 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
     )
 
     pt_out.sum().backward()
-    USum()(tr_out.from_vector()).backward()
+    tr_out.from_vector().sum().backward()
 
     assert np.allclose(
         pt_input.grad.detach().numpy(),
@@ -296,6 +297,7 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
 
 
 @given(tensor_shape(), st.booleans())
+@example(in_shape=[32, 2], is_vector=False)
 def test_crossentropy_matches(in_shape, is_vector):
     y_pred = build_tensor(in_shape, is_vector)
     y_true = copy(y_pred)
@@ -309,13 +311,8 @@ def test_crossentropy_matches(in_shape, is_vector):
     assume(np.isfinite(y_pred._data).all())
 
     tr_out = cross_entropy(y_true, y_pred).from_vector()
-    match len(in_shape):
-        case 1:
-            pass
-        case 2:
-            tr_out = tr_out.mean()
-        case 3:
-            tr_out = tr_out.mean().mean()
+    if len(in_shape) > 1:
+        tr_out = tr_out.mean()
 
     p_y_pred = torch.tensor(y_pred._data, requires_grad=True)
     p_y_true = torch.tensor(y_true._data, requires_grad=False)

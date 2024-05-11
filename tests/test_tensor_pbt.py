@@ -34,6 +34,7 @@ from tricycle.unary import (
     UnaryPower,
     UnarySin,
     UnarySquareRoot,
+    UnarySubtract,
 )
 
 
@@ -67,23 +68,16 @@ def unary_op(draw):
     Generate a single, initial unary operation
     """
     ops = [
-        UnaryAdd(),
+        UnarySin(),
         UnaryCos(),
-        UnaryDivide(),
         UnaryExp(),
         UnaryLog(),
-        UnaryMax(),
-        UnaryMin(),
-        UnaryMultiply(),
-        UnaryPower(),
-        UnarySin(),
         UnarySquareRoot(),
-        UnaryCos(),
     ]
     needs_constant = [
         UnaryAdd(),
+        UnarySubtract(),
         UnaryMultiply(),
-        UnaryCos(),
         UnaryPower(),
         UnaryDivide(),
         UnaryMax(),

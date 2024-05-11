@@ -13,7 +13,7 @@ from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Dropout, Layer, LayerNorm  # noqa E501
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, select_backend, to_tensor
-from tricycle.utils import log_gpu_memory
+from tricycle.utils import log_memory_and_time
 
 
 def build_mask(context_window: int) -> Tensor:
@@ -115,49 +115,48 @@ class MultiHeadSelfAttention(Layer):
         key = key.reshape(head_shape).e("TNH -> NTH")
         query = query.reshape(head_shape).e("TNH -> NTH")
         value = value.reshape(head_shape).e("TNH -> NTH")
-        log_gpu_memory("reshape + reorder")
+        log_memory_and_time("reshape + reorder")
 
         # attend
         divisor = sqrt(head_size)
         attention = Einsum("NIh, NJh -> NIJ")(query, key)
-        log_gpu_memory("attend")
+        log_memory_and_time("attend")
         attention = attention / divisor
-        log_gpu_memory("divide")
+        log_memory_and_time("divide")
 
         # mask and softmax
         attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
-        log_gpu_memory("masked_fill")
+        log_memory_and_time("masked_fill")
 
         attention = softmax(attention)
-        log_gpu_memory("softmax")
+        log_memory_and_time("softmax")
 
         attention = self.attention_dropout(attention)
-        log_gpu_memory("dropout")
+        log_memory_and_time("dropout")
 
         # smush the heads back together
         out_shape = (n_tokens, self.embedding_dim)
         out = Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
-        log_gpu_memory("recombine")
+        log_memory_and_time("recombine")
         return out
 
     def forward(self, x: Tensor):
         # use the projection layer to expand the inoput embedding
         x = self.in_projection(x)
-        log_gpu_memory("in_projection")
+        log_memory_and_time("in_projection")
 
         # split the embedding into key, query and value
-        query, key, value = x.split(3, axis=1)
-        log_gpu_memory("split")
+        query, key, value = x.split(3, axis=-1)
+        log_memory_and_time("split")
 
         attention = self._attention(key, query, value)
-        log_gpu_memory("attention")
 
         # project back
         projected = self.out_projection(attention)
-        log_gpu_memory("out_projection")
+        log_memory_and_time("out_projection")
 
         projected = self.residual_dropout(projected)
-        log_gpu_memory("dropout")
+        log_memory_and_time("dropout")
 
         return projected
 
@@ -245,13 +244,13 @@ class MLPBlock(Layer):
 
     def forward(self, x: Tensor):
         x = self.linear_1(x)
-        log_gpu_memory("linear_1")
+        log_memory_and_time("linear_1")
         x = self.activation_fn(x)
-        log_gpu_memory("gelu")
+        log_memory_and_time("gelu")
         x = self.linear_2(x)
-        log_gpu_memory("linear_2")
+        log_memory_and_time("linear_2")
         x = self.dropout(x)
-        log_gpu_memory("dropout")
+        log_memory_and_time("dropout")
         return x
 
     def update(self, optimiser: Optimiser):
