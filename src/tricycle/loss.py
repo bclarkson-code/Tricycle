@@ -1,6 +1,6 @@
 import logging
 
-from tricycle.functions import softmax
+from tricycle.functions import Softmax
 from tricycle.ops import Op
 from tricycle.tensor import Tensor, to_tensor
 
@@ -37,7 +37,7 @@ class CrossEntropy(Op):
         """
         # normalise
         # TODO: fuse normalising and calculation together
-        y_pred = softmax(y_pred)
+        y_pred = Softmax()(y_pred)
 
         xp = y_pred.xp
 
@@ -105,7 +105,7 @@ class BinaryCrossEntropy(Op):
         """
         # normalise
         # TODO: fuse normalising and calculation together
-        y_pred = softmax(y_pred)
+        y_pred = Softmax()(y_pred)
 
         xp = y_pred.xp
 

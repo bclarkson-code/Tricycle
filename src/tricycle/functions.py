@@ -3,6 +3,7 @@ from pathlib import Path
 import cupy as cp
 
 from tricycle.binary import BinaryDivide
+from tricycle.ops import Op
 from tricycle.reduce import ReduceMax
 from tricycle.tensor import Tensor, to_tensor
 from tricycle.unary import UnaryDivide, UnaryExp
@@ -202,36 +203,39 @@ def softmax_old(tensor: Tensor):
     return BinaryDivide(numerator, denominator)
 
 
-def softmax(tensor: Tensor):
-    """
-    Apply softmax. The softmax is only applied to the final
-    dimension of the tensor
-    Note: the tensor is normalised for numeric stability
+class Softmax(Op):
+    def backward(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
 
-    Note: This function is in development and not yet ready for use
-    """
-
-    if tensor.on_gpu:
-        from cupyx.scipy.special import softmax as softmax_fn
-    else:
-        from scipy.special import softmax as softmax_fn
-
-    _result = softmax_fn(tensor._data, axis=-1)
-
-    def softmax_back_fn(grad):
-        inner = grad.xp.sum(grad._data * _result, axis=-1, keepdims=True)
-        out = _result * (grad._data - inner)
+        inner = xp.sum(grad._data * self._out, axis=-1, keepdims=True)
+        self._grad = self._out * (grad._data - inner)
         return to_tensor(
-            out, is_vector=grad.is_vector, requires_grad=grad.requires_grad
+            self._grad,
+            is_vector=grad.is_vector,
+            requires_grad=grad.requires_grad,
         )
 
-    result = to_tensor(_result)
-    result.args = (tensor,)
-    result.name = "softmax"
-    result.is_vector = tensor.is_vector
-    result.back_fns = (softmax_back_fn,)
+    def forward(self, tensor: Tensor):
+        """
+        Apply softmax. The softmax is only applied to the final
+        dimension of the tensor
+        Note: the tensor is normalised for numeric stability
+        """
 
-    return result
+        if tensor.on_gpu:
+            from cupyx.scipy.special import softmax as softmax_fn
+        else:
+            from scipy.special import softmax as softmax_fn
+
+        self._out = softmax_fn(tensor._data, axis=-1)
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.name = "softmax"
+        result.is_vector = tensor.is_vector
+        result.back_fns = (self.backward,)
+
+        return result
 
 
 def softmax_v2(tensor: Tensor):

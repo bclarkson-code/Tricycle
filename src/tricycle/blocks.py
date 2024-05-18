@@ -8,7 +8,7 @@ import numpy as np
 
 from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
 from tricycle.einsum import Einsum
-from tricycle.functions import softmax
+from tricycle.functions import Softmax
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Dropout, Layer, LayerNorm  # noqa E501
 from tricycle.optimisers import Optimiser
@@ -128,7 +128,7 @@ class MultiHeadSelfAttention(Layer):
         attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
         log_memory_and_time("masked_fill")
 
-        attention = softmax(attention)
+        attention = Softmax()(attention)
         log_memory_and_time("softmax")
 
         attention = self.attention_dropout(attention)

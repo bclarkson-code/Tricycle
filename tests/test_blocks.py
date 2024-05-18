@@ -11,7 +11,7 @@ from tricycle.blocks import (
     masked_fill,
 )
 from tricycle.einsum import Einsum
-from tricycle.functions import softmax
+from tricycle.functions import Softmax
 from tricycle.tensor import to_tensor
 
 
@@ -94,7 +94,7 @@ def test_attention_individually():
     att = torch.softmax(att, dim=-1)
 
     # tricycle
-    attention = softmax(attention)
+    attention = Softmax()(attention)
 
     assert attention.close_to(att.numpy())
 
