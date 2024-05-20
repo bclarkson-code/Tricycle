@@ -86,7 +86,7 @@ This will fetch the complete works of shakespeare, build it into a dataset, toke
 
 As you can see, it looks pretty similar to other frameworks like PyTorch. However, because Tricycle is much smaller and simpler, if you want to figure out how something works, you can dive into the code and get an answer in a few minutes instead of hours.
 
-For a proper training script with all the bells and whistles (logging, gradient accumulation etc.) take a look at train_smol_gpt.py which will train a transformer to produce infinite shakespeare in ~35 minutes (on my machine, with an RTX 3090).
+For a proper training script with all the bells and whistles (logging, gradient accumulation etc.) take a look at `train_smol_gpt.py` which will train a transformer to produce infinite shakespeare in ~35 minutes (on my machine, with an RTX 3090).
 
 
 ## Contact
