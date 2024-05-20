@@ -9,9 +9,16 @@ The hyperparams for this model are very much a work in progress
 import os
 import pickle
 import uuid
+from pathlib import Path
+
+from tricycle import CUPY_ENABLED
+
+if CUPY_ENABLED:
+    import cupy as xp
+else:
+    import numpy as xp
 
 import mlflow
-import numpy as np
 from tqdm import tqdm
 
 from inference import generate
@@ -24,7 +31,7 @@ from tricycle.scheduler import lr_schedule
 from tricycle.utils import log_memory_and_time
 from tricycle_datasets.shakespeare import Shakespeare
 
-np.random.seed(0)
+xp.random.seed(0)
 config = SmolGPTConfig()
 model = GPT(config)
 model.display()
@@ -115,6 +122,8 @@ O Romeo, Romeo! wherefore art thou Romeo?
         enumerate(generate(sample_text, model, dataset)),
         desc="evaluating",
         total=n_samples,
+        position=1,
+        leave=False,
     ):
         if i > n_samples:
             break
@@ -126,19 +135,22 @@ O Romeo, Romeo! wherefore art thou Romeo?
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:tokeniser_1024:debug")
+mlflow.set_experiment("SmolGPT:tokeniser_1024:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 unique_id = uuid.uuid4()
 
-best_loss = float("inf")
-losses = []
-for step in tqdm(range(config.steps)):
+best_loss = xp.inf
+
+losses = xp.zeros(config.steps)
+for step in tqdm(range(config.steps), position=0):
+    mlflow.log_params(config.dict())
+    log_memory_and_time("start")
+
     optimiser.step()
     batch_loss = 0
     # perform several forward and backward passes before doing a gradient
     # update to increase the effective batch size
     for _ in range(config.gradient_accumulation_steps):
-        log_memory_and_time("start")
         inputs, outputs = next(dataloader)
         inputs = inputs.to_gpu(config.device_idx)
         outputs = outputs.to_gpu(config.device_idx)
@@ -146,25 +158,23 @@ for step in tqdm(range(config.steps)):
 
         # forward and backward pass
         logits = model(inputs)
-        loss = loss_fn(outputs, logits).from_vector().e("ab->") / (
+        log_memory_and_time("forward")
+        loss = loss_fn(outputs, logits).sum() / (
             config.gradient_accumulation_steps
             * config.batch_size
             * config.context_window
         )
         log_memory_and_time("loss")
-        batch_loss += float(loss.numpy())
+        batch_loss += loss._data
         loss.backward()
         log_memory_and_time("backward")
-
-        # delete intermediate values we dont need any more
-        # TODO: statically allocate objects to avoid this
-        loss.cleanup()
-        log_memory_and_time("cleanup")
 
     # Use the optimiser to update weights
     model.update(optimiser)
     log_memory_and_time("update_weights")
 
+    mlflow.log_metric("loss", batch_loss, step=step)
+    mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
     # clean up the computational graph
     # step the learning rate
     optimiser.learning_rate = lr_schedule(
@@ -174,20 +184,20 @@ for step in tqdm(range(config.steps)):
         warmup_steps=config.warmup_steps,
         total_steps=config.steps,
     )
+    losses[step] = batch_loss
 
-    # log the loss
-    losses.append(batch_loss)
-    mlflow.log_metric("loss", batch_loss, step=step)
-    mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
-
+    log_memory_and_time("step_scheduler")
     if step % config.eval_interval == 0:
+        # log the loss
+
         # generate some text
         predicted = get_sample()
         mlflow.log_text(predicted, f"generated/{step}.txt")
 
         # checkpoint
-        avg_loss = np.mean(losses[-config.eval_interval :])
+        avg_loss = xp.mean(losses[step-config.eval_interval:step])
         if avg_loss < best_loss:
-            with open(f"models/model_{unique_id}_{step}.pkl", "wb") as f:
+            Path("models").mkdir(exist_ok=True)
+            with open(f"models/model_{unique_id}.pkl", "wb") as f:
                 pickle.dump(model, f)
             best_loss = avg_loss
