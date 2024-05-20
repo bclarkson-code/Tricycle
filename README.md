@@ -18,9 +18,6 @@ Here are some things you can do with Tricycle:
 - Use a GPU
 - Train a Transformer to produce infinite shakespeare(!)
 
-Here are some things you can't do with Tricycle (yet):
-- Do anything at the speed of pytorch
-
 If you want to do these things, you should check out [pytorch](https://pytorch.org/)
 
 If you would like to learn more about the process of building tricycle, you can check out my [blog](http://bclarkson-code.com)
@@ -68,20 +65,17 @@ best_loss = float("inf")
 losses = []
 for step in tqdm(range(config.steps)):
     optimiser.step()
-    batch_loss = 0
     inputs, outputs = next(dataset)
     inputs = inputs.to_gpu()
     outputs = outputs.to_gpu()
 
     logits = model(inputs)
-    loss = (
-        loss_fn(outputs, logits).from_vector().mean().mean()
-        / config.gradient_accumulation_steps
+    loss = loss_fn(outputs, logits).sum() / (
+        config.gradient_accumulation_steps
+        * config.batch_size
+        * config.context_window
     )
-    batch_loss += float(loss.numpy())
     loss.backward()
-
-    loss.cleanup()
 
     model.update(optimiser)
 
@@ -94,18 +88,8 @@ This will fetch the complete works of shakespeare, build it into a dataset, toke
 
 As you can see, it looks pretty similar to other frameworks like PyTorch. However, because Tricycle is much smaller and simpler, if you want to figure out how something works, you can dive into the code and get an answer in a few minutes instead of hours.
 
-## Installation
-Tricycle uses [poetry](https://python-poetry.org/) to manage dependencies. Assuming it is installed, you
-can install Tricycle by running:
-```bash
-poetry install
-```
+For a proper training script with all the bells and whistles (logging, gradient accumulation etc.) take a look at train_smol_gpt.py which will train a transformer to produce infinite shakespeare in ~35 minutes (on my machine, with an RTX 3090).
 
-## Tests
-Tricycle is tested using [pytest](https://docs.pytest.org/en/latest/)
-```bash
-poetry run pytest
-```
 
 ## Contact
 Want to learn more / have a chat / work together?
