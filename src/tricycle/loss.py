@@ -146,3 +146,62 @@ class BinaryCrossEntropy(Op):
         result.name = "cross_entropy"
 
         return result
+
+
+class BinaryCrossEntropyV2(Op):
+    """
+    Calculate cross entropy loss, given logits and target indices (as opposed
+    to one-hot encoded tensors)
+    """
+
+    REALLY_SMALL_NUMBER = 1e-8
+    REALLY_BIG_NUMBER = 1e8
+
+    def backward(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        self._y_pred[xp.arange(self._n_inputs), self._y_true] -= 1
+        self._y_pred /= self._n_inputs
+        self._grad = self._y_pred.reshape(self._original_shape) * grad._data
+
+        return to_tensor(self._grad, is_vector=self._input_vector)
+
+    def forward(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
+        # sourcery skip: assign-if-exp, reintroduce-else
+        """
+        Calculate the cross entropy loss
+        """
+        xp = y_pred.xp
+
+        # flatten to simplify multiple inputs
+        self._original_shape = y_pred.shape
+        self._input_vector = y_pred.is_vector
+        out_dim = y_pred.shape[-1]
+        self._y_true = y_true._data.reshape(-1)
+        y_pred_f = y_pred._data.reshape(-1, out_dim)
+        self._n_inputs = y_pred_f.shape[0]
+
+        # we scale values by the largest value in each vector
+        # for numeric stability
+        max_vals = xp.max(y_pred_f, axis=-1, keepdims=True)
+        scaled = y_pred_f - max_vals
+
+        log_probs = scaled - xp.log(
+            xp.sum(xp.exp(scaled), axis=-1, keepdims=True)
+        )
+        self._y_pred = xp.exp(log_probs)
+
+        corrected_log_probs = -log_probs[
+            xp.arange(self._n_inputs), self._y_true
+        ]
+        self._out = corrected_log_probs.sum() / self._n_inputs
+
+        # TODO: fuse normalising and calculation together
+        result = to_tensor(self._out, is_vector=False)
+        result.back_fns = (self.backward,)
+
+        # y_true never requires grad so we dont calculate gradients for it
+        result.args = (y_pred,)
+        result.name = "cross_entropy"
+
+        return result
