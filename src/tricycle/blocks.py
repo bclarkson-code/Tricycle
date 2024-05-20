@@ -54,7 +54,6 @@ class MultiHeadSelfAttention(Layer):
 
     embedding_dim: int
     n_heads: int
-    dropout: float
     context_window: int
 
     def __init__(
@@ -62,7 +61,6 @@ class MultiHeadSelfAttention(Layer):
         embedding_dim: int,
         n_heads: int,
         context_window: int,
-        attention_dropout_prob: float,
         residual_dropout_prob: float,
         initialiser=init_xavier,
     ):
@@ -98,7 +96,6 @@ class MultiHeadSelfAttention(Layer):
         self.attention = Attention(
             embedding_dim=embedding_dim,
             n_heads=n_heads,
-            dropout_prob=attention_dropout_prob,
             context_window=context_window,
         )
 
@@ -203,13 +200,9 @@ class MLPBlock(Layer):
 
     def forward(self, x: Tensor):
         x = self.linear_1(x)
-        # log_memory_and_time("linear_1")
         x = self.activation_fn(x)
-        # log_memory_and_time("gelu")
         x = self.linear_2(x)
-        # log_memory_and_time("linear_2")
         x = self.dropout(x)
-        # log_memory_and_time("dropout")
         return x
 
     def update(self, optimiser: Optimiser):
@@ -237,7 +230,6 @@ class GPT2TransformerBlock(Layer):
     embedding_dim: int
     expansion_ratio: float
     activation_fn: Layer
-    attention_dropout_prob: float
     residual_dropout_prob: float
     linear_dropout_prob: float
 
@@ -248,7 +240,6 @@ class GPT2TransformerBlock(Layer):
         context_window: int,
         expansion_ratio: float = 4,
         activation_fn: Layer | str = GeLU(),
-        attention_dropout_prob: float = 0,
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
     ):
@@ -256,7 +247,6 @@ class GPT2TransformerBlock(Layer):
             embedding_dim,
             n_heads=n_heads,
             context_window=context_window,
-            attention_dropout_prob=attention_dropout_prob,
             residual_dropout_prob=residual_dropout_prob,
             initialiser=init_xavier,
         )
