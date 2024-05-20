@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import cupy as cp
+from cupyx import jit
 
 from tricycle.binary import BinaryDivide
 from tricycle.ops import Op
@@ -221,13 +222,13 @@ class Softmax(Op):
         dimension of the tensor
         Note: the tensor is normalised for numeric stability
         """
+        xp = tensor.xp
 
-        if tensor.on_gpu:
-            from cupyx.scipy.special import softmax as softmax_fn
-        else:
-            from scipy.special import softmax as softmax_fn
-
-        self._out = softmax_fn(tensor._data, axis=-1)
+        exp = xp.exp(
+            tensor._data - xp.max(tensor._data, axis=-1, keepdims=True)
+        )
+        denominator = xp.sum(exp, axis=-1, keepdims=True)
+        self._out = exp / denominator
 
         result = to_tensor(self._out)
         result.args = (tensor,)
