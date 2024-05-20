@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 
 from tricycle.configs import SmolGPTConfig
-from tricycle.functions import softmax
+from tricycle.functions import Softmax
 from tricycle.layers import Dropout, Layer
 from tricycle.tensor import to_tensor
 from tricycle_datasets.shakespeare import Shakespeare, ShakespeareChar
@@ -54,7 +54,7 @@ def generate(text, model, tokeniser, sample=True, temperature=0.8):
         ).to_vector()
 
         pred = model(encoded)
-        pred = softmax(pred / temperature)
+        pred = Softmax()(pred / temperature)
 
         if pred.on_gpu:
             probabilities = pred.xp.asnumpy(
@@ -89,11 +89,10 @@ if __name__ == "__main__":
 
     config = SmolGPTConfig()
     shakespeare = Shakespeare(config.vocab_size)
-    shakespeare.vocab_size = 65
 
     tokeniser = shakespeare
     model = load_model(sys.argv[1])
-    model.to_gpu(1)
+    model.to_gpu(0)
 
     deactivate_dropout(model)
 
