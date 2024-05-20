@@ -151,6 +151,7 @@ for step in tqdm(range(config.steps), position=0):
     # perform several forward and backward passes before doing a gradient
     # update to increase the effective batch size
     for _ in range(config.gradient_accumulation_steps):
+        log_memory_and_time("start")
         inputs, outputs = next(dataloader)
         inputs = inputs.to_gpu(config.device_idx)
         outputs = outputs.to_gpu(config.device_idx)

@@ -200,9 +200,13 @@ class MLPBlock(Layer):
 
     def forward(self, x: Tensor):
         x = self.linear_1(x)
+        log_memory_and_time("linear_1")
         x = self.activation_fn(x)
+        log_memory_and_time("gelu")
         x = self.linear_2(x)
+        log_memory_and_time("linear_2")
         x = self.dropout(x)
+        log_memory_and_time("dropout")
         return x
 
     def update(self, optimiser: Optimiser):
