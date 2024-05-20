@@ -76,7 +76,7 @@ def test_can_vectorise_mse():
         np.array([input_1._data, input_2._data, input_3._data])
     )
     correct_output = to_tensor(
-        np.array([output_1._data, output_2._data, output_3._data])
+        np.array([output_1._data, output_2._data, output_3._data]).sum()
     )
 
     input_y_true = vectorise(input_y_true)

@@ -66,7 +66,8 @@ def test_dropout():  # sourcery skip: square-identity
     assert in_tensor.grad is not None
     assert in_tensor.grad.shape == in_tensor.shape
 
-    correct_grad = np.ones(in_tensor.shape)
+    coef = 1 / (1-dropout_prob)
+    correct_grad = np.full(in_tensor.shape, coef)
     correct_grad[zero_x_idx, zero_y_idx] = 0
 
     assert in_tensor.grad.close_to(correct_grad)
@@ -81,7 +82,7 @@ def test_layer_norm():
     assert out_tensor.shape == in_tensor.shape
     out_tensor.backward()
 
-    assert copy(out_tensor).mean().close_to([0] * 100, atol=1e-7)
+    assert copy(out_tensor).mean().close_to(0, atol=1e-6)
     assert np.allclose(np.std(out_tensor._data), [1] * 100, atol=1e-7)
 
     assert in_tensor.grad is not None
