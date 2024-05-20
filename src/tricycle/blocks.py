@@ -7,6 +7,7 @@ from math import sqrt
 import numpy as np
 
 from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
+from tricycle.attention import Attention
 from tricycle.einsum import Einsum
 from tricycle.functions import Softmax
 from tricycle.initialisers import init_xavier
@@ -87,76 +88,34 @@ class MultiHeadSelfAttention(Layer):
             name="out_projection",
         )
 
-        # build a mask to make attention causal
-        self.mask = build_mask(self.context_window)
-
-        self.attention_dropout = Dropout(attention_dropout_prob)
         self.residual_dropout = Dropout(residual_dropout_prob)
         self.layers = [
             self.in_projection,
-            self.attention_dropout,
             self.residual_dropout,
             self.out_projection,
         ]
 
-    def _attention(self, key: Tensor, query: Tensor, value: Tensor):
-        xp = select_backend(key._data, query._data, value._data)
-        # reshape into n_heads x embedding_dim
-        head_size = self.embedding_dim // self.n_heads
-        n_tokens = key.shape[1] if key.is_vector else key.shape[0]
-        head_shape = (
-            n_tokens,  # number of tokens
-            self.n_heads,  # number of heads
-            head_size,  # embedding per head
+        self.attention = Attention(
+            embedding_dim=embedding_dim,
+            n_heads=n_heads,
+            dropout_prob=attention_dropout_prob,
+            context_window=context_window,
         )
-        out_shape = (n_tokens, self.embedding_dim)
 
-        # reshape and reorder the heads
-        key = key.reshape(head_shape).e("TNH -> NTH")
-        query = query.reshape(head_shape).e("TNH -> NTH")
-        value = value.reshape(head_shape).e("TNH -> NTH")
-        log_memory_and_time("reshape + reorder")
+    def forward(self, tensor: Tensor):
+        # expand the input
+        tensor = self.in_projection(tensor)
+        # log_memory_and_time("in_projection")
 
-        # attend
-        divisor = sqrt(head_size)
-        attention = Einsum("NIh, NJh -> NIJ")(query, key)
-        log_memory_and_time("attend")
-        attention = attention / divisor
-        log_memory_and_time("divide")
-
-        # mask and softmax
-        attention = masked_fill(attention, (n_tokens, n_tokens), self.mask)
-        log_memory_and_time("masked_fill")
-
-        attention = Softmax()(attention)
-        log_memory_and_time("softmax")
-
-        attention = self.attention_dropout(attention)
-        log_memory_and_time("dropout")
-
-        # smush the heads back together
-        out_shape = (n_tokens, self.embedding_dim)
-        out = Einsum("NIj, NjH -> INH")(attention, value).reshape(out_shape)
-        log_memory_and_time("recombine")
-        return out
-
-    def forward(self, x: Tensor):
-        # use the projection layer to expand the inoput embedding
-        x = self.in_projection(x)
-        log_memory_and_time("in_projection")
-
-        # split the embedding into key, query and value
-        query, key, value = x.split(3, axis=-1)
-        log_memory_and_time("split")
-
-        attention = self._attention(key, query, value)
+        attention = self.attention(tensor)
+        # log_memory_and_time("attention")
 
         # project back
         projected = self.out_projection(attention)
-        log_memory_and_time("out_projection")
+        # log_memory_and_time("out_projection")
 
         projected = self.residual_dropout(projected)
-        log_memory_and_time("dropout")
+        # log_memory_and_time("dropout")
 
         return projected
 
@@ -171,12 +130,12 @@ class MultiHeadSelfAttention(Layer):
     def to_gpu(self, device: int = 0):
         self.in_projection.to_gpu(device)
         self.out_projection.to_gpu(device)
-        self.mask.to_gpu(device)
+        self.attention.to_gpu(device)
 
     def from_gpu(self):
         self.in_projection.from_gpu()
         self.out_projection.from_gpu()
-        self.mask.from_gpu()
+        self.attention.from_gpu()
 
 
 class MLPBlock(Layer):
@@ -244,13 +203,13 @@ class MLPBlock(Layer):
 
     def forward(self, x: Tensor):
         x = self.linear_1(x)
-        log_memory_and_time("linear_1")
+        # log_memory_and_time("linear_1")
         x = self.activation_fn(x)
-        log_memory_and_time("gelu")
+        # log_memory_and_time("gelu")
         x = self.linear_2(x)
-        log_memory_and_time("linear_2")
+        # log_memory_and_time("linear_2")
         x = self.dropout(x)
-        log_memory_and_time("dropout")
+        # log_memory_and_time("dropout")
         return x
 
     def update(self, optimiser: Optimiser):
@@ -321,13 +280,13 @@ class GPT2TransformerBlock(Layer):
         normed = self.layer_norm_1(x)
 
         attn = self.attention_block(normed)
-
+        log_memory_and_time("attention")
         attn += x
 
         x = self.layer_norm_2(attn)
 
         x = self.mlp_block(x)
-
+        log_memory_and_time("mlp")
         x += attn
 
         return x
