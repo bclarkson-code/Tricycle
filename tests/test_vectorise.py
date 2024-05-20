@@ -2,7 +2,7 @@ import numpy as np
 
 from tricycle.activation import ReLU
 from tricycle.einsum import Einsum
-from tricycle.functions import softmax
+from tricycle.functions import Softmax
 from tricycle.layers import Dense, Sequential
 from tricycle.loss import CrossEntropy, mean_square_error
 from tricycle.tensor import to_tensor, unvectorise, vectorise
@@ -76,7 +76,7 @@ def test_can_vectorise_mse():
         np.array([input_1._data, input_2._data, input_3._data])
     )
     correct_output = to_tensor(
-        np.array([output_1._data, output_2._data, output_3._data])
+        np.array([output_1._data, output_2._data, output_3._data]).sum()
     )
 
     input_y_true = vectorise(input_y_true)
@@ -118,9 +118,9 @@ def test_can_vectorise_softmax():
     input_2 = to_tensor(np.arange(2, 6))
     input_3 = to_tensor(np.arange(3, 7))
 
-    output_1 = softmax(input_1)
-    output_2 = softmax(input_2)
-    output_3 = softmax(input_3)
+    output_1 = Softmax()(input_1)
+    output_2 = Softmax()(input_2)
+    output_3 = Softmax()(input_3)
 
     input_vector = to_tensor(
         np.array([input_1._data, input_2._data, input_3._data])
@@ -130,7 +130,7 @@ def test_can_vectorise_softmax():
     )
 
     input_vector = vectorise(input_vector)
-    output_vector = softmax(input_vector)
+    output_vector = Softmax()(input_vector)
     output_vector = unvectorise(output_vector)
 
     assert output_vector.close_to(correct_output)

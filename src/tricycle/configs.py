@@ -1,3 +1,6 @@
+from dataclasses import dataclass, asdict
+
+
 class GPTConfig:
     embedding_dim: int
     context_window: int
@@ -8,7 +11,6 @@ class GPTConfig:
     activation_fn: str
 
     input_dropout_prob: float
-    attention_dropout_prob: float
     residual_dropout_prob: float
     linear_dropout_prob: float
 
@@ -40,10 +42,9 @@ class SmolGPTConfig(GPTConfig):
     expansion_ratio = 4
     activation_fn = "gelu"
 
-    input_dropout_prob = 0
-    attention_dropout_prob = 0
-    residual_dropout_prob = 0
-    linear_dropout_prob = 0
+    input_dropout_prob = 0.2
+    residual_dropout_prob = 0.2
+    linear_dropout_prob = 0.2
 
     max_learning_rate = 1e-3
     min_learning_rate = 1e-4
@@ -58,7 +59,18 @@ class SmolGPTConfig(GPTConfig):
     batch_size = 32
     gradient_accumulation_steps = 1
 
-    device_idx = 0
+    device_idx = 1
 
     mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"
+
+    def dict(self) -> dict[str, int | float | str | bool]:
+        out = {}
+        for k, v in SmolGPTConfig.__dict__.items():
+            if k.startswith('__'):
+                continue
+
+            if callable(v):
+                continue
+            out[k] = v
+        return out

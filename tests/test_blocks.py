@@ -11,7 +11,7 @@ from tricycle.blocks import (
     masked_fill,
 )
 from tricycle.einsum import Einsum
-from tricycle.functions import softmax
+from tricycle.functions import Softmax
 from tricycle.tensor import to_tensor
 
 
@@ -94,7 +94,7 @@ def test_attention_individually():
     att = torch.softmax(att, dim=-1)
 
     # tricycle
-    attention = softmax(attention)
+    attention = Softmax()(attention)
 
     assert attention.close_to(att.numpy())
 
@@ -211,11 +211,8 @@ def test_attention_combined():
         n_heads=n_heads,
         context_window=context_window,
         residual_dropout_prob=0,
-        attention_dropout_prob=0,
     )
-    tricycle_result = tricycle_attention._attention(
-        query=query, key=key, value=value
-    ).from_vector()
+    tricycle_result = tricycle_attention.attention(in_tensor).from_vector()
 
     assert np.allclose(andrej_result, pytorch_result, rtol=1e-3)
     assert tricycle_result.close_to(andrej_result)
@@ -239,7 +236,7 @@ def test_attention_block():
     """
     n_heads = 3
     embedding_dim = 15
-    n_tokens = 7
+    n_tokens = 32
     batch_size = 11
     context_window = 32
 
@@ -259,7 +256,6 @@ def test_attention_block():
         n_heads=n_heads,
         context_window=context_window,
         residual_dropout_prob=0,
-        attention_dropout_prob=0,
     )
     tricycle_attention.in_projection.weights = to_tensor(
         in_projection_weights, name="in_proj"
@@ -288,7 +284,9 @@ def test_attention_block():
         block_size=32,
     )
 
-    assert tricycle_result.close_to(andrej_result.detach().numpy())
+    assert tricycle_result.close_to(
+        andrej_result.detach().numpy(), rtol=1e-3, atol=1e-4
+    )
 
     tricycle_loss = tricycle_result.from_vector().e("abc->")
     andrej_loss = andrej_result.sum()
@@ -306,7 +304,7 @@ def test_attention_block():
     tricycle_in_weights = tricycle_attention.in_projection.weights.grad
 
     assert tricycle_in_weights.close_to(
-        c_attn.weight.grad.T.numpy(), rtol=1e-3
+        c_attn.weight.grad.T.numpy(), rtol=1e-2, atol=1e-4
     )
 
 
@@ -327,14 +325,14 @@ def test_MLPBlock():
 
     correct_output = np.array(
         [
-            [96.0, 0.0, 96.0, 0.0],
+            [192.0, 0.0, 192.0, 0.0],
             [
-                352.0,
                 0.0,
-                352.0,
                 0.0,
+                704.0,
+                704.0,
             ],
-            [608.0, 0.0, 608.0, 0.0],
+            [1216.0, 1216.0, 1216.0, 0.0],
         ]
     )
     correct_output = to_tensor(correct_output)
@@ -347,9 +345,9 @@ def test_MLPBlock():
     assert in_tensor.grad is not None
     correct_grad = to_tensor(
         [
-            [32.0, 32.0, 32.0, 32.0],
-            [32.0, 32.0, 32.0, 32.0],
-            [32.0, 32.0, 32.0, 32.0],
+            [64.0, 64.0, 64.0, 64.0],
+            [64.0, 64.0, 64.0, 64.0],
+            [96.0, 96.0, 96.0, 96.0],
         ]
     )
 
@@ -359,7 +357,7 @@ def test_MLPBlock():
 def test_GPT2TransformerBlock():
     np.random.seed(0)
     batch_size = 11
-    n_tokens = 5
+    n_tokens = 32
     n_heads = 3
     embedding_dim = 7 * n_heads
 

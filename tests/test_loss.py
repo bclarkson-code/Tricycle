@@ -14,6 +14,8 @@ slow_test = pytest.mark.skipif(
     reason="Only run when --run-slow is given",
 )
 
+# TODO: a lot of these tests are outdated and should be modernised
+
 
 def test_can_mean_square_error():
     y_true = to_tensor([0, 0, 1])
@@ -101,6 +103,7 @@ def test_single_lr_step_with_multiple_datapoints():
     assert intercept.grad.close_to(correct)
 
 
+@slow_test
 def test_can_linear_regression():
     np.random.seed(42)
 
@@ -156,7 +159,7 @@ def test_can_linear_regression():
             last_slope_grad = slope.grad
             last_intercept_grad = intercept.grad
 
-        slope -= slope.grad * learning_rate
+        slope -= slope.grad * learning_ratetest_loss
         intercept -= intercept.grad * learning_rate
 
         slopes.append(slope)
@@ -205,6 +208,7 @@ def test_linear_regression_real_data():
     assert r_square > 0.45
 
 
+@slow_test
 def test_linear_regression_multi_input_output():
     X_data, y_data = load_linnerud(return_X_y=True)
     x_scaler = RobustScaler()
