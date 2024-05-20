@@ -32,7 +32,6 @@ class GPT(Layer):
                 context_window=self.context_window,
                 expansion_ratio=config.expansion_ratio,
                 activation_fn=config.activation_fn,
-                attention_dropout_prob=config.attention_dropout_prob,
             )
             for _ in range(config.n_layers)
         ]
@@ -86,7 +85,7 @@ class GPT(Layer):
 
         for i, block in enumerate(self.blocks):
             embedding = block(embedding)
-            log_memory_and_time(f"block_{i}")
+            # log_memory_and_time(f"block_{i}")
 
         embedding = self.layer_norm(embedding)
         log_memory_and_time("layer_norm")

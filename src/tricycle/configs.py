@@ -11,7 +11,6 @@ class GPTConfig:
     activation_fn: str
 
     input_dropout_prob: float
-    attention_dropout_prob: float
     residual_dropout_prob: float
     linear_dropout_prob: float
 
@@ -44,7 +43,6 @@ class SmolGPTConfig(GPTConfig):
     activation_fn = "gelu"
 
     input_dropout_prob = 0.2
-    attention_dropout_prob = 0.2
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
