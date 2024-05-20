@@ -64,9 +64,7 @@ class GeLU(Layer):
     def forward(self, tensor: Tensor):
         xp = tensor.xp
         self._input = tensor._data
-        inner = self.CONST_1 * (
-            tensor._data + self.CONST_2 * tensor._data**3
-        )
+        inner = self.CONST_1 * (tensor._data + self.CONST_2 * tensor._data**3)
         result = tensor._data * 0.5 * (1 + xp.tanh(inner))
 
         result = to_tensor(
