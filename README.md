@@ -18,8 +18,6 @@ Here are some things you can do with Tricycle:
 - Use a GPU
 - Train a Transformer to produce infinite shakespeare(!)
 
-If you want to do these things, you should check out [pytorch](https://pytorch.org/)
-
 If you would like to learn more about the process of building tricycle, you can check out my [blog](http://bclarkson-code.com)
 
 ## Usage
