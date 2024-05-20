@@ -387,10 +387,8 @@ class Tensor:
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        # from tricycle.ops import Mean
-
-        # return Mean()(self)
-        return self.sum() / self.shape[-1]
+        divisor = self.shape[-1] if self.shape else 1
+        return self.sum() / divisor
 
     def sum(self) -> "Tensor":
         from tricycle.unary import UnarySum
