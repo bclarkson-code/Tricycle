@@ -2,19 +2,14 @@
 Several layers can be grouped together into a single layer called a block
 """
 
-from math import sqrt
-
 import numpy as np
 
 from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
 from tricycle.attention import Attention
-from tricycle.einsum import Einsum
-from tricycle.functions import Softmax
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Dropout, Layer, LayerNorm  # noqa E501
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, select_backend, to_tensor
-from tricycle.utils import log_memory_and_time
+from tricycle.tensor import Tensor, to_tensor
 
 
 def build_mask(context_window: int) -> Tensor:
@@ -102,17 +97,11 @@ class MultiHeadSelfAttention(Layer):
     def forward(self, tensor: Tensor):
         # expand the input
         tensor = self.in_projection(tensor)
-        # log_memory_and_time("in_projection")
-
         attention = self.attention(tensor)
-        # log_memory_and_time("attention")
 
         # project back
         projected = self.out_projection(attention)
-        # log_memory_and_time("out_projection")
-
         projected = self.residual_dropout(projected)
-        # log_memory_and_time("dropout")
 
         return projected
 
@@ -200,13 +189,9 @@ class MLPBlock(Layer):
 
     def forward(self, x: Tensor):
         x = self.linear_1(x)
-        log_memory_and_time("linear_1")
         x = self.activation_fn(x)
-        log_memory_and_time("gelu")
         x = self.linear_2(x)
-        log_memory_and_time("linear_2")
         x = self.dropout(x)
-        log_memory_and_time("dropout")
         return x
 
     def update(self, optimiser: Optimiser):
@@ -274,13 +259,11 @@ class GPT2TransformerBlock(Layer):
         normed = self.layer_norm_1(x)
 
         attn = self.attention_block(normed)
-        log_memory_and_time("attention")
         attn += x
 
         x = self.layer_norm_2(attn)
 
         x = self.mlp_block(x)
-        log_memory_and_time("mlp")
         x += attn
 
         return x

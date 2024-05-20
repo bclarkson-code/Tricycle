@@ -28,7 +28,6 @@ from tricycle.loss import BinaryCrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
-from tricycle.utils import log_memory_and_time
 from tricycle_datasets.shakespeare import Shakespeare
 
 xp.random.seed(0)
@@ -144,35 +143,28 @@ best_loss = xp.inf
 losses = xp.zeros(config.steps)
 for step in tqdm(range(config.steps), position=0):
     mlflow.log_params(config.dict())
-    log_memory_and_time("start")
 
     optimiser.step()
     batch_loss = 0
     # perform several forward and backward passes before doing a gradient
     # update to increase the effective batch size
     for _ in range(config.gradient_accumulation_steps):
-        log_memory_and_time("start")
         inputs, outputs = next(dataloader)
         inputs = inputs.to_gpu(config.device_idx)
         outputs = outputs.to_gpu(config.device_idx)
-        log_memory_and_time("load_data")
 
         # forward and backward pass
         logits = model(inputs)
-        log_memory_and_time("forward")
         loss = loss_fn(outputs, logits).sum() / (
             config.gradient_accumulation_steps
             * config.batch_size
             * config.context_window
         )
-        log_memory_and_time("loss")
         batch_loss += loss._data
         loss.backward()
-        log_memory_and_time("backward")
 
     # Use the optimiser to update weights
     model.update(optimiser)
-    log_memory_and_time("update_weights")
 
     mlflow.log_metric("loss", batch_loss, step=step)
     mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
@@ -187,7 +179,6 @@ for step in tqdm(range(config.steps), position=0):
     )
     losses[step] = batch_loss
 
-    log_memory_and_time("step_scheduler")
     if step % config.eval_interval == 0:
         # log the loss
 

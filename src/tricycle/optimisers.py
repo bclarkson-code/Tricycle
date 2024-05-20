@@ -1,8 +1,6 @@
 import cupy as cp
-import numpy as np
 
 from tricycle.tensor import Tensor, to_tensor
-from tricycle.utils import log_memory_and_time
 
 
 class Optimiser:
@@ -222,7 +220,5 @@ class AdamWV2(Optimiser):
 
     def __call__(self, tensor: Tensor) -> Tensor:
         tensor = self.update_weight(tensor)
-        # log_memory_and_time("update_weight")
         tensor = self._reset_grad(tensor)
-        # log_memory_and_time("reset_grad")
         return tensor
