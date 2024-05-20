@@ -159,12 +159,12 @@ class Dropout(Layer):
         if self.probability == 0:
             return tensor
         xp = tensor.xp
-        shape = tensor.shape[1:] if tensor.is_vector else tensor.shape
         coef = 1 / (1 - self.probability)
-        random_mask = (xp.random.rand(*shape) > self.probability).astype(
+        random_mask = (xp.random.rand(*tensor.shape) > self.probability).astype(
             tensor.dtype
         ) * coef
-        random_mask = to_tensor(random_mask, requires_grad=False)
+        random_mask = to_tensor(
+            random_mask, is_vector=True, requires_grad=False)
         return BinaryMultiply()(tensor, random_mask)
 
 
