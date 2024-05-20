@@ -310,3 +310,35 @@ class UnarySquareRoot(Op):
         """
         upow = UnaryPower()
         return upow(tensor, 0.5)
+
+
+class UnarySum(Op):
+    _in_shape: tuple[int]
+    _in_is_vector: bool
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        self._grad = xp.full(self._in_shape, grad._data)
+
+        result = to_tensor(self._grad)
+        result.is_vector = self._in_is_vector
+        return result
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        """
+        Sums all the values in a tensor
+        """
+        xp = tensor.xp
+
+        # Sum all the values in the tensor
+        self._out = xp.sum(tensor._data)
+        self._in_shape = tensor.shape
+        self._in_is_vector = tensor.is_vector
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = "sum"
+        result.is_vector = False  # The result of the sum is a scalar
+        return result
