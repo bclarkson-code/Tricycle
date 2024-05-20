@@ -1,6 +1,7 @@
 import logging
 import numbers
 import uuid
+import weakref
 from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
@@ -71,7 +72,11 @@ class Tensor:
                     continue
 
                 if arg.parents is None:
-                    arg.parents = set()
+                    # if we use a set, we get a circular reference
+                    # which can't be garbage collected, leading to a memory
+                    # leak so we need to do a weakref to avoid the circular
+                    # reference
+                    arg.parents = weakref.WeakSet()
 
                 if node not in arg.parents:
                     stack.append(arg)
@@ -126,13 +131,15 @@ class Tensor:
                     if arg.grad is None:
                         arg.grad = grad
                     else:
-                        arg.grad += grad
+                        arg.grad._data += grad._data
 
                 except Exception as e:
                     raise e
 
                 # only move to arg if we have been to all of its parents
                 if len(arg.parents) == 0:
+                    # get rid of the weakref so we can pickle the model
+                    arg.parents = None
                     stack.append(arg)
 
     def cleanup(self):
@@ -165,7 +172,7 @@ class Tensor:
         self._calculate_gradients(clip=clip)
 
     def __hash__(self) -> int:
-        return id(self)
+        return self._id
 
     def __add__(self, other: Union[float, "Tensor"]) -> "Tensor":
         if isinstance(other, numbers.Number):
@@ -386,11 +393,14 @@ class Tensor:
         return self.sum() / self.shape[-1]
 
     def sum(self) -> "Tensor":
-        if self.is_vector:
-            indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim - 1]
-        else:
-            indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim]
-        return self.e(f"{indices}->")
+        from tricycle.unary import UnarySum
+
+        # if self.is_vector:
+        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim - 1]
+        # else:
+        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim]
+        # return self.e(f"{indices}->")
+        return UnarySum()(self)
 
     def close_to(
         self,
