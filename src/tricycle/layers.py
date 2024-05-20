@@ -48,56 +48,52 @@ class Dense(Layer):
         self.to_size = to_size
         self.tensors = {"weights": self.weights}
 
-    def _einsum_fn(self, subscript, tensor, is_vector: bool):
-        def back_einsum(grad):
-            result = tensor.xp.einsum(subscript, tensor._data, grad._data)
-            return to_tensor(
-                result,
-                requires_grad=grad.requires_grad,
-                name="back_dense",
-                is_vector=is_vector,
-            )
+    def weight_back_fn(self, grad: Tensor):
+        xp = grad.xp
+        result = xp.einsum(self._weight_subscript, self._input, grad._data)
+        return to_tensor(
+            result,
+            requires_grad=grad.requires_grad,
+            name="back_dense",
+            is_vector=False,
+        )
 
-        return back_einsum
+    def grad_back_fn(self, grad: Tensor):
+        xp = grad.xp
+        result = xp.einsum(
+            self._grad_subscript, self.weights._data, grad._data
+        )
+        return to_tensor(
+            result,
+            requires_grad=grad.requires_grad,
+            name="back_dense",
+            is_vector=True,
+        )
 
     def forward(self, tensor: Tensor):
         match tensor.ndim:
             case 1:
-                result = self._forward(tensor, "a,aW->W", "a,W->aW", "aW,W->a")
+                subscript = "a,aW->W"
+                weight_subscript = "a,W->aW"
+                grad_subscript = "aW,W->a"
             case 2:
-                result = self._forward(
-                    tensor, "Tb,bW->TW", "Tb,TW->bW", "bW,TW->Tb"
-                )
+                subscript = "Tb,bW->TW"
+                weight_subscript = "Tb,TW->bW"
+                grad_subscript = "bW,TW->Tb"
             case 3:
-                result = self._forward(
-                    tensor,
-                    "zTb,bW->zTW",
-                    "zTb,zTW->bW",
-                    "bW,zTW->zTb",
-                )
+                subscript = "zTb,bW->zTW"
+                weight_subscript = "zTb,zTW->bW"
+                grad_subscript = "bW,zTW->zTb"
             case 4:
-                result = self._forward(
-                    tensor,
-                    "zxTb,bW->zxTW",
-                    "zxTb,zxTW->bW",
-                    "bW,zxTW->zxTb",
-                )
+                subscript = "zxTb,bW->zxTW"
+                weight_subscript = "zxTb,zxTW->bW"
+                grad_subscript = "bW,zxTW->zxTb"
             case _:
                 raise NotImplementedError(
                     f"Cannot pass tensor with shape {tensor.shape} "
                     f"and {tensor.is_vector=}"
                     "through a Dense layer"
                 )
-        result.name = "dense"
-        return result
-
-    def _forward(
-        self,
-        tensor,
-        subscript,
-        weight_subscript,
-        tensor_subscript,
-    ):
         result = to_tensor(
             tensor.xp.einsum(
                 subscript,
@@ -105,14 +101,13 @@ class Dense(Layer):
                 self.weights._data,
             )
         )
-        weight_back_fn = self._einsum_fn(
-            weight_subscript, tensor, is_vector=False
-        )
-        grad_back_fn = self._einsum_fn(
-            tensor_subscript, self.weights, is_vector=tensor.is_vector
-        )
+        self._grad_subscript = grad_subscript
+        self._weight_subscript = weight_subscript
+        self._input = tensor._data
+
+        result.name = "dense"
         result.args = (self.weights, tensor)
-        result.back_fns = (weight_back_fn, grad_back_fn)
+        result.back_fns = (self.weight_back_fn, self.grad_back_fn)
         result.is_vector = tensor.is_vector
 
         return result
@@ -132,6 +127,30 @@ class Dense(Layer):
         return self
 
 
+# class Dropout(Layer):
+#     def __init__(self, probability: float):
+#         self.probability = probability
+#
+#     def backward(self, grad: Tensor):
+#         return to_tensor(self._mask * grad._data, is_vector=grad.is_vector)
+#
+#     def forward(self, tensor: Tensor):
+#         if self.probability == 0:
+#             return tensor
+#         xp = tensor.xp
+#         coef = 1 / (1 - self.probability)
+#
+#         self._mask = (xp.random.rand(*tensor.shape) > self.probability).astype(
+#             tensor.dtype
+#         ) * coef
+#         self._out = self._mask * tensor._data
+#         result = to_tensor(self._out, is_vector=tensor.is_vector)
+#         result.args = (tensor,)
+#         result.back_fns = (self.backward,)
+#
+#         return result
+
+
 class Dropout(Layer):
     def __init__(self, probability: float):
         self.probability = probability
@@ -139,10 +158,12 @@ class Dropout(Layer):
     def forward(self, tensor: Tensor):
         if self.probability == 0:
             return tensor
+        xp = tensor.xp
         shape = tensor.shape[1:] if tensor.is_vector else tensor.shape
-        random_mask = tensor.xp.random.binomial(
-            n=1, p=1 - self.probability, size=shape
-        ).astype(bool)
+        coef = 1 / (1 - self.probability)
+        random_mask = (xp.random.rand(*shape) > self.probability).astype(
+            tensor.dtype
+        ) * coef
         random_mask = to_tensor(random_mask, requires_grad=False)
         return BinaryMultiply()(tensor, random_mask)
 
@@ -173,86 +194,86 @@ class LayerNorm(Layer):
         x = tensor._data
 
         # Compute mean and variance along the feature dimension
-        mean = x.mean(axis=-1, keepdims=True)
-        var = x.var(axis=-1, keepdims=True)
+        self._mean = x.mean(axis=-1, keepdims=True)
+        self._var = x.var(axis=-1, keepdims=True)
+        self._input = x
 
         # Normalize and scale
-        x_norm = (x - mean) / xp.sqrt(var + self.eps)
+        x_norm = (x - self._mean) / xp.sqrt(self._var + self.eps)
         output = self.gamma._data * x_norm + self.beta._data
-
-        self.cache = x, mean, var
 
         output = to_tensor(
             output,
             is_vector=tensor.is_vector,
             requires_grad=tensor.requires_grad,
         )
-        back_fn, beta_back_fn, gamma_back_fn = self.build_back_fns(
-            x, mean, var
-        )
-        output.back_fns = (back_fn, beta_back_fn, gamma_back_fn)
+        output.back_fns = (self.back_fn, self.beta_back_fn, self.gamma_back_fn)
         output.args = (tensor, self.beta, self.gamma)
         output.name = "layer_norm"
 
         return output
 
-    def build_back_fns(self, x, mean, var):
-        def gamma_back_fn(grad: Tensor):
-            """
-            backward pass for grad
-            """
-            xp = grad.xp
+    def gamma_back_fn(self, grad: Tensor):
+        """
+        backward pass for grad
+        """
+        xp = grad.xp
 
-            # Compute intermediate values
-            x_norm = (x - mean) / xp.sqrt(var + self.eps)
-            axes = tuple(range(grad.ndim - 1))
-            result = xp.sum(grad._data * x_norm, axis=axes)
-            return to_tensor(result, is_vector=False)
+        # Compute intermediate values
+        x_norm = (self._input - self._mean) / xp.sqrt(self._var + self.eps)
+        axes = tuple(range(grad.ndim - 1))
+        result = xp.sum(grad._data * x_norm, axis=axes)
+        return to_tensor(result, is_vector=False)
 
-        def beta_back_fn(grad: Tensor):
-            """
-            backward pass for grad
-            """
-            xp = grad.xp
+    def beta_back_fn(self, grad: Tensor):
+        """
+        backward pass for grad
+        """
+        xp = grad.xp
 
-            # Compute intermediate values
-            axes = tuple(range(grad.ndim - 1))
-            result = xp.sum(grad._data, axis=axes)
-            return to_tensor(result, is_vector=False)
+        # Compute intermediate values
+        axes = tuple(range(grad.ndim - 1))
+        result = xp.sum(grad._data, axis=axes)
+        return to_tensor(result, is_vector=False)
 
-        def back_fn(grad: Tensor):
-            """
-            backward pass for grad
-            """
-            xp = grad.xp
+    def back_fn(self, grad: Tensor):
+        """
+        backward pass for grad
+        """
+        xp = grad.xp
 
-            # Compute intermediate values
-            n = x.shape[-1]
+        # Compute intermediate values
+        n = self._input.shape[-1]
 
-            # Gradients with respect to x
-            dx_norm = grad._data * self.gamma._data
-            dvar = xp.sum(
-                dx_norm * (x - mean) * -0.5 * xp.power(var + self.eps, -1.5),
-                axis=-1,
-                keepdims=True,
-            )
-            dmean = xp.sum(
-                dx_norm * -1 / xp.sqrt(var + self.eps), axis=-1, keepdims=True
-            ) + dvar * xp.mean(-2 * (x - mean) / n, axis=-1, keepdims=True)
-            result = (
-                dx_norm / xp.sqrt(var + self.eps)
-                + dvar * 2 * (x - mean) / n
-                + dmean / n
-            )
+        # Gradients with respect to x
+        dx_norm = grad._data * self.gamma._data
+        dvar = xp.sum(
+            dx_norm
+            * (self._input - self._mean)
+            * -0.5
+            * xp.power(self._var + self.eps, -1.5),
+            axis=-1,
+            keepdims=True,
+        )
+        dmean = xp.sum(
+            dx_norm * -1 / xp.sqrt(self._var + self.eps),
+            axis=-1,
+            keepdims=True,
+        ) + dvar * xp.mean(
+            -2 * (self._input - self._mean) / n, axis=-1, keepdims=True
+        )
+        result = (
+            dx_norm / xp.sqrt(self._var + self.eps)
+            + dvar * 2 * (self._input - self._mean) / n
+            + dmean / n
+        )
 
-            return to_tensor(
-                result,
-                is_vector=grad.is_vector,
-                requires_grad=grad.requires_grad,
-                name="back_ln",
-            )
-
-        return back_fn, beta_back_fn, gamma_back_fn
+        return to_tensor(
+            result,
+            is_vector=grad.is_vector,
+            requires_grad=grad.requires_grad,
+            name="back_ln",
+        )
 
     def update(self, optimiser: Optimiser):
         self.gamma = optimiser(self.gamma)
