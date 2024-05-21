@@ -160,11 +160,12 @@ class Dropout(Layer):
             return tensor
         xp = tensor.xp
         coef = 1 / (1 - self.probability)
-        random_mask = (xp.random.rand(*tensor.shape) > self.probability).astype(
-            tensor.dtype
-        ) * coef
+        random_mask = (
+            xp.random.rand(*tensor.shape) > self.probability
+        ).astype(tensor.dtype) * coef
         random_mask = to_tensor(
-            random_mask, is_vector=True, requires_grad=False)
+            random_mask, is_vector=True, requires_grad=False
+        )
         return BinaryMultiply()(tensor, random_mask)
 
 
@@ -404,8 +405,7 @@ class Embedding(Layer):
             case 1:
                 xp.add.at(out, self.input._data, grad._data)
             case 2:
-                for batch in range(grad._data.shape[0]):
-                    xp.add.at(out, self.input._data, grad._data[batch])
+                xp.add.at(out, self.input._data, grad._data.sum(axis=0))
             case _:
                 raise NotImplementedError(
                     f"{grad.ndim=}, {self.input.ndim=} are not supported"
@@ -420,11 +420,11 @@ class Embedding(Layer):
 
         self.input = tensor
         if tensor.is_vector:
-            self._out = tensor.xp.stack(
-                [self.weights._data[idx] for idx in tensor._data]
+            self._out = self.weights._data[tensor._data.flatten()].reshape(
+                tensor._data.shape + (-1,)
             )
         else:
-            self._out = self.weights[tensor._data]
+            self._out = self.weights._data[tensor._data]
         result = to_tensor(self._out, is_vector=tensor.is_vector)
 
         result.args = (tensor, self.weights)

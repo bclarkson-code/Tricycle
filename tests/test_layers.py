@@ -7,7 +7,7 @@ from tricycle.einsum import Einsum
 from tricycle.layers import (  # noqa: E501
     Dense,
     Dropout,
-    Embedding,
+    EmbeddingV2,
     LayerNorm,
     RMSNorm,
     Sequential,
@@ -66,7 +66,7 @@ def test_dropout():  # sourcery skip: square-identity
     assert in_tensor.grad is not None
     assert in_tensor.grad.shape == in_tensor.shape
 
-    coef = 1 / (1-dropout_prob)
+    coef = 1 / (1 - dropout_prob)
     correct_grad = np.full(in_tensor.shape, coef)
     correct_grad[zero_x_idx, zero_y_idx] = 0
 
@@ -102,7 +102,7 @@ def test_embedding():
         dtype=int,
     )
 
-    embedding_layer = Embedding(from_size=vocab_size, to_size=out_shape)
+    embedding_layer = EmbeddingV2(from_size=vocab_size, to_size=out_shape)
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )
@@ -135,7 +135,7 @@ def test_embedding_vectorised():
         dtype=np.int8,
     ).to_vector()
 
-    embedding_layer = Embedding(from_size=vocab_size, to_size=out_shape)
+    embedding_layer = EmbeddingV2(from_size=vocab_size, to_size=out_shape)
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )
