@@ -296,26 +296,27 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
 
 
 @given(tensor_shape(), st.booleans())
-@example(in_shape=[32, 2], is_vector=False)
+@example(in_shape=[2, 2, 4], is_vector=False)
 def test_crossentropy_matches(in_shape, is_vector):
     y_pred = build_tensor(in_shape, is_vector)
-    y_true = copy(y_pred)
-    y_true._data = y_pred.xp.zeros_like(y_true._data)
-    one_idx = y_pred.xp.random.choice(range(in_shape[-1]))
-    match len(in_shape):
-        case 1:
-            y_true[one_idx] = 1
-        case 2:
-            y_true[:, one_idx] = 1
+    y_true = np.random.randint(0, in_shape[-1], size=in_shape[:-1])
+    y_true = to_tensor(y_true, is_vector=is_vector, dtype=int)
     assume(np.isfinite(y_pred._data).all())
 
     tr_out = CrossEntropy()(y_true, y_pred).from_vector()
     if len(in_shape) > 1:
         tr_out = tr_out.mean()
 
-    p_y_pred = torch.tensor(y_pred._data, requires_grad=True)
-    p_y_true = torch.tensor(y_true._data, requires_grad=False)
-    p_out = torch.nn.functional.cross_entropy(
+    if len(in_shape) == 1:
+        p_y_pred = copy(y_pred._data)
+    if len(in_shape) == 2:
+        p_y_pred = copy(y_pred._data)
+    if len(in_shape) == 3:
+        p_y_pred = copy(y_pred._data).transpose(0, -1, 1)
+    p_y_pred = torch.tensor(p_y_pred, requires_grad=True)
+    p_y_true = torch.tensor(y_true._data, dtype=torch.long)
+
+    p_out = torch.nn.CrossEntropyLoss()(
         input=p_y_pred,
         target=p_y_true,
     )
@@ -325,4 +326,7 @@ def test_crossentropy_matches(in_shape, is_vector):
     tr_out.backward()
     p_out.backward()
 
-    assert y_pred.grad.close_to(p_y_pred.grad.detach().numpy())
+    p_grad = p_y_pred.grad.detach().numpy()
+    if len(in_shape) == 3:
+        p_grad = p_grad.transpose(0, -1, 1)
+    assert y_pred.grad.close_to(p_grad)

@@ -31,7 +31,7 @@ def test_can_train_simple_neural_network():
     X, y = load_iris(return_X_y=True)
 
     # one hot encode y
-    y = np.eye(3)[y.astype(int)]
+    y = y.astype(int)
 
     # create a dataset
     ds = InfiniteBatchDataset(X, y, batch_size=BATCH_SIZE)
@@ -55,7 +55,7 @@ def test_can_train_simple_neural_network():
             break
 
         y_pred = model(x_in)
-        loss = loss_fn(y_out, y_pred).from_vector().e("a->") / BATCH_SIZE
+        loss = loss_fn(y_out, y_pred)
         loss.backward()
         losses.append(loss)
 

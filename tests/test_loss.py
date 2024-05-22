@@ -27,8 +27,8 @@ def test_can_mean_square_error():
 
 
 def test_can_CrossEntropy():
-    y_true = to_tensor([0, 0, 1])
-    y_pred = to_tensor([0, 0, 0])
+    y_true = to_tensor([1], dtype=int)
+    y_pred = to_tensor([[0, 0, 0]])
 
     loss = CrossEntropy()(y_true, y_pred)
 
@@ -40,15 +40,18 @@ def test_CrossEntropy_vectorised():
     n_tokens = 5
     vocab_size = 7
 
-    y_true = np.random.random((batch_size, n_tokens, vocab_size))
+    y_true = np.random.randint(0, vocab_size, size=(batch_size, n_tokens))
     y_pred = np.random.random((batch_size, n_tokens, vocab_size))
 
-    y_true = to_tensor(y_true).to_vector()
+    y_true = to_tensor(y_true, dtype=int).to_vector()
     y_pred = to_tensor(y_pred).to_vector()
 
     loss = CrossEntropy()(y_true, y_pred)
 
-    assert loss.shape == (batch_size, n_tokens)
+    assert loss.shape == ()
+
+
+# TODO: write a proper backprop test for these loss functions
 
 
 def test_can_single_linear_regression_step():

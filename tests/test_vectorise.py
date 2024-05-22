@@ -87,32 +87,6 @@ def test_can_vectorise_mse():
     assert output_vector.close_to(correct_output)
 
 
-def test_can_vectorise_cross_entropy():
-    y_true = to_tensor([0, 0, 1, 0])
-    input_1 = to_tensor(np.arange(1, 5))
-    input_2 = to_tensor(np.arange(2, 6))
-    input_3 = to_tensor(np.arange(3, 7))
-
-    output_1 = CrossEntropy()(y_true, input_1)
-    output_2 = CrossEntropy()(y_true, input_2)
-    output_3 = CrossEntropy()(y_true, input_3)
-
-    input_y_true = to_tensor(np.array([y_true._data] * 3))
-    input_vector = to_tensor(
-        np.array([input_1._data, input_2._data, input_3._data])
-    )
-    correct_output = to_tensor(
-        np.array([output_1._data, output_2._data, output_3._data])
-    )
-
-    input_y_true = vectorise(input_y_true)
-    input_vector = vectorise(input_vector)
-    output_vector = CrossEntropy()(input_y_true, input_vector)
-    output_vector = unvectorise(output_vector)
-
-    assert output_vector.close_to(correct_output)
-
-
 def test_can_vectorise_softmax():
     input_1 = to_tensor(np.arange(1, 5))
     input_2 = to_tensor(np.arange(2, 6))

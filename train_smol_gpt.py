@@ -24,7 +24,7 @@ from tqdm import tqdm
 from inference import generate
 from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
-from tricycle.loss import BinaryCrossEntropy
+from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
@@ -50,7 +50,7 @@ dataloader = (
     .to_vector()
     .shuffle()
 )
-loss_fn = BinaryCrossEntropy()
+loss_fn = CrossEntropy()
 optimiser = AdamW(
     learning_rate=lr_schedule(
         0,
@@ -187,7 +187,7 @@ for step in tqdm(range(config.steps), position=0):
         mlflow.log_text(predicted, f"generated/{step}.txt")
 
         # checkpoint
-        avg_loss = xp.mean(losses[step-config.eval_interval:step])
+        avg_loss = xp.mean(losses[step - config.eval_interval : step])
         if avg_loss < best_loss:
             Path("models").mkdir(exist_ok=True)
             with open(f"models/model_{unique_id}.pkl", "wb") as f:

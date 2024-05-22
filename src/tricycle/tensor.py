@@ -492,7 +492,7 @@ def to_tensor(
     requires_grad: bool = True,
     is_vector: bool = False,
     _id: int | None = None,
-    dtype: np.dtype = np.float32,
+    dtype: np.dtype | None = None,
     **kwargs,
 ) -> Tensor:
     """
@@ -504,9 +504,13 @@ def to_tensor(
 
         if isinstance(tensor_like, Tensor):
             array = tensor_like._data
-        elif isinstance(tensor_like, cupy.ndarray):
+        elif isinstance(tensor_like, (np.ndarray, cupy.ndarray)):
             array = tensor_like
+            if dtype is not None:
+                array = array.astype(dtype)
         else:
+            if dtype is None:
+                dtype = np.float32
             array = np.asarray(tensor_like, dtype=dtype, **kwargs)
 
     elif isinstance(tensor_like, Tensor):

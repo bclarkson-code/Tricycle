@@ -86,8 +86,12 @@ def test_can_bmul():
 
 
 def test_can_bdiv():
-    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
-    in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_vector=True)
+    in_tensor_1 = to_tensor(
+        np.arange(12).reshape(3, 4), is_vector=True, dtype=float
+    )
+    in_tensor_2 = to_tensor(
+        np.arange(1, 13).reshape(3, 4), is_vector=True, dtype=float
+    )
 
     out_tensor = BinaryDivide()(in_tensor_1, in_tensor_2)
 
