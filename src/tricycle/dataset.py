@@ -81,8 +81,16 @@ class InfiniteBatchDataset(Dataset):
         batch_outputs = np.vstack([self.outputs[i] for i in indices])
 
         if self._to_tensor:
-            batch_inputs = to_tensor(batch_inputs, is_vector=self.is_vector)
-            batch_outputs = to_tensor(batch_outputs, is_vector=self.is_vector)
+            batch_inputs = to_tensor(
+                batch_inputs,
+                is_vector=self.is_vector,
+                dtype=batch_outputs.dtype,
+            )
+            batch_outputs = to_tensor(
+                batch_outputs,
+                is_vector=self.is_vector,
+                dtype=batch_outputs.dtype,
+            )
         return batch_inputs, batch_outputs
 
     def to_tensor(self):

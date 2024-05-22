@@ -18,7 +18,7 @@ def test_can_train_simple_neural_network_no_wd():
     np.random.seed(42)
     X, y = load_iris(return_X_y=True)
     # one hot encode y
-    y = np.eye(3)[y.astype(int)]
+    y = y.astype(int)
 
     # create a dataset
     ds = InfiniteBatchDataset(X, y, batch_size=BATCH_SIZE)
@@ -40,7 +40,7 @@ def test_can_train_simple_neural_network_no_wd():
             break
 
         y_pred = model(x)
-        loss = loss_fn(y, y_pred).from_vector().e("a->") / BATCH_SIZE
+        loss = loss_fn(y, y_pred)
         loss.backward()
         losses.append(loss)
 
@@ -60,7 +60,7 @@ def test_can_train_simple_neural_network_wd():
     np.random.seed(42)
     X, y = load_iris(return_X_y=True)
     # one hot encode y
-    y = np.eye(3)[y.astype(int)]
+    y = y.astype(int)
 
     # create a dataset
     ds = InfiniteBatchDataset(X, y, batch_size=BATCH_SIZE)
@@ -82,7 +82,7 @@ def test_can_train_simple_neural_network_wd():
             break
 
         y_pred = model(x)
-        loss = loss_fn(y, y_pred).from_vector().e("a->") / BATCH_SIZE
+        loss = loss_fn(y, y_pred)
         loss.backward()
         losses.append(loss)
 
@@ -102,7 +102,7 @@ def test_can_train_simple_neural_network_momentum():
     np.random.seed(42)
     X, y = load_iris(return_X_y=True)
     # one hot encode y
-    y = np.eye(3)[y.astype(int)]
+    y = y.astype(int)
 
     # create a dataset
     ds = InfiniteBatchDataset(X, y, batch_size=BATCH_SIZE)
@@ -124,7 +124,7 @@ def test_can_train_simple_neural_network_momentum():
             break
 
         y_pred = model(x)
-        loss = loss_fn(y, y_pred).from_vector().e("a->") / BATCH_SIZE
+        loss = loss_fn(y, y_pred)
         loss.backward()
         losses.append(loss)
 

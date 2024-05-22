@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 
 class GPTConfig:
@@ -67,7 +67,7 @@ class SmolGPTConfig(GPTConfig):
     def dict(self) -> dict[str, int | float | str | bool]:
         out = {}
         for k, v in SmolGPTConfig.__dict__.items():
-            if k.startswith('__'):
+            if k.startswith("__"):
                 continue
 
             if callable(v):

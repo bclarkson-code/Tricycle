@@ -1,4 +1,5 @@
 from math import sqrt
+
 import numpy as np
 
 from tricycle import CUPY_ENABLED
@@ -83,8 +84,8 @@ class Attention(Op):
                 (self.batch_size, self.context_window, self.embedding_dim * 3)
             )
         self._grad[:, :, : self.embedding_dim] = query
-        self._grad[:, :, self.embedding_dim: self.embedding_dim * 2] = key
-        self._grad[:, :, self.embedding_dim * 2:] = value
+        self._grad[:, :, self.embedding_dim : self.embedding_dim * 2] = key
+        self._grad[:, :, self.embedding_dim * 2 :] = value
 
         return to_tensor(self._grad)
 
@@ -96,8 +97,8 @@ class Attention(Op):
         # split the input into 3 peices
         self._input = tensor
         query = tensor[:, :, : self.embedding_dim]
-        key = tensor[:, :, self.embedding_dim: self.embedding_dim * 2]
-        value = tensor[:, :, self.embedding_dim * 2:]
+        key = tensor[:, :, self.embedding_dim : self.embedding_dim * 2]
+        value = tensor[:, :, self.embedding_dim * 2 :]
 
         # Figure out how big everything is
         self.batch_size = key._data.shape[0]
@@ -163,4 +164,5 @@ class Attention(Op):
     def from_gpu(self):
         if CUPY_ENABLED:
             import cupy as cp
+
             self._mask = cp.asnumpy(self._mask)

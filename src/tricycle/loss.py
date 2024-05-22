@@ -19,7 +19,7 @@ def mean_square_error(y_true: Tensor, y_pred: Tensor):
     return square_error.mean()
 
 
-class CrossEntropy(Op):
+class CrossEntropy_(Op):
     REALLY_SMALL_NUMBER = 1e-8
     REALLY_BIG_NUMBER = 1e8
 
@@ -148,60 +148,91 @@ class BinaryCrossEntropy(Op):
         return result
 
 
-class BinaryCrossEntropyV2(Op):
+class CrossEntropy(Op):
     """
     Calculate cross entropy loss, given logits and target indices (as opposed
     to one-hot encoded tensors)
     """
 
-    REALLY_SMALL_NUMBER = 1e-8
-    REALLY_BIG_NUMBER = 1e8
-
-    def backward(self, grad: Tensor) -> Tensor:
-        xp = grad.xp
-
-        self._y_pred[xp.arange(self._n_inputs), self._y_true] -= 1
-        self._y_pred /= self._n_inputs
-        self._grad = self._y_pred.reshape(self._original_shape) * grad._data
-
-        return to_tensor(self._grad, is_vector=self._input_vector)
+    def log_softmax(self, tensor: Tensor):
+        xp = tensor.xp
+        x_max = xp.max(tensor._data, axis=-1, keepdims=True)
+        log_sum_exp = x_max + xp.log(
+            xp.sum(xp.exp(tensor._data - x_max), axis=-1, keepdims=True)
+        )
+        return tensor._data - log_sum_exp
 
     def forward(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        # sourcery skip: assign-if-exp, reintroduce-else
         """
         Calculate the cross entropy loss
         """
         xp = y_pred.xp
 
-        # flatten to simplify multiple inputs
-        self._original_shape = y_pred.shape
-        self._input_vector = y_pred.is_vector
-        out_dim = y_pred.shape[-1]
-        self._y_true = y_true._data.reshape(-1)
-        y_pred_f = y_pred._data.reshape(-1, out_dim)
-        self._n_inputs = y_pred_f.shape[0]
+        # Calculate log softmax
+        log_softmax_pred = self.log_softmax(y_pred)
 
-        # we scale values by the largest value in each vector
-        # for numeric stability
-        max_vals = xp.max(y_pred_f, axis=-1, keepdims=True)
-        scaled = y_pred_f - max_vals
+        # Cache for backward pass
+        self._y_true = y_true._data
+        self._log_softmax_pred = log_softmax_pred
 
-        log_probs = scaled - xp.log(
-            xp.sum(xp.exp(scaled), axis=-1, keepdims=True)
-        )
-        self._y_pred = xp.exp(log_probs)
+        ndim = log_softmax_pred.ndim
 
-        corrected_log_probs = -log_probs[
-            xp.arange(self._n_inputs), self._y_true
-        ]
-        self._out = corrected_log_probs.sum() / self._n_inputs
+        if ndim == 3:
+            batch_indices = xp.arange(y_true.shape[0], dtype=int)
+            token_indices = xp.arange(y_true.shape[1], dtype=int)
+            loss = -log_softmax_pred[
+                batch_indices[:, None], token_indices, y_true._data
+            ]
+        elif ndim == 2:
+            indices = xp.arange(y_true.shape[0], dtype=int)
+            loss = -log_softmax_pred[indices, y_true._data]
+        elif ndim == 1:
+            loss = -log_softmax_pred[y_true._data]
+        else:
+            raise NotImplementedError(
+                f"BinaryCrossEntropy with predictions with ndim: {ndim} are not yet supported"
+            )
 
-        # TODO: fuse normalising and calculation together
+        # Mean loss over all elements
+        loss = loss.mean()
+
+        self._out = loss
         result = to_tensor(self._out, is_vector=False)
         result.back_fns = (self.backward,)
 
-        # y_true never requires grad so we dont calculate gradients for it
         result.args = (y_pred,)
         result.name = "cross_entropy"
 
         return result
+
+    def backward(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+        ndim = self._log_softmax_pred.ndim
+
+        if ndim == 3:
+            batch_indices = xp.arange(self._y_true.shape[0], dtype=int)
+            token_indices = xp.arange(self._y_true.shape[1], dtype=int)
+            grad_output = xp.exp(self._log_softmax_pred)
+            grad_output[
+                batch_indices[:, None], token_indices, self._y_true
+            ] -= 1
+            grad_output *= grad._data / (
+                self._y_true.shape[0] * self._y_true.shape[1]
+            )
+
+        elif ndim == 2:
+            indices = xp.arange(self._y_true.shape[0], dtype=int)
+            grad_output = xp.exp(self._log_softmax_pred)
+            grad_output[indices, self._y_true] -= 1
+            grad_output *= grad._data / self._y_true.shape[0]
+        elif ndim == 1:
+            grad_output = xp.exp(self._log_softmax_pred)
+            grad_output[self._y_true] -= 1
+            grad_output *= grad._data
+        else:
+            raise NotImplementedError(
+                f"BinaryCrossEntropy with predictions with ndim: {ndim} are not yet supported"
+            )
+
+        self._grad = grad_output
+        return to_tensor(self._grad, is_vector=grad.is_vector)
