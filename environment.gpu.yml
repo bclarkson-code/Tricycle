@@ -7,10 +7,9 @@ channels:
 dependencies:
   - python=3.10
   - numpy
+  - cupy
   - humanize
-  - tqdm
-  - mlflow
-  - psutil
-  - pip
-  - pip:
-    - -e .
+  - scikit-learn
+  - cudnn
+  - cutensor
+  - nccl
