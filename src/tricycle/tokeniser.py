@@ -18,9 +18,7 @@ class BPETokeniser:
     pairs: list[tuple[int, int | None]]
 
     def __init__(self, vocab_size: int):
-        assert (
-            vocab_size >= self.MIN_TOKENS
-        ), f"vocab_size must be >= {self.MIN_TOKENS}"
+        assert vocab_size >= self.MIN_TOKENS, f"vocab_size must be >= {self.MIN_TOKENS}"
         self.vocab_size = vocab_size
 
         # initialise our pairs and merges with single byte tokens
@@ -74,17 +72,13 @@ class BPETokeniser:
         """
         token_ids = range(self.MIN_TOKENS, self.vocab_size)
         if loading_bar:
-            token_ids = tqdm(token_ids, desc="Training")
+            token_ids = tqdm(token_ids, desc="Training tokeniser")
         for token_id in token_ids:
-            most_common_pair = self.most_common_pair(
-                self.count_pairs(int_array)
-            )
+            most_common_pair = self.most_common_pair(self.count_pairs(int_array))
             if most_common_pair is None:
                 break
 
-            int_array = self.replace_pair(
-                int_array, most_common_pair, token_id
-            )
+            int_array = self.replace_pair(int_array, most_common_pair, token_id)
             self.merges[most_common_pair] = token_id
             self.pairs.append(most_common_pair)
             left, right = most_common_pair
@@ -104,9 +98,7 @@ class BPETokeniser:
         as_ints = list(as_bytes)
         return self.train_ints(as_ints)
 
-    def tokenise_ints(
-        self, int_array: list[int], loading_bar=False
-    ) -> list[int]:
+    def tokenise_ints(self, int_array: list[int], loading_bar=False) -> list[int]:
         """
         Tokenise an array of ints
         """

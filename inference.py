@@ -42,7 +42,10 @@ def deactivate_dropout(model: Layer) -> Layer:
     return model
 
 
-def generate(text, model, tokeniser, sample=True, temperature=0.8):
+# TODO: allow tokensiers that arent shakespeare
+def generate(
+    text: str, model: GPT, tokeniser: Shakespeare, sample=True, temperature=0.8
+):
     """
     Given a prompt, yield next token predictions for a model
     """
@@ -87,7 +90,7 @@ def get_sample(
         sample_text = dataset.raw_data_path.read_text()[:2048]
     sampled = []
     for i, next_token in tqdm(
-        enumerate(generate(sample_text, model, dataset)),
+        enumerate(generate(text=sample_text, model=model, tokeniser=dataset)),
         desc="evaluating",
         total=n_samples,
         position=1,

@@ -1,16 +1,13 @@
 import pickle
+import requests
 from collections import abc
 from pathlib import Path
-
-import httpx
 
 from tricycle.tokeniser import BPETokeniser
 
 
 class Shakespeare(abc.Sequence):
-    url: str = (
-        "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
-    )
+    url: str = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
     vocab_size: int
     token_path: Path
     raw_data_path: Path
@@ -55,7 +52,7 @@ class Shakespeare(abc.Sequence):
         """
         Download the shakespeare dataset
         """
-        raw_data = httpx.get(self.url).text
+        raw_data = requests.get(self.url).text
         self.raw_data_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.raw_data_path, "w") as f:
             f.write(raw_data)
@@ -84,9 +81,7 @@ class Shakespeare(abc.Sequence):
 
 
 class ShakespeareChar(abc.Sequence):
-    url: str = (
-        "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
-    )
+    url: str = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"  # noqa: E501
     vocab_size: int
     raw_data_path: Path
     chars: list[int]
@@ -112,7 +107,7 @@ class ShakespeareChar(abc.Sequence):
         """
         Download the shakespeare dataset
         """
-        raw_data = httpx.get(self.url).text
+        raw_data = requests.get(self.url).text
         self.raw_data_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.raw_data_path, "w") as f:
             f.write(raw_data)
