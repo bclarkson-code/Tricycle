@@ -1,4 +1,6 @@
 import time
+from tricycle import CUPY_ENABLED
+from tricycle.exceptions import GPUDisabledException
 from abc import abstractmethod
 from pathlib import Path
 from typing import Iterable
@@ -52,6 +54,9 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
     """
     Log the current GPU memory usage to a file
     """
+    if not CUPY_ENABLED:
+        raise GPUDisabledException()
+
     import cupy
 
     if not path.exists():
