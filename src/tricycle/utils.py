@@ -55,7 +55,7 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
     Log the current GPU memory usage to a file
     """
     if not CUPY_ENABLED:
-        raise GPUDisabledException()
+        raise GPUDisabledException("Cannot log GPU memory if GPU is not enabled")
 
     import cupy
 
