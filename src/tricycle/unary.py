@@ -111,7 +111,7 @@ class UnaryPower(Op):
 
 class UnaryDivide(Op):
     # TODO: manually define the derivative instead of using other operations
-    def forward(self, constant: float, tensor: Tensor) -> Tensor:
+    def forward(self, constant: float | int, tensor: Tensor) -> Tensor:
         """
         Divide a constant by a tensor, elementwise. The constant is not
         differentiable.
