@@ -69,7 +69,7 @@ if CUPY_ENABLED:
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:tokeniser_1024:base")
+mlflow.set_experiment("SmolGPT:tokeniser_1024:debug")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 unique_id = uuid.uuid4()
 
@@ -117,7 +117,7 @@ for step in tqdm(range(config.steps), position=0):
         mlflow.log_text(predicted, f"generated/{step}.txt")
 
         # checkpoint if new model better than old
-        avg_loss = xp.mean(losses[step - config.eval_interval : step])
+        avg_loss = xp.mean(losses[step - config.eval_interval: step])
         if avg_loss < best_loss:
             Path("models").mkdir(exist_ok=True)
             with open(f"models/model_{unique_id}.pkl", "wb") as f:
