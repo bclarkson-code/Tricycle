@@ -18,6 +18,7 @@ dependencies:
   - pytest
   - hypothesis
   - pytorch # we use this to test correctness, not to cheat
+  - pre-commit
   # install tricycle
   - pip
   - pip:
