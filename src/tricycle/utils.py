@@ -1,12 +1,13 @@
 import time
-from tricycle import CUPY_ENABLED
-from tricycle.exceptions import GPUDisabledException
 from abc import abstractmethod
 from pathlib import Path
 from typing import Iterable
 
 import humanize
 import numpy as np
+
+from tricycle import CUPY_ENABLED
+from tricycle.exceptions import GPUDisabledException
 
 
 class Dataset:
@@ -55,7 +56,9 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
     Log the current GPU memory usage to a file
     """
     if not CUPY_ENABLED:
-        raise GPUDisabledException("Cannot log GPU memory if GPU is not enabled")
+        raise GPUDisabledException(
+            "Cannot log GPU memory if GPU is not enabled"
+        )
 
     import cupy
 

@@ -2,7 +2,12 @@ from copy import deepcopy
 
 import numpy as np
 
-from tricycle.binary import BinaryAdd, BinaryDivide, BinaryMultiply, BinarySubtract
+from tricycle.binary import (
+    BinaryAdd,
+    BinaryDivide,
+    BinaryMultiply,
+    BinarySubtract,
+)
 from tricycle.ops import to_tensor
 from tricycle.unary import UnaryAdd, UnaryDivide, UnaryMultiply, UnarySubtract
 

@@ -105,7 +105,8 @@ class AdamW(Optimiser):
             self.v[key] = tensor.xp.zeros_like(tensor._data)
 
         self.m[key] = (
-            self.betas[0] * self.m[key] + (1 - self.betas[0]) * tensor.grad._data
+            self.betas[0] * self.m[key]
+            + (1 - self.betas[0]) * tensor.grad._data
         )
 
         self.v[key] = self.betas[1] * self.v[key] + (1 - self.betas[1]) * (
@@ -116,7 +117,8 @@ class AdamW(Optimiser):
         v_hat = self.v[key] / (1 - self.betas[1] ** self.t)
 
         tensor._data -= self.learning_rate * (
-            m_hat / (xp.sqrt(v_hat) + self.eps) + self.weight_decay * tensor._data
+            m_hat / (xp.sqrt(v_hat) + self.eps)
+            + self.weight_decay * tensor._data
         )
 
         tensor.grad._data.fill(0)

@@ -1,9 +1,9 @@
 import pickle
-from tqdm import tqdm
 import sys
 from pathlib import Path
 
 import numpy as np
+from tqdm import tqdm
 
 from tricycle.configs import SmolGPTConfig
 from tricycle.functions import Softmax
@@ -54,13 +54,17 @@ def generate(
         tokens = tokens[-config.context_window :]
         assert len(tokens) == config.context_window
 
-        encoded = to_tensor([tokens], dtype=int, requires_grad=False).to_vector()
+        encoded = to_tensor(
+            [tokens], dtype=int, requires_grad=False
+        ).to_vector()
 
         pred = model(encoded)
         pred = Softmax()(pred / temperature)
 
         if pred.on_gpu:
-            probabilities = pred.xp.asnumpy(pred._data[0][config.context_window - 1])
+            probabilities = pred.xp.asnumpy(
+                pred._data[0][config.context_window - 1]
+            )
         else:
             probabilities = pred._data[0][config.context_window - 1]
 

@@ -24,7 +24,9 @@ class Softmax(Op):
         """
         xp = tensor.xp
 
-        exp = xp.exp(tensor._data - xp.max(tensor._data, axis=-1, keepdims=True))
+        exp = xp.exp(
+            tensor._data - xp.max(tensor._data, axis=-1, keepdims=True)
+        )
         denominator = xp.sum(exp, axis=-1, keepdims=True)
         self._out = exp / denominator
 
