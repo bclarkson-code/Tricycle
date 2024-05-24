@@ -91,11 +91,7 @@ for step in tqdm(range(config.steps), position=0):
 
         # forward and backward pass
         logits = model(inputs)
-        loss = loss_fn(outputs, logits).sum() / (
-            config.gradient_accumulation_steps
-            * config.batch_size
-            * config.context_window
-        )
+        loss = loss_fn(outputs, logits)
         batch_loss += loss._data
         loss.backward()
 
