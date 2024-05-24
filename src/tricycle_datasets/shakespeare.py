@@ -2,7 +2,7 @@ import pickle
 from collections import abc
 from pathlib import Path
 
-import httpx
+import requests
 
 from tricycle.tokeniser import BPETokeniser
 
@@ -55,7 +55,7 @@ class Shakespeare(abc.Sequence):
         """
         Download the shakespeare dataset
         """
-        raw_data = httpx.get(self.url).text
+        raw_data = requests.get(self.url).text
         self.raw_data_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.raw_data_path, "w") as f:
             f.write(raw_data)
@@ -112,7 +112,7 @@ class ShakespeareChar(abc.Sequence):
         """
         Download the shakespeare dataset
         """
-        raw_data = httpx.get(self.url).text
+        raw_data = requests.get(self.url).text
         self.raw_data_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.raw_data_path, "w") as f:
             f.write(raw_data)

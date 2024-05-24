@@ -28,35 +28,21 @@ jobs:
       uses: mamba-org/setup-micromamba@v1
       with:
         micromamba-version: '1.5.6-0' # any version from https://github.com/mamba-org/micromamba-releases
-        environment-file: environment.yml
+        environment-file: environment.cpu_only.test.yml
         init-shell: >-
           bash
         cache-environment: true
         post-cleanup: 'all'
 
     #----------------------------------------------
-    # install dependencies if cache does not exist
-    #----------------------------------------------
-    - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root --with test
-      shell: bash -el {0}
-    #----------------------------------------------
-    # install your root project, if required
-    #----------------------------------------------
-    - name: Install project
-      run: poetry install --no-interaction
-      shell: bash -el {0}
-    #----------------------------------------------
     # run pre-commit checks
     #----------------------------------------------
     - name: Run pre-commit checks
-      run: poetry run pre-commit run --all-files
+      run: pre-commit run --all-files
       shell: bash -el {0}
     #----------------------------------------------
     #              run test suite
     #----------------------------------------------
     - name: Run tests
-      run: |
-        poetry run pytest tests/
+      run: pytest tests
       shell: bash -el {0}

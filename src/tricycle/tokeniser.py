@@ -74,7 +74,7 @@ class BPETokeniser:
         """
         token_ids = range(self.MIN_TOKENS, self.vocab_size)
         if loading_bar:
-            token_ids = tqdm(token_ids, desc="Training")
+            token_ids = tqdm(token_ids, desc="Training tokeniser")
         for token_id in token_ids:
             most_common_pair = self.most_common_pair(
                 self.count_pairs(int_array)

@@ -3,12 +3,14 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from tqdm import tqdm
 
 from tricycle.configs import SmolGPTConfig
 from tricycle.functions import Softmax
 from tricycle.layers import Dropout, Layer
+from tricycle.models import GPT
 from tricycle.tensor import to_tensor
-from tricycle_datasets.shakespeare import Shakespeare, ShakespeareChar
+from tricycle_datasets.shakespeare import Shakespeare
 
 config = SmolGPTConfig()
 
@@ -40,7 +42,10 @@ def deactivate_dropout(model: Layer) -> Layer:
     return model
 
 
-def generate(text, model, tokeniser, sample=True, temperature=0.8):
+# TODO: allow tokensiers that arent shakespeare
+def generate(
+    text: str, model: GPT, tokeniser: Shakespeare, sample=True, temperature=0.8
+):
     """
     Given a prompt, yield next token predictions for a model
     """
@@ -74,78 +79,51 @@ def generate(text, model, tokeniser, sample=True, temperature=0.8):
         yield next_token
 
 
-def get_sample(sample_text, model, tokeniser, n_samples=50):
+def get_sample(
+    model: GPT,
+    dataset: Shakespeare,
+    sample_text: str | None = None,
+    n_samples: int = 50,
+) -> str:
+    """
+    Given a prompt, generate some new tokens and return them as a string
+    """
+    if sample_text is None:
+        # we need a full context window before we start generating so this
+        # text is more than we'll need
+        sample_text = dataset.raw_data_path.read_text()[:2048]
     sampled = []
-    for i, next_token in enumerate(generate(sample_text, model, tokeniser)):
+    for i, next_token in tqdm(
+        enumerate(generate(text=sample_text, model=model, tokeniser=dataset)),
+        desc="evaluating",
+        total=n_samples,
+        position=1,
+        leave=False,
+    ):
         if i > n_samples:
             break
         sampled.append(next_token)
-    model.zero_grad()
-    return tokeniser.decode(sampled)
+    decoded = dataset.decode(sampled)
+    if not isinstance(decoded, str):
+        decoded = "".join([chr(i) for i in decoded])
+    return decoded
 
 
 if __name__ == "__main__":
     np.random.seed(0)
 
     config = SmolGPTConfig()
-    shakespeare = Shakespeare(config.vocab_size)
+    dataset = Shakespeare(config.vocab_size)
 
-    tokeniser = shakespeare
     model = load_model(sys.argv[1])
     model.to_gpu(0)
 
     deactivate_dropout(model)
 
-    sample_text = """ROMEO:
-He jests at scars that never felt a wound.
-But, soft! what light through yonder window breaks?
-It is the east, and Juliet is the sun.
-Arise, fair sun, and kill the envious moon,
-Who is already sick and pale with grief,
-That thou her maid art far more fair than she:
-Be not her maid, since she is envious;
-Her vestal livery is but sick and green
-And none but fools do wear it; cast it off.
-It is my lady, O, it is my love!
-O, that she knew she were!
-She speaks yet she says nothing: what of that?
-Her eye discourses; I will answer it.
-I am too bold, 'tis not to me she speaks:
-Two of the fairest stars in all the heaven,
-Having some business, do entreat her eyes
-To twinkle in their spheres till they return.
-What if her eyes were there, they in her head?
-The brightness of her cheek would shame those stars,
-As daylight doth a lamp; her eyes in heaven
-Would through the airy region stream so bright
-That birds would sing and think it were not night.
-See, how she leans her cheek upon her hand!
-O, that I were a glove upon that hand,
-That I might touch that cheek!
-
-JULIET:
-Ay me!
-
-ROMEO:
-She speaks:
-O, speak again, bright angel! for thou art
-As glorious to this night, being o'er my head
-As is a winged messenger of heaven
-Unto the white-upturned wondering eyes
-Of mortals that fall back to gaze on him
-When he bestrides the lazy-pacing clouds
-And sails upon the bosom of the air.
-
-JULIET:
-O Romeo, Romeo! wherefore art thou Romeo?
-"""
-
-    print(
-        f"------------PROMPT-------------\n{sample_text}\n--------------RESPONSE-----------",
-        flush=True,
-    )
-    sys.stdout.flush()
-    for token in generate(sample_text, model, tokeniser, sample=True):
+    sample_text = dataset.raw_data_path.read_text()[:2048]
+    for token in generate(
+        text=sample_text, model=model, tokeniser=dataset, sample=True
+    ):
         token = int(token)
-        token = tokeniser.decode([token])
+        token = dataset.decode([token])
         print(token, end="", flush=True)
