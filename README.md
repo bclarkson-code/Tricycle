@@ -21,7 +21,9 @@ Here are some things you can do with Tricycle:
 If you would like to learn more about the process of building tricycle, you can check out my [blog](http://bclarkson-code.com)
 
 ## Installation
-Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, at time of writing, not effort has been put into optimising it. If you do have a CUDA capable GPU I would strongly reccommend installing the gpu version of Tricycle. Training Smol GPT on my GPU takes ~30 mins. Training Smol GPT on CPU takes ~122 hours.
+Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, at time of writing, not effort has been put into optimising it. If you do have a CUDA capable GPU I would strongly reccommend installing the gpu version of Tricycle.
+
+Training Smol GPT on my GPU takes ~30 mins while training Smol GPT on CPU takes ~122 hours.
 
 ### GPU Installation
 If you have a CUDA capable GPU, you can install Tricycle as follows.
