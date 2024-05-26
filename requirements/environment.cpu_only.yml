@@ -13,4 +13,4 @@ dependencies:
   - psutil
   - pip
   - pip:
-    - -e .
+    - -e ..

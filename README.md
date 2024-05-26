@@ -28,13 +28,7 @@ Training Smol GPT on my GPU takes ~30 mins while training Smol GPT on CPU takes 
 ### GPU Installation
 If you have a CUDA capable GPU, you can install Tricycle as follows.
 ```bash
-conda env create -f environment.yml
-conda activate tricycle
-```
-If you want to install test-dependencies you can do the following.
-
-```bash
-conda env create -f environment.test.yml
+conda env create -f requirements/environment.yml
 conda activate tricycle
 ```
 
@@ -42,12 +36,6 @@ conda activate tricycle
 If you want to install Tricycle for CPU, you can do the following.
 ```bash
 conda env create -f environment.cpu_only.yml
-conda activate tricycle
-```
-
-If you want to install test-dependencies you can do the following.
-```bash
-conda env create -f environment.cpu_only.test.yml
 conda activate tricycle
 ```
 
@@ -61,51 +49,57 @@ from tqdm import tqdm
 
 from tricycle.configs import SmolGPTConfig
 from tricycle.dataset import CausalLMDataset
-from tricycle.loss import cross_entropy
+from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
-from tricycle_datasets.shakespeare import ShakespeareChar
+from tricycle_datasets.shakespeare import Shakespeare
 
+# Create a small GPT
 config = SmolGPTConfig()
 model = GPT(config)
 
-tokens = ShakespeareChar(vocab_size=config.vocab_size)
+# Download + tokenise shakespeare
+tokens = Shakespeare(vocab_size=config.vocab_size)
+
+# Build a dataset
 dataset = (
     CausalLMDataset(
         tokens=tokens,
         vocab_size=config.vocab_size,
-        batch_size=config.batch_size,
         context_window=config.context_window,
     )
-    .batch()
-    .to_tensor()
-    .to_vector()
+    .batch(config.batch_size)
+    .shuffle()
+    .to_gpu()
 )
-loss_fn = cross_entropy
+
+# Create loss function and optimiser
+loss_fn = CrossEntropy()
 optimiser = AdamW(
     learning_rate=config.max_learning_rate,
     weight_decay=config.weight_decay,
     betas=(config.beta1, config.beta2),
 )
 
+# Use the gpu
 model.to_gpu()
 
-best_loss = float("inf")
-losses = []
-for step in tqdm(range(config.steps)):
+pbar = tqdm(range(config.steps))
+for step in pbar:
     optimiser.step()
     inputs, outputs = next(dataset)
-    inputs = inputs.to_gpu()
-    outputs = outputs.to_gpu()
 
+    # Forward pass
     logits = model(inputs)
-    loss = loss_fn(outputs, logits).sum() / (
-        config.gradient_accumulation_steps
-        * config.batch_size
-        * config.context_window
-    )
+
+    # Backward pass
+    loss = loss_fn(outputs, logits)
     loss.backward()
 
+    # update loading bar
+    pbar.set_postfix(loss=round(loss._data.item(), 4))
+
+    # Update the model weights
     model.update(optimiser)
 
 # save results
@@ -118,6 +112,26 @@ This will fetch the complete works of shakespeare, build it into a dataset, toke
 As you can see, it looks pretty similar to other frameworks like PyTorch. However, because Tricycle is much smaller and simpler, if you want to figure out how something works, you can dive into the code and get an answer in a few minutes instead of hours.
 
 For a proper training script with all the bells and whistles (logging, gradient accumulation etc.) take a look at `train_smol_gpt.py` which will train a transformer to produce infinite shakespeare in ~35 minutes (on my machine, with an RTX 3090).
+
+## Test + Development dependencies
+To install everything required to run the tests, do the following:
+```bash
+# gpu version
+conda env create -f environment.test.yml
+# cpu version
+conda env create -f environment.cpu_only.test.yml
+conda activate tricycle
+```
+Similarly, development dependencies can be installed as follows:
+
+```bash
+# gpu version
+conda env create -f environment.dev.yml
+# cpu version
+conda env create -f environment.cpu_only.dev.yml
+conda activate tricycle
+```
+
 
 
 ## Contact
