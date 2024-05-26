@@ -107,40 +107,35 @@ class InfiniteBatchDataset(Dataset):
 
 
 class CausalLMDataset:
+    tokens: Sequence[int]
+    vocab_size: int
+    context_window: int
+
+    batch_size: int | None = None
+    is_batch: bool = False
+    batch_indices: np.ndarray | None = None
+    device: int | None = None
+
+    _idx: int = 0
+
     def __init__(
         self,
         tokens: Sequence[int],
         vocab_size: int,
-        batch_size: int,
         context_window: int,
-        should_one_hot_encode: bool = True,
     ):
         self.tokens = tokens
         self.vocab_size = vocab_size
-        self.batch_size = batch_size
         self.context_window = context_window
-        self.is_batch = False
         self._idx = 0
-        self.batch_indices = None
-        self.should_one_hot_encode = should_one_hot_encode
 
     def __len__(self):
-        return (
-            (len(self.tokens) - self.context_window - self.batch_size - 1)
-            // self.batch_size
-            if self.is_batch
-            else len(self.tokens) - 1
-        )
-
-    def one_hot_encode(self, tokens: Sequence[int]):
-        """
-        One hot encode some tokens into one-hot vectors
-        """
-        one_hot = np.zeros((len(tokens), self.vocab_size))
-
-        for i, token in enumerate(tokens):
-            one_hot[i, token] = 1
-        return one_hot
+        if self.batched:
+            assert self.batch_size
+            return (
+                len(self.tokens) - self.context_window - self.batch_size - 1
+            ) // self.batch_size
+        return len(self.tokens) - 1
 
     def _get_single(self, idx: int):
         """
@@ -150,15 +145,17 @@ class CausalLMDataset:
             raise IndexError(f"Index {idx} out of range")
 
         tokens = self.tokens[idx : idx + self.context_window + 1]
-        encoded_tokens = self.one_hot_encode(tokens)
         inputs = tokens[:-1]
-        outputs = encoded_tokens[1:]
+        outputs = tokens[1:]
         return inputs, outputs
 
     def _get_batch(self, idx: int):
         """
         Get a batch of input-output pairs
         """
+        assert self.batch_size is not None
+        assert self.batch_indices is not None
+
         if idx >= len(self.tokens) - self.context_window - self.batch_size - 1:
             raise IndexError(f"Index {idx} out of range")
 
@@ -172,29 +169,27 @@ class CausalLMDataset:
                 for batch_idx in batch_indices
             ]
         )
-        if self.should_one_hot_encode:
-            outputs = np.identity(self.vocab_size)[tokens[:, 1:]]
-
-            return tokens[:, :-1], outputs
         return tokens[:, :-1], tokens[:, 1:]
 
     def __getitem__(self, idx: int):
         inputs, output = (
-            self._get_batch(idx) if self.is_batch else self._get_single(idx)
+            self._get_batch(idx) if self.batched else self._get_single(idx)
         )
-        if self.as_tensor:
-            inputs = to_tensor(
-                inputs, requires_grad=False, name="inputs", dtype=int
-            )
-            output = to_tensor(
-                output, requires_grad=False, name="output", dtype=int
-            )
+        inputs = to_tensor(
+            inputs, requires_grad=False, name="inputs", dtype=np.int32
+        )
+        output = to_tensor(
+            output, requires_grad=False, name="output", dtype=np.int32
+        )
 
-        if self.is_vector and not self.as_tensor:
-            raise ValueError("Cannot vectorise an unbatched dataset")
+        if self.batched:
+            inputs = inputs.to_vector()
+            output = output.to_vector()
 
-        inputs = inputs.to_vector()
-        output = output.to_vector()
+        if self.use_gpu:
+            assert self.device is not None
+            inputs = inputs.to_gpu(self.device)
+            output = output.to_gpu(self.device)
 
         return inputs, output
 
@@ -210,34 +205,36 @@ class CausalLMDataset:
         self._idx += 1
         return result
 
-    def batch(self):
-        self.is_batch = True
-        self.batch_indices = list(
-            range(len(self.tokens) - self.context_window - 1)
+    def batch(self, batch_size: int):
+        self.batch_size = batch_size
+        self.batched = True
+        self.batch_indices = np.arange(
+            len(self.tokens) - self.context_window - 1
         )
         return self
 
     def unbatch(self):
-        self.is_batch = False
+        self.batched = False
         return self
 
     def shuffle(self):
-        if not self.is_batch and self.batch_indices is not None:
+        if not self.batched:
             raise NotImplementedError(
                 "Shuffling non-batched datasets is not currently supported"
             )
         else:
+            assert self.batch_indices is not None
             self.batch_indices = np.random.choice(
                 self.batch_indices, replace=False, size=len(self.batch_indices)
             )
         return self
 
-    def to_tensor(self):
-        self.as_tensor = True
+    def to_gpu(self, device: int = 0):
+        self.device = device
+        self.use_gpu = True
         return self
 
-    def to_vector(self):
-        if not self.is_batch:
-            raise ValueError("Cannot vectorise an unbatched dataset")
-        self.is_vector = True
+    def from_gpu(self):
+        self.device = None
+        self.use_gpu = False
         return self
