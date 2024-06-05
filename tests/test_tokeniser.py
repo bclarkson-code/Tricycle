@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from tricycle.tokeniser import BPETokeniser, BPETokeniserNumba
@@ -12,13 +13,10 @@ def test_count_pairs():
     tokeniser = BPETokeniserNumba(256)
     data = [0, 0, 1, 0, 1]
 
-    got = tokeniser.count_pairs(data)
-    want = {
-        (0, 0): 1,
-        (0, 1): 2,
-        (1, 0): 1,
-    }
-    assert got == want
+    got = tokeniser.count_pairs(data, token_id=1)
+    want = np.array([1, 2, 1, 0])
+
+    assert np.allclose(got, want)
 
 
 def test_replace_pair():
@@ -71,6 +69,90 @@ def test_can_tokenise_simple_text():
     assert got == want
 
 
+def test_can_tokenise_paragraph():
+    tokeniser = BPETokeniserNumba(300)
+
+    sample_text = """(Barry is picking out a shirt)
+Yellow, black. Yellow, black.
+Yellow, black. Yellow, black.
+ :
+Ooh, black and yellow!
+Let's shake it up a little.
+"""
+    tokeniser.train(sample_text)
+    got = tokeniser.encode(sample_text)
+    want = [
+        40,
+        66,
+        97,
+        114,
+        114,
+        121,
+        271,
+        115,
+        32,
+        112,
+        105,
+        256,
+        105,
+        110,
+        103,
+        32,
+        111,
+        117,
+        116,
+        269,
+        275,
+        105,
+        114,
+        116,
+        41,
+        274,
+        274,
+        10,
+        32,
+        58,
+        10,
+        79,
+        111,
+        104,
+        263,
+        269,
+        110,
+        100,
+        32,
+        121,
+        265,
+        33,
+        10,
+        76,
+        101,
+        116,
+        39,
+        115,
+        275,
+        97,
+        107,
+        101,
+        271,
+        116,
+        32,
+        117,
+        112,
+        269,
+        32,
+        108,
+        105,
+        116,
+        116,
+        108,
+        101,
+        46,
+        10,
+    ]
+    assert got == want
+
+
 def test_can_decode_tokens():
     tokeniser = BPETokeniserNumba(257)
     tokeniser.vocab.append(b"ab")
@@ -95,5 +177,5 @@ def test_can_tokenise_longer_text():
 
     got = tokeniser.encode(sample_text)
 
-    assert got[:10] == [78, 279, 82, 65, 693, 82, 675, 66, 337, 383]
-    assert got[-10:] == [640, 612, 339, 455, 266, 115, 597, 434, 464, 262]
+    assert got[:10] == [78, 279, 82, 65, 84, 829, 684, 66, 337, 386]
+    assert got[-10:] == [644, 617, 339, 454, 266, 115, 600, 437, 468, 262]

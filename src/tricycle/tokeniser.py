@@ -1,5 +1,6 @@
 import pickle
 from pathlib import Path
+from typing import List, Tuple
 from warnings import warn
 
 import numpy as np
@@ -165,10 +166,11 @@ class BPETokeniser:
 
 @jit(nopython=True, cache=True)
 def replace_pair(
-    data: list[int], pair: tuple[int, int], token_id: int
-) -> list[int]:
+    data: np.ndarray, pair: Tuple[int, int], token_id: int
+) -> np.ndarray:
     """
-    Replace every occurrence of `pair` with `token_id`"""
+    Replace every occurrence of `pair` with `token_id`
+    """
     new = 0
     old = 0
     while old < len(data) - 1:
@@ -189,6 +191,36 @@ def replace_pair(
         new += 1
 
     return data[:new]
+
+
+@jit("int32[:](int32[:], int32)", nopython=True, parallel=True)
+def count_pairs_parallel_types(data: np.ndarray, token_id: int) -> np.ndarray:
+    counts = np.zeros((token_id + 1) ** 2, dtype=np.int32)
+    for i in range(len(data) - 1):
+        left, right = data[i], data[i + 1]
+        counts[(left * (token_id + 1)) + right] += 1
+
+    return counts
+
+
+@jit(nopython=True, parallel=True)
+def count_pairs_parallel(data: np.ndarray, token_id: int) -> np.ndarray:
+    counts = np.zeros((token_id + 1) ** 2, dtype=np.int32)
+    for i in range(len(data) - 1):
+        left, right = data[i], data[i + 1]
+        counts[(left * (token_id + 1)) + right] += 1
+
+    return counts
+
+
+@jit(nopython=True, parallel=False)
+def count_pairs(data: np.ndarray, token_id: int) -> np.ndarray:
+    counts = np.zeros((token_id + 1) ** 2, dtype=np.int32)
+    for i in range(len(data) - 1):
+        left, right = data[i], data[i + 1]
+        counts[(left * (token_id + 1)) + right] += 1
+
+    return counts
 
 
 class BPETokeniserNumba:
@@ -213,30 +245,40 @@ class BPETokeniserNumba:
         self.pairs = [(idx, None) for idx in range(self.MIN_TOKENS)]
         self.merges = {(idx, None): idx for idx in range(self.MIN_TOKENS)}
         self.vocab = [idx.to_bytes(1, "big") for idx in range(self.MIN_TOKENS)]
+        self.parallel = False
+        self.types = False
 
-    def count_pairs(self, data: list[int]):
-        counts = {}
-        for left, right in zip(data[:-1], data[1:]):
-            counts[(left, right)] = counts.get((left, right), 0) + 1
-        return counts
+    def count_pairs(self, data: np.ndarray, token_id: int) -> np.ndarray:
+
+        if self.parallel:
+            return count_pairs_parallel(data, token_id)
+        if self.types:
+            return count_pairs_parallel_types(data, token_id)
+        return count_pairs(data, token_id)
 
     def replace_pair(
-        self, data: list[int], pair: tuple[int, int], token_id: int
-    ) -> list[int]:
+        self, data: np.ndarray, pair: tuple[int, int], token_id: int
+    ) -> np.ndarray:
         return replace_pair(data=data, pair=pair, token_id=token_id)
 
     def most_common_pair(
-        self, counts: dict[tuple[int, int], int]
+        self, counts: np.ndarray, token_id: int
     ) -> tuple[int, int] | None:
         """
         Return the most common pair
         """
-        if not counts:
-            return None
-        most_common = max(counts, key=counts.get)
-        return None if counts.get(most_common) == 1 else most_common
+        most_common_idx = np.argmax(counts)
 
-    def train_ints(self, int_array: list[int], loading_bar=False):
+        # check if there are no more repeated pairs
+        if counts[most_common_idx] in {0, 1}:
+            return None
+
+        left = most_common_idx // (token_id + 1)
+        right = most_common_idx % (token_id + 1)
+
+        return left, right
+
+    def train_ints(self, int_array: np.ndarray, loading_bar=False):
         """
         Train the tokeniser on an array of ints
         """
@@ -245,7 +287,7 @@ class BPETokeniserNumba:
             token_ids = tqdm(token_ids, desc="Training tokeniser")
         for token_id in token_ids:
             most_common_pair = self.most_common_pair(
-                self.count_pairs(int_array)
+                self.count_pairs(int_array, token_id), token_id
             )
             if most_common_pair is None:
                 break
@@ -267,7 +309,7 @@ class BPETokeniserNumba:
         Train the tokeniser on a string
         """
         as_bytes = text.encode("utf-8")
-        as_ints = list(as_bytes)
+        as_ints = np.array(list(as_bytes), dtype=np.int32)
         return self.train_ints(as_ints)
 
     def tokenise_ints(
