@@ -1,6 +1,6 @@
 import pytest
 
-from tricycle.tokeniser import BPETokeniser
+from tricycle.tokeniser import BPETokeniser, BPETokeniserNumba
 
 slow_test = pytest.mark.skipif(
     "not config.getoption('--run-slow')",
@@ -9,7 +9,7 @@ slow_test = pytest.mark.skipif(
 
 
 def test_count_pairs():
-    tokeniser = BPETokeniser(256)
+    tokeniser = BPETokeniserNumba(256)
     data = [0, 0, 1, 0, 1]
 
     got = tokeniser.count_pairs(data)
@@ -22,7 +22,7 @@ def test_count_pairs():
 
 
 def test_replace_pair():
-    tokeniser = BPETokeniser(256)
+    tokeniser = BPETokeniserNumba(256)
 
     to_replace = (1, 2)
     data = [1, 1, 2, 1, 2, 1]
@@ -34,7 +34,7 @@ def test_replace_pair():
 
 
 def test_replace_pair_when_final_tokens_are_pair():
-    tokeniser = BPETokeniser(256)
+    tokeniser = BPETokeniserNumba(256)
 
     to_replace = (1, 2)
     data = [1, 1, 2, 1, 2]
@@ -46,7 +46,7 @@ def test_replace_pair_when_final_tokens_are_pair():
 
 
 def test_can_train_simple_text():
-    tokeniser = BPETokeniser(256 + 3)
+    tokeniser = BPETokeniserNumba(256 + 3)
     sample_text = "aababa"
 
     with pytest.warns(UserWarning):
@@ -61,7 +61,7 @@ def test_can_train_simple_text():
 
 
 def test_can_tokenise_simple_text():
-    tokeniser = BPETokeniser(257)
+    tokeniser = BPETokeniserNumba(257)
     tokeniser.merges[(ord("a"), ord("b"))] = 256
 
     sample_text = "aababa"
@@ -72,7 +72,7 @@ def test_can_tokenise_simple_text():
 
 
 def test_can_decode_tokens():
-    tokeniser = BPETokeniser(257)
+    tokeniser = BPETokeniserNumba(257)
     tokeniser.vocab.append(b"ab")
 
     sample_tokens = [ord("a"), 256, 256, ord("a")]
@@ -82,9 +82,9 @@ def test_can_decode_tokens():
     assert got == want
 
 
-@slow_test
+# @slow_test
 def test_can_tokenise_longer_text():
-    tokeniser = BPETokeniser(1000)
+    tokeniser = BPETokeniserNumba(1000)
 
     with open("datasets/bee_movie.txt", "r") as f:
         sample_text = f.read()
