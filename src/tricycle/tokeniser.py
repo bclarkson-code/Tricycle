@@ -1,10 +1,12 @@
 import pickle
 from pathlib import Path
-from typing import List, Tuple
+import regex as re
+from pathlib import Path
+from typing import Tuple
 from warnings import warn
 
 import numpy as np
-from numba import jit, prange
+from numba import jit
 from tqdm.auto import tqdm
 
 
@@ -351,3 +353,25 @@ class BPETokeniserNumba:
             result.merges = state["merges"]
             result.pairs = state["pairs"]
             return result
+
+from numba.typed import List
+GPT4_SPLIT_PATTERN = r"""'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?+\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
+
+@jit("", nopython=True, parallel=False)
+def count_pairs_l(data: np.ndarray, token_id: int) -> np.ndarray:
+    counts = np.zeros((token_id + 1) ** 2, dtype=np.int32)
+    for i in range(len(data) - 1):
+        left, right = data[i], data[i + 1]
+        counts[(left * (token_id + 1)) + right] += 1
+
+    return counts
+
+if __name__ == '__main__':
+    sample_text = Path(__file__).read_text()
+    pattern = re.compile(GPT4_SPLIT_PATTERN)
+    chunks = re.findall(pattern, sample_text)
+
+    ints = [list(chunk.encode('utf-8')) for chunk in chunks]
+    print(ints)
+
+
