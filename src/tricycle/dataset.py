@@ -113,7 +113,7 @@ class CausalLMDataset:
         vocab_size: int,
         batch_size: int,
         context_window: int,
-        should_one_hot_encode: bool = True,
+        should_one_hot_encode: bool = False,
     ):
         self.tokens = tokens
         self.vocab_size = vocab_size

@@ -36,7 +36,7 @@ class GPTConfig:
 class SmolGPTConfig(GPTConfig):
     embedding_dim = 384
     context_window = 256
-    vocab_size = 1024
+    vocab_size = 100276
     n_heads = 6
     n_layers = 6
     expansion_ratio = 4
