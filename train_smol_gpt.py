@@ -28,7 +28,7 @@ from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
-from tricycle_datasets.shakespeare import Shakespeare
+from tricycle_datasets.codeparrot import CodeParrot
 
 xp.random.seed(0)
 config = SmolGPTConfig()
@@ -36,20 +36,34 @@ model = GPT(config)
 model.display()
 
 
-dataset = Shakespeare(config.vocab_size)
-dataloader = (
+train_dataset = CodeParrot(config.vocab_size, split="train")
+valid_dataset = CodeParrot(config.vocab_size, split="valid")
+train_dataloader = (
     CausalLMDataset(
-        tokens=dataset,
-        vocab_size=dataset.vocab_size,
+        tokens=train_dataset,
+        vocab_size=train_dataset.vocab_size,
         batch_size=config.batch_size,
         context_window=config.context_window,
-        should_one_hot_encode=False,
     )
     .batch()
     .to_tensor()
     .to_vector()
     .shuffle()
 )
+valid_dataloader = (
+    CausalLMDataset(
+        tokens=valid_dataset,
+        vocab_size=valid_dataset.vocab_size,
+        batch_size=config.batch_size,
+        context_window=config.context_window,
+    )
+    .batch()
+    .to_tensor()
+    .to_vector()
+    .shuffle()
+)
+print("Loaded dataloaders")
+breakpoint()
 loss_fn = CrossEntropy()
 optimiser = AdamW(
     learning_rate=lr_schedule(
@@ -69,7 +83,7 @@ if CUPY_ENABLED:
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:tokeniser_1024:debug")
+mlflow.set_experiment("SmolGPT:codeparrot:debug")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 unique_id = uuid.uuid4()
 
@@ -84,7 +98,7 @@ for step in tqdm(range(config.steps), position=0):
     # perform several forward and backward passes before doing a gradient
     # update to increase the effective batch size
     for _ in range(config.gradient_accumulation_steps):
-        inputs, outputs = next(dataloader)
+        inputs, outputs = next(train_dataloader)
         if CUPY_ENABLED:
             inputs = inputs.to_gpu(config.device_idx)
             outputs = outputs.to_gpu(config.device_idx)
@@ -113,7 +127,7 @@ for step in tqdm(range(config.steps), position=0):
 
     if step % config.eval_interval == 0:
         # generate some text
-        predicted = get_sample(model=model, dataset=dataset)
+        predicted = get_sample(model=model, dataset=train_dataset)
         mlflow.log_text(predicted, f"generated/{step}.txt")
 
         # checkpoint if new model better than old
