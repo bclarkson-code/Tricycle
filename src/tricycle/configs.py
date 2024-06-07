@@ -22,7 +22,7 @@ class GPTConfig:
     beta1: float
     beta2: float
 
-    steps: int
+    steps: int | None
     eval_interval: int
     batch_size: int
     gradient_accumulation_steps: int
@@ -54,9 +54,9 @@ class SmolGPTConfig(GPTConfig):
     beta1 = 0.9
     beta2 = 0.99
 
-    steps = 5_000
-    eval_interval = 50
-    batch_size = 32
+    steps = None
+    eval_interval = 250
+    batch_size = 64
     gradient_accumulation_steps = 1
 
     device_idx = 1

@@ -92,6 +92,7 @@ class CodeParrot(abc.Sequence):
     vocab_size: int
     token_path: Path
     tokeniser_string: str = "cl100k_base"
+    tokens: np.ndarray
 
     def __init__(
         self,

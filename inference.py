@@ -10,6 +10,7 @@ from tricycle.functions import Softmax
 from tricycle.layers import Dropout, Layer
 from tricycle.models import GPT
 from tricycle.tensor import to_tensor
+from tricycle_datasets.codeparrot import CodeParrot
 from tricycle_datasets.shakespeare import Shakespeare
 
 config = SmolGPTConfig()
@@ -44,12 +45,21 @@ def deactivate_dropout(model: Layer) -> Layer:
 
 # TODO: allow tokensiers that arent shakespeare
 def generate(
-    text: str, model: GPT, tokeniser: Shakespeare, sample=True, temperature=0.8
+    model: GPT,
+    tokeniser: Shakespeare,
+    text: str | None = None,
+    tokens: np.ndarray | None = None,
+    sample=True,
+    temperature=0.8,
 ):
     """
     Given a prompt, yield next token predictions for a model
     """
-    tokens = tokeniser.encode(text)
+    if text is not None:
+        tokens = tokeniser.encode(text)
+    elif tokens is None:
+        raise ValueError("At least one of text, tokens must not be None")
+
     while True:
         tokens = tokens[-config.context_window :]
         assert len(tokens) == config.context_window
@@ -81,7 +91,7 @@ def generate(
 
 def get_sample(
     model: GPT,
-    dataset: Shakespeare,
+    dataset: Shakespeare | CodeParrot,
     sample_text: str | None = None,
     n_samples: int = 50,
 ) -> str:
@@ -91,7 +101,7 @@ def get_sample(
     if sample_text is None:
         # we need a full context window before we start generating so this
         # text is more than we'll need
-        sample_text = dataset.raw_data_path.read_text()[:2048]
+        sample_text = dataset.tokens[:2048]
     sampled = []
     for i, next_token in tqdm(
         enumerate(generate(text=sample_text, model=model, tokeniser=dataset)),

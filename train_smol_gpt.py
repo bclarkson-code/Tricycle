@@ -12,6 +12,7 @@ import uuid
 from pathlib import Path
 
 from tricycle import CUPY_ENABLED
+from tricycle.utils import optimal_n_tokens
 
 if CUPY_ENABLED:
     import cupy as xp
@@ -34,10 +35,18 @@ xp.random.seed(0)
 config = SmolGPTConfig()
 model = GPT(config)
 model.display()
+n_tokens, n_steps = optimal_n_tokens(model, config)
+
+config.steps = n_steps
 
 
+print("Loading dataset")
 train_dataset = CodeParrot(config.vocab_size, split="train")
+# trim the training dataset to the chinchilla optimal number of tokens
+train_dataset.tokens = train_dataset.tokens[:n_tokens]
+
 valid_dataset = CodeParrot(config.vocab_size, split="valid")
+print("Loading dataloaders")
 train_dataloader = (
     CausalLMDataset(
         tokens=train_dataset,
@@ -46,9 +55,8 @@ train_dataloader = (
         context_window=config.context_window,
     )
     .batch()
-    .to_tensor()
-    .to_vector()
     .shuffle()
+    .to_tensor()
 )
 valid_dataloader = (
     CausalLMDataset(
@@ -59,11 +67,8 @@ valid_dataloader = (
     )
     .batch()
     .to_tensor()
-    .to_vector()
-    .shuffle()
 )
-print("Loaded dataloaders")
-breakpoint()
+
 loss_fn = CrossEntropy()
 optimiser = AdamW(
     learning_rate=lr_schedule(
