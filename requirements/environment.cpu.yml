@@ -14,4 +14,4 @@ dependencies:
   - numba
   - pip
   - pip:
-    - -e .
+    - -e ../
