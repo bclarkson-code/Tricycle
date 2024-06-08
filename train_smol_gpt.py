@@ -144,7 +144,7 @@ if CUPY_ENABLED:
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:codeparrot:debug")
+mlflow.set_experiment("SmolGPT:codeparrot:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 with mlflow.start_run() as run:
     unique_id = uuid.uuid4()
