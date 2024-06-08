@@ -53,7 +53,7 @@ from tqdm import tqdm
 
 from tricycle.configs import ShakespeareConfig
 from tricycle.dataset import CausalLMDataset
-from tricycle.loss import cross_entropy
+from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle_datasets.shakespeare import Shakespeare
@@ -70,10 +70,10 @@ dataset = (
         context_window=config.context_window,
     )
     .batch()
-    .shuffle()  # only shuffle train dataset.
+    .shuffle()
     .to_tensor()
 )
-loss_fn = cross_entropy
+loss_fn = CrossEntropy()
 optimiser = AdamW(
     learning_rate=config.max_learning_rate,
     weight_decay=config.weight_decay,
