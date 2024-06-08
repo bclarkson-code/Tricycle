@@ -17,7 +17,7 @@ conda activate tricycle
 ```
 
 <details>
-    <summary>CPU and test installation<summary>
+    <summary>CPU and test installation</summary>
 If you want to install test dependencies you can do the following.
 
 ```bash
