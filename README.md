@@ -1,5 +1,6 @@
 # Tricycle
 Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and numpy.
+
 The file `train_smol_gpy.py` trains a 49M, GPT-2 style language model to produce python code in ~2 days on a single RTX 3090 (24Gb).
 
 The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + numpy code.
@@ -129,14 +130,14 @@ This works on multidimensional tensors
 import numpy as np
 
 shape = (6,5,4,3,2)
-a = to_tensor(np.full(shape, 3))
-b = to_tensor(np.full(shape, 4))
+a = to_tensor(np.random.random(shape))
+b = to_tensor(np.random.random(shape))
 
 c = a * b # elementwise multiply
 
 c.backward()
-assert (a.grad == b).all()
-assert (b.grad == a).all()
+assert a.grad.close_to(b)
+assert b.grad.close_to(a)
 ```
 
 And even works through complex operations like attention
