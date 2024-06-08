@@ -121,7 +121,11 @@ class GPT(Layer):
     def display(self):
         print(self)
 
-    def __str__(self):
+    def _contents(self):
+        """
+        Return a flattened list of the layers in this model, along with
+        their depth in the tree of layers
+        """
         stack = [(self, 0)]
 
         contents = []
@@ -134,10 +138,12 @@ class GPT(Layer):
             contents.append((node.__class__.__name__, size, indent))
 
             stack.extend((layer, indent + 1) for layer in node.layers[::-1])
+        return contents
 
+    def __str__(self):
         string = ""
         total = 0
-        for layer, size, n_indent in contents:
+        for layer, size, n_indent in self._contents():
             total += size
             size = humanize.scientific(size) if size else ""
             indent = "  " * n_indent

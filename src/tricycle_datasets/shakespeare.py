@@ -2,9 +2,10 @@ import pickle
 from collections import abc
 from pathlib import Path
 
+import numpy as np
 import requests
 
-from tricycle.tokeniser import BPETokeniser
+from tricycle.tokeniser import BPETokeniserNumba
 
 
 class Shakespeare(abc.Sequence):
@@ -14,7 +15,7 @@ class Shakespeare(abc.Sequence):
     vocab_size: int
     token_path: Path
     raw_data_path: Path
-    tokens: list[int]
+    tokens: np.ndarray
 
     def __init__(
         self,
@@ -60,14 +61,16 @@ class Shakespeare(abc.Sequence):
         with open(self.raw_data_path, "w") as f:
             f.write(raw_data)
 
-    def generate(self) -> BPETokeniser:
+    def generate(self) -> BPETokeniserNumba:
         """
         Download and tokenise the shakespeare dataset
         """
         self.download()
-        raw_data = list(self.raw_data_path.read_bytes())
+        raw_data = np.array(
+            list(self.raw_data_path.read_bytes()), dtype=np.int32
+        )
         if self.tokeniser is None:
-            self.tokeniser = BPETokeniser(self.vocab_size)
+            self.tokeniser = BPETokeniserNumba(self.vocab_size)
         return self.tokeniser.train_ints(raw_data, loading_bar=True)
 
     def __getitem__(self, idx: int) -> int | list[int]:

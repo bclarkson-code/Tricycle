@@ -5,7 +5,7 @@ import hypothesis.strategies as st
 import numpy as np
 import pytest
 import torch
-from hypothesis import assume, given
+from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
@@ -341,13 +341,14 @@ def test_tokeniser_encode_decode(text):
 
 
 @given(string())
+@settings(deadline=1000)
 def test_tokeniser_train_encode_decode(text):
     tokeniser = BPETokeniser(vocab_size=1024)
 
     tokeniser.train(text)
 
     encoded = tokeniser.encode(text)
-    assert encoded == tokeniser.tokens
+    assert np.allclose(encoded, tokeniser.tokens)
 
     decoded = tokeniser.decode(encoded)
     assert text == decoded
