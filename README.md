@@ -98,13 +98,15 @@ with open("model.pkl", "wb") as f:
 ```
 Once trained, you can generate new shakespeare as follows:
 
-```
+```bash
 python inference.py model.pkl
 ```
 
 ## Automatic Differentiation
+
 Tricycle features an automatic differentiation engine that can differentiate arbitrary expressions:
-```
+
+```python
 from tricycle.tensor import to_tensor
 
 x = to_tensor(2)
@@ -123,7 +125,7 @@ print(x.grad)
 
 This works on multidimensional tensors
 
-```
+```python
 import numpy as np
 
 shape = (6,5,4,3,2)
@@ -139,7 +141,7 @@ assert (b.grad == a).all()
 
 And even works through more complex operations
 
-```
+```python
 from tricycle.blocks import MultiHeadSelfAttention
 
 attention = MultiHeadSelfAttention(
