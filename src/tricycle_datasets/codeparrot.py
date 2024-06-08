@@ -127,7 +127,7 @@ class CodeParrot(abc.Sequence):
         return len(self.tokens)
 
     def encode(self, *args):
-        return self.tokeniser.encode(*args)
+        return self.tokeniser.encode_ordinary(*args)
 
     def decode(self, *args):
         return self.tokeniser.decode(*args)

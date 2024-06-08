@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass
+from typing import Literal
 
 
 class GPTConfig:
@@ -22,7 +23,7 @@ class GPTConfig:
     beta1: float
     beta2: float
 
-    steps: int | None
+    steps: int | Literal["chinchilla_optimal"]
     eval_interval: int
     batch_size: int
     gradient_accumulation_steps: int
@@ -54,12 +55,14 @@ class SmolGPTConfig(GPTConfig):
     beta1 = 0.9
     beta2 = 0.99
 
-    steps = None
+    steps = "chinchilla_optimal"
     eval_interval = 250
-    batch_size = 64
-    gradient_accumulation_steps = 1
+    eval_steps = 128
+    batch_size = 20
+    gradient_accumulation_steps = 4
+    sample_size = 512
 
-    device_idx = 1
+    device_idx = 0
 
     mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"

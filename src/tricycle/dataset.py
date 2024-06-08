@@ -141,8 +141,8 @@ class CausalLMDataset:
             batches = [
                 self.tokens[i : i + self.context_window + 1] for i in indices
             ]
-            inputs = np.concatenate([b[:-1] for b in batches])
-            outputs = np.concatenate([b[1:] for b in batches])
+            inputs = np.vstack([b[:-1] for b in batches])
+            outputs = np.vstack([b[1:] for b in batches])
         else:
             start = idx * self.context_window
             end = (idx + 1) * self.context_window + 1
@@ -156,12 +156,14 @@ class CausalLMDataset:
                 requires_grad=False,
                 name="inputs",
                 is_vector=self.is_batch,
+                dtype=np.uint32,
             )
             outputs = to_tensor(
                 outputs,
                 requires_grad=False,
                 name="output",
                 is_vector=self.is_batch,
+                dtype=np.uint32,
             )
             if self.device is not None:
                 inputs.to_gpu(self.device)

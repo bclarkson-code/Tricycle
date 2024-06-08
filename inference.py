@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import tiktoken
 from tqdm import tqdm
 
 from tricycle.configs import SmolGPTConfig
@@ -10,6 +11,7 @@ from tricycle.functions import Softmax
 from tricycle.layers import Dropout, Layer
 from tricycle.models import GPT
 from tricycle.tensor import to_tensor
+from tricycle.tokeniser.tokeniser import BPETokeniser, BPETokeniserNumba
 from tricycle_datasets.codeparrot import CodeParrot
 from tricycle_datasets.shakespeare import Shakespeare
 
@@ -46,8 +48,7 @@ def deactivate_dropout(model: Layer) -> Layer:
 # TODO: allow tokensiers that arent shakespeare
 def generate(
     model: GPT,
-    tokeniser: Shakespeare,
-    text: str | None = None,
+    tokeniser: BPETokeniser | BPETokeniserNumba | tiktoken.core.Encoding,
     tokens: np.ndarray | None = None,
     sample=True,
     temperature=0.8,
@@ -55,10 +56,8 @@ def generate(
     """
     Given a prompt, yield next token predictions for a model
     """
-    if text is not None:
-        tokens = tokeniser.encode(text)
-    elif tokens is None:
-        raise ValueError("At least one of text, tokens must not be None")
+    if isinstance(tokens, np.ndarray):
+        tokens = tokens.tolist()
 
     while True:
         tokens = tokens[-config.context_window :]
@@ -91,31 +90,33 @@ def generate(
 
 def get_sample(
     model: GPT,
-    dataset: Shakespeare | CodeParrot,
-    sample_text: str | None = None,
-    n_samples: int = 50,
+    tokeniser: BPETokeniser | BPETokeniserNumba | tiktoken.core.Encoding,
+    sample_tokens: np.ndarray | None = None,
 ) -> str:
     """
     Given a prompt, generate some new tokens and return them as a string
     """
-    if sample_text is None:
-        # we need a full context window before we start generating so this
-        # text is more than we'll need
-        sample_text = dataset.tokens[:2048]
     sampled = []
     for i, next_token in tqdm(
-        enumerate(generate(text=sample_text, model=model, tokeniser=dataset)),
-        desc="evaluating",
-        total=n_samples,
+        enumerate(
+            generate(
+                tokens=sample_tokens,
+                model=model,
+                tokeniser=tokeniser,
+            )
+        ),
+        desc="Sampling",
+        total=config.sample_size,
         position=1,
         leave=False,
     ):
-        if i > n_samples:
+        if i > config.sample_size:
             break
         sampled.append(next_token)
-    decoded = dataset.decode(sampled)
-    if not isinstance(decoded, str):
-        decoded = "".join([chr(i) for i in decoded])
+
+    decoded = tokeniser.decode(sampled)
+    sample_text = tokeniser.decode(sample_tokens)
+    decoded = f"PROMPT:\n{sample_text}\nGENERATED:\n{decoded}"
     return decoded
 
 

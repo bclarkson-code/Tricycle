@@ -96,7 +96,9 @@ def optimal_n_tokens(model: GPT, config: SmolGPTConfig):
 
     model_size = sum(size for _, size, _ in model._contents())
     n_tokens = model_size * tokens_per_param
-    n_steps = n_tokens / config.batch_size
+    n_steps = n_tokens // (
+        config.batch_size * config.gradient_accumulation_steps
+    )
     estimated_loss = (
         CONST + (A / (model_size**pow_1)) + (B / (n_tokens**pow_2))
     )
