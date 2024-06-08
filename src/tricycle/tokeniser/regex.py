@@ -185,5 +185,5 @@ class RegexTokeniser:
 
 if __name__ == "__main__":
     sample_text = DATA_PATH.read_text()
-    tokeniser = Tokeniser(1000)
+    tokeniser = RegexTokeniser(1000)
     tokens = tokeniser.encode(sample_text, loading_bar=True)
