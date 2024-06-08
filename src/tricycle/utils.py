@@ -7,7 +7,9 @@ import humanize
 import numpy as np
 
 from tricycle import CUPY_ENABLED
+from tricycle.configs import SmolGPTConfig
 from tricycle.exceptions import GPUDisabledException
+from tricycle.models import GPT
 
 
 class Dataset:
@@ -76,3 +78,34 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
         f.write(
             f"{stage},{used_bytes},{total_bytes},{pool.used_bytes()},{pool.total_bytes()},{now}\n"  # noqa: E501
         )
+
+
+def optimal_n_tokens(model: GPT, config: SmolGPTConfig):
+    """
+    Use corrected chinchilla scaling to estimate the compute-optimal number of
+    tokens to train on.
+    See https://arxiv.org/abs/2404.10102 for details
+    """
+    # constants from the paper
+    CONST = 1.82
+    A = 514
+    B = 2115.2
+    pow_1 = 0.35
+    pow_2 = 0.37
+    tokens_per_param = 20
+
+    model_size = sum(size for _, size, _ in model._contents())
+    n_tokens = model_size * tokens_per_param
+    n_steps = n_tokens // (
+        config.batch_size
+        * config.gradient_accumulation_steps
+        * config.context_window
+    )
+    estimated_loss = (
+        CONST + (A / (model_size**pow_1)) + (B / (n_tokens**pow_2))
+    )
+    print("Corrected Chinchilla Optimal Parameters:")
+    print(f" - Number of tokens: {humanize.intword(n_tokens)}")
+    print(f" - Number of steps: {humanize.intword(n_steps)}")
+    print(f" - Estimated final loss: {estimated_loss:.3f}")
+    return n_tokens, n_steps

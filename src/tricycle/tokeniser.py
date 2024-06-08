@@ -2,12 +2,62 @@ import pickle
 from pathlib import Path
 from warnings import warn
 
+import numpy as np
+from numba import njit
 from tqdm.auto import tqdm
+
+
+@njit
+def replace_pair(
+    data: np.ndarray, pair: tuple[int, int], token_id: int
+) -> np.ndarray:
+    """
+    Replace every occurrence of `pair` with `token_id`
+    """
+    new = 0
+    old = 0
+
+    while old < len(data) - 1:
+        left = data[old]
+        right = data[old + 1]
+
+        if (left, right) == pair:
+            data[new] = token_id
+            old += 1
+        else:
+            data[new] = left
+        new += 1
+        old += 1
+
+    # handle final id not being a match
+    if old == len(data) - 1 and old != 0:
+        data[new] = data[old]
+        new += 1
+
+    return data[:new]
+
+
+@njit
+def count_pairs(data: np.ndarray, token_id: int) -> np.ndarray:
+    """
+    Count the number of occurences of each pair of ints in an array
+    Note: I tried setting parallel to True, but it was slower than
+    turning it off
+    """
+    counts = np.zeros((token_id + 1) ** 2, dtype=np.int32)
+    for i in range(len(data) - 1):
+        left, right = data[i], data[i + 1]
+        counts[(left * (token_id + 1)) + right] += 1
+
+    return counts
 
 
 class BPETokeniser:
     """
-    A simple byte pair encoding tokeniser
+    A simple byte pair encoding tokeniser.
+
+    In vanilla python, this is really slow so some functions have been
+    sped up with numba
     """
 
     # we cant have less than the number of possible single bytes
@@ -27,48 +77,31 @@ class BPETokeniser:
         self.pairs = [(idx, None) for idx in range(self.MIN_TOKENS)]
         self.merges = {(idx, None): idx for idx in range(self.MIN_TOKENS)}
         self.vocab = [idx.to_bytes(1, "big") for idx in range(self.MIN_TOKENS)]
-
-    def count_pairs(self, data: list[int]):
-        counts = {}
-        for left, right in zip(data[:-1], data[1:]):
-            counts[(left, right)] = counts.get((left, right), 0) + 1
-        return counts
-
-    def most_common_pair(
-        self, counts: dict[tuple[int, int], int]
-    ) -> tuple[int, int] | None:
-        """
-        Return the most common pair
-        """
-        if not counts:
-            return None
-        most_common = max(counts, key=counts.get)
-        return None if counts.get(most_common) == 1 else most_common
+        self.type_ = "numba"
 
     def replace_pair(
-        self, data: list[int], pair: tuple[int, int], token_id: int
-    ) -> list[int]:
+        self, data: np.ndarray, pair: tuple[int, int], token_id: int
+    ) -> np.ndarray:
+        return replace_pair(data=data, pair=pair, token_id=token_id)
+
+    def most_common_pair(
+        self, counts: np.ndarray, token_id: int
+    ) -> tuple[int, int] | None:
         """
-        Replace every occurrence of `pair` with `token_id`
+        Return the most common pair.
         """
-        out = []
-        skip_next = False
-        for left, right in zip(data[:-1], data[1:]):
-            if skip_next:
-                skip_next = False
-                continue
+        most_common_idx = np.argmax(counts)
 
-            if (left, right) == pair:
-                skip_next = True
-                out.append(token_id)
-            else:
-                out.append(left)
-        if not skip_next and data[1:]:
-            out.append(right)
+        # check if there are no more repeated pairs
+        if counts[most_common_idx] in {0, 1}:
+            return None
 
-        return out
+        left = most_common_idx // (token_id + 1)
+        right = most_common_idx % (token_id + 1)
 
-    def train_ints(self, int_array: list[int], loading_bar=False):
+        return left, right
+
+    def train_ints(self, int_array: np.ndarray, loading_bar=False):
         """
         Train the tokeniser on an array of ints
         """
@@ -76,15 +109,19 @@ class BPETokeniser:
         if loading_bar:
             token_ids = tqdm(token_ids, desc="Training tokeniser")
         for token_id in token_ids:
+            # find the most common pair of tokens
             most_common_pair = self.most_common_pair(
-                self.count_pairs(int_array)
+                count_pairs(int_array, token_id), token_id
             )
             if most_common_pair is None:
                 break
 
+            # replace every occurrence of the pair with the new token
             int_array = self.replace_pair(
                 int_array, most_common_pair, token_id
             )
+
+            # store the new pair and token
             self.merges[most_common_pair] = token_id
             self.pairs.append(most_common_pair)
             left, right = most_common_pair
@@ -101,39 +138,42 @@ class BPETokeniser:
         Train the tokeniser on a string
         """
         as_bytes = text.encode("utf-8")
-        as_ints = list(as_bytes)
+        as_ints = np.array(list(as_bytes), dtype=np.int32)
         return self.train_ints(as_ints)
 
     def tokenise_ints(
-        self, int_array: list[int], loading_bar=False
-    ) -> list[int]:
+        self, int_array: np.ndarray, loading_bar=False
+    ) -> np.ndarray:
         """
         Tokenise an array of ints
         """
+        if not isinstance(int_array, np.ndarray):
+            int_array = np.array(int_array, dtype=np.int32)
+
         ints = self.merges.items()
         if loading_bar:
             ints = tqdm(ints, desc="tokenising", total=len(ints))
         for pair, token_id in ints:
             if pair[1] is None:
                 continue
-            int_array = self.replace_pair(int_array, pair, token_id)
+            int_array = replace_pair(int_array, pair, token_id)
         return int_array
 
-    def encode(self, text: str) -> list[int]:
+    def encode(self, text: str) -> np.ndarray:
         """
         Tokenise a string
         """
         as_bytes = text.encode("utf-8")
-        as_ints = list(as_bytes)
+        as_ints = np.array(list(as_bytes))
 
         return self.tokenise_ints(as_ints)
 
-    def decode(self, tokens: list[int] | int) -> str:
+    def decode(self, tokens: np.ndarray | int) -> str:
         """
         Convert tokens into a string
         """
-        if not isinstance(tokens, list):
-            tokens = [tokens]
+        if not isinstance(tokens, np.ndarray):
+            tokens = np.array([tokens])
 
         decoded = b""
         for token in tokens:

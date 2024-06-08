@@ -13,6 +13,7 @@ dependencies:
   - tqdm
   - mlflow
   - psutil
+  - numba
   # gpu dependencies
   - cudnn
   - cutensor
