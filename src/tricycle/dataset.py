@@ -120,6 +120,7 @@ class CausalLMDataset:
         self.batch_size = batch_size
         self.context_window = context_window
         self.is_batch = False
+        self.as_tensor = False
         self._idx = 0
         self.batch_indices = None
         self.should_one_hot_encode = should_one_hot_encode

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from tricycle.tokeniser import BPETokeniser, BPETokeniserNumba
+from tricycle.tokeniser import BPETokeniser, count_pairs, replace_pair
 
 slow_test = pytest.mark.skipif(
     "not config.getoption('--run-slow')",
@@ -10,29 +10,26 @@ slow_test = pytest.mark.skipif(
 
 
 def test_count_pairs():
-    tokeniser = BPETokeniserNumba(256)
     data = np.array([0, 0, 1, 0, 1], dtype=np.int32)
 
-    got = tokeniser.count_pairs(data, token_id=1)
+    got = count_pairs(data=data, token_id=1)
     want = np.array([1, 2, 1, 0])
 
     assert np.allclose(got, want)
 
 
 def test_replace_pair():
-    tokeniser = BPETokeniserNumba(256)
-
     to_replace = (1, 2)
     data = np.array([1, 1, 2, 1, 2, 1])
 
-    got = tokeniser.replace_pair(data, to_replace, 3)
+    got = replace_pair(data, to_replace, 3)
     want = np.array([1, 3, 3, 1])
 
     assert np.allclose(got, want)
 
 
 def test_replace_pair_when_final_tokens_are_pair():
-    tokeniser = BPETokeniserNumba(256)
+    tokeniser = BPETokeniser(256)
 
     to_replace = (1, 2)
     data = np.array([1, 1, 2, 1, 2])
@@ -44,7 +41,7 @@ def test_replace_pair_when_final_tokens_are_pair():
 
 
 def test_can_train_simple_text():
-    tokeniser = BPETokeniserNumba(256 + 3)
+    tokeniser = BPETokeniser(256 + 3)
     sample_text = "aababa"
 
     with pytest.warns(UserWarning):
@@ -59,7 +56,7 @@ def test_can_train_simple_text():
 
 
 def test_can_tokenise_simple_text():
-    tokeniser = BPETokeniserNumba(257)
+    tokeniser = BPETokeniser(257)
     tokeniser.merges[(ord("a"), ord("b"))] = 256
 
     sample_text = "aababa"
@@ -70,7 +67,7 @@ def test_can_tokenise_simple_text():
 
 
 def test_can_tokenise_paragraph():
-    tokeniser = BPETokeniserNumba(300)
+    tokeniser = BPETokeniser(300)
 
     sample_text = """(Barry is picking out a shirt)
 Yellow, black. Yellow, black.
@@ -156,7 +153,7 @@ Let's shake it up a little.
 
 
 def test_can_decode_tokens():
-    tokeniser = BPETokeniserNumba(257)
+    tokeniser = BPETokeniser(257)
     tokeniser.vocab.append(b"ab")
 
     sample_tokens = np.array([ord("a"), 256, 256, ord("a")])
@@ -167,7 +164,7 @@ def test_can_decode_tokens():
 
 
 def test_can_tokenise_longer_text():
-    tokeniser = BPETokeniserNumba(1000)
+    tokeniser = BPETokeniser(1000)
 
     with open("datasets/bee_movie.txt", "r") as f:
         sample_text = f.read()

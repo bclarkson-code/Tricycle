@@ -37,7 +37,7 @@ def replace_pair(
     return data[:new]
 
 
-@njit(parallel=False)
+@njit
 def count_pairs(data: np.ndarray, token_id: int) -> np.ndarray:
     """
     Count the number of occurences of each pair of ints in an array
