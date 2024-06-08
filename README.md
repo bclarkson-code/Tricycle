@@ -17,8 +17,8 @@ conda activate tricycle
 ```
 
 <details>
-    <summary>Other installations</summary>
-If you want to install test-dependencies you can do the following.
+    <summary>CPU and test installation<summary>
+If you want to install test dependencies you can do the following.
 
 ```bash
 conda env create -f environment.test.yml -n tricycle
@@ -32,7 +32,7 @@ conda env create -f environment.cpu.yml -n tricycle
 conda activate tricycle
 ```
 
-If you want to install test-dependencies you can do the following.
+If you want to install test dependencies on CPU you can do the following.
 ```bash
 conda env create -f environment.cpu.test.yml -n tricycle
 conda activate tricycle
