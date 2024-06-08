@@ -23,4 +23,4 @@ dependencies:
   # install tricycle
   - pip
   - pip:
-    - -e .
+    - -e ../

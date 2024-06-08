@@ -10,7 +10,7 @@ Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. 
 
 If you have a CUDA capable GPU, you can install Tricycle as follows.
 ```bash
-conda env create -f environment.yml
+conda env create -f environment.yml -n tricycle
 conda activate tricycle
 ```
 
@@ -19,20 +19,20 @@ conda activate tricycle
 If you want to install test-dependencies you can do the following.
 
 ```bash
-conda env create -f environment.test.yml
+conda env create -f environment.test.yml -n tricycle
 conda activate tricycle
 ```
 
 ### CPU Installation
 If you want to install Tricycle for CPU, you can do the following.
 ```bash
-conda env create -f environment.cpu_only.yml
+conda env create -f environment.cpu_only.yml -n tricycle
 conda activate tricycle
 ```
 
 If you want to install test-dependencies you can do the following.
 ```bash
-conda env create -f environment.cpu_only.test.yml
+conda env create -f environment.cpu_only.test.yml -n tricycle
 conda activate tricycle
 ```
 </details>
