@@ -1,76 +1,81 @@
-import numpy as np
-
 from tricycle.einsum import Einsum, Subscript
+from tricycle.ops import Op
 from tricycle.tensor import Tensor, to_tensor
 
 
-def rmax(tensor: Tensor, subscript: str | Subscript):
-    """
-    Generate an indicator tensor that, when einsummed with the tensor, results
-    in a tensor that is equal to the result of max applied along the indices
-    that dont appear in the output of the subscript
-    """
-    if isinstance(subscript, str):
-        subscript = Subscript(subscript)
+class ReduceMax(Op):
+    def __call__(self, tensor: Tensor, subscript: Subscript | str):
+        """
+        Generate an indicator tensor that, when einsummed with the tensor,
+        results in a tensor that is equal to the result of max applied along
+        the indices that dont appear in the output of the subscript
+        """
+        if isinstance(subscript, str):
+            subscript = Subscript(subscript)
 
-    assert (
-        len(subscript.inputs) == 1
-    ), f"Can only reduce a single tensor at a time. Indices suggeststed: {len(subscript.inputs)} tensors: {subscript.inputs}"
-    [idx] = subscript.inputs
+        assert (
+            len(subscript.inputs) == 1
+        ), f"Can only reduce a single tensor at a time. Indices suggeststed: {len(subscript.inputs)} tensors: {subscript.inputs}"
 
-    reduce_along_axes = [
-        i for i, char in enumerate(idx) if char not in subscript.output
-    ]
+        [idx] = subscript.inputs
 
-    if not reduce_along_axes:
-        return tensor
+        reduce_along_axes = [
+            i for i, char in enumerate(idx) if char not in subscript.output
+        ]
 
-    indicator = (
-        tensor == np.max(tensor, axis=tuple(reduce_along_axes), keepdims=True)
-    ).astype(int)
-    indicator = to_tensor(
-        indicator, requires_grad=False, is_vector=tensor.is_vector
-    )
+        if not reduce_along_axes:
+            return tensor
 
-    new_subscript = f"{idx},{idx}->{subscript.output}"
+        indicator = tensor._data == tensor.xp.max(
+            tensor._data, axis=tuple(reduce_along_axes), keepdims=True
+        )
+        indicator = to_tensor(
+            indicator, requires_grad=False, is_vector=tensor.is_vector
+        )
+        indicator._data = indicator._data.astype(tensor.xp.int8)
 
-    result = Einsum(new_subscript)(tensor, indicator)
-    result.name = f"min({new_subscript})"
+        new_subscript = Subscript.from_split([idx, idx], subscript.output)
 
-    return result
+        result = Einsum(new_subscript)(tensor, indicator)
+        result.name = f"min({new_subscript})"
+
+        return result
 
 
-def rmin(tensor: Tensor, subscript: Subscript | str):
-    """
-    Generate an indicator tensor that, when einsummed with the tensor, results
-    in a tensor that is equal to the result of min applied along the indices
-    that dont appear in the output of the subscript
-    """
-    if isinstance(subscript, str):
-        subscript = Subscript(subscript)
+class ReduceMin(Op):
+    def __call__(self, tensor: Tensor, subscript: Subscript | str):
+        """
+        Generate an indicator tensor that, when einsummed with the tensor, results
+        in a tensor that is equal to the result of min applied along the indices
+        that dont appear in the output of the subscript
+        """
+        if isinstance(subscript, str):
+            subscript = Subscript(subscript)
 
-    assert (
-        len(subscript.inputs) == 1
-    ), f"Can only reduce a single tensor at a time. Indices suggeststed: {len(subscript.inputs)} tensors: {subscript.inputs}"
-    [idx] = subscript.inputs
+        assert (
+            len(subscript.inputs) == 1
+        ), f"Can only reduce a single tensor at a time. Indices suggeststed: {len(subscript.inputs)} tensors: {subscript.inputs}"
 
-    reduce_along_axes = [
-        i for i, char in enumerate(idx) if char not in subscript.output
-    ]
+        [idx] = subscript.inputs
 
-    if not reduce_along_axes:
-        return tensor
+        reduce_along_axes = [
+            i for i, char in enumerate(idx) if char not in subscript.output
+        ]
 
-    indicator = (
-        tensor == np.min(tensor, axis=tuple(reduce_along_axes), keepdims=True)
-    ).astype(int)
-    indicator = to_tensor(
-        indicator, requires_grad=False, is_vector=tensor.is_vector
-    )
+        if not reduce_along_axes:
+            return tensor
 
-    new_subscript = Subscript.from_split([idx, idx], subscript.output)
+        indicator = tensor._data == tensor.xp.min(
+            tensor._data, axis=tuple(reduce_along_axes), keepdims=True
+        )
+        indicator = to_tensor(
+            indicator, requires_grad=False, is_vector=tensor.is_vector
+        )
+        indicator._data = indicator._data.astype(tensor.xp.int8)
 
-    result = Einsum(new_subscript)(tensor, indicator)
-    result.name = f"min({new_subscript})"
+        new_subscript = Subscript.from_split([idx, idx], subscript.output)
 
-    return result
+        result = Einsum(new_subscript)(tensor, indicator)
+        result.name = f"min({new_subscript})"
+
+        return result

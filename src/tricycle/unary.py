@@ -1,192 +1,344 @@
-from functools import partial
+import numbers
 
-import numpy as np
+from numpy.typing import ArrayLike
 
-from tricycle.einsum import Einsum
-from tricycle.ops import nothing
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.ops import Op
+from tricycle.tensor import Tensor, nothing, to_tensor
 
 grad = False
 
 
-def uadd(tensor: Tensor, constant: float) -> Tensor:
-    """
-    Add a constant, elementwise, to a tensor. The constant is not
-    differentiable.
-    """
-    assert isinstance(tensor, Tensor)
-    assert np.isscalar(constant)
+class UnaryAdd(Op):
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
+        """
+        Add a constant, elementwise, to a tensor. The constant is not
+        differentiable.
+        """
+        xp = tensor.xp
 
-    result = to_tensor(np.add(tensor, constant))
-    result.args = (tensor,)
-    result.back_fn = (nothing,)
-    result.name = f"+ {constant}"
-    result.is_vector = tensor.is_vector
-    return result
+        assert isinstance(tensor, Tensor)
+        assert isinstance(constant, numbers.Number)
 
+        self._out = xp.add(tensor._data, constant)
 
-def umul(tensor: Tensor, constant: float) -> Tensor:
-    """
-    Multiply a constant, elementwise, to a tensor. The constant is not
-    differentiable.
-    """
-    assert isinstance(tensor, Tensor)
-    assert np.isscalar(constant)
-
-    constant_tensor = to_tensor(
-        np.full_like(tensor, constant, dtype=float), requires_grad=False
-    )
-    constant_tensor.is_vector = tensor.is_vector
-
-    return Einsum("...,...->...")(tensor, constant_tensor)
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (nothing,)
+        result.name = f"+ {constant}"
+        result.is_vector = tensor.is_vector
+        return result
 
 
-def usub(tensor: Tensor, constant: float) -> Tensor:
-    """
-    Subtract a constant, elementwise, from a tensor. The constant is not
-    differentiable.
-    """
-    return uadd(tensor, -constant)
+class UnaryMultiply(Op):
+    _constant: float
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        self._grad = xp.multiply(grad._data, self._constant)
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
+        """
+        Multiply a constant, elementwise, to a tensor. The constant is not
+        differentiable.
+        """
+        xp = tensor.xp
+
+        assert isinstance(tensor, Tensor)
+        assert xp.isscalar(constant)
+
+        self._out = xp.multiply(tensor._data, constant)
+        self._constant = constant
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = f"+ {constant}"
+        result.is_vector = tensor.is_vector
+        return result
 
 
-def upow(tensor: Tensor, constant: float) -> Tensor:
-    """
-    Raise a tensor to a constant, elementwise. The constant is not
-    differentiable.
-    """
-    from tricycle.binary import bmul
-
-    assert isinstance(tensor, Tensor)
-    assert np.isscalar(constant)
-
-    result = to_tensor(np.power(tensor, constant))
-    result.args = (tensor,)
-    coef = to_tensor(
-        np.power(tensor, constant - 1), is_vector=tensor.is_vector
-    )
-    result.back_fn = (partial(bmul, umul(coef, constant)),)
-    result.name = f"^ {constant}"
-    result.is_vector = tensor.is_vector
-
-    return result
+class UnarySubtract(Op):
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
+        """
+        Subtract a constant, elementwise, from a tensor. The constant is not
+        differentiable.
+        """
+        return UnaryAdd()(tensor, -constant)
 
 
-def udiv(constant: float, tensor: Tensor) -> Tensor:
-    """
-    Divide a constant by a tensor, elementwise. The constant is not
-    differentiable.
-    """
-    return umul(upow(tensor, -1.0), constant)
+class UnaryPower(Op):
+    input: ArrayLike
+    constant: float
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        self._grad = xp.power(
+            self.input._data, self.constant - 1, dtype=self.input.dtype
+        )
+        self._grad *= self.constant * grad._data
+
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
+        """
+        Raise a tensor to a constant, elementwise. The constant is not
+        differentiable.
+        """
+        xp = tensor.xp
+
+        assert isinstance(tensor, Tensor)
+        assert xp.isscalar(constant)
+
+        self._out = xp.power(tensor._data, constant)
+        self.input = tensor
+        self.constant = constant
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = f"^ {constant}"
+        result.is_vector = tensor.is_vector
+
+        return result
 
 
-def umax(tensor: Tensor, constant: float) -> Tensor:
-    """
-    Return the max of the tensor and the constant,
-    elementwise. The constant is not differentiable.
-    """
-    assert isinstance(tensor, Tensor)
-    assert np.isscalar(constant)
-
-    result = to_tensor(np.maximum(tensor, constant))
-
-    from tricycle.binary import bmul
-
-    result.args = (tensor,)
-    is_bigger = to_tensor(
-        (tensor > constant).astype(float), is_vector=tensor.is_vector
-    )
-    result.back_fn = (partial(bmul, is_bigger),)
-    result.name = f"> {constant}"
-    result.is_vector = tensor.is_vector
-
-    return result
+class UnaryDivide(Op):
+    # TODO: manually define the derivative instead of using other operations
+    def forward(self, constant: float | int, tensor: Tensor) -> Tensor:
+        """
+        Divide a constant by a tensor, elementwise. The constant is not
+        differentiable.
+        """
+        upow = UnaryPower()
+        umul = UnaryMultiply()
+        return umul(upow(tensor, -1.0), constant)
 
 
-def umin(tensor: Tensor, constant: float) -> Tensor:
-    """
-    Return the max of the tensor and the constant,
-    elementwise. The constant is not differentiable.
-    """
-    assert isinstance(tensor, Tensor)
-    assert np.isscalar(constant)
+class UnaryMax(Op):
+    is_bigger: Tensor
 
-    result = to_tensor(np.minimum(tensor, constant))
+    def back_fn(self, grad: Tensor) -> Tensor:
+        self._grad = grad._data * self.is_bigger._data
 
-    from tricycle.binary import bmul
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
 
-    result.args = (tensor,)
-    is_smaller = to_tensor(
-        (tensor < constant).astype(float), is_vector=tensor.is_vector
-    )
-    result.back_fn = (partial(bmul, is_smaller),)
-    result.name = f"< {constant}"
-    result.is_vector = tensor.is_vector
-    return result
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
+        """
+        Return the max of the tensor and the constant,
+        elementwise. The constant is not differentiable.
+        """
+        xp = tensor.xp
 
+        assert isinstance(tensor, Tensor)
+        assert xp.isscalar(constant)
 
-def uexp(tensor: Tensor) -> Tensor:
-    """
-    Raise every element of a tensor to the power of e
-    """
-    result = to_tensor(np.exp(tensor))
+        self._out = xp.maximum(tensor._data, constant, dtype=tensor.dtype)
 
-    from tricycle.binary import bmul
+        self.is_bigger = tensor > constant
+        self.is_bigger.is_vector = tensor.is_vector
 
-    result.args = (tensor,)
-    result.name = "exp"
-    result.is_vector = tensor.is_vector
-    coef = to_tensor(result, is_vector=tensor.is_vector)
-    result.back_fn = (partial(bmul, coef),)
-    return result
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = f"> {constant}"
+        result.is_vector = tensor.is_vector
+
+        return result
 
 
-def ulog(tensor: Tensor) -> Tensor:
-    """
-    Raise every element of a tensor to the power of e
-    """
-    result = to_tensor(np.log(tensor))
+class UnaryMin(Op):
+    is_smaller: Tensor
 
-    from tricycle.binary import bmul
+    def back_fn(self, grad: Tensor) -> Tensor:
+        self._grad = grad._data * self.is_smaller._data
 
-    result.args = (tensor,)
-    result.back_fn = (
-        partial(
-            bmul,
-            udiv(1, tensor),
-        ),
-    )
-    result.name = "log"
-    result.is_vector = tensor.is_vector
-    return result
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
 
+    def forward(self, tensor: Tensor, constant: float) -> Tensor:
+        """
+        Return the max of the tensor and the constant,
+        elementwise. The constant is not differentiable.
+        """
+        xp = tensor.xp
 
-def usin(tensor: Tensor) -> Tensor:
-    """
-    Raise every element of a tensor to the power of e
-    """
-    result = to_tensor(np.sin(tensor))
+        assert isinstance(tensor, Tensor)
+        assert xp.isscalar(constant)
 
-    from tricycle.binary import bmul
+        self._out = xp.minimum(tensor._data, constant, dtype=tensor.dtype)
 
-    result.args = (tensor,)
-    coef = to_tensor(np.cos(tensor), is_vector=tensor.is_vector)
-    result.back_fn = (partial(bmul, coef),)
-    result.name = "sin"
-    result.is_vector = tensor.is_vector
-    return result
+        self.is_smaller = tensor < constant
+        self.is_smaller.is_vector = tensor.is_vector
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = f"> {constant}"
+        result.is_vector = tensor.is_vector
+
+        return result
 
 
-def ucos(tensor: Tensor) -> Tensor:
-    """
-    Raise every element of a tensor to the power of e
-    """
-    result = to_tensor(np.cos(tensor))
+class UnaryExp(Op):
+    def back_fn(self, grad: Tensor) -> Tensor:
+        self._grad = grad._data * self._out
 
-    from tricycle.binary import bmul
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
 
-    result.args = (tensor,)
-    coef = to_tensor(-np.sin(tensor), is_vector=tensor.is_vector)
-    result.back_fn = (partial(bmul, coef),)
-    result.name = "cos"
-    result.is_vector = tensor.is_vector
-    return result
+    def forward(self, tensor: Tensor) -> Tensor:
+        """
+        Raise every element of a tensor to the power of e
+        """
+        xp = tensor.xp
+
+        self._out = xp.exp(tensor._data)
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = "exp"
+        result.is_vector = tensor.is_vector
+        return result
+
+
+class UnaryLog(Op):
+    REALLY_SMALL_NUMBER = 1e-8
+
+    _input: ArrayLike | None = None
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+        denominator = self._input + self.REALLY_SMALL_NUMBER
+        self._grad = grad._data * xp.divide(1, denominator)
+
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        """
+        Raise every element of a tensor to the power of e
+        """
+        xp = tensor.xp
+
+        self._out = xp.log(tensor._data)
+        self._input = tensor._data
+
+        result = to_tensor(self._out)
+
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = "log"
+        result.is_vector = tensor.is_vector
+        return result
+
+
+class UnarySin(Op):
+    _input: ArrayLike | None = None
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        self._grad = grad._data * xp.cos(self._input)
+
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        """
+        Applies the sine function, elementwise, to a tensor
+        """
+        xp = tensor.xp
+
+        self._out = xp.sin(tensor._data)
+        self._input = tensor._data
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = "sin"
+        result.is_vector = tensor.is_vector
+        return result
+
+
+class UnaryCos(Op):
+    _input: ArrayLike | None = None
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        self._grad = grad._data * -xp.sin(self._input)
+
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        """
+        Applies the cosine function, elementwise, to a tensor
+        """
+        xp = tensor.xp
+
+        self._out = xp.cos(tensor._data)
+        self._input = tensor._data
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = "cos"
+        result.is_vector = tensor.is_vector
+        return result
+
+
+class UnarySquareRoot(Op):
+    def forward(self, tensor: Tensor):
+        """
+        Apply the square root function
+        """
+        upow = UnaryPower()
+        return upow(tensor, 0.5)
+
+
+class UnarySum(Op):
+    _in_shape: tuple[int]
+    _in_is_vector: bool
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        self._grad = xp.full(self._in_shape, grad._data)
+
+        result = to_tensor(self._grad)
+        result.is_vector = self._in_is_vector
+        return result
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        """
+        Sums all the values in a tensor
+        """
+        xp = tensor.xp
+
+        # Sum all the values in the tensor
+        self._out = xp.sum(tensor._data)
+        self._in_shape = tensor.shape
+        self._in_is_vector = tensor.is_vector
+
+        result = to_tensor(self._out)
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = "sum"
+        result.is_vector = False  # The result of the sum is a scalar
+        return result

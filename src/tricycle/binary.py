@@ -1,128 +1,218 @@
 from functools import partial
 
-import numpy as np
+from numpy.typing import ArrayLike
 
-from tricycle.ops import Einsum, nothing
-from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import udiv, umul
+from tricycle.ops import Einsum, Op
+from tricycle.tensor import Tensor, nothing, select_backend, to_tensor
+from tricycle.unary import UnaryDivide, UnaryMultiply
 
 
 def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
-    # sourcery skip: assign-if-exp
-    if tensor_1.is_vector:
-        shape_1 = tensor_1.shape[1:]
-    else:
+    # sourcery skip: assign-if-exp, merge-duplicate-blocks, remove-redundant-if
+    if tensor_1.is_vector and tensor_2.is_vector:
         shape_1 = tensor_1.shape
-
-    if tensor_2.is_vector:
+        shape_2 = tensor_2.shape
+    elif tensor_1.is_vector:
+        shape_1 = tensor_1.shape[1:]
+        shape_2 = tensor_2.shape
+    elif tensor_2.is_vector:
+        shape_1 = tensor_1.shape
         shape_2 = tensor_2.shape[1:]
     else:
+        shape_1 = tensor_1.shape
         shape_2 = tensor_2.shape
 
     if shape_1 != shape_2:
-        breakpoint()
+        raise ValueError(
+            f"Shapes {shape_1} and {shape_2} do not match: {tensor_1._data.shape}, {tensor_2._data.shape}"
+        )
     return shape_1 == shape_2
 
 
-def badd(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
-    """
-    Add the elements of two tensors together, elementwise
+class BinaryAdd(Op):
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+        """
+        Applies the cosine function, elementwise, to a tensor
+        """
+        xp = select_backend(tensor_1._data, tensor_2._data)
 
-    The two tensors must have the same shape
-    """
-    assert _shapes_match(tensor_1, tensor_2)
+        assert _shapes_match(tensor_1, tensor_2)
+        self._out = xp.add(tensor_1._data, tensor_2._data)
 
-    result = to_tensor(np.add(tensor_1, tensor_2))
+        result = to_tensor(self._out)
+        result.args = (tensor_1, tensor_2)
+        result.back_fns = (nothing, nothing)
+        result.name = "badd"
 
-    result.args = (tensor_1, tensor_2)
-    result.back_fn = (nothing, nothing)
-    result.name = "badd"
+        if tensor_1.is_vector or tensor_2.is_vector:
+            result.is_vector = True
 
-    if tensor_1.is_vector or tensor_2.is_vector:
-        result.is_vector = True
-
-    return result
-
-
-def bsub(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
-    """
-    Subtract the elements of two tensors together, elementwise
-
-    The two tensors must have the same shape
-    """
-    assert _shapes_match(tensor_1, tensor_2)
-
-    return badd(tensor_1, umul(tensor_2, -1))
+        return result
 
 
-def bmul(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
-    """
-    Multiply the elements of two tensors together, elementwise
+class BinarySubtract(Op):
+    def back_fn_2(self, grad: Tensor) -> Tensor:
+        self._grad = -grad._data
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
 
-    The two tensors must have the same shape
-    """
-    assert _shapes_match(tensor_1, tensor_2)
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+        """
+        Subtract one tensor from another
+        """
+        xp = select_backend(tensor_1._data, tensor_2._data)
 
-    result = Einsum("...,...->...")(tensor_1, tensor_2)
-    result.name = "bmul"
-    return result
+        assert _shapes_match(tensor_1, tensor_2)
+        self._out = xp.subtract(tensor_1._data, tensor_2._data)
 
+        result = to_tensor(self._out)
+        result.args = (tensor_1, tensor_2)
+        result.back_fns = (nothing, self.back_fn_2)
+        result.name = "badd"
 
-def bdiv(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
-    """
-    Divide the elements of two tensors together, elementwise
+        if tensor_1.is_vector or tensor_2.is_vector:
+            result.is_vector = True
 
-    The two tensors must have the same shape
-    """
-    return bmul(tensor_1, udiv(1, tensor_2))
-
-
-def bmax(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
-    """
-    Compare two tensors elementwise, returning the maximum
-    of each pair of elements
-
-    The two tensors must have the same shape
-    if elements are equal, return the first
-    """
-    assert _shapes_match(tensor_1, tensor_2)
-
-    result = to_tensor(np.maximum(tensor_1, tensor_2))
-
-    indicator_1 = to_tensor(
-        (tensor_1 > tensor_2).astype(float), is_vector=tensor_1.is_vector
-    )
-    indicator_2 = to_tensor(
-        (tensor_1 <= tensor_2).astype(float), is_vector=tensor_2.is_vector
-    )
-    result.args = (tensor_1, tensor_2)
-    result.back_fn = (partial(bmul, indicator_1), partial(bmul, indicator_2))
-    result.name = "bmax"
-    result.is_vector = tensor_1.is_vector or tensor_2.is_vector
-    return result
+        return result
 
 
-def bmin(tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
-    """
-    Compare two tensors elementwise, returning the minimum
-    of each pair of elements
+class BinaryMultiply(Op):
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+        """
+        Multiply the elements of two tensors together, elementwise
 
-    The two tensors must have the same shape
-    if elements are equal, return the first
-    """
-    assert _shapes_match(tensor_1, tensor_2)
+        The two tensors must have the same shape
+        """
+        assert _shapes_match(tensor_1, tensor_2)
 
-    result = to_tensor(np.minimum(tensor_1, tensor_2))
+        result = Einsum("...,...->...")(tensor_1, tensor_2)
+        result.name = "bmul"
+        return result
 
-    indicator_1 = to_tensor(
-        (tensor_1 < tensor_2).astype(float), is_vector=tensor_1.is_vector
-    )
-    indicator_2 = to_tensor(
-        (tensor_1 >= tensor_2).astype(float), is_vector=tensor_2.is_vector
-    )
-    result.args = (tensor_1, tensor_2)
-    result.back_fn = (partial(bmul, indicator_1), partial(bmul, indicator_2))
-    result.name = "bmin"
-    result.is_vector = tensor_1.is_vector or tensor_2.is_vector
 
-    return result
+class BinaryDivide(Op):
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+        """
+        Divide the elements of two tensors together, elementwise
+
+        The two tensors must have the same shape
+        """
+        mul = BinaryMultiply()
+        div = UnaryDivide()
+
+        return mul(tensor_1, div(1, tensor_2))
+
+
+class BinaryMax(Op):
+    _is_bigger_1: ArrayLike | None
+    _is_bigger_2: ArrayLike | None
+
+    def back_fn_1(self, grad: Tensor) -> Tensor:
+        self._grad_1 = grad._data * self._is_bigger_1
+        result = to_tensor(self._grad_1)
+        result.is_vector = grad.is_vector
+        return result
+
+    def back_fn_2(self, grad: Tensor) -> Tensor:
+        self._grad_2 = grad._data * self._is_bigger_2
+        result = to_tensor(self._grad_2)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+        """
+        Compare two tensors elementwise, returning the maximum
+        of each pair of elements
+
+        The two tensors must have the same shape
+        if elements are equal, return the first
+        """
+        xp = select_backend(tensor_1._data, tensor_2._data)
+        assert _shapes_match(tensor_1, tensor_2)
+
+        self._out = xp.maximum(tensor_1._data, tensor_2._data)
+
+        self._is_bigger_1 = tensor_1._data > tensor_2._data
+        self._is_bigger_2 = tensor_1._data <= tensor_2._data
+
+        result = to_tensor(self._out)
+        result.args = (tensor_1, tensor_2)
+        result.back_fns = (self.back_fn_1, self.back_fn_2)
+        result.name = "bmax"
+        result.is_vector = tensor_1.is_vector or tensor_2.is_vector
+        return result
+
+
+class BinaryMin(Op):
+    _is_smaller_1: Tensor | None
+    _is_smaller_2: Tensor | None
+
+    def back_fn_1(self, grad: Tensor) -> Tensor:
+        self._grad_1 = grad._data * self._is_smaller_1
+        result = to_tensor(self._grad_1)
+        result.is_vector = grad.is_vector
+        return result
+
+    def back_fn_2(self, grad: Tensor) -> Tensor:
+        self._grad_2 = grad._data * self._is_smaller_2
+        result = to_tensor(self._grad_2)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
+        """
+        Compare two tensors elementwise, returning the maximum
+        of each pair of elements
+
+        The two tensors must have the same shape
+        if elements are equal, return the first
+        """
+        xp = select_backend(tensor_1._data, tensor_2._data)
+        assert _shapes_match(tensor_1, tensor_2)
+
+        self._out = xp.minimum(tensor_1._data, tensor_2._data)
+
+        self._is_smaller_1 = tensor_1._data < tensor_2._data
+        self._is_smaller_2 = tensor_1._data >= tensor_2._data
+
+        result = to_tensor(self._out)
+        result.args = (tensor_1, tensor_2)
+        result.back_fns = (self.back_fn_1, self.back_fn_2)
+        result.name = "bmax"
+        result.is_vector = tensor_1.is_vector or tensor_2.is_vector
+        return result
+
+
+class BinaryMask(Op):
+    _mask: ArrayLike | None = None
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = select_backend(grad._data, self._mask)
+        self._grad = xp.where(self._mask, grad._data, 0)
+
+        result = to_tensor(self._grad)
+        result.is_vector = grad.is_vector
+        return result
+
+    def forward(self, tensor: Tensor, mask: Tensor) -> Tensor:
+        """
+        Apply a binary mask to a numpy array, setting values to 0 where
+        the mask is True
+        """
+        xp = select_backend(tensor._data, mask._data)
+        assert _shapes_match(tensor, mask)
+        assert (
+            not mask.requires_grad
+        ), "Cannot compute gradient of a binary mask"
+
+        self._out = xp.where(mask._data, tensor._data, 0)
+        self._mask = mask._data
+
+        result = to_tensor(self._out)
+
+        result.args = (tensor,)
+        result.back_fns = (self.back_fn,)
+        result.name = "bmask"
+        result.is_vector = tensor.is_vector
+        return result

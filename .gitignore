@@ -1,4 +1,34 @@
+# environment
 .venv
-.null-ls*
-*__pycache__*
 poetry.lock
+*__pycache__*
+
+# nvim
+.null-ls*
+
+# macos
+*.DS_Store
+
+# datasets
+datasets/shakespeare/tokens_*.pkl
+datasets/shakespeare/raw_data.txt
+
+# jupyter
+.ipynb_checkpoints
+*.ipynb
+output.bin
+
+# experiment results
+*.csv
+results/*
+.hypothesis
+results
+models
+benchmarks/.profiles
+tests/.profiles
+
+richbench*.json
+python*.json
+
+# binaries
+*.pkl

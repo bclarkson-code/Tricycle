@@ -1,157 +1,246 @@
 import logging
+import numbers
 import uuid
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
+import weakref
+from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
+from numpy.typing import ArrayLike
+
+from tricycle import CUPY_ENABLED
+from tricycle.exceptions import GPUDisabledException
 
 logger = logging.getLogger(__name__)
 
 Op = Callable[..., "Tensor"]
 
 
-class Tensor(np.ndarray):
+class Tensor:
     """
     An N-dimensional grid of numbers. This is implemented as a subclass
     of a standard numpy array
     """
 
     _id: int
-    _grad_fn: Optional[List[List[Op]]] = None
+    _data: np.ndarray | ArrayLike
     args: tuple["Tensor", ...] | None = None
-    back_fn: tuple[Op, ...] | None = None
+    back_fns: tuple[Op, ...] | None = None
+    parents: set["Tensor"] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
-    show_graph = False
     is_vector: bool = False
 
-    def _find_differentiable_params(self) -> Dict[int, "Tensor"]:
-        """
-        Find every path backward through the computational graph from the current tensor
-        to every differentiable parameter and attach them to the corresponding
-        differentiable_params
-        """
-        stack: List[Tuple[Tensor, List[Op]]] = [(self, [])]
-        differentiable_params: Dict[int, Tensor] = {}
+    def __init__(
+        self,
+        data: np.ndarray | ArrayLike,
+        requires_grad: bool = False,
+        is_vector: bool = False,
+        name: str | None = None,
+        _id: int | None = None,
+    ):
+        self._id = _id or uuid.uuid4().int
+        if CUPY_ENABLED:
+            import cupy
 
-        # Find every route to a differentiable parameter
-        while stack:
-            current_node, current_gradient = stack.pop()
-
-            # At leaf node
-            if current_node.args is None:
-                if current_node._grad_fn is None:
-                    current_node._grad_fn = [current_gradient]
-                else:
-                    current_node._grad_fn.append(current_gradient)
-                if hash(current_node) not in differentiable_params:
-                    differentiable_params[hash(current_node)] = current_node
-
-            # At non-leaf node
+            if isinstance(data, (np.ndarray, cupy.ndarray)):
+                self._data = data
             else:
-                for arg, op in zip(current_node.args, current_node.back_fn):
-                    if not arg.requires_grad:
-                        continue
+                self._data = np.array(data)
+        else:
+            self._data = np.array(data)
 
-                    new_gradient = current_gradient + [op]
-                    stack.append((arg, new_gradient))
-        return differentiable_params
+        self.requires_grad = requires_grad
+        self.is_vector = is_vector
+        self.name = name
 
-    def _calculate_gradient(self, param: "Tensor") -> None:
+    def _attach_parents(self):
         """
-        Calculate the gradient for a single parameter in the computational
-        graph
+        Traverse through the graph, labelling each tensor with the tensors that
+        are direct parents to it in the graph
         """
-        if param._grad_fn is None:
-            return
+        stack: list["Tensor"] = [self]
 
-        for path in param._grad_fn:
-            grad = to_tensor(
-                np.ones_like(self),
-                requires_grad=False,
-                is_vector=self.is_vector,
-            )
+        while stack:
+            node = stack.pop()
 
-            logger.debug(f"  {path}")
-            logger.debug("----------------------------")
-            for op in path:
-                logger.debug(f"  {op}")
-                grad = op(grad)
-                logger.debug(f"  {grad.shape}")
-                logger.debug(f"  {grad.is_vector}")
-            logger.debug("----------------------------")
+            if not node.args:
+                continue
 
-            param.grad = grad if param.grad is None else param.grad + grad
-        param._grad_fn = None
+            for arg in node.args:
+                if not arg.requires_grad:
+                    continue
 
-    def backward(self):
+                if arg.parents is None:
+                    # if we use a set, we get a circular reference
+                    # which can't be garbage collected, leading to a memory
+                    # leak so we need to do a weakref to avoid the circular
+                    # reference
+                    arg.parents = weakref.WeakSet()
+
+                if node not in arg.parents:
+                    stack.append(arg)
+                    arg.parents.add(node)
+
+    def _calculate_gradients(self, clip: float | None = None):
+        """
+        Traverse through the graph, calculating gradients along the way such
+        that a child is only visited if the entirety of its parent's gradient
+        has been computed
+        """
+        self.grad = to_tensor(
+            self.xp.ones(self._data.shape, dtype=self.dtype),
+            requires_grad=False,
+            is_vector=self.is_vector,
+        )
+
+        stack: list["Tensor"] = [self]
+
+        while stack:
+            node = stack.pop()
+
+            if node.args is None or node.back_fns is None:
+                continue
+
+            for arg, back_fns in zip(node.args, node.back_fns):
+                if not arg.requires_grad:
+                    continue
+
+                if arg.parents is None:
+                    raise ValueError(
+                        "arg.parents is None. Parents must be attached",
+                        "before calculating gradients. Did you forget to ",
+                        "call _attach_parents?",
+                    )
+
+                # already visited along this edge, dont do it again
+                if node not in arg.parents:
+                    continue
+
+                arg.parents.remove(node)
+
+                # calculate gradients
+                try:
+                    grad = back_fns(node.grad)
+
+                    # gradient clipping
+                    if clip is not None:
+                        grad._data = grad.xp.clip(grad._data, -clip, clip)
+
+                    # add gradient
+                    if arg.grad is None:
+                        arg.grad = grad
+                    else:
+                        arg.grad._data += grad._data
+
+                except Exception as e:
+                    raise e
+
+                # only move to arg if we have been to all of its parents
+                if len(arg.parents) == 0:
+                    # get rid of the weakref so we can pickle the model
+                    arg.parents = None
+                    stack.append(arg)
+
+    def cleanup(self):
+        """
+        Traverse through the graph, deleting all non-parameter nodes in
+        the graph to avoid a memory leak
+        """
+        stack: list["Tensor"] = [self]
+        while stack:
+            node = stack.pop()
+
+            # add children to stack
+            if node.args:
+                stack.extend(iter(node.args))
+                del node.args
+            else:
+                continue
+
+            # delete node
+            if hasattr(node, "grad") and node.grad is not None:
+                del node.grad
+            del node
+
+    def backward(self, clip: float | None = None):
         """
         Perform a backward pass through the graph, calculating the gradient
         for each parameter
         """
-        params = self._find_differentiable_params()
-        for param in params.values():
-            self._calculate_gradient(param)
+        self._attach_parents()
+        self._calculate_gradients(clip=clip)
 
     def __hash__(self) -> int:
-        return id(self)
+        return self._id
 
-    def __add__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
-            other = to_tensor(other)
-        if np.isscalar(other):
-            from tricycle.unary import uadd
+    def __add__(self, other: Union[float, "Tensor"]) -> "Tensor":
+        if isinstance(other, numbers.Number):
+            from tricycle.unary import UnaryAdd
 
-            return uadd(self, other)
+            return UnaryAdd()(self, other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import badd
+            from tricycle.binary import BinaryAdd
 
-            return badd(self, other)
+            return BinaryAdd()(self, other)
         else:
             raise NotImplementedError(
                 f"Cannot add {type(self)} and {type(other)}"
             )
 
+    def __radd__(self, other):
+        return self + other
+
     def __iadd__(self, other):
         return self + other
 
     def __sub__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
+        if isinstance(other, self.xp.ndarray) and not isinstance(
+            other, Tensor
+        ):
             other = to_tensor(other)
-        if np.isscalar(other):
-            from tricycle.unary import usub
+        if self.xp.isscalar(other):
+            from tricycle.unary import UnarySubtract
 
-            return usub(self, other)
+            return UnarySubtract()(self, other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import bsub
+            from tricycle.binary import BinarySubtract
 
-            return bsub(self, other)
+            return BinarySubtract()(self, other)
 
         else:
             raise NotImplementedError(
                 f"Cannot sub {type(self)} and {type(other)}"
             )
 
+    def __rsub__(self, other):
+        return -(self - other)
+
     def __isub__(self, other):
-        return -1 * (other - self)
+        return self.__sub__(other)
 
     def __mul__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
+        if isinstance(other, self.xp.ndarray) and not isinstance(
+            other, Tensor
+        ):
             other = to_tensor(other)
-        if np.isscalar(other):
-            from tricycle.unary import umul
+        if self.xp.isscalar(other) or other.shape == ():
+            from tricycle.unary import UnaryMultiply
 
-            return umul(self, other)
+            return UnaryMultiply()(self, other)
 
         elif isinstance(other, Tensor):
-            from tricycle.binary import bmul
+            from tricycle.binary import BinaryMultiply
 
-            return bmul(self, other)
+            return BinaryMultiply()(self, other)
 
         else:
             raise NotImplementedError(
                 f"Cannot mul {type(self)} and {type(other)}"
             )
+
+    def __rmul__(self, other):
+        return self * other
 
     def __imul__(self, other):
         return self * other
@@ -160,19 +249,29 @@ class Tensor(np.ndarray):
         return self * -1
 
     def __truediv__(self, other):
-        if np.isscalar(other):
-            from tricycle.unary import umul
+        if self.xp.isscalar(other):
+            from tricycle.unary import UnaryMultiply
 
-            return umul(self, 1 / other)
+            return UnaryMultiply()(self, 1 / other)
         elif isinstance(other, Tensor):
-            from tricycle.binary import bdiv
+            from tricycle.binary import BinaryDivide
 
-            return bdiv(self, other)
+            return BinaryDivide()(self, other)
 
         else:
             raise NotImplementedError(
                 f"Cannot divide {type(self)} and {type(other)}"
             )
+
+    def __rtruediv__(self, other):
+        if self.xp.isscalar(other):
+            from tricycle.unary import UnaryDivide
+
+            return UnaryDivide()(other, self)
+        elif isinstance(other, Tensor):
+            from tricycle.binary import BinaryDivide
+
+            return BinaryDivide()(other, self)
 
     def __itruediv__(self, other):
         return self / other
@@ -180,59 +279,149 @@ class Tensor(np.ndarray):
     def __floordiv__(self, _):
         raise NotImplementedError("Cannot floor divide")
 
+    def __rfloordiv__(self, _):
+        raise NotImplementedError("Cannot floor divide")
+
+    def __ifloordiv__(self, _):
+        raise NotImplementedError("Cannot floor divide")
+
     def __mod__(self, _):
         raise NotImplementedError("Cannot mod")
 
-    def __pow__(self, other):
-        if isinstance(other, np.ndarray) and not isinstance(other, Tensor):
+    def __pow__(self, other) -> "Tensor":
+        if isinstance(other, self.xp.ndarray) and not isinstance(
+            other, Tensor
+        ):
             other = to_tensor(other)
-        if np.isscalar(other):
-            from tricycle.unary import upow
+        if self.xp.isscalar(other):
+            from tricycle.unary import UnaryPower
 
-            return upow(self, other)
+            return UnaryPower()(self, other)
         elif isinstance(other, Tensor):
-            raise NotImplementedError("Cannot power")
+            raise NotImplementedError(
+                "Cannot power two tensors of shape: "
+                f"{self.shape}, {other.shape}"
+            )
+        else:
+            raise NotImplementedError(
+                f"Cannot power {type(self)} and {type(other)}"
+            )
+
+    def __lt__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data < other._data)
+        return Tensor(self._data < other)
+
+    def __le__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data <= other._data)
+        return Tensor(self._data <= other)
+
+    def __eq__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data == other._data)
+        return Tensor(self._data == other)
+
+    def __ne__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data != other._data)
+        return Tensor(self._data != other)
+
+    def __gt__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data > other._data)
+        return Tensor(self._data > other)
+
+    def __ge__(self, other):
+        if isinstance(other, Tensor):
+            return Tensor(self._data >= other._data)
+        return Tensor(self._data >= other)
 
     def __repr__(self):
         name = f", name={self.name}" if self.name is not None else ""
-        return f"Tensor({self.__str__()}{name})"
+        return f"Tensor({self._data.__str__()}{name})"
 
-    def __new__(
-        cls,
-        shape,
-        dtype=float,
-        buffer=None,
-        offset=0,
-        strides=None,
-        order=None,
-    ):
-        obj = super().__new__(
-            cls, shape, dtype, buffer, offset, strides, order
-        )
-        obj.uuid = uuid.uuid4()
-        return obj
+    def __getitem__(self, idx):
+        return to_tensor(self._data[idx], requires_grad=self.requires_grad)
 
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-        self.uuid = getattr(obj, "uuid", None)
+    def __setitem__(self, idx, value):
+        self._data[idx] = value
+
+    @property
+    def xp(self):
+        return select_backend(self._data)
 
     def e(self, subscript: str) -> "Tensor":
+        """
+        Perform an einsum operation on the tensor
+        """
         from tricycle.einsum import Einsum
 
         return Einsum(subscript)(self)
 
-    def repeat(self, subscript: str, n_repeats: int) -> "Tensor":
-        from tricycle.ops import repeat
+    def repeat(self, n_repeats: int) -> "Tensor":
+        from tricycle.ops import Repeat
 
-        return repeat(subscript, self, n_repeats)
+        return Repeat()(self, n_repeats)
 
-    def close_to(self, other: "Tensor", **kwargs) -> bool:
+    @property
+    def shape(self) -> Sequence[int]:
+        return self._data.shape
+
+    @property
+    def ndim(self) -> int:
+        return self._data.ndim
+
+    @property
+    def dtype(self) -> np.dtype:
+        return self._data.dtype
+
+    def reshape(self, shape: Sequence[int]) -> "Tensor":
+        from tricycle.ops import Reshape
+
+        return Reshape()(self, shape)
+
+    def split(self, n_splits: int, axis: int = -1) -> List["Tensor"]:
+        from tricycle.ops import Split
+
+        return Split()(self, n_splits=n_splits, axis=axis)
+
+    def mean(self) -> "Tensor":
+        divisor = self.shape[-1] if self.shape else 1
+        return self.sum() / divisor
+
+    def sum(self) -> "Tensor":
+        from tricycle.unary import UnarySum
+
+        # if self.is_vector:
+        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim - 1]
+        # else:
+        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim]
+        # return self.e(f"{indices}->")
+        return UnarySum()(self)
+
+    def close_to(
+        self,
+        other: Union["Tensor", ArrayLike, float, int],
+        equal_nan=False,
+        rtol=1e-4,
+        **kwargs,
+    ) -> bool:
         """
         Convenience method to check if two tensors are identical
         to within some tolerance
         """
-        return np.allclose(np.array(self), np.array(other), **kwargs)
+        if not isinstance(other, Tensor):
+            return self.xp.allclose(
+                self._data,
+                self.xp.array(other),
+                equal_nan=equal_nan,
+                rtol=rtol,
+                **kwargs,
+            )
+        return self.xp.allclose(
+            self._data, other._data, equal_nan=equal_nan, rtol=rtol, **kwargs
+        )
 
     def to_vector(self):
         """
@@ -246,27 +435,96 @@ class Tensor(np.ndarray):
         """
         return unvectorise(self)
 
+    @property
+    def on_gpu(self):
+        if not CUPY_ENABLED:
+            return False
+        import cupy
+
+        return isinstance(self._data, cupy.ndarray)
+
+    def to_gpu(self, device: int = 0):
+        """
+        Move this tensor to the GPU
+        """
+        if not CUPY_ENABLED:
+            raise GPUDisabledException(
+                "Cannot move tensor to GPU because CuPY is not enabled"
+            )
+        import cupy
+
+        cupy.cuda.Device(device).use()
+        self._data = cupy.asarray(self._data)
+        return self
+
+    def from_gpu(self):
+        """
+        Move this tensor from the GPU
+        """
+        if not CUPY_ENABLED:
+            raise GPUDisabledException(
+                "Cannot move tensor from GPU because CuPY is not enabled"
+            )
+        import cupy
+
+        self._data = cupy.asnumpy(self._data)
+        return self
+
+    def zero_grad(self):
+        self.grad = None
+        self.args = None
+        self.back_fns = None
+
+        return self
+
     def numpy(self):
-        return np.array(self)
+        if not CUPY_ENABLED:
+            return self._data
+
+        import cupy
+
+        return cupy.asnumpy(self._data) if self.on_gpu else self._data
 
 
 def to_tensor(
-    *args,
+    tensor_like: ArrayLike,
     name: Optional[str] = None,
     requires_grad: bool = True,
     is_vector: bool = False,
+    _id: int | None = None,
+    dtype: np.dtype | None = np.float32,
     **kwargs,
 ) -> Tensor:
     """
     Create a new Tensor instance. First, we convert the argument to a numpy
     array and then to a tensor
     """
-    result = np.asarray(*args, **kwargs).view(Tensor)
-    result.name = name
-    result.requires_grad = requires_grad
-    result.uuid = uuid.uuid4()
-    result.is_vector = is_vector
-    return result
+    if CUPY_ENABLED:
+        import cupy
+
+        if isinstance(tensor_like, Tensor):
+            array = tensor_like._data
+        elif isinstance(tensor_like, (np.ndarray, cupy.ndarray)):
+            array = tensor_like
+            if dtype is not None:
+                array = array.astype(dtype)
+        else:
+            if dtype is None:
+                dtype = np.float32
+            array = np.asarray(tensor_like, dtype=dtype, **kwargs)
+
+    elif isinstance(tensor_like, Tensor):
+        array = tensor_like._data
+    else:
+        array = np.asarray(tensor_like, dtype=dtype, **kwargs)
+
+    return Tensor(
+        array,
+        name=name,
+        requires_grad=requires_grad,
+        is_vector=is_vector,
+        _id=_id,
+    )
 
 
 def vectorise(tensor: Tensor) -> Tensor:
@@ -274,11 +532,16 @@ def vectorise(tensor: Tensor) -> Tensor:
     Tell Tricycle to treat this tensor as a group of vectors
     """
     if tensor.is_vector:
-        raise ValueError("Tensor is already vectorised")
+        return tensor
 
-    result = to_tensor(tensor, is_vector=True)
+    result = to_tensor(
+        tensor._data,
+        is_vector=True,
+        requires_grad=tensor.requires_grad,
+        dtype=tensor._data.dtype,
+    )
     result.args = (tensor,)
-    result.back_fn = (unvectorise,)
+    result.back_fns = (unvectorise,)
     return result
 
 
@@ -288,9 +551,32 @@ def unvectorise(tensor: Tensor) -> Tensor:
     (not a group of vectors)
     """
     if not tensor.is_vector:
-        raise ValueError("Tensor is not vectorised")
+        return tensor
 
-    result = to_tensor(tensor, is_vector=False)
+    result = to_tensor(
+        tensor._data,
+        is_vector=False,
+        requires_grad=tensor.requires_grad,
+        dtype=tensor._data.dtype,
+    )
     result.args = (tensor,)
-    result.back_fn = (vectorise,)
+    result.back_fns = (vectorise,)
     return result
+
+
+def nothing(tensor):
+    """
+    Return a tensor
+
+    This is used as a dummy to simplify the backpropagation logic
+    """
+    return tensor
+
+
+def select_backend(*tensors: Tensor | np.ndarray | ArrayLike):
+    if not CUPY_ENABLED:
+        return np
+
+    import cupy
+
+    return cupy.get_array_module(*tensors)

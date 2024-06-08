@@ -23,36 +23,26 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
-    #----------------------------------------------
-    #  -----  install & configure poetry  -----
-    #----------------------------------------------
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-        installer-parallel: true
 
-    #----------------------------------------------
-    # install dependencies if cache does not exist
-    #----------------------------------------------
-    - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root
-    #----------------------------------------------
-    # install your root project, if required
-    #----------------------------------------------
-    - name: Install project
-      run: poetry install --no-interaction
+    - name: Install Mamba
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        micromamba-version: '1.5.6-0' # any version from https://github.com/mamba-org/micromamba-releases
+        environment-file: environment.cpu_only.test.yml
+        init-shell: >-
+          bash
+        cache-environment: true
+        post-cleanup: 'all'
+
     #----------------------------------------------
     # run pre-commit checks
     #----------------------------------------------
     - name: Run pre-commit checks
-      run: poetry run pre-commit run --all-files
+      run: pre-commit run --all-files
+      shell: bash -el {0}
     #----------------------------------------------
     #              run test suite
     #----------------------------------------------
     - name: Run tests
-      run: |
-        source .venv/bin/activate
-        pytest tests/
+      run: pytest tests
+      shell: bash -el {0}
