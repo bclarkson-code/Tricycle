@@ -139,7 +139,7 @@ assert (a.grad == b).all()
 assert (b.grad == a).all()
 ```
 
-And even works through more complex operations
+And even works through complex operations like attention
 
 ```python
 from tricycle.blocks import MultiHeadSelfAttention
@@ -148,7 +148,6 @@ attention = MultiHeadSelfAttention(
     embedding_dim=32,
     n_heads=2,
     context_window=32,
-    residual_dropout_prob= 0.0,
 )
 
 # batch_size, n_tokens, embedding_dim
