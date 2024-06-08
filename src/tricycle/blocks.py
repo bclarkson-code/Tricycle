@@ -56,7 +56,7 @@ class MultiHeadSelfAttention(Layer):
         embedding_dim: int,
         n_heads: int,
         context_window: int,
-        residual_dropout_prob: float,
+        residual_dropout_prob: float = 0.0,
         initialiser=init_xavier,
     ):
         # set the constants

@@ -4,7 +4,7 @@ The file `train_smol_gpy.py` trains a 49M, GPT-2 style language model to produce
 
 The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + numpy code.
 
-Using [CuPY](https://cupy.dev/), all Tricycle code can run on a GPU and is only about ~TODO: insert comparision to pytorch here.~ % [slower than pytorch](#comparison-with-pytorch).
+Using [CuPY](https://cupy.dev/), all Tricycle code can run on a GPU and is only about ~TODO: insert comparision to pytorch here.~ % [slower than pytorch](#comparison-with-pytorch). Tricycle is still under active development so this is subject to change.
 
 ## Installation
 Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, optimisation efforts have been focussed on GPU computation so it is pretty slow. If you do have a CUDA capable GPU I would strongly recommend installing the gpu version of Tricycle.
@@ -37,10 +37,6 @@ conda env create -f environment.cpu.test.yml -n tricycle
 conda activate tricycle
 ```
 </details>
-
-
-
-## Features
 
 
 ## Training a GPT on shakespeare
@@ -106,7 +102,64 @@ Once trained, you can generate new shakespeare as follows:
 python inference.py model.pkl
 ```
 
+## Automatic Differentiation
+Tricycle features an automatic differentiation engine that can differentiate arbitrary expressions:
+```
+from tricycle.tensor import to_tensor
+
+x = to_tensor(2)
+
+y = x ** 2 + 3 * x + 4
+print(y)
+# Tensor(14.0, name=+ 4)
+
+# derivative of y wrt x is
+# 2 * x + 3 = 7
+
+y.backward() # differentiate
+print(x.grad)
+# Tensor(7.0)
+```
+
+This works on multidimensional tensors
+
+```
+import numpy as np
+
+shape = (6,5,4,3,2)
+a = to_tensor(np.full(shape, 3))
+b = to_tensor(np.full(shape, 4))
+
+c = a * b # elementwise multiply
+
+c.backward()
+assert (a.grad == b).all()
+assert (b.grad == a).all()
+```
+
+And even works through more complex operations
+
+```
+from tricycle.blocks import MultiHeadSelfAttention
+
+attention = MultiHeadSelfAttention(
+    embedding_dim=32,
+    n_heads=2,
+    context_window=32,
+    residual_dropout_prob= 0.0,
+)
+
+# batch_size, n_tokens, embedding_dim
+shape = (4,32,32)
+input = to_tensor(np.ones(shape), is_vector=True)
+
+output = attention(input)
+output.backward()
+
+print(input.grad)
+# Tensor([[[ 2.5441039  -2.0558214  -1.7923143  ...
+assert input.grad.shape == (4,32,32)
+```
 
 ## Contact
-Want to learn more / have a chat / work together?
-You can send an email to: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
+Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
