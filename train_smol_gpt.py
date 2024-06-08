@@ -13,8 +13,6 @@ import pickle
 import uuid
 from pathlib import Path
 
-import numpy as np
-
 from tricycle import CUPY_ENABLED
 from tricycle.tensor import Op, Tensor
 from tricycle.utils import optimal_n_tokens
@@ -40,10 +38,11 @@ from tricycle_datasets.codeparrot import CodeParrot
 xp.random.seed(0)
 config = SmolGPTConfig()
 model = GPT(config)
+
 model.display()
 
 # Use corrected Chinchilla scaling to estimate the compute-optimal number of
-# tokens and steps we shoudl train for
+# tokens and steps we should train for
 n_tokens, n_steps = optimal_n_tokens(model, config)
 
 
@@ -58,8 +57,7 @@ def load_datasets(
     # it will create some big cache files in ~/.cache/huggingface that you might
     # want to clean up once you are done with the dataset
     print("Loading dataset")
-    # train_dataset = CodeParrot(config.vocab_size, split="train")
-    train_dataset = CodeParrot(config.vocab_size, split="valid")
+    train_dataset = CodeParrot(config.vocab_size, split="train")
 
     # trim the training dataset to the chinchilla optimal number of tokens
     train_dataset.tokens = train_dataset.tokens[:n_tokens]
