@@ -12,6 +12,8 @@ dependencies:
   - mlflow
   - psutil
   - numba
+  - tiktoken
+  - datasets
   - pip
   - pip:
-    - -e .
+    - -e ../
