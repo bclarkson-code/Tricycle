@@ -11,6 +11,9 @@ The entire library, from the automatic differentiation engine to a GPT, is writt
 
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on a either GPU or a CPU.
 
+
+## Table of Contents
+
 - [Installation](#installation)
     - [CPU Installation](#cpu-installation)
 - [Training a GPT on shakespeare](#training-a-gpt-on-shakespeare)
@@ -221,7 +224,9 @@ Because we keep track of the `args` for each operation, we can start at the outp
 Thanks to the [chain rule](https://en.wikipedia.org/wiki/Chain_rule), if we apply each `back_fn` that we pass through on our way through the tree, when we get to an input, we will have calculated the derivative of the output wrt the input.
 Despite implementing it myself, I still feel like this couldn't possibly work, and yet it does!
 
+
 The entirety of the algorithm can be found in [`tensor.py`](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/tensor.py#L145).
+
 It ends up being a topological sort to figure out which order to traverse the tree and then a simple traversal, applying the `back_fns` along the way.
 
 If you want a more detailed explanation, I've talked about it on [my blog](https://bclarkson-code.com/posts/llm-from-scratch-scalar-autograd/post.html).
@@ -333,7 +338,9 @@ print(layer(x)) # Output: Tensor([-2.238703], name=dense)
 ```
 
 Next, neural networks need a nonlinearity (otherwise they reduce to expensive linear regressions).
+
 Tricycle has a few [nonlinearities](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/activation.py) (also called activation functions). Here we can choose the simplest: `ReLU`.
+
 
 ```python
 from tricycle.activation import ReLU
