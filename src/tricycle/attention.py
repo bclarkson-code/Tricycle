@@ -40,7 +40,7 @@ class Attention(Op):
         xp = grad.xp
         in_shape = (self.batch_size, self.context_window, self.embedding_dim)
 
-        attention = grad._data
+        attention = grad.array
 
         # TODO: come up with a better name
         # smush
@@ -101,7 +101,7 @@ class Attention(Op):
         value = tensor[:, :, self.embedding_dim * 2 :]
 
         # Figure out how big everything is
-        self.batch_size = key._data.shape[0]
+        self.batch_size = key.array.shape[0]
         self.head_size = self.embedding_dim // self.n_heads
         self.n_tokens = key.shape[-2]
         head_shape = (
@@ -113,9 +113,9 @@ class Attention(Op):
         out_shape = (self.batch_size, self.n_tokens, self.embedding_dim)
 
         # reshape and reorder the heads
-        key = key._data
-        query = query._data
-        value = value._data
+        key = key.array
+        query = query.array
+        value = value.array
 
         key = key.reshape(head_shape)
         query = query.reshape(head_shape)

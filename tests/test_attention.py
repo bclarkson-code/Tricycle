@@ -66,7 +66,7 @@ def test_attention_combined():
     )
     in_tensor = to_tensor(in_tensor).to_vector()
 
-    x = torch.from_numpy(in_tensor._data)
+    x = torch.from_numpy(in_tensor.array)
     x.requires_grad = True
 
     qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch

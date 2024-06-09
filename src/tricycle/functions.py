@@ -8,8 +8,8 @@ class Softmax(Op):
     def backward(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        inner = xp.sum(grad._data * self._out, axis=-1, keepdims=True)
-        self._grad = self._out * (grad._data - inner)
+        inner = xp.sum(grad.array * self._out, axis=-1, keepdims=True)
+        self._grad = self._out * (grad.array - inner)
         return to_tensor(
             self._grad,
             is_vector=grad.is_vector,
@@ -25,7 +25,7 @@ class Softmax(Op):
         xp = tensor.xp
 
         exp = xp.exp(
-            tensor._data - xp.max(tensor._data, axis=-1, keepdims=True)
+            tensor.array - xp.max(tensor.array, axis=-1, keepdims=True)
         )
         denominator = xp.sum(exp, axis=-1, keepdims=True)
         self._out = exp / denominator

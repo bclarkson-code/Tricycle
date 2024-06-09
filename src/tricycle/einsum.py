@@ -204,12 +204,12 @@ class Einsum:
         xp = select_backend(*tensors)
         processed = []
         for tensor in tensors:
-            if not xp.isinf(tensor._data).any():
+            if not xp.isinf(tensor.array).any():
                 processed.append(tensor)
                 continue
 
             new_tensor = to_tensor(
-                xp.nan_to_num(tensor._data), is_vector=tensor.is_vector
+                xp.nan_to_num(tensor.array), is_vector=tensor.is_vector
             )
             new_tensor.args = tensor.args
             new_tensor.back_fns = tensor.back_fns
@@ -224,7 +224,7 @@ class Einsum:
             self.subscript, tensors
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
-        tensor_data = [t._data for t in tensors]
+        tensor_data = [t.array for t in tensors]
         result = to_tensor(xp.einsum(str(subscript), *tensor_data))
         if vectorise_output:
             result.is_vector = True

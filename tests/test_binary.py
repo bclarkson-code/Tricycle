@@ -110,10 +110,10 @@ def test_can_bdiv():
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None
-    assert in_tensor_1.grad.close_to(1 / in_tensor_2._data)
+    assert in_tensor_1.grad.close_to(1 / in_tensor_2.array)
 
     assert in_tensor_2.grad.close_to(
-        -in_tensor_1._data / (in_tensor_2._data**2)
+        -in_tensor_1.array / (in_tensor_2.array**2)
     )
 
 

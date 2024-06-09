@@ -24,7 +24,7 @@ def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
 
     if shape_1 != shape_2:
         raise ValueError(
-            f"Shapes {shape_1} and {shape_2} do not match: {tensor_1._data.shape}, {tensor_2._data.shape}"
+            f"Shapes {shape_1} and {shape_2} do not match: {tensor_1.array.shape}, {tensor_2.array.shape}"
         )
     return shape_1 == shape_2
 
@@ -34,10 +34,10 @@ class BinaryAdd(Op):
         """
         Applies the cosine function, elementwise, to a tensor
         """
-        xp = select_backend(tensor_1._data, tensor_2._data)
+        xp = select_backend(tensor_1.array, tensor_2.array)
 
         assert _shapes_match(tensor_1, tensor_2)
-        self._out = xp.add(tensor_1._data, tensor_2._data)
+        self._out = xp.add(tensor_1.array, tensor_2.array)
 
         result = to_tensor(self._out)
         result.args = (tensor_1, tensor_2)
@@ -52,7 +52,7 @@ class BinaryAdd(Op):
 
 class BinarySubtract(Op):
     def back_fn_2(self, grad: Tensor) -> Tensor:
-        self._grad = -grad._data
+        self._grad = -grad.array
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
         return result
@@ -61,10 +61,10 @@ class BinarySubtract(Op):
         """
         Subtract one tensor from another
         """
-        xp = select_backend(tensor_1._data, tensor_2._data)
+        xp = select_backend(tensor_1.array, tensor_2.array)
 
         assert _shapes_match(tensor_1, tensor_2)
-        self._out = xp.subtract(tensor_1._data, tensor_2._data)
+        self._out = xp.subtract(tensor_1.array, tensor_2.array)
 
         result = to_tensor(self._out)
         result.args = (tensor_1, tensor_2)
@@ -109,13 +109,13 @@ class BinaryMax(Op):
     _is_bigger_2: ArrayLike | None
 
     def back_fn_1(self, grad: Tensor) -> Tensor:
-        self._grad_1 = grad._data * self._is_bigger_1
+        self._grad_1 = grad.array * self._is_bigger_1
         result = to_tensor(self._grad_1)
         result.is_vector = grad.is_vector
         return result
 
     def back_fn_2(self, grad: Tensor) -> Tensor:
-        self._grad_2 = grad._data * self._is_bigger_2
+        self._grad_2 = grad.array * self._is_bigger_2
         result = to_tensor(self._grad_2)
         result.is_vector = grad.is_vector
         return result
@@ -128,13 +128,13 @@ class BinaryMax(Op):
         The two tensors must have the same shape
         if elements are equal, return the first
         """
-        xp = select_backend(tensor_1._data, tensor_2._data)
+        xp = select_backend(tensor_1.array, tensor_2.array)
         assert _shapes_match(tensor_1, tensor_2)
 
-        self._out = xp.maximum(tensor_1._data, tensor_2._data)
+        self._out = xp.maximum(tensor_1.array, tensor_2.array)
 
-        self._is_bigger_1 = tensor_1._data > tensor_2._data
-        self._is_bigger_2 = tensor_1._data <= tensor_2._data
+        self._is_bigger_1 = tensor_1.array > tensor_2.array
+        self._is_bigger_2 = tensor_1.array <= tensor_2.array
 
         result = to_tensor(self._out)
         result.args = (tensor_1, tensor_2)
@@ -149,13 +149,13 @@ class BinaryMin(Op):
     _is_smaller_2: Tensor | None
 
     def back_fn_1(self, grad: Tensor) -> Tensor:
-        self._grad_1 = grad._data * self._is_smaller_1
+        self._grad_1 = grad.array * self._is_smaller_1
         result = to_tensor(self._grad_1)
         result.is_vector = grad.is_vector
         return result
 
     def back_fn_2(self, grad: Tensor) -> Tensor:
-        self._grad_2 = grad._data * self._is_smaller_2
+        self._grad_2 = grad.array * self._is_smaller_2
         result = to_tensor(self._grad_2)
         result.is_vector = grad.is_vector
         return result
@@ -168,13 +168,13 @@ class BinaryMin(Op):
         The two tensors must have the same shape
         if elements are equal, return the first
         """
-        xp = select_backend(tensor_1._data, tensor_2._data)
+        xp = select_backend(tensor_1.array, tensor_2.array)
         assert _shapes_match(tensor_1, tensor_2)
 
-        self._out = xp.minimum(tensor_1._data, tensor_2._data)
+        self._out = xp.minimum(tensor_1.array, tensor_2.array)
 
-        self._is_smaller_1 = tensor_1._data < tensor_2._data
-        self._is_smaller_2 = tensor_1._data >= tensor_2._data
+        self._is_smaller_1 = tensor_1.array < tensor_2.array
+        self._is_smaller_2 = tensor_1.array >= tensor_2.array
 
         result = to_tensor(self._out)
         result.args = (tensor_1, tensor_2)
@@ -188,8 +188,8 @@ class BinaryMask(Op):
     _mask: ArrayLike | None = None
 
     def back_fn(self, grad: Tensor) -> Tensor:
-        xp = select_backend(grad._data, self._mask)
-        self._grad = xp.where(self._mask, grad._data, 0)
+        xp = select_backend(grad.array, self._mask)
+        self._grad = xp.where(self._mask, grad.array, 0)
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -200,14 +200,14 @@ class BinaryMask(Op):
         Apply a binary mask to a numpy array, setting values to 0 where
         the mask is True
         """
-        xp = select_backend(tensor._data, mask._data)
+        xp = select_backend(tensor.array, mask.array)
         assert _shapes_match(tensor, mask)
         assert (
             not mask.requires_grad
         ), "Cannot compute gradient of a binary mask"
 
-        self._out = xp.where(mask._data, tensor._data, 0)
-        self._mask = mask._data
+        self._out = xp.where(mask.array, tensor.array, 0)
+        self._mask = mask.array
 
         result = to_tensor(self._out)
 

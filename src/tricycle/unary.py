@@ -19,7 +19,7 @@ class UnaryAdd(Op):
         assert isinstance(tensor, Tensor)
         assert isinstance(constant, numbers.Number)
 
-        self._out = xp.add(tensor._data, constant)
+        self._out = xp.add(tensor.array, constant)
 
         result = to_tensor(self._out)
         result.args = (tensor,)
@@ -35,7 +35,7 @@ class UnaryMultiply(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        self._grad = xp.multiply(grad._data, self._constant)
+        self._grad = xp.multiply(grad.array, self._constant)
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
         return result
@@ -50,7 +50,7 @@ class UnaryMultiply(Op):
         assert isinstance(tensor, Tensor)
         assert xp.isscalar(constant)
 
-        self._out = xp.multiply(tensor._data, constant)
+        self._out = xp.multiply(tensor.array, constant)
         self._constant = constant
 
         result = to_tensor(self._out)
@@ -80,7 +80,7 @@ class UnaryPower(Op):
         self._grad = xp.power(
             self.input._data, self.constant - 1, dtype=self.input.dtype
         )
-        self._grad *= self.constant * grad._data
+        self._grad *= self.constant * grad.array
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -96,7 +96,7 @@ class UnaryPower(Op):
         assert isinstance(tensor, Tensor)
         assert xp.isscalar(constant)
 
-        self._out = xp.power(tensor._data, constant)
+        self._out = xp.power(tensor.array, constant)
         self.input = tensor
         self.constant = constant
 
@@ -125,7 +125,7 @@ class UnaryMax(Op):
     is_bigger: Tensor
 
     def back_fn(self, grad: Tensor) -> Tensor:
-        self._grad = grad._data * self.is_bigger._data
+        self._grad = grad.array * self.is_bigger.array
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -141,7 +141,7 @@ class UnaryMax(Op):
         assert isinstance(tensor, Tensor)
         assert xp.isscalar(constant)
 
-        self._out = xp.maximum(tensor._data, constant, dtype=tensor.dtype)
+        self._out = xp.maximum(tensor.array, constant, dtype=tensor.dtype)
 
         self.is_bigger = tensor > constant
         self.is_bigger.is_vector = tensor.is_vector
@@ -159,7 +159,7 @@ class UnaryMin(Op):
     is_smaller: Tensor
 
     def back_fn(self, grad: Tensor) -> Tensor:
-        self._grad = grad._data * self.is_smaller._data
+        self._grad = grad.array * self.is_smaller.array
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -175,7 +175,7 @@ class UnaryMin(Op):
         assert isinstance(tensor, Tensor)
         assert xp.isscalar(constant)
 
-        self._out = xp.minimum(tensor._data, constant, dtype=tensor.dtype)
+        self._out = xp.minimum(tensor.array, constant, dtype=tensor.dtype)
 
         self.is_smaller = tensor < constant
         self.is_smaller.is_vector = tensor.is_vector
@@ -191,7 +191,7 @@ class UnaryMin(Op):
 
 class UnaryExp(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
-        self._grad = grad._data * self._out
+        self._grad = grad.array * self._out
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -203,7 +203,7 @@ class UnaryExp(Op):
         """
         xp = tensor.xp
 
-        self._out = xp.exp(tensor._data)
+        self._out = xp.exp(tensor.array)
 
         result = to_tensor(self._out)
         result.args = (tensor,)
@@ -221,7 +221,7 @@ class UnaryLog(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
         denominator = self._input + self.REALLY_SMALL_NUMBER
-        self._grad = grad._data * xp.divide(1, denominator)
+        self._grad = grad.array * xp.divide(1, denominator)
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -233,8 +233,8 @@ class UnaryLog(Op):
         """
         xp = tensor.xp
 
-        self._out = xp.log(tensor._data)
-        self._input = tensor._data
+        self._out = xp.log(tensor.array)
+        self._input = tensor.array
 
         result = to_tensor(self._out)
 
@@ -251,7 +251,7 @@ class UnarySin(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        self._grad = grad._data * xp.cos(self._input)
+        self._grad = grad.array * xp.cos(self._input)
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -263,8 +263,8 @@ class UnarySin(Op):
         """
         xp = tensor.xp
 
-        self._out = xp.sin(tensor._data)
-        self._input = tensor._data
+        self._out = xp.sin(tensor.array)
+        self._input = tensor.array
 
         result = to_tensor(self._out)
         result.args = (tensor,)
@@ -280,7 +280,7 @@ class UnaryCos(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        self._grad = grad._data * -xp.sin(self._input)
+        self._grad = grad.array * -xp.sin(self._input)
 
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
@@ -292,8 +292,8 @@ class UnaryCos(Op):
         """
         xp = tensor.xp
 
-        self._out = xp.cos(tensor._data)
-        self._input = tensor._data
+        self._out = xp.cos(tensor.array)
+        self._input = tensor.array
 
         result = to_tensor(self._out)
         result.args = (tensor,)
@@ -319,7 +319,7 @@ class UnarySum(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        self._grad = xp.full(self._in_shape, grad._data)
+        self._grad = xp.full(self._in_shape, grad.array)
 
         result = to_tensor(self._grad)
         result.is_vector = self._in_is_vector
@@ -332,7 +332,7 @@ class UnarySum(Op):
         xp = tensor.xp
 
         # Sum all the values in the tensor
-        self._out = xp.sum(tensor._data)
+        self._out = xp.sum(tensor.array)
         self._in_shape = tensor.shape
         self._in_is_vector = tensor.is_vector
 

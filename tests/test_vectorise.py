@@ -71,12 +71,12 @@ def test_can_vectorise_mse():
     output_2 = mean_square_error(y_true, input_2)
     output_3 = mean_square_error(y_true, input_3)
 
-    input_y_true = to_tensor(np.array([y_true._data] * 3))
+    input_y_true = to_tensor(np.array([y_true.array] * 3))
     input_vector = to_tensor(
-        np.array([input_1._data, input_2._data, input_3._data])
+        np.array([input_1.array, input_2.array, input_3.array])
     )
     correct_output = to_tensor(
-        np.array([output_1._data, output_2._data, output_3._data]).sum()
+        np.array([output_1.array, output_2.array, output_3.array]).sum()
     )
 
     input_y_true = vectorise(input_y_true)
@@ -97,10 +97,10 @@ def test_can_vectorise_softmax():
     output_3 = Softmax()(input_3)
 
     input_vector = to_tensor(
-        np.array([input_1._data, input_2._data, input_3._data])
+        np.array([input_1.array, input_2.array, input_3.array])
     )
     correct_output = to_tensor(
-        np.array([output_1._data, output_2._data, output_3._data])
+        np.array([output_1.array, output_2.array, output_3.array])
     )
 
     input_vector = vectorise(input_vector)

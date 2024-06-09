@@ -51,7 +51,7 @@ class GeLU(Layer):
         left = xp.tanh(inner)
         cosh = xp.cosh(inner)
         right = coef / (cosh * cosh)
-        self._grad = 0.5 * (1 + left + right) * grad._data
+        self._grad = 0.5 * (1 + left + right) * grad.array
 
         result = to_tensor(
             self._grad,
@@ -63,9 +63,9 @@ class GeLU(Layer):
 
     def forward(self, tensor: Tensor):
         xp = tensor.xp
-        self._input = tensor._data
-        inner = self.CONST_1 * (tensor._data + self.CONST_2 * tensor._data**3)
-        result = tensor._data * 0.5 * (1 + xp.tanh(inner))
+        self._input = tensor.array
+        inner = self.CONST_1 * (tensor.array + self.CONST_2 * tensor.array**3)
+        result = tensor.array * 0.5 * (1 + xp.tanh(inner))
 
         result = to_tensor(
             result,

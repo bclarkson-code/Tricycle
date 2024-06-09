@@ -74,7 +74,7 @@ class Split(Op):
                 indices.append(slice(start, end))
             else:
                 indices.append(slice(None))
-        self._grad[idx][tuple(indices)] = grad._data
+        self._grad[idx][tuple(indices)] = grad.array
 
         result = to_tensor(self._grad[idx])
         result.is_vector = grad.is_vector
@@ -90,7 +90,7 @@ class Split(Op):
 
         assert isinstance(n_splits, int)
 
-        self._out = xp.split(tensor._data, n_splits, axis=axis)
+        self._out = xp.split(tensor.array, n_splits, axis=axis)
         self._in_shape = tensor.shape
         self._axis = axis
         self._n_splits = n_splits
@@ -117,7 +117,7 @@ class Reshape(Op):
     def back_fn(self, grad: Tensor) -> Tensor:  # sourcery skip: assign-if-exp
         xp = grad.xp
 
-        self._grad = xp.reshape(grad._data, self._original_shape)
+        self._grad = xp.reshape(grad.array, self._original_shape)
         result = to_tensor(self._grad)
         result.is_vector = grad.is_vector
         return result
@@ -127,7 +127,7 @@ class Reshape(Op):
         if tensor.is_vector:
             shape = [tensor.shape[0]] + list(shape)
 
-        self._out = xp.reshape(tensor._data, shape)
+        self._out = xp.reshape(tensor.array, shape)
         self._original_shape = tensor.shape
 
         result = to_tensor(self._out)

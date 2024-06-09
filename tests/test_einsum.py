@@ -38,7 +38,7 @@ def test_matrix_partial_reduce():
 def test_transpose():
     x = to_tensor(np.arange(20).reshape(4, 5))
     op = Einsum("ij->ji")
-    assert op(x).close_to(x._data.T)
+    assert op(x).close_to(x.array.T)
 
     op(x).backward()
     assert x.grad is not None

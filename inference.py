@@ -71,10 +71,10 @@ def generate(
 
         if pred.on_gpu:
             probabilities = pred.xp.asnumpy(
-                pred._data[0][config.context_window - 1]
+                pred.array[0][config.context_window - 1]
             )
         else:
-            probabilities = pred._data[0][config.context_window - 1]
+            probabilities = pred.array[0][config.context_window - 1]
 
         # sample according to probabilities
         if sample:

@@ -38,7 +38,7 @@ def test_attention_individually():
     in_tensor = np.random.uniform(-5, 5, (n_tokens, projected_size))
     in_tensor = to_tensor(in_tensor)
 
-    x = torch.from_numpy(in_tensor._data)
+    x = torch.from_numpy(in_tensor.array)
 
     qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch
     query, key, value = in_tensor.split(3, axis=-1)  # tricycle
@@ -175,7 +175,7 @@ def test_attention_combined():
     )
     in_tensor = to_tensor(in_tensor).to_vector()
 
-    x = torch.from_numpy(in_tensor._data)
+    x = torch.from_numpy(in_tensor.array)
 
     qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch
     query, key, value = in_tensor.split(3, axis=-1)  # tricycle

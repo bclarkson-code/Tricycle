@@ -203,7 +203,7 @@ def tensor_pair_same_shape(draw):
 @settings(deadline=1000)
 def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
     tensor = build_tensor(in_shape, is_vector)
-    assume(np.isfinite(tensor._data).all())
+    assume(np.isfinite(tensor.array).all())
 
     from_size = tensor.shape[-1]
 
@@ -213,7 +213,7 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
     tr_layer = Dense(from_size=from_size, to_size=out_shape)
     tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy().T)
 
-    pt_out = pt_layer(torch.tensor(tensor._data))
+    pt_out = pt_layer(torch.tensor(tensor.array))
     tr_out = tr_layer(tensor)
 
     assert np.allclose(
@@ -268,14 +268,14 @@ def test_embedding_matches(tokens_, out_shape):
 @example(in_shape=[1, 1, 1, 128], is_vector=True)
 def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
     tensor = build_tensor(in_shape, is_vector)
-    assume(np.isfinite(tensor._data).all())
+    assume(np.isfinite(tensor.array).all())
 
     tensor.requires_grad = True
 
     pt_layer = torch.nn.functional.softmax
     tr_layer = Softmax()
 
-    pt_input = torch.tensor(tensor._data, requires_grad=True)
+    pt_input = torch.tensor(tensor.array, requires_grad=True)
 
     pt_out = pt_layer(pt_input, dim=-1)
     tr_out = tr_layer(tensor)
@@ -301,20 +301,20 @@ def test_crossentropy_matches(in_shape, is_vector):
     y_pred = build_tensor(in_shape, is_vector)
     y_true = np.random.randint(0, in_shape[-1], size=in_shape[:-1])
     y_true = to_tensor(y_true, is_vector=is_vector, dtype=int)
-    assume(np.isfinite(y_pred._data).all())
+    assume(np.isfinite(y_pred.array).all())
 
     tr_out = CrossEntropy()(y_true, y_pred).from_vector()
     if len(in_shape) > 1:
         tr_out = tr_out.mean()
 
     if len(in_shape) == 1:
-        p_y_pred = copy(y_pred._data)
+        p_y_pred = copy(y_pred.array)
     if len(in_shape) == 2:
-        p_y_pred = copy(y_pred._data)
+        p_y_pred = copy(y_pred.array)
     if len(in_shape) == 3:
-        p_y_pred = copy(y_pred._data).transpose(0, -1, 1)
+        p_y_pred = copy(y_pred.array).transpose(0, -1, 1)
     p_y_pred = torch.tensor(p_y_pred, requires_grad=True)
-    p_y_true = torch.tensor(y_true._data, dtype=torch.long)
+    p_y_true = torch.tensor(y_true.array, dtype=torch.long)
 
     p_out = torch.nn.CrossEntropyLoss()(
         input=p_y_pred,

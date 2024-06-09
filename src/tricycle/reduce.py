@@ -26,13 +26,13 @@ class ReduceMax(Op):
         if not reduce_along_axes:
             return tensor
 
-        indicator = tensor._data == tensor.xp.max(
-            tensor._data, axis=tuple(reduce_along_axes), keepdims=True
+        indicator = tensor.array == tensor.xp.max(
+            tensor.array, axis=tuple(reduce_along_axes), keepdims=True
         )
         indicator = to_tensor(
             indicator, requires_grad=False, is_vector=tensor.is_vector
         )
-        indicator._data = indicator._data.astype(tensor.xp.int8)
+        indicator.array = indicator.array.astype(tensor.xp.int8)
 
         new_subscript = Subscript.from_split([idx, idx], subscript.output)
 
@@ -65,13 +65,13 @@ class ReduceMin(Op):
         if not reduce_along_axes:
             return tensor
 
-        indicator = tensor._data == tensor.xp.min(
-            tensor._data, axis=tuple(reduce_along_axes), keepdims=True
+        indicator = tensor.array == tensor.xp.min(
+            tensor.array, axis=tuple(reduce_along_axes), keepdims=True
         )
         indicator = to_tensor(
             indicator, requires_grad=False, is_vector=tensor.is_vector
         )
-        indicator._data = indicator._data.astype(tensor.xp.int8)
+        indicator.array = indicator.array.astype(tensor.xp.int8)
 
         new_subscript = Subscript.from_split([idx, idx], subscript.output)
 
