@@ -28,7 +28,7 @@ jobs:
       uses: mamba-org/setup-micromamba@v1
       with:
         micromamba-version: '1.5.6-0' # any version from https://github.com/mamba-org/micromamba-releases
-        environment-file: environment.cpu_only.test.yml
+        environment-file: requirements/environment.cpu_only.test.yml
         init-shell: >-
           bash
         cache-environment: true
