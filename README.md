@@ -258,6 +258,15 @@ https://github.com/bclarkson-code/Tricycle/assets/57139598/f8b35a6b-f102-44f1-a7
 
 https://github.com/bclarkson-code/Tricycle/assets/57139598/1ed18428-11de-4990-a0f4-12d1310d6898
 
+Becuase every `Op` in einsum needs a derivative, we need to figure out what the
+derivative of `Einsum` is. Thankfully, if you sit down and go through the
+maths (index notation is really helpful here) you'll find that you can follow
+these two, really simple rules to differentiate an einsum operation wrt a
+given input:
+
+ - Swap the indices for the input and output
+ - Replace the original input with your current derivative
+
 For example, the derivative of a transpose works like this:
 
 ```python
