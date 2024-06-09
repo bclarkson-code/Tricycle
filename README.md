@@ -110,14 +110,11 @@ Much like other deep learning libraries, tricycle centers around `Tensors`. In t
 from tricycle.tensor import to_tensor
 
 tensor = to_tensor([1,2,3])
-print(tensor)
-```
-Which outupts
-```python
-Tensor([1. 2. 3.])
+print(tensor) # Output: Tensor([1. 2. 3.])
 ```
 
 You can do a lot of things with a tensor
+
 ```python
 from tricycle.functions import Softmax
 
@@ -125,19 +122,14 @@ a = to_tensor([1,2,3])
 b = to_tensor([4,5,6])
 
 # addition
-print(a + b)
+print(a + b) # Output: Tensor([5. 7. 9.], name=badd)
 
 # comparison
-print(a < b)
+print(a < b) # Output: Tensor([ True  True  True])
 
 # more complex functions
-print(Softmax()(a))
-```
-Which outputs
-```python
-Tensor([5. 7. 9.], name=badd)
-Tensor([ True  True  True])
-Tensor([0.09003057 0.24472848 0.66524094], name=softmax)
+print(Softmax()(a)) # Output: Tensor([0.09003057 0.24472848 0.66524094], name=softmax)
+
 ```
 
 ## Automatic Differentiation
