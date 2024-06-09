@@ -104,7 +104,7 @@ python inference.py model.pkl
 ```
 
 ## How it works
-Much like other deep learning libraries, tricycle centers around `Tensors`. In tricycle a `Tensor` is a wrapper around a numpy array that adds some extra features:
+Tricycle code centers around objects called `Tensors`. A `Tensor` is a wrapper around a numpy array that adds some extra features:
 
 ```python
 from tricycle.tensor import to_tensor
@@ -132,25 +132,20 @@ print(Softmax()(a)) # Output: Tensor([0.09003057 0.24472848 0.66524094], name=so
 
 ```
 
-## Automatic Differentiation
-
-Tricycle features an automatic differentiation engine that can differentiate arbitrary expressions:
+### Automatic Differentiation
+Unlike vanilla numpy, every operation in Tricycle is attached to a derivative.
+When you do some operations on your `Tensor`, Tricycle keeps track of what you did and allows you to differentiate the output.
 
 ```python
-from tricycle.tensor import to_tensor
-
 x = to_tensor(2)
 
 y = x ** 2 + 3 * x + 4
-print(y)
-# Tensor(14.0, name=+ 4)
+print(y) # Output: Tensor(14.0, name=+ 4)
 
-# derivative of y wrt x is
+# derivative of y with respect to (wrt) x is
 # 2 * x + 3 = 7
-
-y.backward() # differentiate
-print(x.grad)
-# Tensor(7.0)
+y.backward() # differentiate wrt y
+print(x.grad) # Output: Tensor(7.0)
 ```
 
 This works on multidimensional tensors
@@ -164,9 +159,9 @@ b = to_tensor(np.random.random(shape))
 
 c = a * b # elementwise multiply
 
-c.backward()
-assert a.grad.close_to(b)
-assert b.grad.close_to(a)
+c.backward() # differentiate wrt c
+assert a.grad.close_to(b) # derivative of c wrt a is b
+assert b.grad.close_to(a) # derivative of c wrt b is a
 ```
 
 And even works through complex operations like attention
@@ -185,12 +180,13 @@ shape = (4,32,32)
 input = to_tensor(np.ones(shape), is_vector=True)
 
 output = attention(input)
-output.backward()
+output.backward() # differentiate wrt output
 
-print(input.grad)
-# Tensor([[[ 2.5441039  -2.0558214  -1.7923143  ...
+print(input.grad) # Output: Tensor([[[ 2.5441039  -2.0558214  -1.7923143  ...
 assert input.grad.shape == (4,32,32)
 ```
+
+This is done by recording the
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
