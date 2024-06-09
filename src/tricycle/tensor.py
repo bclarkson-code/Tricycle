@@ -142,27 +142,6 @@ class Tensor:
                     arg.parents = None
                     stack.append(arg)
 
-    def cleanup(self):
-        """
-        Traverse through the graph, deleting all non-parameter nodes in
-        the graph to avoid a memory leak
-        """
-        stack: list["Tensor"] = [self]
-        while stack:
-            node = stack.pop()
-
-            # add children to stack
-            if node.args:
-                stack.extend(iter(node.args))
-                del node.args
-            else:
-                continue
-
-            # delete node
-            if hasattr(node, "grad") and node.grad is not None:
-                del node.grad
-            del node
-
     def backward(self, clip: float | None = None):
         """
         Perform a backward pass through the graph, calculating the gradient
