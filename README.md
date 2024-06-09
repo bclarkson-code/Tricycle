@@ -1,7 +1,11 @@
 # Tricycle
+<p align="center">
+    <img width="223" alt="tricycle_logo" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/62405944-b27b-49bc-93c3-17ba93fc8ad7">
+</p>
+
 Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and numpy.
 
-The file `train_smol_gpy.py` trains a 49M parameter, GPT-2 style language model to produce python code in ~2 days on a single RTX 3090.
+The file `train_smol_gpy.py` trains a 49M parameter, GPT-2 style language model that can produce passable python code in ~2 days on a single RTX 3090.
 
 The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + numpy code.
 
@@ -239,25 +243,20 @@ There are only two rules to remember with einsum:
 
 For example:
 #### Summing along an axis
-![](assets/EinsumIJToI.mp4)
+
+https://github.com/bclarkson-code/Tricycle/assets/57139598/c575c958-19ed-4406-8a1b-d2390663ba96
 
 #### Sum of an entire tensor
-![](assets/EinsumIJTo.mp4)
+
+https://github.com/bclarkson-code/Tricycle/assets/57139598/efbb5eaa-656c-40e5-a32d-b0f5e7bd28f5
 
 #### Transpose
-![](assets/EinsumIJToJI.mp4)
+
+https://github.com/bclarkson-code/Tricycle/assets/57139598/f8b35a6b-f102-44f1-a7cd-b6b2e765f275
 
 #### Matrix multiplication
-![](assets/EinsumIJkToIK.mp4)
 
-Becuase every `Op` in einsum needs a derivative, we need to figure out what the
-derivative of `Einsum` is. Thankfully, if you sit down and go through the
-maths (index notation is really helpful here) you'll find that you can follow
-these two, really simple rules to differentiate an einsum operation wrt a
-given input:
-
- - Swap the indices for the input and output
- - Replace the original input with your current derivative
+https://github.com/bclarkson-code/Tricycle/assets/57139598/1ed18428-11de-4990-a0f4-12d1310d6898
 
 For example, the derivative of a transpose works like this:
 
