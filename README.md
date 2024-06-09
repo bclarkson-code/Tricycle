@@ -11,11 +11,10 @@ The entire library, from the automatic differentiation engine to a GPT, is writt
 
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on a either GPU or a CPU.
 
-- [Tricycle](#tricycle)
-  - [Installation](#installation)
+- [Installation](#installation)
     - [CPU Installation](#cpu-installation)
-  - [Training a GPT on shakespeare](#training-a-gpt-on-shakespeare)
-  - [How it works](#how-it-works)
+- [Training a GPT on shakespeare](#training-a-gpt-on-shakespeare)
+- [How it works](#how-it-works)
     - [Automatic Differentiation](#automatic-differentiation)
     - [Einsum](#einsum)
       - [Summing along an axis](#summing-along-an-axis)
@@ -31,7 +30,8 @@ Using [CuPY](https://cupy.dev/), all Tricycle code can run on a either GPU or a 
         - [Inplace tensor updates](#inplace-tensor-updates)
         - [Mathematical optimisations](#mathematical-optimisations)
         - [Hardware optimisations](#hardware-optimisations)
-  - [Contact](#contact)
+- [Contact](#contact)
+
 ## Installation
 Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, optimisation efforts have been focussed on GPU computation so it is pretty slow. If you do have a CUDA capable GPU I would strongly recommend installing the gpu version of Tricycle.
 
@@ -65,8 +65,8 @@ conda activate tricycle
 </details>
 
 
-## Training a GPT on shakespeare
-The following toy script will train a small GPT to generate convincing shakespeare.
+## Training a GPT on Shakespeare
+The following toy script will train a small GPT to generate convincing Shakespeare.
 On my RTX 3090, this takes ~30 mins. For a more realistic training script with metric tracking, gradient accumulation, a validation dataset etc, take a look at `train_smol_gpt.py`
 
 ```python
@@ -583,11 +583,7 @@ a household fan on top, I get about 30% better performance.
 
 ![IMG_0713](https://github.com/bclarkson-code/Tricycle/assets/57139598/958f12b4-caaa-4f2a-b9d0-2f5a7fc1e5a5)
 
-Putting all of these things together, Triycle can train a small language model
-on shakespeare in ~30 mins. Andrej Karpathy can
-[do this in pytorch](https://github.com/karpathy/nanoGPT/tree/master) in around
-7 minutes on my machine (with a like-for-like config) which, given that the
-entire Tricycle project is in python, is a surprisingly good time (IMO).
+Putting all of these things together, Tricycle can train a small language model on shakespeare in ~30 mins. Andrej Karpathy can [do this in pytorch](https://github.com/karpathy/nanoGPT/tree/master) in around 7 minutes on my machine (with a like-for-like config) which, given that the entire Tricycle project is in python, means that Tricycle is surprisingly fast. That said, more work is needed to get the speed up.
 
 
 ## Contact
