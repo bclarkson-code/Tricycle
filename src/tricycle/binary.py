@@ -1,13 +1,32 @@
-from functools import partial
+"""
+In tricycle (because it makes the derivatives easier) we only allow operations
+on two matrices if they are the same shape. We call these `binary` operations.
+This file contains all of the binary operations in tricycle
+
+In deep learning, almost all of the time you can use an einsum operation to
+handle what you want to do. This includes:
+ - Transposing
+ - Elementwise multiplication
+ - Matrix multiplication
+ - ...
+
+Interestingly, all of the operations here can be made out of clever
+combinations of unary operations and einsums,  (exercise for the reader?)
+but it is a bit more efficient to give them their own, optimised `Op`s
+"""
 
 from numpy.typing import ArrayLike
 
 from tricycle.ops import Einsum, Op
 from tricycle.tensor import Tensor, nothing, select_backend, to_tensor
-from tricycle.unary import UnaryDivide, UnaryMultiply
+from tricycle.unary import UnaryDivide
 
 
 def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
+    """
+    Binary operations can only be performed if the matrices are the same shape
+    This function checks that we are allowed to apply a binary Op.
+    """
     # sourcery skip: assign-if-exp, merge-duplicate-blocks, remove-redundant-if
     if tensor_1.is_vector and tensor_2.is_vector:
         shape_1 = tensor_1.shape

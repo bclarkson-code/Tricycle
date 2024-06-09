@@ -186,7 +186,24 @@ print(input.grad) # Output: Tensor([[[ 2.5441039  -2.0558214  -1.7923143  ...
 assert input.grad.shape == (4,32,32)
 ```
 
-This is done by recording the
+When you run an operation (`Op`), the output has two pieces of information attached:
+ - `args`: The inputs to the function
+ - `back_fns`: The functions that should be executed to calculate the derivative wrt each of the inputs
+
+Surprisingly, this all that you need to perform automatic differentiation on an arbitrarily complicated sequence of `Op`s.
+Because we keep track of the `args` for each operation, we can start at the output of a set of `Op`s and traverse through them to reach every input to the sequence: the operations form a tree.
+
+Thanks to the [chain rule](https://en.wikipedia.org/wiki/Chain_rule), if we apply each `back_fn` that we pass through on our way through the tree, when we get to an input, we will have calculated the derivative of the output wrt the input.
+Despite implementing it myself, I still feel like this couldn't possibly work, and yet it does!
+
+The entirety of the algorithm can be found in [`tensor.py`](https://github.com/bclarkson-code/Tricycle/blob/update-readme/src/tricycle/tensor.py#L145).
+It ends up being a topological sort to figure out which order to traverse the tree and then a simple traversal, applying the `back_fns` along the way.
+
+If you want a more detailed explanation, I've talked about it on [my blog](https://bclarkson-code.com/posts/llm-from-scratch-scalar-autograd/post.html).
+
+### Building an LLM
+
+Now we have the automatic differentiation engine built.
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)

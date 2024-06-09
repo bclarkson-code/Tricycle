@@ -1,11 +1,16 @@
+"""
+When doing tensor calculus, some Operations have a single input and output.
+I'm calling these `unary` operations.
+
+This file contains all of the unary operations in Tricycle
+"""
+
 import numbers
 
 from numpy.typing import ArrayLike
 
 from tricycle.ops import Op
 from tricycle.tensor import Tensor, nothing, to_tensor
-
-grad = False
 
 
 class UnaryAdd(Op):
