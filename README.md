@@ -11,6 +11,27 @@ The entire library, from the automatic differentiation engine to a GPT, is writt
 
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on a either GPU or a CPU.
 
+- [Tricycle](#tricycle)
+  - [Installation](#installation)
+    - [CPU Installation](#cpu-installation)
+  - [Training a GPT on shakespeare](#training-a-gpt-on-shakespeare)
+  - [How it works](#how-it-works)
+    - [Automatic Differentiation](#automatic-differentiation)
+    - [Einsum](#einsum)
+      - [Summing along an axis](#summing-along-an-axis)
+      - [Sum of an entire tensor](#sum-of-an-entire-tensor)
+      - [Transpose](#transpose)
+      - [Matrix multiplication](#matrix-multiplication)
+    - [Building a simple neural network](#building-a-simple-neural-network)
+    - [Optimisations](#optimisations)
+      - [Batching](#batching)
+      - [GPU](#gpu)
+      - [Fusing](#fusing)
+      - [Other optimisations](#other-optimisations)
+        - [Inplace tensor updates](#inplace-tensor-updates)
+        - [Mathematical optimisations](#mathematical-optimisations)
+        - [Hardware optimisations](#hardware-optimisations)
+  - [Contact](#contact)
 ## Installation
 Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, optimisation efforts have been focussed on GPU computation so it is pretty slow. If you do have a CUDA capable GPU I would strongly recommend installing the gpu version of Tricycle.
 
