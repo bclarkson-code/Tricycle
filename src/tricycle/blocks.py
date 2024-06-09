@@ -32,7 +32,7 @@ def masked_fill(
     Apply an attention_mask to a tensor
     """
     xp = tensor.xp
-    repeats = tensor.shape[1] if tensor.is_vector else tensor.shape[0]
+    repeats = tensor.shape[1] if tensor.is_batched else tensor.shape[0]
     mask = xp.stack(
         [full_mask[: mask_shape[0], : mask_shape[1]].array] * repeats
     )

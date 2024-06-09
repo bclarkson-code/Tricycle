@@ -55,7 +55,7 @@ class Dense(Layer):
             result,
             requires_grad=grad.requires_grad,
             name="back_dense",
-            is_vector=False,
+            is_batched=False,
         )
 
     def grad_back_fn(self, grad: Tensor):
@@ -67,7 +67,7 @@ class Dense(Layer):
             result,
             requires_grad=grad.requires_grad,
             name="back_dense",
-            is_vector=True,
+            is_batched=True,
         )
 
     def forward(self, tensor: Tensor):
@@ -91,7 +91,7 @@ class Dense(Layer):
             case _:
                 raise NotImplementedError(
                     f"Cannot pass tensor with shape {tensor.shape} "
-                    f"and {tensor.is_vector=}"
+                    f"and {tensor.is_batched=}"
                     "through a Dense layer"
                 )
         result = to_tensor(
@@ -108,7 +108,7 @@ class Dense(Layer):
         result.name = "dense"
         result.args = (self.weights, tensor)
         result.back_fns = (self.weight_back_fn, self.grad_back_fn)
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
 
         return result
 
@@ -127,30 +127,6 @@ class Dense(Layer):
         return self
 
 
-# class Dropout(Layer):
-#     def __init__(self, probability: float):
-#         self.probability = probability
-#
-#     def backward(self, grad: Tensor):
-#         return to_tensor(self._mask * grad._data, is_vector=grad.is_vector)
-#
-#     def forward(self, tensor: Tensor):
-#         if self.probability == 0:
-#             return tensor
-#         xp = tensor.xp
-#         coef = 1 / (1 - self.probability)
-#
-#         self._mask = (xp.random.rand(*tensor.shape) > self.probability).astype(
-#             tensor.dtype
-#         ) * coef
-#         self._out = self._mask * tensor._data
-#         result = to_tensor(self._out, is_vector=tensor.is_vector)
-#         result.args = (tensor,)
-#         result.back_fns = (self.backward,)
-#
-#         return result
-
-
 class Dropout(Layer):
     def __init__(self, probability: float):
         self.probability = probability
@@ -164,7 +140,7 @@ class Dropout(Layer):
             xp.random.rand(*tensor.shape) > self.probability
         ).astype(tensor.dtype) * coef
         random_mask = to_tensor(
-            random_mask, is_vector=True, requires_grad=False
+            random_mask, is_batched=True, requires_grad=False
         )
         return BinaryMultiply()(tensor, random_mask)
 
@@ -175,10 +151,10 @@ class LayerNorm(Layer):
 
         self.eps = eps
         self.gamma = to_tensor(
-            np.ones((embedding_dim,)), requires_grad=True, is_vector=False
+            np.ones((embedding_dim,)), requires_grad=True, is_batched=False
         )
         self.beta = to_tensor(
-            np.zeros((embedding_dim,)), requires_grad=True, is_vector=False
+            np.zeros((embedding_dim,)), requires_grad=True, is_batched=False
         )
 
     def forward(self, tensor: Tensor):
@@ -205,7 +181,7 @@ class LayerNorm(Layer):
 
         output = to_tensor(
             output,
-            is_vector=tensor.is_vector,
+            is_batched=tensor.is_batched,
             requires_grad=tensor.requires_grad,
         )
         output.back_fns = (self.back_fn, self.beta_back_fn, self.gamma_back_fn)
@@ -224,7 +200,7 @@ class LayerNorm(Layer):
         x_norm = (self._input - self._mean) / xp.sqrt(self._var + self.eps)
         axes = tuple(range(grad.ndim - 1))
         result = xp.sum(grad.array * x_norm, axis=axes)
-        return to_tensor(result, is_vector=False)
+        return to_tensor(result, is_batched=False)
 
     def beta_back_fn(self, grad: Tensor):
         """
@@ -235,7 +211,7 @@ class LayerNorm(Layer):
         # Compute intermediate values
         axes = tuple(range(grad.ndim - 1))
         result = xp.sum(grad.array, axis=axes)
-        return to_tensor(result, is_vector=False)
+        return to_tensor(result, is_batched=False)
 
     def back_fn(self, grad: Tensor):
         """
@@ -271,7 +247,7 @@ class LayerNorm(Layer):
 
         return to_tensor(
             result,
-            is_vector=grad.is_vector,
+            is_batched=grad.is_batched,
             requires_grad=grad.requires_grad,
             name="back_ln",
         )
@@ -315,11 +291,11 @@ class RMSNorm(Layer):
         def rmsnorm_weight_back_fn(grad):
             xp = grad.xp
             result = xp.sum(input_ / rms, axis=-2).sum(0).squeeze()
-            return to_tensor(result, is_vector=False)
+            return to_tensor(result, is_batched=False)
 
         def rmsnorm_back_fn(grad):
             xp = grad.xp
-            scaled_grad = xp.multiply(grad._data, self.weights.array)
+            scaled_grad = xp.multiply(grad.array, self.weights.array)
 
             left = scaled_grad / rms
 
@@ -337,7 +313,7 @@ class RMSNorm(Layer):
                         f"RMSNorm with tensors of size {input_.ndim} are not yet supported"
                     )
             right = square_prod * coef
-            return to_tensor(left - right, is_vector=grad.is_vector)
+            return to_tensor(left - right, is_batched=grad.is_batched)
 
         return rmsnorm_weight_back_fn, rmsnorm_back_fn
 
@@ -350,9 +326,11 @@ class RMSNorm(Layer):
         result = xp.einsum("...a,a->...a", result, self.weights.array)
 
         weight_back_fn, back_fn = self.build_back_fn(
-            rms=rms, input_=tensor.array, is_vector=tensor.is_vector
+            rms=rms, input_=tensor.array, is_batched=tensor.is_batched
         )
-        result = to_tensor(result, is_vector=tensor.is_vector, name="rmsnorm")
+        result = to_tensor(
+            result, is_batched=tensor.is_batched, name="rmsnorm"
+        )
         result.back_fns = (
             weight_back_fn,
             back_fn,
@@ -419,13 +397,13 @@ class Embedding(Layer):
         ), "Cannot embed a differentiable tensor"
 
         self.input = tensor
-        if tensor.is_vector:
+        if tensor.is_batched:
             self._out = self.weights.array[tensor.array.flatten()].reshape(
                 tensor.array.shape + (-1,)
             )
         else:
             self._out = self.weights.array[tensor.array]
-        result = to_tensor(self._out, is_vector=tensor.is_vector)
+        result = to_tensor(self._out, is_batched=tensor.is_batched)
 
         result.args = (tensor, self.weights)
 

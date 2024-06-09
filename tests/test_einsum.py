@@ -4,7 +4,7 @@ from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import to_tensor
 
 
-def test_vector_reduce():
+def test_batched_reduce():
     x = to_tensor(np.arange(5))
     op = Einsum("a->")
     result = op(x)

@@ -35,7 +35,7 @@ def test_can_CrossEntropy():
     assert loss.close_to(1.0986122886681098)
 
 
-def test_CrossEntropy_vectorised():
+def test_CrossEntropy_batched():
     batch_size = 3
     n_tokens = 5
     vocab_size = 7
@@ -43,8 +43,8 @@ def test_CrossEntropy_vectorised():
     y_true = np.random.randint(0, vocab_size, size=(batch_size, n_tokens))
     y_pred = np.random.random((batch_size, n_tokens, vocab_size))
 
-    y_true = to_tensor(y_true, dtype=int).to_vector()
-    y_pred = to_tensor(y_pred).to_vector()
+    y_true = to_tensor(y_true, dtype=int).to_batched()
+    y_pred = to_tensor(y_pred).to_batched()
 
     loss = CrossEntropy()(y_true, y_pred)
 
@@ -87,8 +87,8 @@ def test_single_lr_step_with_multiple_datapoints():
     slope = to_tensor([0.02])
     intercept = to_tensor([0.01])
 
-    x_input = to_tensor(x, requires_grad=False, name="x", is_vector=True)
-    y_input = to_tensor(y, requires_grad=False, name="y", is_vector=True)
+    x_input = to_tensor(x, requires_grad=False, name="x", is_batched=True)
+    y_input = to_tensor(y, requires_grad=False, name="y", is_batched=True)
 
     y_pred = x_input * slope + intercept
     loss = mean_square_error(y_input, y_pred)
@@ -233,16 +233,16 @@ def test_linear_regression_multi_input_output():
         return Einsum("i,ij->j")(X, slope) + intercept
 
     for idx in range(loops):
-        X = to_tensor(X_data).to_vector()
-        y = to_tensor(y_data).to_vector()
+        X = to_tensor(X_data).to_batched()
+        y = to_tensor(y_data).to_batched()
 
         # predict an output
         y_pred = model(X, slope, intercept)
 
         # calculate the loss
         loss = mean_square_error(y, y_pred)
-        # we need to unvectorise the loss before finding its average
-        loss = loss.from_vector().mean()
+        # we need to unbatch the loss before finding its average
+        loss = loss.from_batched().mean()
 
         losses[idx] = loss.numpy()
         loss.backward()
@@ -250,8 +250,8 @@ def test_linear_regression_multi_input_output():
         assert slope.grad is not None
         assert intercept.grad is not None
 
-        slope.grad = slope.grad.from_vector().e("abc->bc")
-        intercept.grad = intercept.grad.from_vector().e("ab->b")
+        slope.grad = slope.grad.from_batched().e("abc->bc")
+        intercept.grad = intercept.grad.from_batched().e("ab->b")
 
         slope = (slope - slope.grad * learning_rate).zero_grad()
         intercept = (intercept - intercept.grad * learning_rate).zero_grad()

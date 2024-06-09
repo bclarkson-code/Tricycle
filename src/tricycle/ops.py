@@ -35,7 +35,9 @@ class Repeat(Op):
         subscript = Subscript("...,...a->...a")
         new_shape = tensor.shape + (repeats,)
         ones = to_tensor(
-            xp.ones(new_shape), is_vector=tensor.is_vector, requires_grad=False
+            xp.ones(new_shape),
+            is_batched=tensor.is_batched,
+            requires_grad=False,
         )
 
         return Einsum(subscript)(tensor, ones)
@@ -77,7 +79,7 @@ class Split(Op):
         self._grad[idx][tuple(indices)] = grad.array
 
         result = to_tensor(self._grad[idx])
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(
@@ -106,7 +108,7 @@ class Split(Op):
             result = to_tensor(result)
             result.back_fns = (back_fn,)
             result.args = (tensor,)
-            result.is_vector = tensor.is_vector
+            result.is_batched = tensor.is_batched
             results.append(result)
         return results
 
@@ -119,12 +121,12 @@ class Reshape(Op):
 
         self._grad = xp.reshape(grad.array, self._original_shape)
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor, shape: Sequence[int]) -> Tensor:
         xp = tensor.xp
-        if tensor.is_vector:
+        if tensor.is_batched:
             shape = [tensor.shape[0]] + list(shape)
 
         self._out = xp.reshape(tensor.array, shape)
@@ -133,7 +135,7 @@ class Reshape(Op):
         result = to_tensor(self._out)
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
 
         return result
 

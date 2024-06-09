@@ -28,13 +28,13 @@ def _shapes_match(tensor_1: Tensor, tensor_2: Tensor) -> bool:
     This function checks that we are allowed to apply a binary Op.
     """
     # sourcery skip: assign-if-exp, merge-duplicate-blocks, remove-redundant-if
-    if tensor_1.is_vector and tensor_2.is_vector:
+    if tensor_1.is_batched and tensor_2.is_batched:
         shape_1 = tensor_1.shape
         shape_2 = tensor_2.shape
-    elif tensor_1.is_vector:
+    elif tensor_1.is_batched:
         shape_1 = tensor_1.shape[1:]
         shape_2 = tensor_2.shape
-    elif tensor_2.is_vector:
+    elif tensor_2.is_batched:
         shape_1 = tensor_1.shape
         shape_2 = tensor_2.shape[1:]
     else:
@@ -63,8 +63,8 @@ class BinaryAdd(Op):
         result.back_fns = (nothing, nothing)
         result.name = "badd"
 
-        if tensor_1.is_vector or tensor_2.is_vector:
-            result.is_vector = True
+        if tensor_1.is_batched or tensor_2.is_batched:
+            result.is_batched = True
 
         return result
 
@@ -73,7 +73,7 @@ class BinarySubtract(Op):
     def back_fn_2(self, grad: Tensor) -> Tensor:
         self._grad = -grad.array
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
@@ -90,8 +90,8 @@ class BinarySubtract(Op):
         result.back_fns = (nothing, self.back_fn_2)
         result.name = "badd"
 
-        if tensor_1.is_vector or tensor_2.is_vector:
-            result.is_vector = True
+        if tensor_1.is_batched or tensor_2.is_batched:
+            result.is_batched = True
 
         return result
 
@@ -130,13 +130,13 @@ class BinaryMax(Op):
     def back_fn_1(self, grad: Tensor) -> Tensor:
         self._grad_1 = grad.array * self._is_bigger_1
         result = to_tensor(self._grad_1)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def back_fn_2(self, grad: Tensor) -> Tensor:
         self._grad_2 = grad.array * self._is_bigger_2
         result = to_tensor(self._grad_2)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
@@ -159,7 +159,7 @@ class BinaryMax(Op):
         result.args = (tensor_1, tensor_2)
         result.back_fns = (self.back_fn_1, self.back_fn_2)
         result.name = "bmax"
-        result.is_vector = tensor_1.is_vector or tensor_2.is_vector
+        result.is_batched = tensor_1.is_batched or tensor_2.is_batched
         return result
 
 
@@ -170,13 +170,13 @@ class BinaryMin(Op):
     def back_fn_1(self, grad: Tensor) -> Tensor:
         self._grad_1 = grad.array * self._is_smaller_1
         result = to_tensor(self._grad_1)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def back_fn_2(self, grad: Tensor) -> Tensor:
         self._grad_2 = grad.array * self._is_smaller_2
         result = to_tensor(self._grad_2)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor_1: Tensor, tensor_2: Tensor) -> Tensor:
@@ -199,7 +199,7 @@ class BinaryMin(Op):
         result.args = (tensor_1, tensor_2)
         result.back_fns = (self.back_fn_1, self.back_fn_2)
         result.name = "bmax"
-        result.is_vector = tensor_1.is_vector or tensor_2.is_vector
+        result.is_batched = tensor_1.is_batched or tensor_2.is_batched
         return result
 
 
@@ -211,7 +211,7 @@ class BinaryMask(Op):
         self._grad = xp.where(self._mask, grad.array, 0)
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor, mask: Tensor) -> Tensor:
@@ -233,5 +233,5 @@ class BinaryMask(Op):
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = "bmask"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         return result

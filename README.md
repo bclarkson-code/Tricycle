@@ -181,7 +181,7 @@ attention = MultiHeadSelfAttention(
 
 # batch_size, n_tokens, embedding_dim
 shape = (4,32,32)
-input = to_tensor(np.ones(shape), is_vector=True)
+input = to_tensor(np.ones(shape), is_batched=True)
 
 output = attention(input)
 output.backward() # differentiate wrt output
@@ -297,7 +297,7 @@ derivative = Einsum('zxTb,zxTW->bW')(inputs, grad)
 This little trick significantly simplifies code, as well as reducing the
 amount of maths I had to do to implement different operations.
 
-### Building a simple Neural network
+### Building a simple neural network
 
 Einsum and an automatic differentiation engine are all we need to build a simple neural network. Lets try to train a model on the [iris dataset](https://scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html)
 We can start with a [`Dense` Layer](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L34).
@@ -379,10 +379,10 @@ N_STEPS = 1000
 
 np.random.seed(42)
 X, y = load_iris(return_X_y=True)
-inputs = to_tensor(X, is_vector=True)
+inputs = to_tensor(X, is_batched=True)
 
 # The class labels need to be ints for crossentropy
-outputs = to_tensor(y, is_vector=True, dtype=int)
+outputs = to_tensor(y, is_batched=True, dtype=int)
 
 # create a model
 layer_1 = Dense(4, 16)
@@ -409,6 +409,11 @@ predicted_labels = np.argmax(y_pred.array, axis=-1)
 accuracy = (predicted_labels == outputs.array).mean()
 print(f"Accuracy: {accuracy:.2f}") # Output: Accuracy: 0.97
 ```
+
+### Optimisations
+
+Deep learning is famously computationally heavy. If we want to train anything
+in a reasonable amount of time,
 
 
 ## Contact

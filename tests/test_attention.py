@@ -64,7 +64,7 @@ def test_attention_combined():
     in_tensor = np.random.uniform(
         -5, 5, (batch_size, n_tokens, projected_size)
     )
-    in_tensor = to_tensor(in_tensor).to_vector()
+    in_tensor = to_tensor(in_tensor).to_batched()
 
     x = torch.from_numpy(in_tensor.array)
     x.requires_grad = True
@@ -86,13 +86,13 @@ def test_attention_combined():
         n_heads=n_heads,
         context_window=context_window,
     )
-    tricycle_result = tricycle_attention(in_tensor).from_vector()
+    tricycle_result = tricycle_attention(in_tensor).from_batched()
 
     assert tricycle_result.close_to(
         pytorch_result.detach().numpy(), equal_nan=True, rtol=1e-3, atol=1e-5
     )
 
-    tricycle_result.from_vector().sum().backward()
+    tricycle_result.from_batched().sum().backward()
     pytorch_result.sum().backward()
 
     assert in_tensor.grad.close_to(

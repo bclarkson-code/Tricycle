@@ -162,9 +162,9 @@ class Einsum:
         """
         assert len(tensors) == len(subscript.inputs)
 
-        # To avoid adding a bunch of special cases for vectorised
-        # operations, we replace any vectorised operations with
-        # their non-vectorised counterparts
+        # To avoid adding a bunch of special cases for batched
+        # operations, we replace any batched operations with
+        # their non-batched counterparts
         subscript = Subscript(subscript.subscript.replace("z", ""))
 
         back_functions = []
@@ -199,7 +199,7 @@ class Einsum:
         [tensor] = tensors
         ones = to_tensor(
             xp.ones(tensor.shape),
-            is_vector=tensor.is_vector,
+            is_batched=tensor.is_batched,
             requires_grad=False,
         )
         tensors = [tensor, ones]
@@ -211,33 +211,33 @@ class Einsum:
 
         return subscript, tensors
 
-    def _handle_vectorised(
+    def _handle_batched(
         self, subscript: Subscript, tensors: Sequence[Tensor]
     ) -> tuple[Subscript, Sequence[Tensor], bool]:
         """
-        If a tensor is labelled as being vectorised, add an extra dimension
+        If a tensor is labelled as being batched, add an extra dimension
         to its indices.
         """
         inputs = []
-        vectorise_output = False
+        batch_output = False
         for idx, tensor in zip(subscript.inputs, tensors):
-            if tensor.is_vector:
+            if tensor.is_batched:
                 inputs.append(["z"] + idx)
-                vectorise_output = True
+                batch_output = True
             else:
                 inputs.append(idx)
         output = subscript.output
-        if vectorise_output:
+        if batch_output:
             if "z" in subscript.subscript:
                 raise ValueError(
                     "`z` cannot be used in an einsum subscript on "
-                    "non-vectorised tensors because "
-                    "it is reserved for vectorised indices."
+                    "non-batched tensors because "
+                    "it is reserved for batched indices."
                 )
             output = ["z"] + output
 
         subscript = Subscript.from_split(inputs, output)
-        return subscript, tensors, vectorise_output
+        return subscript, tensors, batch_output
 
     def _replace_infinity(self, tensors: Sequence[Tensor]):
         """
@@ -252,7 +252,8 @@ class Einsum:
                 continue
 
             new_tensor = to_tensor(
-                xp.nan_to_num(tensor.array), is_vector=tensor.is_vector
+                xp.nan_to_num(tensor.array),
+                is_batched=tensor.is_batched,
             )
             new_tensor.args = tensor.args
             new_tensor.back_fns = tensor.back_fns
@@ -263,14 +264,14 @@ class Einsum:
 
     def __call__(self, *tensors: Tensor):
         xp = select_backend(*tensors)
-        subscript, tensors, vectorise_output = self._handle_vectorised(
+        subscript, tensors, batch_output = self._handle_batched(
             self.subscript, tensors
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
         tensor_data = [t.array for t in tensors]
         result = to_tensor(xp.einsum(str(subscript), *tensor_data))
-        if vectorise_output:
-            result.is_vector = True
+        if batch_output:
+            result.is_batched = True
 
         result.args = tuple(tensors)
         result.back_fns = tuple(self._build_back_ops(tensors, subscript))

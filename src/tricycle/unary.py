@@ -30,7 +30,7 @@ class UnaryAdd(Op):
         result.args = (tensor,)
         result.back_fns = (nothing,)
         result.name = f"+ {constant}"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         return result
 
 
@@ -42,7 +42,7 @@ class UnaryMultiply(Op):
 
         self._grad = xp.multiply(grad.array, self._constant)
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor, constant: float) -> Tensor:
@@ -62,7 +62,7 @@ class UnaryMultiply(Op):
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = f"+ {constant}"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         return result
 
 
@@ -83,12 +83,12 @@ class UnaryPower(Op):
         xp = grad.xp
 
         self._grad = xp.power(
-            self.input._data, self.constant - 1, dtype=self.input.dtype
+            self.input.array, self.constant - 1, dtype=self.input.dtype
         )
         self._grad *= self.constant * grad.array
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor, constant: float) -> Tensor:
@@ -109,7 +109,7 @@ class UnaryPower(Op):
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = f"^ {constant}"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
 
         return result
 
@@ -133,7 +133,7 @@ class UnaryMax(Op):
         self._grad = grad.array * self.is_bigger.array
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor, constant: float) -> Tensor:
@@ -149,13 +149,13 @@ class UnaryMax(Op):
         self._out = xp.maximum(tensor.array, constant, dtype=tensor.dtype)
 
         self.is_bigger = tensor > constant
-        self.is_bigger.is_vector = tensor.is_vector
+        self.is_bigger.is_batched = tensor.is_batched
 
         result = to_tensor(self._out)
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = f"> {constant}"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
 
         return result
 
@@ -167,7 +167,7 @@ class UnaryMin(Op):
         self._grad = grad.array * self.is_smaller.array
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor, constant: float) -> Tensor:
@@ -183,13 +183,13 @@ class UnaryMin(Op):
         self._out = xp.minimum(tensor.array, constant, dtype=tensor.dtype)
 
         self.is_smaller = tensor < constant
-        self.is_smaller.is_vector = tensor.is_vector
+        self.is_smaller.is_batched = tensor.is_batched
 
         result = to_tensor(self._out)
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = f"> {constant}"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
 
         return result
 
@@ -199,7 +199,7 @@ class UnaryExp(Op):
         self._grad = grad.array * self._out
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor) -> Tensor:
@@ -214,7 +214,7 @@ class UnaryExp(Op):
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = "exp"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         return result
 
 
@@ -229,7 +229,7 @@ class UnaryLog(Op):
         self._grad = grad.array * xp.divide(1, denominator)
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor) -> Tensor:
@@ -246,7 +246,7 @@ class UnaryLog(Op):
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = "log"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         return result
 
 
@@ -259,7 +259,7 @@ class UnarySin(Op):
         self._grad = grad.array * xp.cos(self._input)
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor) -> Tensor:
@@ -275,7 +275,7 @@ class UnarySin(Op):
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = "sin"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         return result
 
 
@@ -288,7 +288,7 @@ class UnaryCos(Op):
         self._grad = grad.array * -xp.sin(self._input)
 
         result = to_tensor(self._grad)
-        result.is_vector = grad.is_vector
+        result.is_batched = grad.is_batched
         return result
 
     def forward(self, tensor: Tensor) -> Tensor:
@@ -304,7 +304,7 @@ class UnaryCos(Op):
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = "cos"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         return result
 
 
@@ -319,7 +319,7 @@ class UnarySquareRoot(Op):
 
 class UnarySum(Op):
     _in_shape: tuple[int]
-    _in_is_vector: bool
+    _in_is_batche: bool
 
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
@@ -327,7 +327,7 @@ class UnarySum(Op):
         self._grad = xp.full(self._in_shape, grad.array)
 
         result = to_tensor(self._grad)
-        result.is_vector = self._in_is_vector
+        result.is_batched = self._in_is_batched
         return result
 
     def forward(self, tensor: Tensor) -> Tensor:
@@ -339,11 +339,11 @@ class UnarySum(Op):
         # Sum all the values in the tensor
         self._out = xp.sum(tensor.array)
         self._in_shape = tensor.shape
-        self._in_is_vector = tensor.is_vector
+        self._in_is_batched = tensor.is_batched
 
         result = to_tensor(self._out)
         result.args = (tensor,)
         result.back_fns = (self.back_fn,)
         result.name = "sum"
-        result.is_vector = False  # The result of the sum is a scalar
+        result.is_batched = False  # The result of the sum is a scalar
         return result

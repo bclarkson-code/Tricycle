@@ -92,7 +92,7 @@ class Attention(Op):
     def forward(self, tensor: Tensor):
         xp = tensor.xp
 
-        assert tensor.is_vector
+        assert tensor.is_batched
 
         # split the input into 3 peices
         self._input = tensor
@@ -149,7 +149,7 @@ class Attention(Op):
         attention = xp.einsum("BNIj, BNjH -> BINH", attention, value)
         attention = attention.reshape(out_shape)
 
-        result = to_tensor(attention, is_vector=True)
+        result = to_tensor(attention, is_batched=True)
         result.back_fns = (self.backward,)
         result.args = (self._input,)
         return result

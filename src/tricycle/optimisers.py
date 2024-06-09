@@ -32,8 +32,8 @@ class StochasticGradientDescent(Optimiser):
         """
         assert tensor.grad is not None
 
-        if tensor.grad.is_vector:
-            tensor.grad = tensor.grad.from_vector().e("z...->...")
+        if tensor.grad.is_batched:
+            tensor.grad = tensor.grad.from_batched().e("z...->...")
 
         grad = self.learning_rate * tensor.grad
 
@@ -48,14 +48,14 @@ class StochasticGradientDescent(Optimiser):
                 last_momentum = self.momentum_store[tensor._id]
 
             grad += self.momentum * last_momentum
-            self.momentum_store[tensor._id] = to_tensor(grad._data)
+            self.momentum_store[tensor._id] = to_tensor(grad.array)
 
         # update the value only, leave everything else
         result = to_tensor(
             tensor - grad,
             requires_grad=tensor.requires_grad,
             name=tensor.name,
-            is_vector=tensor.is_vector,
+            is_batched=tensor.is_batched,
             _id=tensor._id,
         )
 

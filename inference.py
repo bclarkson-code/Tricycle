@@ -64,7 +64,7 @@ def generate(
 
         encoded = to_tensor(
             [tokens], dtype=int, requires_grad=False
-        ).to_vector()
+        ).to_batched()
 
         pred = model(encoded)
         pred = Softmax()(pred / temperature)

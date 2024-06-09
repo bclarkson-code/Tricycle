@@ -12,7 +12,7 @@ class Softmax(Op):
         self._grad = self._out * (grad.array - inner)
         return to_tensor(
             self._grad,
-            is_vector=grad.is_vector,
+            is_batched=grad.is_batched,
             requires_grad=grad.requires_grad,
         )
 
@@ -33,7 +33,7 @@ class Softmax(Op):
         result = to_tensor(self._out)
         result.args = (tensor,)
         result.name = "softmax"
-        result.is_vector = tensor.is_vector
+        result.is_batched = tensor.is_batched
         result.back_fns = (self.backward,)
 
         return result

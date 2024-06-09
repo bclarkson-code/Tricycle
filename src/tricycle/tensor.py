@@ -29,13 +29,13 @@ class Tensor:
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
-    is_vector: bool = False
+    is_batched: bool = False
 
     def __init__(
         self,
         data: np.ndarray | ArrayLike,
         requires_grad: bool = False,
-        is_vector: bool = False,
+        is_batched: bool = False,
         name: str | None = None,
         _id: int | None = None,
     ):
@@ -51,7 +51,7 @@ class Tensor:
             self.array = np.array(data)
 
         self.requires_grad = requires_grad
-        self.is_vector = is_vector
+        self.is_batched = is_batched
         self.name = name
 
     def _attach_parents(self):
@@ -91,7 +91,7 @@ class Tensor:
         self.grad = to_tensor(
             self.xp.ones(self.array.shape, dtype=self.dtype),
             requires_grad=False,
-            is_vector=self.is_vector,
+            is_batched=self.is_batched,
         )
 
         stack: list["Tensor"] = [self]
@@ -372,11 +372,6 @@ class Tensor:
     def sum(self) -> "Tensor":
         from tricycle.unary import UnarySum
 
-        # if self.is_vector:
-        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim - 1]
-        # else:
-        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim]
-        # return self.e(f"{indices}->")
         return UnarySum()(self)
 
     def close_to(
@@ -402,17 +397,17 @@ class Tensor:
             self.array, other.array, equal_nan=equal_nan, rtol=rtol, **kwargs
         )
 
-    def to_vector(self):
+    def to_batched(self):
         """
-        Treat this tensor as a vector
+        Treat this tensor as a batch of tensors
         """
-        return vectorise(self)
+        return batch(self)
 
-    def from_vector(self):
+    def from_batched(self):
         """
-        Treat a vectorised tensor as a normal tensor
+        Treat a batched tensor as a normal tensor
         """
-        return unvectorise(self)
+        return unbatch(self)
 
     @property
     def on_gpu(self):
@@ -469,7 +464,7 @@ def to_tensor(
     tensor_like: ArrayLike,
     name: Optional[str] = None,
     requires_grad: bool = True,
-    is_vector: bool = False,
+    is_batched: bool = False,
     _id: int | None = None,
     dtype: np.dtype | None = np.float32,
     **kwargs,
@@ -501,45 +496,45 @@ def to_tensor(
         array,
         name=name,
         requires_grad=requires_grad,
-        is_vector=is_vector,
+        is_batched=is_batched,
         _id=_id,
     )
 
 
-def vectorise(tensor: Tensor) -> Tensor:
+def batch(tensor: Tensor) -> Tensor:
     """
-    Tell Tricycle to treat this tensor as a group of vectors
+    Tell Tricycle to treat this tensor as a batch of tensors
     """
-    if tensor.is_vector:
+    if tensor.is_batched:
         return tensor
 
     result = to_tensor(
         tensor.array,
-        is_vector=True,
+        is_batched=True,
         requires_grad=tensor.requires_grad,
         dtype=tensor.array.dtype,
     )
     result.args = (tensor,)
-    result.back_fns = (unvectorise,)
+    result.back_fns = (unbatch,)
     return result
 
 
-def unvectorise(tensor: Tensor) -> Tensor:
+def unbatch(tensor: Tensor) -> Tensor:
     """
     Tell Tricycle to treat this tensor as a single tensor
-    (not a group of vectors)
+    (not a batch of tensors)
     """
-    if not tensor.is_vector:
+    if not tensor.is_batched:
         return tensor
 
     result = to_tensor(
         tensor.array,
-        is_vector=False,
+        is_batched=False,
         requires_grad=tensor.requires_grad,
         dtype=tensor.array.dtype,
     )
     result.args = (tensor,)
-    result.back_fns = (vectorise,)
+    result.back_fns = (batch,)
     return result
 
 

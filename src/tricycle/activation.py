@@ -55,7 +55,7 @@ class GeLU(Layer):
 
         result = to_tensor(
             self._grad,
-            is_vector=grad.is_vector,
+            is_batched=grad.is_batched,
             requires_grad=grad.requires_grad,
         )
         result.name = "gelu_back"
@@ -69,7 +69,7 @@ class GeLU(Layer):
 
         result = to_tensor(
             result,
-            is_vector=tensor.is_vector,
+            is_batched=tensor.is_batched,
             requires_grad=tensor.requires_grad,
         )
         result.name = "gelu"
@@ -135,7 +135,7 @@ class SwiGLU(Layer):
         x = self.linear(x)
         # this is slow and terrible hack
         left, right = x.split(2)
-        if right.is_vector:
+        if right.is_batched:
             bias = self.bias.repeat(right.shape[1])
         else:
             bias = self.bias.repeat(right.shape[0])

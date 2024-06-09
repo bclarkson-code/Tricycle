@@ -30,7 +30,7 @@ class ReduceMax(Op):
             tensor.array, axis=tuple(reduce_along_axes), keepdims=True
         )
         indicator = to_tensor(
-            indicator, requires_grad=False, is_vector=tensor.is_vector
+            indicator, requires_grad=False, is_batched=tensor.is_batched
         )
         indicator.array = indicator.array.astype(tensor.xp.int8)
 
@@ -69,7 +69,7 @@ class ReduceMin(Op):
             tensor.array, axis=tuple(reduce_along_axes), keepdims=True
         )
         indicator = to_tensor(
-            indicator, requires_grad=False, is_vector=tensor.is_vector
+            indicator, requires_grad=False, is_batched=tensor.is_batched
         )
         indicator.array = indicator.array.astype(tensor.xp.int8)
 

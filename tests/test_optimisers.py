@@ -32,7 +32,7 @@ def test_can_train_simple_neural_network_no_wd():
     optimiser = StochasticGradientDescent(learning_rate=1e-2)
 
     losses = []
-    batches = ds.to_tensor().to_vector()
+    batches = ds.to_tensor()
     # sourcery skip: no-loop-in-tests
     # sourcery skip: no-conditionals-in-tests
     for step, (x, y) in enumerate(batches):
@@ -74,7 +74,7 @@ def test_can_train_simple_neural_network_wd():
     optimiser = StochasticGradientDescent(learning_rate=1e-2, weight_decay=1e1)
 
     losses = []
-    batches = ds.to_tensor().to_vector()
+    batches = ds.to_tensor()
     # sourcery skip: no-loop-in-tests
     # sourcery skip: no-conditionals-in-tests
     for step, (x, y) in enumerate(batches):
@@ -116,7 +116,7 @@ def test_can_train_simple_neural_network_momentum():
     optimiser = StochasticGradientDescent(learning_rate=1e-2, momentum=0.9)
 
     losses = []
-    batches = ds.to_tensor().to_vector()
+    batches = ds.to_tensor()
     # sourcery skip: no-loop-in-tests
     # sourcery skip: no-conditionals-in-tests
     for step, (x, y) in enumerate(batches):

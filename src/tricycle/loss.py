@@ -68,7 +68,7 @@ class CrossEntropy(Op):
         loss = loss.mean()
 
         self._out = loss
-        result = to_tensor(self._out, is_vector=False)
+        result = to_tensor(self._out, is_batched=False)
         result.back_fns = (self.backward,)
 
         result.args = (y_pred,)
@@ -106,4 +106,4 @@ class CrossEntropy(Op):
             )
 
         self._grad = grad_output
-        return to_tensor(self._grad, is_vector=grad.is_vector)
+        return to_tensor(self._grad, is_batched=grad.is_batched)
