@@ -258,7 +258,7 @@ https://github.com/bclarkson-code/Tricycle/assets/57139598/f8b35a6b-f102-44f1-a7
 
 https://github.com/bclarkson-code/Tricycle/assets/57139598/1ed18428-11de-4990-a0f4-12d1310d6898
 
-Becuase every `Op` in einsum needs a derivative, we need to figure out what the
+Becuase every `Op` in Tricycle needs a derivative, we need to figure out what the
 derivative of `Einsum` is. Thankfully, if you sit down and go through the
 maths (index notation is really helpful here) you'll find that you can follow
 these two, really simple rules to differentiate an einsum operation wrt a
@@ -300,7 +300,7 @@ amount of maths I had to do to implement different operations.
 ### Building a simple Neural network
 
 Einsum and an automatic differentiation engine are all we need to build a simple neural network. Lets try to train a model on the [iris dataset](https://scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html)
-We can start with a [Dense Layer](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L34).
+We can start with a [`Dense` Layer](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L34).
 
 ```python
 from tricycle.layers import Dense
@@ -312,7 +312,7 @@ print(layer(x)) # Output: Tensor([-2.238703], name=dense)
 ```
 
 Next, neural networks need a nonlinearity (otherwise they reduce to expensive linear regressions).
-Tricycle has a few [nonlinearities](https://github.com/bclarkson-code/Tricycle/blob/update-readme/src/tricycle/activation.py) (also called activation functions), we can choose ReLU.
+Tricycle has a few [nonlinearities](https://github.com/bclarkson-code/Tricycle/blob/update-readme/src/tricycle/activation.py) (also called activation functions). Here we can choose the simplest: `ReLU`.
 
 ```python
 from tricycle.activation import ReLU
