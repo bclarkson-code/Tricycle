@@ -9,7 +9,7 @@ The file `train_smol_gpt.py` trains a 49M parameter, GPT-2 style language model 
 
 The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + numpy code.
 
-Using [CuPY](https://cupy.dev/), all Tricycle code can run on a GPU and is only about ~TODO: insert comparision to pytorch here.~ % [slower than pytorch](#comparison-with-pytorch). Tricycle is still under active development so this is subject to change.
+Using [CuPY](https://cupy.dev/), all Tricycle code can run on a either GPU or a CPU.
 
 ## Installation
 Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, optimisation efforts have been focussed on GPU computation so it is pretty slow. If you do have a CUDA capable GPU I would strongly recommend installing the gpu version of Tricycle.
@@ -561,6 +561,13 @@ throttling. However, I found that by removing my computer case and placing
 a household fan on top, I get about 30% better performance.
 
 ![IMG_0713](https://github.com/bclarkson-code/Tricycle/assets/57139598/958f12b4-caaa-4f2a-b9d0-2f5a7fc1e5a5)
+
+Putting all of these things together, Triycle can train a small language model
+on shakespeare in ~30 mins. Andrej Karpathy can
+[do this in pytorch](https://github.com/karpathy/nanoGPT/tree/master) in around
+7 minutes on my machine (with a like-for-like config) which, given that the
+entire Tricycle project is in python, is a surprisingly good time (IMO).
+
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
