@@ -413,7 +413,28 @@ print(f"Accuracy: {accuracy:.2f}") # Output: Accuracy: 0.97
 ### Optimisations
 
 Deep learning is famously computationally heavy. If we want to train anything
-in a reasonable amount of time,
+in a reasonable amount of time, there are several optimisations we need to make.
+
+The first, and arguably most important, optimisation is batching. Instead of
+applying operations to each input individually, if we are clever about how we design
+an operation, we can apply an operation to multiple operations at once.
+
+For example, suppose we are multiplying a batch of tensors by a weight matrix.
+We could do it like this:
+
+```python
+# batch of 16 64x64 tensors
+inputs = to_tensor(np.ones(16, 64, 64))
+weights = to_tensor(np.random.random((64,64)))
+
+output = [Einsum('ij,jk->ik')(inp) for inp in inputs]
+```
+
+But we can use the properties of `Einsum` to do the same thing like this
+
+```
+
+```
 
 
 ## Contact
