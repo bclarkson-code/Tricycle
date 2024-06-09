@@ -239,18 +239,20 @@ There are only two rules to remember with einsum:
 
 For example:
 #### Summing along an axis
-![](assets/EinsumIJToI.mp4)
+
+https://github.com/bclarkson-code/Tricycle/assets/57139598/d05d802d-ccbc-4bb0-9298-42d00e7e2a37
 
 #### Sum of an entire tensor
-![](assets/EinsumIJTo.mp4)
+
+https://github.com/bclarkson-code/Tricycle/assets/57139598/efbb5eaa-656c-40e5-a32d-b0f5e7bd28f5
 
 #### Transpose
-![](assets/EinsumIJToJI.mp4)
+
+https://github.com/bclarkson-code/Tricycle/assets/57139598/f8b35a6b-f102-44f1-a7cd-b6b2e765f275
 
 #### Matrix multiplication
-![](assets/EinsumIJkToIK.mp4)
 
-
+https://github.com/bclarkson-code/Tricycle/assets/57139598/1ed18428-11de-4990-a0f4-12d1310d6898
 
 ### Building a Neural network
 
