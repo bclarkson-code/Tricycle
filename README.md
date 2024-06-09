@@ -11,6 +11,7 @@ The entire library, from the automatic differentiation engine to a GPT, is writt
 
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on a either GPU or a CPU.
 
+## Table of Contents
 - [Installation](#installation)
     - [CPU Installation](#cpu-installation)
 - [Training a GPT on shakespeare](#training-a-gpt-on-shakespeare)
