@@ -1,3 +1,40 @@
+"""
+Einsum is a generalisation of a large number of matrix operations.
+
+You can use it by assigning each axis in your matrices a letter of the
+alphabet (called an index). You can define the operation you want to perform
+by simply listing the indices you want in your inputs and output, separated by
+an arrow.
+
+For example, you can define the transpose of a 2d tensor as follows:
+
+>>> a = to_tensor([[1,2],[3,4]])
+>>> Einsum("ij->ji")(a)
+Tensor([[1. 3.]
+ [2. 4.]], name=einsum ij->ji)
+
+Here, we use einsum to swap indices i and j: a transpose.
+
+There are only two rules to remember with einsum:
+ - If an index does not appear in the output, any inputs that contain it
+   will be summed along that axis:
+
+    >>> Einsum("ij->i")(a)
+    Tensor([3. 7.], name=einsum ij->i)
+
+ - If an index appears in more than one input, the tensors will be multiplied
+   along that axis
+
+   >>> b = to_tensor([[5,6],[7,8])
+   >>> Einsum("ij,jk->ik")(a,b)
+    Tensor([[19. 22.]
+     [43. 50.]], name=einsum ij,jk->ik)
+
+
+
+You can use einsum to perform all of these operations:
+"""
+
 import itertools
 import re
 from typing import Sequence
@@ -52,6 +89,12 @@ class Subscript:
 
 
 class EinsumBackOp:
+    """
+    The backward operation for an einsum operation. This is done by
+    swapping the indices and tensors for an input with the output.
+    E.g "ij,jk->ik" with idx = 0 would become "ik,jk->ij"
+    """
+
     def __init__(
         self, idx: int, tensors: Sequence[Tensor], subscript: Subscript
     ):

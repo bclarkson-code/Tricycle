@@ -201,9 +201,61 @@ It ends up being a topological sort to figure out which order to traverse the tr
 
 If you want a more detailed explanation, I've talked about it on [my blog](https://bclarkson-code.com/posts/llm-from-scratch-scalar-autograd/post.html).
 
-### Building an LLM
+### Einsum
 
-Now we have the automatic differentiation engine built.
+Tricycle makes use of (in my opinion underutilised) einsum operations.
+Einsum is a generalisation of a large number of matrix operations.
+
+You can use it by assigning each axis in your matrices a letter of the
+alphabet (called an index). You can define the operation you want to perform
+by simply listing the indices you want in your inputs and output, separated by
+an arrow.
+
+For example, you can define the transpose of a 2d tensor as follows:
+
+```python
+from tricycle.einsum import Einsum
+
+a = to_tensor([[1,2],[3,4]])
+print(Einsum("ij->ji")(a)) # Output: Tensor([[1. 3.], [2. 4.]], name=einsum ij->ji)
+```
+
+Here, we use einsum to swap indices i and j: a transpose.
+
+There are only two rules to remember with einsum:
+ - If an index does not appear in the output, any inputs that contain it
+   will be summed along that axis:
+    ```python
+    print(Einsum("ij->i")(a)) # Tensor([3. 7.], name=einsum ij->i)
+    ```
+
+ - If an index appears in more than one input, the tensors will be multiplied
+   along that axis
+
+    ```python
+    b = to_tensor([[5,6],[7,8])
+    print(Einsum("ij,jk->ik")(a,b)) # Tensor([[19. 22.], [43. 50.]], name=einsum ij,jk->ik)
+    ```
+
+For example:
+#### Summing along an axis
+![](assets/EinsumIJToI.mp4)
+
+#### Sum of an entire tensor
+![](assets/EinsumIJTo.mp4)
+
+#### Transpose
+![](assets/EinsumIJToJI.mp4)
+
+#### Matrix multiplication
+![](assets/EinsumIJkToIK.mp4)
+
+
+
+### Building a Neural network
+
+Now we have the automatic differentiation engine built, we can start building the components of a neural network.
+We can start with a [Dense Layer](https://github.com/bclarkson-code/Tricycle/blob/update-readme/src/tricycle/layers.py#L34).
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
