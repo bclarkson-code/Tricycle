@@ -9,7 +9,7 @@ The file `train_smol_gpt.py` trains a 49M parameter, GPT-2 style language model 
 
 The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + numpy code.
 
-Using [CuPY](https://cupy.dev/), all Tricycle code can run on a either GPU or a CPU.
+Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a Cuda-capable GPU or a CPU.
 
 
 ## Table of Contents
