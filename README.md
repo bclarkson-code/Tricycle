@@ -415,6 +415,7 @@ print(f"Accuracy: {accuracy:.2f}") # Output: Accuracy: 0.97
 Deep learning is famously computationally heavy. If we want to train anything
 in a reasonable amount of time, there are several optimisations we need to make.
 
+#### Batching
 The first, and arguably most important, optimisation is batching. Instead of
 applying operations to each input individually, if we are clever about how we design
 an operation, we can apply an operation to multiple operations at once.
@@ -433,19 +434,131 @@ output = [Einsum('ij,jk->ik')(inp, weights) for inp in inputs]
 
 But we can use the properties of `Einsum` to do the same thing like this
 
-```
+```python
 output = Einsum('aij,jk->aik')(inputs, weights)
 # 29.1 ms ± 99.2 μs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 ```
 
-In general, most `Op`s in tricycle behave slightly differenly, depending on
+Which is more than 2x faster.
+
+Some `Op`s in tricycle behave slightly differenly, depending on
 whether a tensor batched or not. You can tell tricycle to use the batched
 version of `Op`s for a tensor by simply calling `.to_batched`. To convert it
 back, you can call `.from_batched`.
 
-For example:
-```python
+#### GPU
+As well as batching, another improvement that has a big impact on performance
+is using a GPU. For this, we can use a library called [CuPY](https://cupy.dev/).
+CuPY lets you run numpy code on a GPU. This means that we can use the same code
+for CPU as well as GPU computation which greatly simplifies the codebase (
+and avoids me needing to write CUDA kernels, for now).
+
+Every tensor in tricycle has an `.xp` method. By default, this is just the
+numpy library:
+
 ```
+import numpy as np
+
+tensor = to_tensor([1,2,3])
+
+assert tensor.xp == np
+```
+
+But if you call `.to_gpu` on a tensor, this is the cupy library:
+
+```
+import cupy as cp
+
+tensor = to_tensor([1,2,3])
+
+tensor.to_gpu()
+
+assert tensor.xp == cp
+```
+
+(`xp` stands for `np` or `cp` because x is an "unknown"). This is really handy
+because it lets us write functions like this:
+
+```python
+def forward(self, tensor: Tensor):
+    """
+    Apply softmax. The softmax is only applied to the final
+    dimension of the tensor
+    Note: the tensor is normalised for numeric stability
+    """
+    xp = tensor.xp
+
+    exp = xp.exp(
+        # subtract the largest value for numeric stability
+        tensor.array - xp.max(tensor.array, axis=-1, keepdims=True)
+    )
+    denominator = xp.sum(exp, axis=-1, keepdims=True)
+    self._out = exp / denominator
+
+    result = to_tensor(self._out)
+    result.args = (tensor,)
+    result.name = "softmax"
+    result.is_batched = tensor.is_batched
+    result.back_fns = (self.backward,)
+
+    return result
+```
+
+Becuase cupy has the same interface as numpy, this function will automatically
+run on the right device, with no code changes.
+
+#### Fusing
+
+One of the problems I faced when trying to use Tricycle is that it used up
+a lot more memory than I expected. Because the `args` and `back_fns` need to
+be stored for every `Op`, a lot of memory was being used to store intermediate
+values.
+
+For more operations like `Softmax`, this quickly adds up. However,
+we can avoid a lot of this overhead by pre-computing the combined derivative.
+In the case of `Softmax` (see above), we could have built it entirely out of
+low level Tricycle operations and this does work. When you sit down and work
+out the derivative for softmax manually, it turns out to be pretty simple:
+
+```python
+def backward(self, grad: Tensor) -> Tensor:
+    xp = grad.xp
+
+    inner = xp.sum(grad.array * self._out, axis=-1, keepdims=True)
+    self._grad = self._out * (grad.array - inner)
+    return to_tensor(
+        self._grad,
+        is_batched=grad.is_batched,
+        requires_grad=grad.requires_grad,
+    )
+```
+
+This kind of operation is a very common optimisation technique in deep learning
+called 'Operator Fusing'. This ends up being a big optimisation for tricycle
+because it lets us replace operations like `MultiHeadSelfAttention`, which
+would usually have 10s of intermediate values, with a single `forward` and
+`backward` function with a minimal set of intermediate values.
+
+#### Other optimisations
+While batching, using a GPU and fusing are the major optimisations, I'd like
+to provide some honorable mentions.
+
+##### Inplace tensor updates
+While probably obvious to many readers, updating tensors in-place rather than
+replacing them with a new tensor caused a big speedup.
+
+##### Mathematical optimisations
+Operations like `CrossEntropy` can be implemented by applying a softmax and then
+applying the crossentropy operation but, if you do a bit of algebra,
+you can do something called the `log-sum-exp` trick to simplify the expression
+and cut down on the computations needed.
+
+##### Hardware optimisations
+As mentioned above, the GPU computation was performed on an NVIDIA RTX 3090.
+Understandably, this gets quite hot when training (probably something to do with
+it being in my cupboard?) which can reduce performance due to thermal
+throttling. However, I found that by removing my computer case and placing
+a household fan on top, I get about 30% better performance.
 
 
 ## Contact
