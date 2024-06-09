@@ -562,6 +562,5 @@ a household fan on top, I get about 30% better performance.
 
 ![IMG_0713](https://github.com/bclarkson-code/Tricycle/assets/57139598/958f12b4-caaa-4f2a-b9d0-2f5a7fc1e5a5)
 
-
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
