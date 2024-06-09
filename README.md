@@ -250,12 +250,158 @@ For example:
 #### Matrix multiplication
 ![](assets/EinsumIJkToIK.mp4)
 
+Becuase every `Op` in einsum needs a derivative, we need to figure out what the
+derivative of `Einsum` is. Thankfully, if you sit down and go through the
+maths (index notation is really helpful here) you'll find that you can follow
+these two, really simple rules to differentiate an einsum operation wrt a
+given input:
 
+ - Swap the indices for the input and output
+ - Replace the original input with your current derivative
 
-### Building a Neural network
+For example, the derivative of a transpose works like this:
 
-Now we have the automatic differentiation engine built, we can start building the components of a neural network.
-We can start with a [Dense Layer](https://github.com/bclarkson-code/Tricycle/blob/update-readme/src/tricycle/layers.py#L34).
+```python
+# forward operation
+y = Einsum('ij->ji')(a)
+
+# swap the input with the current grad (a grid of ones in this case)
+grad = to_tensor(np.ones_like(y))
+
+# swap the indices
+derivative = Einsum('ji->ij')(grad)
+```
+
+And for a more complex operation (a dense layer on a 4d input) like this:
+
+```python
+# forward operation
+input = to_tensor(np.random.random((5, 4, 3, 2)))
+weights = to_tensor(np.random.random((3,6)))
+y = Einsum('zxTb,bW->zxTW')(inputs, weights)
+
+grad = to_tensor(np.ones_like(y))
+
+# swap the indices + replace inputs
+derivative = Einsum('zxTb,zxTW->bW')(inputs, grad)
+```
+
+This little trick significantly simplifies code, as well as reducing the
+amount of maths I had to do to implement different operations.
+
+### Building a simple Neural network
+
+Einsum and an automatic differentiation engine are all we need to build a simple neural network. Lets try to train a model on the [iris dataset](https://scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html)
+We can start with a [Dense Layer](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L34).
+
+```python
+from tricycle.layers import Dense
+
+x = to_tensor([1,2,3])
+layer = Dense(from_size=3, to_size=1)
+
+print(layer(x)) # Output: Tensor([-2.238703], name=dense)
+```
+
+Next, neural networks need a nonlinearity (otherwise they reduce to expensive linear regressions).
+Tricycle has a few [nonlinearities](https://github.com/bclarkson-code/Tricycle/blob/update-readme/src/tricycle/activation.py) (also called activation functions), we can choose ReLU.
+
+```python
+from tricycle.activation import ReLU
+
+x = to_tensor([-1, 0, 1])
+activation_fn = ReLU()
+
+print(activation_fn(x)) # Output: Tensor([0. 0. 1.], name=> 0)
+```
+
+We also need a loss function. We're predicting a category so we can use CrossEntropy
+
+```python
+from tricycle.loss import CrossEntropy
+
+label = to_tensor([0, 1, 2], dtype=int)
+predicted = to_tensor([[0,0,1], [0,0,1], [0,0,1]])
+loss = CrossEntropy()
+
+print(loss(label, predicted)) # Output: Tensor(1.2181114, name=cross_entropy)
+```
+
+Finally, we need an optimiser to update our weights. We can use [Stochastic Gradient Descent](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/optimsers.py#L14).
+In Tricycle, you can use an optimiser the weights of a model as follows:
+
+```python
+from tricycle.activation import ReLU
+from tricycle.layers import Dense, Sequential
+from tricycle.optimisers import StochasticGradientDescent
+
+# build a model
+layer_1 = Dense(4, 16)
+layer_2 = Dense(16, 3)
+relu = ReLU()
+model = Sequential(layer_1, relu, layer_2)
+
+# create an optimiser
+optimiser = StochasticGradientDescent(learning_rate=1e-1)
+
+# do a forward and backward pass
+x = to_tensor([1,2,3,4])
+out = model(x)
+out.backward()
+
+# update the weights
+model.update(optimiser)
+```
+
+We can put all of this together to train a simple neural network on the iris
+dataset.
+
+```python
+import numpy as np
+from sklearn.datasets import load_iris
+
+from tricycle.activation import ReLU
+from tricycle.tensor import to_tensor
+from tricycle.layers import Dense, Sequential
+from tricycle.loss import CrossEntropy
+from tricycle.optimisers import StochasticGradientDescent
+
+LEARNING_RATE = 1e-1
+N_STEPS = 1000
+
+np.random.seed(42)
+X, y = load_iris(return_X_y=True)
+inputs = to_tensor(X, is_vector=True)
+
+# The class labels need to be ints for crossentropy
+outputs = to_tensor(y, is_vector=True, dtype=int)
+
+# create a model
+layer_1 = Dense(4, 16)
+layer_2 = Dense(16, 3)
+relu = ReLU()
+model = Sequential(layer_1, relu, layer_2)
+
+loss_fn = CrossEntropy()
+optimiser = StochasticGradientDescent(learning_rate=LEARNING_RATE)
+
+for step in range(N_STEPS):
+    y_pred = model(inputs)
+    loss = loss_fn(outputs, y_pred)
+    if step == 0:
+        print(f"Initial loss: {loss}") # Output: Initial loss: Tensor(3.974701, name=cross_entropy)
+
+    loss.backward()
+    model.update(optimiser)
+
+print(f"Final loss: {loss}") # Output: Final loss: Tensor(0.08622341, name=cross_entropy)
+
+# Calculate accuracy
+predicted_labels = np.argmax(y_pred.array, axis=-1)
+accuracy = (predicted_labels == outputs.array).mean()
+print(f"Accuracy: {accuracy:.2f}") # Output: Accuracy: 0.97
+```
+
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
