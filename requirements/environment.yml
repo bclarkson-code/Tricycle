@@ -13,7 +13,10 @@ dependencies:
   - mlflow
   - psutil
   - numba
+  - tiktoken
+  - datasets
   # gpu dependencies
+  - cuda-version==12
   - cudnn
   - cutensor
   - nccl
