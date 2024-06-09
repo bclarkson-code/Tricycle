@@ -1,7 +1,7 @@
 # Tricycle
 Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and numpy.
 
-The file `train_smol_gpy.py` trains a 49M, GPT-2 style language model to produce python code in ~2 days on a single RTX 3090 (24Gb).
+The file `train_smol_gpy.py` trains a 49M parameter, GPT-2 style language model to produce python code in ~2 days on a single RTX 3090.
 
 The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + numpy code.
 
@@ -42,7 +42,7 @@ conda activate tricycle
 
 ## Training a GPT on shakespeare
 The following toy script will train a small GPT to generate convincing shakespeare.
-On my RTX 3090, this takes ~30 mins. For a more realistic training script with metric tracking, gradient accumulation etc, take a look at `train_smol_gpt.py`
+On my RTX 3090, this takes ~30 mins. For a more realistic training script with metric tracking, gradient accumulation, a validation dataset etc, take a look at `train_smol_gpt.py`
 
 ```python
 import pickle
@@ -97,10 +97,47 @@ for step in loading_bar:
 with open("model.pkl", "wb") as f:
     pickle.dump(model, f)
 ```
-Once trained, you can generate new shakespeare as follows:
+Once trained, you can generate infinite shakespeare plays as follows:
 
 ```bash
 python inference.py model.pkl
+```
+
+## How it works
+Much like other deep learning libraries, tricycle centers around `Tensors`. In tricycle a `Tensor` is a wrapper around a numpy array that adds some extra features:
+
+```python
+from tricycle.tensor import to_tensor
+
+tensor = to_tensor([1,2,3])
+print(tensor)
+```
+Which outupts
+```python
+Tensor([1. 2. 3.])
+```
+
+You can do a lot of things with a tensor
+```python
+from tricycle.functions import Softmax
+
+a = to_tensor([1,2,3])
+b = to_tensor([4,5,6])
+
+# addition
+print(a + b)
+
+# comparison
+print(a < b)
+
+# more complex functions
+print(Softmax()(a))
+```
+Which outputs
+```python
+Tensor([5. 7. 9.], name=badd)
+Tensor([ True  True  True])
+Tensor([0.09003057 0.24472848 0.66524094], name=softmax)
 ```
 
 ## Automatic Differentiation
