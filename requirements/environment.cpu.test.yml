@@ -14,12 +14,8 @@ dependencies:
   - mlflow
   - psutil
   - numba
-  # gpu dependencies
-  - cudnn
-  - cutensor
-  - nccl
-  - pynvml
-  - cupy
+  - tiktoken
+  - datasets
   # test dependencies
   - scikit-learn
   - pytest
@@ -29,4 +25,4 @@ dependencies:
   # install tricycle
   - pip
   - pip:
-    - -e .
+    - -e ../

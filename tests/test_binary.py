@@ -39,8 +39,8 @@ def test_can_badd():  # sourcery skip: extract-duplicate-method
 
 
 def test_can_bsub():  # sourcery skip: extract-duplicate-method
-    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
-    in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_vector=True)
+    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_batched=True)
+    in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_batched=True)
 
     out_tensor = BinarySubtract()(in_tensor_1, in_tensor_2)
 
@@ -68,8 +68,8 @@ def test_can_bsub():  # sourcery skip: extract-duplicate-method
 
 
 def test_can_bmul():
-    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
-    in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_vector=True)
+    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_batched=True)
+    in_tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4), is_batched=True)
 
     out_tensor = BinaryMultiply()(in_tensor_1, in_tensor_2)
 
@@ -87,10 +87,10 @@ def test_can_bmul():
 
 def test_can_bdiv():
     in_tensor_1 = to_tensor(
-        np.arange(12).reshape(3, 4), is_vector=True, dtype=float
+        np.arange(12).reshape(3, 4), is_batched=True, dtype=float
     )
     in_tensor_2 = to_tensor(
-        np.arange(1, 13).reshape(3, 4), is_vector=True, dtype=float
+        np.arange(1, 13).reshape(3, 4), is_batched=True, dtype=float
     )
 
     out_tensor = BinaryDivide()(in_tensor_1, in_tensor_2)
@@ -110,17 +110,17 @@ def test_can_bdiv():
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None
-    assert in_tensor_1.grad.close_to(1 / in_tensor_2._data)
+    assert in_tensor_1.grad.close_to(1 / in_tensor_2.array)
 
     assert in_tensor_2.grad.close_to(
-        -in_tensor_1._data / (in_tensor_2._data**2)
+        -in_tensor_1.array / (in_tensor_2.array**2)
     )
 
 
 def test_can_bmax():
-    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
+    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_batched=True)
     in_tensor_2 = to_tensor(
-        [[0, 0, 0, 0], [100, 100, 100, 100], [8, 9, 10, 11]], is_vector=True
+        [[0, 0, 0, 0], [100, 100, 100, 100], [8, 9, 10, 11]], is_batched=True
     )
 
     out_tensor = BinaryMax()(in_tensor_1, in_tensor_2)
@@ -141,9 +141,9 @@ def test_can_bmax():
 
 
 def test_can_bmin():
-    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
+    in_tensor_1 = to_tensor(np.arange(12).reshape(3, 4), is_batched=True)
     in_tensor_2 = to_tensor(
-        [[0, 0, 0, 0], [100, 100, 100, 100], [8, 9, 10, 11]], is_vector=True
+        [[0, 0, 0, 0], [100, 100, 100, 100], [8, 9, 10, 11]], is_batched=True
     )
 
     out_tensor = BinaryMin()(in_tensor_1, in_tensor_2)
@@ -164,10 +164,10 @@ def test_can_bmin():
 
 
 def test_can_bmask():
-    in_tensor = to_tensor(np.arange(12).reshape(3, 4), is_vector=True)
+    in_tensor = to_tensor(np.arange(12).reshape(3, 4), is_batched=True)
     mask = to_tensor(
         [[0, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1]],
-        is_vector=True,
+        is_batched=True,
         requires_grad=False,
     )
     out_tensor = BinaryMask()(in_tensor, mask)

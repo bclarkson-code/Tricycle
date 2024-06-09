@@ -1,3 +1,0 @@
-[submodule "llm.c"]
-	path = llm.c
-	url = https://github.com/karpathy/llm.c.git

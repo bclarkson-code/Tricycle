@@ -4,7 +4,7 @@ from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import to_tensor
 
 
-def test_vector_reduce():
+def test_batched_reduce():
     x = to_tensor(np.arange(5))
     op = Einsum("a->")
     result = op(x)
@@ -38,7 +38,7 @@ def test_matrix_partial_reduce():
 def test_transpose():
     x = to_tensor(np.arange(20).reshape(4, 5))
     op = Einsum("ij->ji")
-    assert op(x).close_to(x._data.T)
+    assert op(x).close_to(x.array.T)
 
     op(x).backward()
     assert x.grad is not None

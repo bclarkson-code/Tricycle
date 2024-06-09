@@ -46,16 +46,16 @@ def test_dropout():  # sourcery skip: square-identity
     size = 100
     dropout_prob = 0.3
 
-    # non-vectorised
+    # non-batched
     in_tensor = to_tensor(
         np.random.normal(size=(size, size)), name="in_tensor"
     )
     dropout = Dropout(dropout_prob)
 
-    out_tensor = dropout(in_tensor.to_vector())
+    out_tensor = dropout(in_tensor.to_batched())
 
     assert out_tensor.shape == in_tensor.shape
-    zero_x_idx, zero_y_idx = np.where(out_tensor._data == 0)
+    zero_x_idx, zero_y_idx = np.where(out_tensor.array == 0)
     n_zeros = len(zero_x_idx)
     expected_n_zeros = int(size * size * dropout_prob)
 
@@ -77,13 +77,13 @@ def test_layer_norm():
     np.random.seed(0)
     in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
     layer_norm = LayerNorm(100)
-    out_tensor = layer_norm(in_tensor.to_vector())
+    out_tensor = layer_norm(in_tensor.to_batched())
 
     assert out_tensor.shape == in_tensor.shape
     out_tensor.backward()
 
     assert copy(out_tensor).mean().close_to(0, atol=1e-6)
-    assert np.allclose(np.std(out_tensor._data), [1] * 100, atol=1e-7)
+    assert np.allclose(np.std(out_tensor.array), [1] * 100, atol=1e-7)
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.shape == in_tensor.shape
@@ -125,7 +125,7 @@ def test_embedding():
     )
 
 
-def test_embedding_vectorised():
+def test_embedding_batched():
     np.random.seed(0)
     vocab_size = 3
     out_shape = 5
@@ -133,7 +133,7 @@ def test_embedding_vectorised():
         [[0, 1, 2, 0], [1, 2, 2, 1]],
         requires_grad=False,
         dtype=np.int8,
-    ).to_vector()
+    ).to_batched()
 
     embedding_layer = Embedding(from_size=vocab_size, to_size=out_shape)
     weights = np.indices((vocab_size * out_shape,)).reshape(
@@ -174,10 +174,10 @@ def test_rms_norm():
     np.random.seed(0)
     in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
     layer_norm = RMSNorm(100)
-    out_tensor = layer_norm(in_tensor.to_vector())
+    out_tensor = layer_norm(in_tensor.to_batched())
 
     assert out_tensor.shape == in_tensor.shape
-    assert np.allclose((out_tensor._data**2).mean(), 1)
+    assert np.allclose((out_tensor.array**2).mean(), 1)
     out_tensor.backward()
 
     assert in_tensor.grad is not None

@@ -91,7 +91,7 @@ def test_can_udiv():
     )
     with np.errstate(divide="ignore"):
         out_tensor.backward()
-        correct = -np.power(in_tensor._data, -2) * 2
+        correct = -np.power(in_tensor.array, -2) * 2
 
         assert in_tensor.grad is not None
         assert in_tensor.grad.close_to(correct)

@@ -20,7 +20,7 @@ from tricycle.binary import (
 )
 from tricycle.einsum import EinsumBackOp
 from tricycle.layers import Dense
-from tricycle.tensor import nothing, to_tensor, unvectorise, vectorise
+from tricycle.tensor import batch, nothing, to_tensor, unbatch
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
     UnaryAdd,
@@ -117,17 +117,17 @@ def tensor(draw):
     data = draw(xp.arrays(dtype=np.float32, shape=shape))
     match len(shape):
         case 1:
-            is_vector = False
+            is_batched = False
         case 2:
-            is_vector = draw(st.booleans())
+            is_batched = draw(st.booleans())
         case 3:
-            is_vector = draw(st.booleans())
+            is_batched = draw(st.booleans())
         case 4:
-            is_vector = True
+            is_batched = True
     requires_grad = draw(st.booleans())
     return to_tensor(
         data,
-        is_vector=is_vector,
+        is_batched=is_batched,
         requires_grad=requires_grad,
     )
 
@@ -140,7 +140,7 @@ def small_tensor(draw):
     """
     shape = draw(st.integers(min_value=1, max_value=4))
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
-    is_vector = len(shape) in {3, 4}
+    is_batched = len(shape) in {3, 4}
     requires_grad = draw(st.booleans())
     if CUPY_ENABLED:
         on_gpu = draw(st.booleans())
@@ -150,7 +150,7 @@ def small_tensor(draw):
 
     tensor = to_tensor(
         data,
-        is_vector=is_vector,
+        is_batched=is_batched,
         requires_grad=requires_grad,
     )
     if on_gpu:
@@ -170,12 +170,12 @@ def tensor_pair_same_shape(draw):
     tensors = []
     for _ in range(2):
         data = draw(xp.arrays(dtype=np.float64, shape=shape))
-        is_vector = draw(st.booleans())
+        is_batched = draw(st.booleans())
 
         if draw(st.booleans()):
             data = data[1:]
 
-        tensor = to_tensor(data, is_vector=is_vector)
+        tensor = to_tensor(data, is_batched=is_batched)
         tensors.append(tensor)
 
     return tensors
@@ -202,7 +202,7 @@ def test_tensor_addition_same_shape(tensors):
     assert result.args == (tensor_1, tensor_2)
     assert result.back_fns == (nothing, nothing)
 
-    assert result.is_vector == tensor_1.is_vector or tensor_2.is_vector
+    assert result.is_batched == tensor_1.is_batched or tensor_2.is_batched
 
 
 @given(tensor(), scalar())
@@ -221,7 +221,7 @@ def test_tensor_addition_scalar(tensor, scalar):
     assert result.args == (tensor,)
     assert result.back_fns == (nothing,)
 
-    assert result.is_vector == tensor.is_vector
+    assert result.is_batched == tensor.is_batched
 
 
 @given(tensor_pair_same_shape())
@@ -248,39 +248,39 @@ def test_tensor_multiplication(tensors):
     assert isinstance(result.back_fns[0], EinsumBackOp)
     assert isinstance(result.back_fns[1], EinsumBackOp)
 
-    assert result.is_vector == tensor_1.is_vector or tensor_2.is_vector
+    assert result.is_batched == tensor_1.is_batched or tensor_2.is_batched
 
 
 @given(tensor())
 def test_close_to(tensor):
-    equal_nan = np.isnan(tensor._data).any()
+    equal_nan = np.isnan(tensor.array).any()
 
     assert tensor.close_to(tensor, equal_nan=equal_nan, rtol=1e-6, atol=1e-8)
 
 
 @given(tensor())
-def test_can_vectorise_and_unvectorise(tensor):
-    assume(not tensor.is_vector)
+def test_can_batch_and_unbatch(tensor):
+    assume(not tensor.is_batched)
 
-    vectorised = tensor.to_vector()
-    assert vectorised.is_vector
+    batched = tensor.to_batched()
+    assert batched.is_batched
 
-    unvectorised = vectorised.from_vector()
-    assert not unvectorised.is_vector
+    unbatched = batched.from_batched()
+    assert not unbatched.is_batched
 
-    assert tensor.close_to(unvectorised, equal_nan=True)
+    assert tensor.close_to(unbatched, equal_nan=True)
 
     # sourcery skip: no-conditionals-in-tests
     if tensor.requires_grad:
-        assert len(unvectorised.args) == 1
-        assert unvectorised.args[0].close_to(tensor, equal_nan=True)
-        assert unvectorised.back_fns == (vectorise,)
+        assert len(unbatched.args) == 1
+        assert unbatched.args[0].close_to(tensor, equal_nan=True)
+        assert unbatched.back_fns == (batch,)
 
-        assert len(unvectorised.args[0].args) == 1
-        assert unvectorised.args[0].args[0].close_to(tensor, equal_nan=True)
-        assert unvectorised.args[0].back_fns == (unvectorise,)
+        assert len(unbatched.args[0].args) == 1
+        assert unbatched.args[0].args[0].close_to(tensor, equal_nan=True)
+        assert unbatched.args[0].back_fns == (unbatch,)
 
-        assert unvectorised.requires_grad
+        assert unbatched.requires_grad
 
 
 @given(tensor())
@@ -309,7 +309,7 @@ def test_unary_ops(tensor, op):
     else:
         result = op(tensor)
     assert result.shape == tensor.shape
-    assert result.is_vector == tensor.is_vector
+    assert result.is_batched == tensor.is_batched
     assert result.on_gpu == tensor.on_gpu
 
 
@@ -327,7 +327,7 @@ def test_binary_ops(tensors, op):
     result = op(tensor_1, tensor_2)
 
     assert result.shape in [tensor_1.shape, tensor_2.shape]
-    assert result.is_vector == any([tensor_1.is_vector, tensor_2.is_vector])
+    assert result.is_batched == any([tensor_1.is_batched, tensor_2.is_batched])
     assert result.on_gpu == any([tensor_1.on_gpu, tensor_2.on_gpu])
 
 
@@ -361,7 +361,7 @@ def test_tokeniser_train_encode_decode(text):
 def test_tricycle_dense_matches_pytorch(tensor, out_shape):
     np.random.seed(0)
     torch.manual_seed(0)
-    assume(np.isfinite(tensor._data).all())
+    assume(np.isfinite(tensor.array).all())
 
     from_size = tensor.shape[-1]
 
@@ -376,7 +376,7 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
         pt_layer.weight.detach().numpy().T, dtype=np.float32
     )
 
-    pt_out = pt_layer(torch.tensor(tensor._data))
+    pt_out = pt_layer(torch.tensor(tensor.array))
     tr_out = tr_layer(tensor)
 
     pt_out_np = pt_out.detach().numpy()
@@ -389,7 +389,7 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
     assert tr_out.close_to(pt_out_np, rtol=1e-2, equal_nan=True)
 
     pt_out.sum().backward()
-    match (tensor.ndim, tensor.is_vector):
+    match (tensor.ndim, tensor.is_batched):
         case 1, False:
             tr_out.e("a->").backward()
         case 2, False:
@@ -397,11 +397,11 @@ def test_tricycle_dense_matches_pytorch(tensor, out_shape):
         case 3, False:
             tr_out.e("abc->").backward()
         case 2, True:
-            tr_out.from_vector().e("ab->").backward()
+            tr_out.from_batched().e("ab->").backward()
         case 3, True:
-            tr_out.from_vector().e("abc->").backward()
+            tr_out.from_batched().e("abc->").backward()
         case 4, True:
-            tr_out.from_vector().e("abcd->").backward()
+            tr_out.from_batched().e("abcd->").backward()
 
     assert np.allclose(
         pt_layer.weight.grad.detach().numpy().T,

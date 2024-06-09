@@ -5,7 +5,6 @@ channels:
   - conda-forge
 
 dependencies:
-  # base dependencies
   - python=3.10
   - numpy
   - humanize
@@ -13,13 +12,8 @@ dependencies:
   - mlflow
   - psutil
   - numba
-  # gpu dependencies
-  - cudnn
-  - cutensor
-  - nccl
-  - pynvml
-  - cupy
-  # install tricycle
+  - tiktoken
+  - datasets
   - pip
   - pip:
-    - -e .
+    - -e ../

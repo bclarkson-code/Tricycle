@@ -1,3 +1,40 @@
+"""
+Einsum is a generalisation of a large number of matrix operations.
+
+You can use it by assigning each axis in your matrices a letter of the
+alphabet (called an index). You can define the operation you want to perform
+by simply listing the indices you want in your inputs and output, separated by
+an arrow.
+
+For example, you can define the transpose of a 2d tensor as follows:
+
+>>> a = to_tensor([[1,2],[3,4]])
+>>> Einsum("ij->ji")(a)
+Tensor([[1. 3.]
+ [2. 4.]], name=einsum ij->ji)
+
+Here, we use einsum to swap indices i and j: a transpose.
+
+There are only two rules to remember with einsum:
+ - If an index does not appear in the output, any inputs that contain it
+   will be summed along that axis:
+
+    >>> Einsum("ij->i")(a)
+    Tensor([3. 7.], name=einsum ij->i)
+
+ - If an index appears in more than one input, the tensors will be multiplied
+   along that axis
+
+   >>> b = to_tensor([[5,6],[7,8])
+   >>> Einsum("ij,jk->ik")(a,b)
+    Tensor([[19. 22.]
+     [43. 50.]], name=einsum ij,jk->ik)
+
+
+
+You can use einsum to perform all of these operations:
+"""
+
 import itertools
 import re
 from typing import Sequence
@@ -52,6 +89,12 @@ class Subscript:
 
 
 class EinsumBackOp:
+    """
+    The backward operation for an einsum operation. This is done by
+    swapping the indices and tensors for an input with the output.
+    E.g "ij,jk->ik" with idx = 0 would become "ik,jk->ij"
+    """
+
     def __init__(
         self, idx: int, tensors: Sequence[Tensor], subscript: Subscript
     ):
@@ -119,9 +162,9 @@ class Einsum:
         """
         assert len(tensors) == len(subscript.inputs)
 
-        # To avoid adding a bunch of special cases for vectorised
-        # operations, we replace any vectorised operations with
-        # their non-vectorised counterparts
+        # To avoid adding a bunch of special cases for batched
+        # operations, we replace any batched operations with
+        # their non-batched counterparts
         subscript = Subscript(subscript.subscript.replace("z", ""))
 
         back_functions = []
@@ -156,7 +199,7 @@ class Einsum:
         [tensor] = tensors
         ones = to_tensor(
             xp.ones(tensor.shape),
-            is_vector=tensor.is_vector,
+            is_batched=tensor.is_batched,
             requires_grad=False,
         )
         tensors = [tensor, ones]
@@ -168,33 +211,33 @@ class Einsum:
 
         return subscript, tensors
 
-    def _handle_vectorised(
+    def _handle_batched(
         self, subscript: Subscript, tensors: Sequence[Tensor]
     ) -> tuple[Subscript, Sequence[Tensor], bool]:
         """
-        If a tensor is labelled as being vectorised, add an extra dimension
+        If a tensor is labelled as being batched, add an extra dimension
         to its indices.
         """
         inputs = []
-        vectorise_output = False
+        batch_output = False
         for idx, tensor in zip(subscript.inputs, tensors):
-            if tensor.is_vector:
+            if tensor.is_batched:
                 inputs.append(["z"] + idx)
-                vectorise_output = True
+                batch_output = True
             else:
                 inputs.append(idx)
         output = subscript.output
-        if vectorise_output:
+        if batch_output:
             if "z" in subscript.subscript:
                 raise ValueError(
                     "`z` cannot be used in an einsum subscript on "
-                    "non-vectorised tensors because "
-                    "it is reserved for vectorised indices."
+                    "non-batched tensors because "
+                    "it is reserved for batched indices."
                 )
             output = ["z"] + output
 
         subscript = Subscript.from_split(inputs, output)
-        return subscript, tensors, vectorise_output
+        return subscript, tensors, batch_output
 
     def _replace_infinity(self, tensors: Sequence[Tensor]):
         """
@@ -204,12 +247,13 @@ class Einsum:
         xp = select_backend(*tensors)
         processed = []
         for tensor in tensors:
-            if not xp.isinf(tensor._data).any():
+            if not xp.isinf(tensor.array).any():
                 processed.append(tensor)
                 continue
 
             new_tensor = to_tensor(
-                xp.nan_to_num(tensor._data), is_vector=tensor.is_vector
+                xp.nan_to_num(tensor.array),
+                is_batched=tensor.is_batched,
             )
             new_tensor.args = tensor.args
             new_tensor.back_fns = tensor.back_fns
@@ -220,14 +264,14 @@ class Einsum:
 
     def __call__(self, *tensors: Tensor):
         xp = select_backend(*tensors)
-        subscript, tensors, vectorise_output = self._handle_vectorised(
+        subscript, tensors, batch_output = self._handle_batched(
             self.subscript, tensors
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
-        tensor_data = [t._data for t in tensors]
+        tensor_data = [t.array for t in tensors]
         result = to_tensor(xp.einsum(str(subscript), *tensor_data))
-        if vectorise_output:
-            result.is_vector = True
+        if batch_output:
+            result.is_batched = True
 
         result.args = tuple(tensors)
         result.back_fns = tuple(self._build_back_ops(tensors, subscript))

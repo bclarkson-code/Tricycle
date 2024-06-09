@@ -51,11 +51,11 @@ class GeLU(Layer):
         left = xp.tanh(inner)
         cosh = xp.cosh(inner)
         right = coef / (cosh * cosh)
-        self._grad = 0.5 * (1 + left + right) * grad._data
+        self._grad = 0.5 * (1 + left + right) * grad.array
 
         result = to_tensor(
             self._grad,
-            is_vector=grad.is_vector,
+            is_batched=grad.is_batched,
             requires_grad=grad.requires_grad,
         )
         result.name = "gelu_back"
@@ -63,13 +63,13 @@ class GeLU(Layer):
 
     def forward(self, tensor: Tensor):
         xp = tensor.xp
-        self._input = tensor._data
-        inner = self.CONST_1 * (tensor._data + self.CONST_2 * tensor._data**3)
-        result = tensor._data * 0.5 * (1 + xp.tanh(inner))
+        self._input = tensor.array
+        inner = self.CONST_1 * (tensor.array + self.CONST_2 * tensor.array**3)
+        result = tensor.array * 0.5 * (1 + xp.tanh(inner))
 
         result = to_tensor(
             result,
-            is_vector=tensor.is_vector,
+            is_batched=tensor.is_batched,
             requires_grad=tensor.requires_grad,
         )
         result.name = "gelu"
@@ -135,7 +135,7 @@ class SwiGLU(Layer):
         x = self.linear(x)
         # this is slow and terrible hack
         left, right = x.split(2)
-        if right.is_vector:
+        if right.is_batched:
             bias = self.bias.repeat(right.shape[1])
         else:
             bias = self.bias.repeat(right.shape[0])

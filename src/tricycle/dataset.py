@@ -57,7 +57,7 @@ class Dataset:
 class InfiniteBatchDataset(Dataset):
     is_infinite = True
     _to_tensor = False
-    is_vector = False
+    is_batched = True
 
     def __init__(self, inputs: Sequence, outputs: Sequence, batch_size: int):
         super().__init__(inputs, outputs)
@@ -83,26 +83,18 @@ class InfiniteBatchDataset(Dataset):
         if self._to_tensor:
             batch_inputs = to_tensor(
                 batch_inputs,
-                is_vector=self.is_vector,
+                is_batched=self.is_batched,
                 dtype=batch_outputs.dtype,
             )
             batch_outputs = to_tensor(
                 batch_outputs,
-                is_vector=self.is_vector,
+                is_batched=self.is_batched,
                 dtype=batch_outputs.dtype,
             )
         return batch_inputs, batch_outputs
 
     def to_tensor(self):
         self._to_tensor = True
-        return self
-
-    def to_vector(self):
-        self.is_vector = True
-        return self
-
-    def from_vector(self):
-        self.is_vector = False
         return self
 
 
@@ -156,14 +148,14 @@ class CausalLMDataset:
                 inputs,
                 requires_grad=False,
                 name="inputs",
-                is_vector=self.is_batch,
+                is_batched=self.is_batch,
                 dtype=np.uint32,
             )
             outputs = to_tensor(
                 outputs,
                 requires_grad=False,
                 name="output",
-                is_vector=self.is_batch,
+                is_batched=self.is_batch,
                 dtype=np.uint32,
             )
             if self.device is not None:

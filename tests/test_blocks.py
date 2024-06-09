@@ -20,7 +20,7 @@ def test_attention_individually():
     This operation is pretty complex so we'll perform each stage
     with pytorch and then compare the results. Here, I'm comparing
     with Andrej Karpathy's implementation from NanoGPT
-    For this test, we're doing everything non-vectorised
+    For this test, we're doing everything non-batch
     """
     # setup
     embedding_dim = 15
@@ -38,7 +38,7 @@ def test_attention_individually():
     in_tensor = np.random.uniform(-5, 5, (n_tokens, projected_size))
     in_tensor = to_tensor(in_tensor)
 
-    x = torch.from_numpy(in_tensor._data)
+    x = torch.from_numpy(in_tensor.array)
 
     qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch
     query, key, value = in_tensor.split(3, axis=-1)  # tricycle
@@ -173,9 +173,9 @@ def test_attention_combined():
     in_tensor = np.random.uniform(
         -5, 5, (batch_size, n_tokens, projected_size)
     )
-    in_tensor = to_tensor(in_tensor).to_vector()
+    in_tensor = to_tensor(in_tensor).to_batched()
 
-    x = torch.from_numpy(in_tensor._data)
+    x = torch.from_numpy(in_tensor.array)
 
     qu, k, v = x.split(embedding_dim, dim=-1)  # pytorch
     query, key, value = in_tensor.split(3, axis=-1)  # tricycle
@@ -212,7 +212,7 @@ def test_attention_combined():
         context_window=context_window,
         residual_dropout_prob=0,
     )
-    tricycle_result = tricycle_attention.attention(in_tensor).from_vector()
+    tricycle_result = tricycle_attention.attention(in_tensor).from_batched()
 
     assert np.allclose(andrej_result, pytorch_result, rtol=1e-3)
     assert tricycle_result.close_to(andrej_result)
@@ -264,7 +264,7 @@ def test_attention_block():
         out_projection_weights, name="out_proj"
     )
 
-    in_tensor = to_tensor(x, requires_grad=False).to_vector()
+    in_tensor = to_tensor(x, requires_grad=False).to_batched()
     tricycle_result = tricycle_attention(in_tensor)
 
     c_attn = torch.nn.Linear(embedding_dim, 3 * embedding_dim, bias=False)
@@ -288,7 +288,7 @@ def test_attention_block():
         andrej_result.detach().numpy(), rtol=1e-3, atol=1e-4
     )
 
-    tricycle_loss = tricycle_result.from_vector().e("abc->")
+    tricycle_loss = tricycle_result.from_batched().e("abc->")
     andrej_loss = andrej_result.sum()
 
     assert tricycle_loss.close_to(andrej_loss.detach().numpy())
@@ -296,7 +296,7 @@ def test_attention_block():
     tricycle_loss.backward()
     andrej_loss.backward()
 
-    assert not tricycle_attention.out_projection.weights.is_vector
+    assert not tricycle_attention.out_projection.weights.is_batched
     tricycle_out_weights = tricycle_attention.out_projection.weights.grad
 
     assert tricycle_out_weights.close_to(c_proj.weight.grad.T.numpy())
@@ -319,7 +319,7 @@ def test_MLPBlock():
     block.linear_1.weights = to_tensor(np.ones(block.linear_1.weights.shape))
     block.linear_2.weights = to_tensor(np.ones(block.linear_2.weights.shape))
 
-    out_tensor = block(in_tensor.to_vector())
+    out_tensor = block(in_tensor.to_batched())
 
     assert out_tensor.shape == (3, 4)
 
@@ -337,7 +337,7 @@ def test_MLPBlock():
     )
     correct_output = to_tensor(correct_output)
 
-    assert out_tensor.is_vector
+    assert out_tensor.is_batched
     assert out_tensor.close_to(correct_output)
 
     out_tensor.backward()
@@ -362,7 +362,8 @@ def test_GPT2TransformerBlock():
     embedding_dim = 7 * n_heads
 
     in_tensor = to_tensor(
-        np.random.random((batch_size, n_tokens, embedding_dim)), is_vector=True
+        np.random.random((batch_size, n_tokens, embedding_dim)),
+        is_batched=True,
     )
     block = GPT2TransformerBlock(
         embedding_dim=embedding_dim,
@@ -371,7 +372,7 @@ def test_GPT2TransformerBlock():
         context_window=32,
     )
 
-    out_tensor = block(in_tensor.to_vector())
+    out_tensor = block(in_tensor.to_batched())
 
     assert out_tensor.shape == (batch_size, n_tokens, embedding_dim)
 

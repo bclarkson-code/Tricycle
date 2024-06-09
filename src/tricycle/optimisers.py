@@ -32,8 +32,8 @@ class StochasticGradientDescent(Optimiser):
         """
         assert tensor.grad is not None
 
-        if tensor.grad.is_vector:
-            tensor.grad = tensor.grad.from_vector().e("z...->...")
+        if tensor.grad.is_batched:
+            tensor.grad = tensor.grad.from_batched().e("z...->...")
 
         grad = self.learning_rate * tensor.grad
 
@@ -48,14 +48,14 @@ class StochasticGradientDescent(Optimiser):
                 last_momentum = self.momentum_store[tensor._id]
 
             grad += self.momentum * last_momentum
-            self.momentum_store[tensor._id] = to_tensor(grad._data)
+            self.momentum_store[tensor._id] = to_tensor(grad.array)
 
         # update the value only, leave everything else
         result = to_tensor(
             tensor - grad,
             requires_grad=tensor.requires_grad,
             name=tensor.name,
-            is_vector=tensor.is_vector,
+            is_batched=tensor.is_batched,
             _id=tensor._id,
         )
 
@@ -100,28 +100,28 @@ class AdamW(Optimiser):
 
         # initialise stores
         if key not in self.m:
-            self.m[key] = xp.zeros_like(tensor._data)
+            self.m[key] = xp.zeros_like(tensor.array)
         if key not in self.v:
-            self.v[key] = tensor.xp.zeros_like(tensor._data)
+            self.v[key] = tensor.xp.zeros_like(tensor.array)
 
         self.m[key] = (
             self.betas[0] * self.m[key]
-            + (1 - self.betas[0]) * tensor.grad._data
+            + (1 - self.betas[0]) * tensor.grad.array
         )
 
         self.v[key] = self.betas[1] * self.v[key] + (1 - self.betas[1]) * (
-            tensor.grad._data * tensor.grad._data
+            tensor.grad.array * tensor.grad.array
         )
 
         m_hat = self.m[key] / (1 - self.betas[0] ** self.t)
         v_hat = self.v[key] / (1 - self.betas[1] ** self.t)
 
-        tensor._data -= self.learning_rate * (
+        tensor.array -= self.learning_rate * (
             m_hat / (xp.sqrt(v_hat) + self.eps)
-            + self.weight_decay * tensor._data
+            + self.weight_decay * tensor.array
         )
 
-        tensor.grad._data.fill(0)
+        tensor.grad.array.fill(0)
 
         return tensor
 

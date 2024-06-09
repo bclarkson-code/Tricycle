@@ -115,7 +115,7 @@ def estimate_loss(
         # forward and backward pass
         logits = model(inputs)
         loss = loss_fn(outputs, logits)
-        batch_loss += loss._data / config.eval_steps
+        batch_loss += loss.array / config.eval_steps
 
     return batch_loss
 
@@ -169,7 +169,7 @@ with mlflow.start_run() as run:
             # forward and backward pass
             logits = model(inputs)
             loss = loss_fn(outputs, logits)
-            batch_loss += loss._data / config.gradient_accumulation_steps
+            batch_loss += loss.array / config.gradient_accumulation_steps
             loss.backward()
 
         # Use the optimiser to update weights

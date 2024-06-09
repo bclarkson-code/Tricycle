@@ -32,9 +32,9 @@ def masked_fill(
     Apply an attention_mask to a tensor
     """
     xp = tensor.xp
-    repeats = tensor.shape[1] if tensor.is_vector else tensor.shape[0]
+    repeats = tensor.shape[1] if tensor.is_batched else tensor.shape[0]
     mask = xp.stack(
-        [full_mask[: mask_shape[0], : mask_shape[1]]._data] * repeats
+        [full_mask[: mask_shape[0], : mask_shape[1]].array] * repeats
     )
     mask = to_tensor(mask, requires_grad=False, name="mask")
     result = tensor + mask
@@ -56,7 +56,7 @@ class MultiHeadSelfAttention(Layer):
         embedding_dim: int,
         n_heads: int,
         context_window: int,
-        residual_dropout_prob: float,
+        residual_dropout_prob: float = 0.0,
         initialiser=init_xavier,
     ):
         # set the constants

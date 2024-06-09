@@ -46,7 +46,7 @@ def integer(draw):
 @st.composite
 def tokens(draw):
     """
-    Tokens are a list of integers. They can be either 1d or 2d and vectorised
+    Tokens are a list of integers. They can be either 1d or 2d and batched
     """
     shape = draw(xp.array_shapes(min_dims=1, max_dims=2, max_side=64))
     tokens_ = draw(
@@ -57,7 +57,10 @@ def tokens(draw):
         )
     )
     return to_tensor(
-        tokens_, is_vector=len(shape) == 2, dtype=np.int64, requires_grad=False
+        tokens_,
+        is_batched=len(shape) == 2,
+        dtype=np.int64,
+        requires_grad=False,
     )
 
 
@@ -80,20 +83,20 @@ def tensor(draw):
     """
     Generate a single, initial tensor (not as the result of an operation)
     For our model, we need the following tensors:
-     - 1d non-vector
-     - 2d non-vector
-     - 2d vector
-     - 3d vector
+     - 1d non-batch
+     - 2d non-batch
+     - 2d batch
+     - 3d batch
     """
     shape_ = draw(tensor_shape())
     data = draw(xp.arrays(dtype=np.float64, shape=shape_))
     match len(shape_):
         case 1:
-            is_vector = False
+            is_batched = False
         case 2:
-            is_vector = draw(st.booleans())
+            is_batched = draw(st.booleans())
         case 3:
-            is_vector = True
+            is_batched = True
     requires_grad = True
     if CUPY_ENABLED:
         on_gpu = draw(st.booleans())
@@ -103,7 +106,7 @@ def tensor(draw):
 
     tensor = to_tensor(
         data,
-        is_vector=is_vector,
+        is_batched=is_batched,
         requires_grad=requires_grad,
     )
     if on_gpu:
@@ -114,7 +117,7 @@ def tensor(draw):
 @st.composite
 def embedding_shape(draw):
     """
-    Embeddings are either 2d or 3d and vectorised
+    Embeddings are either 2d or 3d and batched
     """
     return draw(
         st.lists(
@@ -123,29 +126,29 @@ def embedding_shape(draw):
     )
 
 
-def build_tensor(shape_, is_vector):
+def build_tensor(shape_, is_batched):
     """
     Generate a single, initial tensor (not as the result of an operation)
     For our model, we need the following tensors:
-     - 1d non-vector
-     - 2d non-vector
-     - 2d vector
-     - 3d vector
+     - 1d non-batch
+     - 2d non-batch
+     - 2d batch
+     - 3d batch
     """
     np.random.seed(0)
     data = np.random.random(shape_).astype(np.float32)
     match len(shape_):
         case 1:
-            is_vector = False
+            is_batched = False
         case 2:
-            is_vector = is_vector
+            is_batched = is_batched
         case 3:
-            is_vector = True
+            is_batched = True
     requires_grad = True
 
     return to_tensor(
         data,
-        is_vector=is_vector,
+        is_batched=is_batched,
         requires_grad=requires_grad,
     )
 
@@ -158,7 +161,7 @@ def small_tensor(draw):
     """
     shape = draw(st.integers(min_value=1, max_value=4))
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
-    is_vector = len(shape) in {3, 4}
+    is_batched = len(shape) in {3, 4}
     requires_grad = draw(st.booleans())
     if CUPY_ENABLED:
         on_gpu = draw(st.booleans())
@@ -168,7 +171,7 @@ def small_tensor(draw):
 
     tensor = to_tensor(
         data,
-        is_vector=is_vector,
+        is_batched=is_batched,
         requires_grad=requires_grad,
     )
     if on_gpu:
@@ -188,12 +191,12 @@ def tensor_pair_same_shape(draw):
     tensors = []
     for _ in range(2):
         data = draw(xp.arrays(dtype=np.float64, shape=shape))
-        is_vector = draw(st.booleans())
+        is_batched = draw(st.booleans())
 
         if draw(st.booleans()):
             data = data[1:]
 
-        tensor = to_tensor(data, is_vector=is_vector)
+        tensor = to_tensor(data, is_batched=is_batched)
         tensors.append(tensor)
 
     return tensors
@@ -201,9 +204,9 @@ def tensor_pair_same_shape(draw):
 
 @given(tensor_shape(), integer(), st.booleans())
 @settings(deadline=1000)
-def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
-    tensor = build_tensor(in_shape, is_vector)
-    assume(np.isfinite(tensor._data).all())
+def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_batched):
+    tensor = build_tensor(in_shape, is_batched)
+    assume(np.isfinite(tensor.array).all())
 
     from_size = tensor.shape[-1]
 
@@ -213,7 +216,7 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
     tr_layer = Dense(from_size=from_size, to_size=out_shape)
     tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy().T)
 
-    pt_out = pt_layer(torch.tensor(tensor._data))
+    pt_out = pt_layer(torch.tensor(tensor.array))
     tr_out = tr_layer(tensor)
 
     assert np.allclose(
@@ -221,7 +224,7 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
     )
 
     pt_out.sum().backward()
-    tr_out.from_vector().sum().backward()
+    tr_out.from_batched().sum().backward()
 
     assert np.allclose(
         pt_layer.weight.grad.detach().numpy().T,
@@ -232,21 +235,15 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_vector):
 
 @given(tokens(), integer())
 @settings(deadline=1000)
-# @example(
-#     tokens_=to_tensor(
-#         [[1, 1], [1, 1]], dtype=np.int64, requires_grad=False, is_vector=True
-#     ),
-#     out_shape=1,
-# )
 def test_embedding_matches(tokens_, out_shape):
-    vocab_size = tokens_._data.max() + 1
+    vocab_size = tokens_.array.max() + 1
     pt_layer = torch.nn.Embedding(
         num_embeddings=vocab_size, embedding_dim=out_shape
     )
     tr_layer = Embedding(from_size=vocab_size, to_size=out_shape)
     tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy())
 
-    pt_out = pt_layer(torch.tensor(tokens_._data))
+    pt_out = pt_layer(torch.tensor(tokens_.array))
     tr_out = tr_layer(tokens_)
 
     assert np.allclose(
@@ -254,7 +251,7 @@ def test_embedding_matches(tokens_, out_shape):
     )
 
     pt_out.sum().backward()
-    tr_out.from_vector().sum().backward()
+    tr_out.from_batched().sum().backward()
 
     assert np.allclose(
         pt_layer.weight.grad.detach().numpy(),
@@ -265,17 +262,17 @@ def test_embedding_matches(tokens_, out_shape):
 
 @given(tensor_shape(force_divisible_by_32=True), st.booleans())
 @settings(deadline=1000)
-@example(in_shape=[1, 1, 1, 128], is_vector=True)
-def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
-    tensor = build_tensor(in_shape, is_vector)
-    assume(np.isfinite(tensor._data).all())
+@example(in_shape=[1, 1, 1, 128], is_batched=True)
+def test_tricycle_softmax_matches_pytorch(in_shape, is_batched):
+    tensor = build_tensor(in_shape, is_batched)
+    assume(np.isfinite(tensor.array).all())
 
     tensor.requires_grad = True
 
     pt_layer = torch.nn.functional.softmax
     tr_layer = Softmax()
 
-    pt_input = torch.tensor(tensor._data, requires_grad=True)
+    pt_input = torch.tensor(tensor.array, requires_grad=True)
 
     pt_out = pt_layer(pt_input, dim=-1)
     tr_out = tr_layer(tensor)
@@ -285,7 +282,7 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
     )
 
     pt_out.sum().backward()
-    tr_out.from_vector().sum().backward()
+    tr_out.from_batched().sum().backward()
 
     assert np.allclose(
         pt_input.grad.detach().numpy(),
@@ -296,25 +293,25 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_vector):
 
 
 @given(tensor_shape(), st.booleans())
-@example(in_shape=[2, 2, 4], is_vector=False)
-def test_crossentropy_matches(in_shape, is_vector):
-    y_pred = build_tensor(in_shape, is_vector)
+@example(in_shape=[2, 2, 4], is_batched=False)
+def test_crossentropy_matches(in_shape, is_batched):
+    y_pred = build_tensor(in_shape, is_batched)
     y_true = np.random.randint(0, in_shape[-1], size=in_shape[:-1])
-    y_true = to_tensor(y_true, is_vector=is_vector, dtype=int)
-    assume(np.isfinite(y_pred._data).all())
+    y_true = to_tensor(y_true, is_batched=is_batched, dtype=int)
+    assume(np.isfinite(y_pred.array).all())
 
-    tr_out = CrossEntropy()(y_true, y_pred).from_vector()
+    tr_out = CrossEntropy()(y_true, y_pred).from_batched()
     if len(in_shape) > 1:
         tr_out = tr_out.mean()
 
     if len(in_shape) == 1:
-        p_y_pred = copy(y_pred._data)
+        p_y_pred = copy(y_pred.array)
     if len(in_shape) == 2:
-        p_y_pred = copy(y_pred._data)
+        p_y_pred = copy(y_pred.array)
     if len(in_shape) == 3:
-        p_y_pred = copy(y_pred._data).transpose(0, -1, 1)
+        p_y_pred = copy(y_pred.array).transpose(0, -1, 1)
     p_y_pred = torch.tensor(p_y_pred, requires_grad=True)
-    p_y_true = torch.tensor(y_true._data, dtype=torch.long)
+    p_y_true = torch.tensor(y_true.array, dtype=torch.long)
 
     p_out = torch.nn.CrossEntropyLoss()(
         input=p_y_pred,

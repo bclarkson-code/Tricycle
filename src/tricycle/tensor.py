@@ -22,20 +22,20 @@ class Tensor:
     """
 
     _id: int
-    _data: np.ndarray | ArrayLike
+    array: np.ndarray | ArrayLike
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
     parents: set["Tensor"] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
     requires_grad: bool = False
-    is_vector: bool = False
+    is_batched: bool = False
 
     def __init__(
         self,
         data: np.ndarray | ArrayLike,
         requires_grad: bool = False,
-        is_vector: bool = False,
+        is_batched: bool = False,
         name: str | None = None,
         _id: int | None = None,
     ):
@@ -44,14 +44,14 @@ class Tensor:
             import cupy
 
             if isinstance(data, (np.ndarray, cupy.ndarray)):
-                self._data = data
+                self.array = data
             else:
-                self._data = np.array(data)
+                self.array = np.array(data)
         else:
-            self._data = np.array(data)
+            self.array = np.array(data)
 
         self.requires_grad = requires_grad
-        self.is_vector = is_vector
+        self.is_batched = is_batched
         self.name = name
 
     def _attach_parents(self):
@@ -89,9 +89,9 @@ class Tensor:
         has been computed
         """
         self.grad = to_tensor(
-            self.xp.ones(self._data.shape, dtype=self.dtype),
+            self.xp.ones(self.array.shape, dtype=self.dtype),
             requires_grad=False,
-            is_vector=self.is_vector,
+            is_batched=self.is_batched,
         )
 
         stack: list["Tensor"] = [self]
@@ -125,13 +125,13 @@ class Tensor:
 
                     # gradient clipping
                     if clip is not None:
-                        grad._data = grad.xp.clip(grad._data, -clip, clip)
+                        grad.array = grad.xp.clip(grad.array, -clip, clip)
 
                     # add gradient
                     if arg.grad is None:
                         arg.grad = grad
                     else:
-                        arg.grad._data += grad._data
+                        arg.grad.array += grad.array
 
                 except Exception as e:
                     raise e
@@ -141,27 +141,6 @@ class Tensor:
                     # get rid of the weakref so we can pickle the model
                     arg.parents = None
                     stack.append(arg)
-
-    def cleanup(self):
-        """
-        Traverse through the graph, deleting all non-parameter nodes in
-        the graph to avoid a memory leak
-        """
-        stack: list["Tensor"] = [self]
-        while stack:
-            node = stack.pop()
-
-            # add children to stack
-            if node.args:
-                stack.extend(iter(node.args))
-                del node.args
-            else:
-                continue
-
-            # delete node
-            if hasattr(node, "grad") and node.grad is not None:
-                del node.grad
-            del node
 
     def backward(self, clip: float | None = None):
         """
@@ -309,47 +288,47 @@ class Tensor:
 
     def __lt__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self._data < other._data)
-        return Tensor(self._data < other)
+            return Tensor(self.array < other.array)
+        return Tensor(self.array < other)
 
     def __le__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self._data <= other._data)
-        return Tensor(self._data <= other)
+            return Tensor(self.array <= other.array)
+        return Tensor(self.array <= other)
 
     def __eq__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self._data == other._data)
-        return Tensor(self._data == other)
+            return Tensor(self.array == other.array)
+        return Tensor(self.array == other)
 
     def __ne__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self._data != other._data)
-        return Tensor(self._data != other)
+            return Tensor(self.array != other.array)
+        return Tensor(self.array != other)
 
     def __gt__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self._data > other._data)
-        return Tensor(self._data > other)
+            return Tensor(self.array > other.array)
+        return Tensor(self.array > other)
 
     def __ge__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self._data >= other._data)
-        return Tensor(self._data >= other)
+            return Tensor(self.array >= other.array)
+        return Tensor(self.array >= other)
 
     def __repr__(self):
         name = f", name={self.name}" if self.name is not None else ""
-        return f"Tensor({self._data.__str__()}{name})"
+        return f"Tensor({self.array.__str__()}{name})"
 
     def __getitem__(self, idx):
-        return to_tensor(self._data[idx], requires_grad=self.requires_grad)
+        return to_tensor(self.array[idx], requires_grad=self.requires_grad)
 
     def __setitem__(self, idx, value):
-        self._data[idx] = value
+        self.array[idx] = value
 
     @property
     def xp(self):
-        return select_backend(self._data)
+        return select_backend(self.array)
 
     def e(self, subscript: str) -> "Tensor":
         """
@@ -366,15 +345,15 @@ class Tensor:
 
     @property
     def shape(self) -> Sequence[int]:
-        return self._data.shape
+        return self.array.shape
 
     @property
     def ndim(self) -> int:
-        return self._data.ndim
+        return self.array.ndim
 
     @property
     def dtype(self) -> np.dtype:
-        return self._data.dtype
+        return self.array.dtype
 
     def reshape(self, shape: Sequence[int]) -> "Tensor":
         from tricycle.ops import Reshape
@@ -393,11 +372,6 @@ class Tensor:
     def sum(self) -> "Tensor":
         from tricycle.unary import UnarySum
 
-        # if self.is_vector:
-        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim - 1]
-        # else:
-        #     indices = "abcdefghijklmnopqrstuvwxy"[: self.ndim]
-        # return self.e(f"{indices}->")
         return UnarySum()(self)
 
     def close_to(
@@ -413,27 +387,27 @@ class Tensor:
         """
         if not isinstance(other, Tensor):
             return self.xp.allclose(
-                self._data,
+                self.array,
                 self.xp.array(other),
                 equal_nan=equal_nan,
                 rtol=rtol,
                 **kwargs,
             )
         return self.xp.allclose(
-            self._data, other._data, equal_nan=equal_nan, rtol=rtol, **kwargs
+            self.array, other.array, equal_nan=equal_nan, rtol=rtol, **kwargs
         )
 
-    def to_vector(self):
+    def to_batched(self):
         """
-        Treat this tensor as a vector
+        Treat this tensor as a batch of tensors
         """
-        return vectorise(self)
+        return batch(self)
 
-    def from_vector(self):
+    def from_batched(self):
         """
-        Treat a vectorised tensor as a normal tensor
+        Treat a batched tensor as a normal tensor
         """
-        return unvectorise(self)
+        return unbatch(self)
 
     @property
     def on_gpu(self):
@@ -441,7 +415,7 @@ class Tensor:
             return False
         import cupy
 
-        return isinstance(self._data, cupy.ndarray)
+        return isinstance(self.array, cupy.ndarray)
 
     def to_gpu(self, device: int = 0):
         """
@@ -454,7 +428,7 @@ class Tensor:
         import cupy
 
         cupy.cuda.Device(device).use()
-        self._data = cupy.asarray(self._data)
+        self.array = cupy.asarray(self.array)
         return self
 
     def from_gpu(self):
@@ -467,7 +441,7 @@ class Tensor:
             )
         import cupy
 
-        self._data = cupy.asnumpy(self._data)
+        self.array = cupy.asnumpy(self.array)
         return self
 
     def zero_grad(self):
@@ -479,18 +453,18 @@ class Tensor:
 
     def numpy(self):
         if not CUPY_ENABLED:
-            return self._data
+            return self.array
 
         import cupy
 
-        return cupy.asnumpy(self._data) if self.on_gpu else self._data
+        return cupy.asnumpy(self.array) if self.on_gpu else self.array
 
 
 def to_tensor(
     tensor_like: ArrayLike,
     name: Optional[str] = None,
     requires_grad: bool = True,
-    is_vector: bool = False,
+    is_batched: bool = False,
     _id: int | None = None,
     dtype: np.dtype | None = np.float32,
     **kwargs,
@@ -503,7 +477,7 @@ def to_tensor(
         import cupy
 
         if isinstance(tensor_like, Tensor):
-            array = tensor_like._data
+            array = tensor_like.array
         elif isinstance(tensor_like, (np.ndarray, cupy.ndarray)):
             array = tensor_like
             if dtype is not None:
@@ -514,7 +488,7 @@ def to_tensor(
             array = np.asarray(tensor_like, dtype=dtype, **kwargs)
 
     elif isinstance(tensor_like, Tensor):
-        array = tensor_like._data
+        array = tensor_like.array
     else:
         array = np.asarray(tensor_like, dtype=dtype, **kwargs)
 
@@ -522,45 +496,45 @@ def to_tensor(
         array,
         name=name,
         requires_grad=requires_grad,
-        is_vector=is_vector,
+        is_batched=is_batched,
         _id=_id,
     )
 
 
-def vectorise(tensor: Tensor) -> Tensor:
+def batch(tensor: Tensor) -> Tensor:
     """
-    Tell Tricycle to treat this tensor as a group of vectors
+    Tell Tricycle to treat this tensor as a batch of tensors
     """
-    if tensor.is_vector:
+    if tensor.is_batched:
         return tensor
 
     result = to_tensor(
-        tensor._data,
-        is_vector=True,
+        tensor.array,
+        is_batched=True,
         requires_grad=tensor.requires_grad,
-        dtype=tensor._data.dtype,
+        dtype=tensor.array.dtype,
     )
     result.args = (tensor,)
-    result.back_fns = (unvectorise,)
+    result.back_fns = (unbatch,)
     return result
 
 
-def unvectorise(tensor: Tensor) -> Tensor:
+def unbatch(tensor: Tensor) -> Tensor:
     """
     Tell Tricycle to treat this tensor as a single tensor
-    (not a group of vectors)
+    (not a batch of tensors)
     """
-    if not tensor.is_vector:
+    if not tensor.is_batched:
         return tensor
 
     result = to_tensor(
-        tensor._data,
-        is_vector=False,
+        tensor.array,
+        is_batched=False,
         requires_grad=tensor.requires_grad,
-        dtype=tensor._data.dtype,
+        dtype=tensor.array.dtype,
     )
     result.args = (tensor,)
-    result.back_fns = (vectorise,)
+    result.back_fns = (batch,)
     return result
 
 

@@ -3,7 +3,6 @@ name: tricycle
 channels:
   - defaults
   - conda-forge
-  - pytorch
 
 dependencies:
   # base dependencies
@@ -14,13 +13,16 @@ dependencies:
   - mlflow
   - psutil
   - numba
-  # test dependencies
-  - scikit-learn
-  - pytest
-  - hypothesis
-  - pytorch # we use this to test correctness, not to cheat
-  - pre-commit
+  - tiktoken
+  - datasets
+  # gpu dependencies
+  - cuda-version==12
+  - cudnn
+  - cutensor
+  - nccl
+  - pynvml
+  - cupy
   # install tricycle
   - pip
   - pip:
-    - -e .
+    - -e ../
