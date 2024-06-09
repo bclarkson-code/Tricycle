@@ -423,17 +423,28 @@ For example, suppose we are multiplying a batch of tensors by a weight matrix.
 We could do it like this:
 
 ```python
-# batch of 16 64x64 tensors
-inputs = to_tensor(np.ones(16, 64, 64))
+# batch of 1024 64x64 tensors
+inputs = to_tensor(np.ones((1024, 64, 64)))
 weights = to_tensor(np.random.random((64,64)))
 
-output = [Einsum('ij,jk->ik')(inp) for inp in inputs]
+output = [Einsum('ij,jk->ik')(inp, weights) for inp in inputs]
+# 62.2 ms ± 186 μs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 ```
 
 But we can use the properties of `Einsum` to do the same thing like this
 
 ```
+output = Einsum('aij,jk->aik')(inputs, weights)
+# 29.1 ms ± 99.2 μs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+```
 
+In general, most `Op`s in tricycle behave slightly differenly, depending on
+whether a tensor batched or not. You can tell tricycle to use the batched
+version of `Op`s for a tensor by simply calling `.to_batched`. To convert it
+back, you can call `.from_batched`.
+
+For example:
+```python
 ```
 
 
