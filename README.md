@@ -240,7 +240,7 @@ There are only two rules to remember with einsum:
 For example:
 #### Summing along an axis
 
-https://github.com/bclarkson-code/Tricycle/assets/57139598/d05d802d-ccbc-4bb0-9298-42d00e7e2a37
+https://github.com/bclarkson-code/Tricycle/assets/57139598/c575c958-19ed-4406-8a1b-d2390663ba96
 
 #### Sum of an entire tensor
 
