@@ -6,7 +6,6 @@ This file contains all of the unary operations in Tricycle
 import numbers
 from typing import Sequence
 
-import numpy as np
 from numpy.typing import ArrayLike
 
 from tricycle.ops import Op
@@ -238,6 +237,7 @@ class UnaryLog(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
+        # add a small number to avoid dividing by 0
         denominator = self._input + self.REALLY_SMALL_NUMBER
         self._grad = grad.array * xp.divide(1, denominator)
 
