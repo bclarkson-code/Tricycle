@@ -33,9 +33,11 @@ class Tensor:
 
     def __init__(
         self,
-        data: np.ndarray | ArrayLike,
+        array: np.ndarray | ArrayLike,
         requires_grad: bool = False,
         is_batched: bool = False,
+        args: tuple["Tensor", ...] | None = None,
+        back_fns: tuple[Op, ...] | None = None,
         name: str | None = None,
         _id: int | None = None,
     ):
@@ -43,15 +45,17 @@ class Tensor:
         if CUPY_ENABLED:
             import cupy
 
-            if isinstance(data, (np.ndarray, cupy.ndarray)):
-                self.array = data
+            if isinstance(array, (np.ndarray, cupy.ndarray)):
+                self.array = array
             else:
-                self.array = np.array(data)
+                self.array = np.array(array)
         else:
-            self.array = np.array(data)
+            self.array = np.array(array)
 
         self.requires_grad = requires_grad
         self.is_batched = is_batched
+        self.args = args
+        self.back_fns = back_fns
         self.name = name
 
     def _attach_parents(self):
