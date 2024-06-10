@@ -16,7 +16,6 @@ from tricycle.binary import (
     BinaryMin,
     BinaryMultiply,
     BinarySubtract,
-    _shapes_match,
 )
 from tricycle.einsum import EinsumBackOp
 from tricycle.layers import Dense
@@ -36,6 +35,7 @@ from tricycle.unary import (
     UnarySquareRoot,
     UnarySubtract,
 )
+from tricycle.utils import shapes_match
 
 
 @st.composite
@@ -187,12 +187,12 @@ def test_tensor_addition_same_shape(tensors):
     tensor_1, tensor_2 = tensors
 
     try:
-        shapes_match = _shapes_match(tensor_1, tensor_2)
+        _shapes_match = shapes_match(tensor_1, tensor_2)
     except ValueError:
-        shapes_match = False
+        _shapes_match = False
 
     # sourcery skip: no-conditionals-in-tests
-    if not shapes_match:
+    if not _shapes_match:
         assume(False)
 
     result = tensor_1 + tensor_2
@@ -230,12 +230,12 @@ def test_tensor_multiplication(tensors):
     tensor_1, tensor_2 = tensors
 
     try:
-        shapes_match = _shapes_match(tensor_1, tensor_2)
+        _shapes_match = shapes_match(tensor_1, tensor_2)
     except ValueError:
-        shapes_match = False
+        _shapes_match = False
 
     # sourcery skip: no-conditionals-in-tests
-    if not shapes_match:
+    if not _shapes_match:
         assume(False)
 
     result = tensor_1 * tensor_2
@@ -319,10 +319,10 @@ def test_binary_ops(tensors, op):
     tensor_1, tensor_2 = tensors
 
     try:
-        shapes_match = _shapes_match(tensor_1, tensor_2)
+        _shapes_match = shapes_match(tensor_1, tensor_2)
     except ValueError:
-        shapes_match = False
-    assume(shapes_match)
+        _shapes_match = False
+    assume(_shapes_match)
 
     result = op(tensor_1, tensor_2)
 

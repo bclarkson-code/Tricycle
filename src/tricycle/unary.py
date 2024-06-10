@@ -9,7 +9,8 @@ from typing import Sequence
 from numpy.typing import ArrayLike
 
 from tricycle.ops import Op
-from tricycle.tensor import Tensor, nothing
+from tricycle.tensor import Tensor, nothing, select_backend
+from tricycle.utils import shapes_match
 
 
 class UnaryAdd(Op):
@@ -367,4 +368,37 @@ class UnarySum(Op):
             back_fns=(self.back_fn,),
             name="sum",
             is_batched=False,
+        )
+
+
+class UnaryMask(Op):
+    _mask: ArrayLike
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        xp = select_backend(grad.array, self._mask)
+
+        self._grad = xp.where(self._mask, grad.array, 0)
+
+        return Tensor(array=self._grad, is_batched=grad.is_batched)
+
+    def forward(self, tensor: Tensor, mask: Tensor) -> Tensor:
+        """
+        Apply a binary mask to a numpy array, setting values to 0 where
+        the mask is True
+        """
+        xp = select_backend(tensor.array, mask.array)
+        assert shapes_match(tensor, mask)
+        assert (
+            not mask.requires_grad
+        ), "Cannot compute gradient of a binary mask"
+
+        self._out = xp.where(mask.array, tensor.array, 0)
+        self._mask = mask.array
+
+        return Tensor(
+            self._out,
+            args=(tensor,),
+            back_fns=(self.back_fn,),
+            name="umask",
+            is_batched=tensor.is_batched,
         )
