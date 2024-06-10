@@ -22,19 +22,19 @@ class Tensor:
     """
 
     _id: int
-    array: np.ndarray | ArrayLike
+    array: ArrayLike
     args: tuple["Tensor", ...] | None = None
     back_fns: tuple[Op, ...] | None = None
     parents: set["Tensor"] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
-    requires_grad: bool = False
+    requires_grad: bool = True
     is_batched: bool = False
 
     def __init__(
         self,
-        array: np.ndarray | ArrayLike,
-        requires_grad: bool = False,
+        array: ArrayLike,
+        requires_grad: bool = True,
         is_batched: bool = False,
         args: tuple["Tensor", ...] | None = None,
         back_fns: tuple[Op, ...] | None = None,

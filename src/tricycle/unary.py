@@ -87,7 +87,7 @@ class UnaryPower(Op):
     differentiable.
     """
 
-    _input: np.ndarray | ArrayLike
+    _input: ArrayLike
     _constant: float
 
     def back_fn(self, grad: Tensor) -> Tensor:
@@ -146,7 +146,7 @@ class UnaryMax(Op):
     elementwise. The constant is not differentiable.
     """
 
-    _is_bigger: np.ndarray | ArrayLike
+    _is_bigger: ArrayLike
 
     def back_fn(self, grad: Tensor) -> Tensor:
         self._grad = grad.array * self._is_bigger
@@ -233,7 +233,7 @@ class UnaryExp(Op):
 class UnaryLog(Op):
     REALLY_SMALL_NUMBER = 1e-8
 
-    _input: np.ndarray | ArrayLike
+    _input: ArrayLike
 
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
@@ -262,7 +262,7 @@ class UnaryLog(Op):
 
 
 class UnarySin(Op):
-    _input: np.ndarray | ArrayLike
+    _input: ArrayLike
 
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
@@ -290,7 +290,7 @@ class UnarySin(Op):
 
 
 class UnaryCos(Op):
-    _input: np.ndarray | ArrayLike
+    _input: ArrayLike
 
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
@@ -342,7 +342,7 @@ class UnarySum(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        assert xp.isscalar(grad)
+        assert xp.isscalar(grad) or grad.shape == ()
 
         self._grad = xp.full(self._in_shape, grad.array)
 
