@@ -1,8 +1,19 @@
+"""
+The core of Tricycle is the Tensor object, which is implemented in this file.
+A Tensor is a wrapper around a numpy/cupy array that adds automatic 
+differentiation.
+
+The autodiff algorithm itself can be found in `Tensor.backward`.
+
+This file also contains a few other helpful functions like `batch` which
+converts tensors to batched tensors.
+"""
+
 import logging
 import numbers
 import uuid
 import weakref
-from typing import Callable, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -10,9 +21,10 @@ from numpy.typing import ArrayLike
 from tricycle import CUPY_ENABLED
 from tricycle.exceptions import GPUDisabledException
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from tricycle.ops import Op
 
-Op = Callable[..., "Tensor"]
+logger = logging.getLogger(__name__)
 
 
 class Tensor:
@@ -24,7 +36,7 @@ class Tensor:
     _id: int
     array: ArrayLike
     args: tuple["Tensor", ...] | None = None
-    back_fns: tuple[Op, ...] | None = None
+    back_fns: tuple["Op", ...] | None = None
     parents: set["Tensor"] | None = None
     grad: Optional["Tensor"] = None
     name: Optional[str] = None
@@ -37,7 +49,7 @@ class Tensor:
         requires_grad: bool = True,
         is_batched: bool = False,
         args: tuple["Tensor", ...] | None = None,
-        back_fns: tuple[Op, ...] | None = None,
+        back_fns: tuple["Op", ...] | None = None,
         name: str | None = None,
         _id: int | None = None,
     ):
@@ -418,13 +430,17 @@ class Tensor:
         """
         Treat this tensor as a batch of tensors
         """
-        return batch(self)
+        from tricycle.unary import Batch
+
+        return Batch()(self)
 
     def from_batched(self):
         """
         Treat a batched tensor as a normal, non-batched, tensor
         """
-        return unbatch(self)
+        from tricycle.unary import Unbatch
+
+        return Unbatch()(self)
 
     @property
     def on_gpu(self):
@@ -522,53 +538,11 @@ def to_tensor(
     )
 
 
-def batch(tensor: Tensor) -> Tensor:
-    """
-    Tell Tricycle to treat this tensor as a batch of tensors
-    """
-    if tensor.is_batched:
-        return tensor
-
-    result = to_tensor(
-        tensor.array,
-        is_batched=True,
-        requires_grad=tensor.requires_grad,
-        dtype=tensor.array.dtype,
-    )
-    result.args = (tensor,)
-    result.back_fns = (unbatch,)
-    return result
-
-
-def unbatch(tensor: Tensor) -> Tensor:
-    """
-    Tell Tricycle to treat this tensor as a single tensor
-    (not a batch of tensors)
-    """
-    if not tensor.is_batched:
-        return tensor
-
-    result = to_tensor(
-        tensor.array,
-        is_batched=False,
-        requires_grad=tensor.requires_grad,
-        dtype=tensor.array.dtype,
-    )
-    result.args = (tensor,)
-    result.back_fns = (batch,)
-    return result
-
-
-def nothing(tensor):
-    """
-    Return a tensor
-
-    This is used as a dummy to simplify the backpropagation logic
-    """
-    return tensor
-
-
 def select_backend(*tensors: Tensor | np.ndarray | ArrayLike):
+    """
+    Given some tensors, if any of them are on the GPU, return the cupy
+    backend. Otherwise default to the numpy backend
+    """
     if not CUPY_ENABLED:
         return np
 

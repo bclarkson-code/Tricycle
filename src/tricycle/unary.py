@@ -11,8 +11,20 @@ from typing import Sequence
 from numpy.typing import ArrayLike
 
 from tricycle.ops import Op
-from tricycle.tensor import Tensor, nothing, select_backend
+from tricycle.tensor import Tensor, select_backend
 from tricycle.utils import shapes_match
+
+
+def nothing(tensor):
+    """
+    Do nothing to a tensor.
+
+    Operations like addition have a back_fn of multiplying byt 1 which is
+    equivalent to doing nothing. Instead of adding a bunch of checks to see
+    whether a back_fn exists or not, the logic is much simpler by adding this
+    function that does nothing.
+    """
+    return tensor
 
 
 class UnaryAdd(Op):
@@ -401,4 +413,87 @@ class UnaryMask(Op):
             back_fns=(self.back_fn,),
             name="umask",
             is_batched=tensor.is_batched,
+        )
+
+
+def batch(tensor: Tensor) -> Tensor:
+    """
+    Tell Tricycle to treat this tensor as a batch of tensors
+    """
+    if tensor.is_batched:
+        return tensor
+
+    return Tensor(
+        array=tensor.array,
+        name="batch",
+        requires_grad=tensor.requires_grad,
+        is_batched=True,
+        args=(tensor,),
+        back_fns=(unbatch,),
+    )
+
+
+def unbatch(tensor: Tensor) -> Tensor:
+    """
+    Tell Tricycle to treat this tensor as a single tensor
+    (not a batch of tensors)
+    """
+    if not tensor.is_batched:
+        return tensor
+
+    return Tensor(
+        array=tensor.array,
+        name="unbatch",
+        requires_grad=tensor.requires_grad,
+        is_batched=False,
+        args=(tensor,),
+        back_fns=(batch,),
+    )
+
+
+class Batch(Op):
+    is_batched: bool
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        return Tensor(
+            array=grad.array,
+            name="unbatch",
+            requires_grad=grad.requires_grad,
+            is_batched=self.is_batched,
+        )
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        self.is_batched = tensor.is_batched
+
+        return Tensor(
+            array=tensor.array,
+            name="batch",
+            requires_grad=tensor.requires_grad,
+            is_batched=True,
+            args=(tensor,),
+            back_fns=(self.back_fn,),
+        )
+
+
+class Unbatch(Op):
+    is_batched: bool
+
+    def back_fn(self, grad: Tensor) -> Tensor:
+        return Tensor(
+            array=grad.array,
+            name="batch",
+            requires_grad=grad.requires_grad,
+            is_batched=self.is_batched,
+        )
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        self.is_batched = tensor.is_batched
+
+        return Tensor(
+            array=tensor.array,
+            name="unbatch",
+            requires_grad=tensor.requires_grad,
+            is_batched=False,
+            args=(tensor,),
+            back_fns=(self.back_fn,),
         )

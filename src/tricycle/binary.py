@@ -21,8 +21,8 @@ but it is a bit more efficient to give them their own, optimised `Op`s
 from numpy.typing import ArrayLike
 
 from tricycle.ops import Einsum, Op
-from tricycle.tensor import Tensor, nothing, select_backend
-from tricycle.unary import UnaryDivide
+from tricycle.tensor import Tensor, select_backend
+from tricycle.unary import UnaryDivide, nothing
 from tricycle.utils import shapes_match
 
 

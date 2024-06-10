@@ -1,3 +1,16 @@
+"""
+A lot of features of Tricycle are quite hard to test. For example, there are
+a lot of different ways to combine `Op`s. 
+
+To fix this, this file contains several property-based tests where, instead
+of defining a specific situation and checking the output, inputs are generated
+randomly and then the outputs are checked against some predefined properties.
+
+For example, in our tokeniser, we want decode(encode(<some_text>)) to return
+the input so we can build a property based test that tries a whole bunch
+of random inputs and checks that they are unmodified by the decode(encode())
+operation.
+"""
 import numbers
 from warnings import warn
 
@@ -5,7 +18,7 @@ import hypothesis.strategies as st
 import numpy as np
 import pytest
 import torch
-from hypothesis import assume, example, given, settings
+from hypothesis import assume, given, settings
 from hypothesis.extra import numpy as xp
 
 from tricycle import CUPY_ENABLED
@@ -19,7 +32,7 @@ from tricycle.binary import (
 )
 from tricycle.einsum import EinsumBackOp
 from tricycle.layers import Dense
-from tricycle.tensor import batch, nothing, to_tensor, unbatch
+from tricycle.tensor import to_tensor
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
     UnaryAdd,
@@ -34,6 +47,7 @@ from tricycle.unary import (
     UnarySin,
     UnarySquareRoot,
     UnarySubtract,
+    nothing,
 )
 from tricycle.utils import shapes_match
 
@@ -274,17 +288,16 @@ def test_can_batch_and_unbatch(tensor):
     if tensor.requires_grad:
         assert len(unbatched.args) == 1
         assert unbatched.args[0].close_to(tensor, equal_nan=True)
-        assert unbatched.back_fns == (batch,)
 
         assert len(unbatched.args[0].args) == 1
         assert unbatched.args[0].args[0].close_to(tensor, equal_nan=True)
-        assert unbatched.args[0].back_fns == (unbatch,)
 
         assert unbatched.requires_grad
 
 
 @given(tensor())
 def test_can_move_to_and_from_gpu(tensor):
+    # only run this test if we have a gpu enabled
     if not CUPY_ENABLED:
         pytest.skip("GPU not enabled")
     assume(not tensor.on_gpu)
@@ -352,63 +365,3 @@ def test_tokeniser_train_encode_decode(text):
 
     decoded = tokeniser.decode(encoded)
     assert text == decoded
-
-
-@pytest.mark.skip(
-    reason="Fails for large matrices. Could be numeric precision issue"
-)
-@given(tensor(), integer())
-def test_tricycle_dense_matches_pytorch(tensor, out_shape):
-    np.random.seed(0)
-    torch.manual_seed(0)
-    assume(np.isfinite(tensor.array).all())
-
-    from_size = tensor.shape[-1]
-
-    pt_layer = torch.nn.Linear(
-        in_features=from_size,
-        out_features=out_shape,
-        bias=False,
-        dtype=torch.float32,
-    )
-    tr_layer = Dense(from_size=from_size, to_size=out_shape)
-    tr_layer.weights = to_tensor(
-        pt_layer.weight.detach().numpy().T, dtype=np.float32
-    )
-
-    pt_out = pt_layer(torch.tensor(tensor.array))
-    tr_out = tr_layer(tensor)
-
-    pt_out_np = pt_out.detach().numpy()
-    tr_out_np = tr_out.numpy()
-    assert pt_out_np.shape == tr_out_np.shape
-
-    # Not sure why rtol has to be so big here
-    # looks like there are some differences in handling precision that I
-    # can't figure out
-    assert tr_out.close_to(pt_out_np, rtol=1e-2, equal_nan=True)
-
-    pt_out.sum().backward()
-    match (tensor.ndim, tensor.is_batched):
-        case 1, False:
-            tr_out.e("a->").backward()
-        case 2, False:
-            tr_out.e("ab->").backward()
-        case 3, False:
-            tr_out.e("abc->").backward()
-        case 2, True:
-            tr_out.from_batched().e("ab->").backward()
-        case 3, True:
-            tr_out.from_batched().e("abc->").backward()
-        case 4, True:
-            tr_out.from_batched().e("abcd->").backward()
-
-    assert np.allclose(
-        pt_layer.weight.grad.detach().numpy().T,
-        tr_layer.weights.grad.numpy(),
-        rtol=1e-3,
-    )
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
