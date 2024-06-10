@@ -61,7 +61,10 @@ class Tensor:
     def _attach_parents(self):
         """
         Traverse through the graph, labelling each tensor with the tensors that
-        are direct parents to it in the graph
+        are direct parents to it in the graph.
+
+        We're doing this so that we can traverse through the graph later in
+        topological order.
         """
         stack: list["Tensor"] = [self]
 
@@ -82,15 +85,24 @@ class Tensor:
                     # reference
                     arg.parents = weakref.WeakSet()
 
+                # if a node has a parent we haven't visited yet, store it
                 if node not in arg.parents:
                     stack.append(arg)
                     arg.parents.add(node)
 
     def _calculate_gradients(self, clip: float | None = None):
         """
-        Traverse through the graph, calculating gradients along the way such
-        that a child is only visited if the entirety of its parent's gradient
-        has been computed
+        Because every output of an `Op` stores the inputs that were used to
+        make it, we get a tree of intermediate values where the final
+        output of a network is the root node and the inputs are leaves.
+
+        Thanks to the chain rule, we can calculate the derivative of the
+        output wrt an input by moving from the output (root node) to the
+        input, applying each back_fn we go through to get there.
+
+        It turns out that we can minimise calculations by only visiting a
+        child node if all of its parents have been visited through every
+        possible path: a topological sort.
         """
         self.grad = to_tensor(
             self.xp.ones(self.array.shape, dtype=self.dtype),
@@ -103,10 +115,13 @@ class Tensor:
         while stack:
             node = stack.pop()
 
+            # if we have reached an input, we're done along this path
             if node.args is None or node.back_fns is None:
                 continue
 
             for arg, back_fns in zip(node.args, node.back_fns):
+                # if we reach a tensor that does not need gradient computation
+                # (e.g a constant) then we're done along this path
                 if not arg.requires_grad:
                     continue
 
@@ -123,15 +138,17 @@ class Tensor:
 
                 arg.parents.remove(node)
 
-                # calculate gradients
                 try:
+                    # actuall calculate gradient for this node
                     grad = back_fns(node.grad)
 
                     # gradient clipping
+                    # TODO: allow clipping by norm instead of just by value
                     if clip is not None:
                         grad.array = grad.xp.clip(grad.array, -clip, clip)
 
-                    # add gradient
+                    # add current gradient to any gradients we have already
+                    # calculated for this node
                     if arg.grad is None:
                         arg.grad = grad
                     else:
@@ -140,9 +157,10 @@ class Tensor:
                 except Exception as e:
                     raise e
 
-                # only move to arg if we have been to all of its parents
+                # only move to a new node if we have been to all of its parents
                 if len(arg.parents) == 0:
-                    # get rid of the weakref so we can pickle the model
+                    # get rid of the weakref once we're done with a node so we
+                    # can pickle the model. Weakrefs can't be pickled
                     arg.parents = None
                     stack.append(arg)
 
@@ -334,7 +352,7 @@ class Tensor:
     def xp(self):
         return select_backend(self.array)
 
-    def e(self, subscript: str) -> "Tensor":
+    def einsum(self, subscript: str) -> "Tensor":
         """
         Perform an einsum operation on the tensor
         """

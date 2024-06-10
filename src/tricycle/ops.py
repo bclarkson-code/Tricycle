@@ -165,4 +165,4 @@ class Mean(Op):
         if tensor.ndim == 1 and tensor.shape[0] == 1:
             return tensor
 
-        return tensor.e("...a->...") / tensor.shape[-1]
+        return tensor.einsum("...a->...") / tensor.shape[-1]
