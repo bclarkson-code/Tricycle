@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from copy import copy
 from typing import Sequence
 
 from numpy.typing import ArrayLike
@@ -14,13 +13,12 @@ class Op:
     """
 
     _out: ArrayLike | None = None
-    _grad: ArrayLike | None = None
 
-    def __call__(self, tensor: Tensor, *args, **kwargs) -> Tensor:
-        return self.forward(tensor, *args, **kwargs)
+    def __call__(self, *args, **kwargs) -> Tensor:
+        return self.forward(*args, **kwargs)
 
     @abstractmethod
-    def forward(self, tensor: Tensor, *args, **kwargs) -> Tensor:
+    def forward(self, *args, **kwargs) -> Tensor:
         raise NotImplementedError()
 
 
@@ -28,6 +26,7 @@ class Repeat(Op):
     def forward(self, tensor: Tensor, repeats: int):
         """
         Repeat a tensor along its final axis
+
         This is done my multiplying with a ones tensor the same shape as the
         desired output
         """
@@ -67,6 +66,7 @@ class Split(Op):
         xp = grad.xp
         self._grad[idx] = xp.zeros(self._in_shape)
 
+        # TODO: this loop is really slow and should be replaced
         indices = []
         for i in range(self._grad[idx].ndim):
             if i == self._axis % self._grad[idx].ndim:
@@ -98,6 +98,7 @@ class Split(Op):
         self._n_splits = n_splits
         self._grad = [None] * n_splits
 
+        # TODO: this loop is really slow and should be replaced
         results = []
         for idx, result in enumerate(self._out):
             # the back_fn depends on index so we need to
@@ -114,33 +115,49 @@ class Split(Op):
 
 
 class Reshape(Op):
+    """
+    Reshape a tensor. The new shape needs to have the same number of elements
+    as the original, but can have any number of dimensions
+    """
+
     _original_shape: Sequence[int]
 
-    def back_fn(self, grad: Tensor) -> Tensor:  # sourcery skip: assign-if-exp
+    def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
         self._grad = xp.reshape(grad.array, self._original_shape)
-        result = to_tensor(self._grad)
-        result.is_batched = grad.is_batched
-        return result
+
+        return Tensor(array=self._grad, is_batched=grad.is_batched)
 
     def forward(self, tensor: Tensor, shape: Sequence[int]) -> Tensor:
+        """
+        Reshape a tensor. The new shape needs to have the same number of elements
+        as the original, but can have any number of dimensions
+        """
         xp = tensor.xp
+
+        # if the tensor is batched, don't include the first dimension in
+        # the reshape
         if tensor.is_batched:
             shape = [tensor.shape[0]] + list(shape)
 
         self._out = xp.reshape(tensor.array, shape)
         self._original_shape = tensor.shape
 
-        result = to_tensor(self._out)
-        result.args = (tensor,)
-        result.back_fns = (self.back_fn,)
-        result.is_batched = tensor.is_batched
-
-        return result
+        return Tensor(
+            array=self._out,
+            args=(tensor,),
+            back_fns=(self.back_fn,),
+            name="reshape",
+            is_batched=tensor.is_batched,
+        )
 
 
 class Mean(Op):
+    """
+    Find the mean of a tensor along the final axis
+    """
+
     def forward(self, tensor: Tensor) -> Tensor:
         """
         Find the mean of a tensor along the final axis
