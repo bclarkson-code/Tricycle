@@ -93,8 +93,9 @@ class Tensor:
     def _calculate_gradients(self, clip: float | None = None):
         """
         Because every output of an `Op` stores the inputs that were used to
-        make it, we get a tree of intermediate values where the final
-        output of a network is the root node and the inputs are leaves.
+        make it, we can think of the outputs of `Op`s as a tree of
+        intermediate values where the final output of a network is the root
+        node and the inputs are leaves.
 
         Thanks to the chain rule, we can calculate the derivative of the
         output wrt an input by moving from the output (root node) to the
@@ -277,18 +278,6 @@ class Tensor:
     def __itruediv__(self, other):
         return self / other
 
-    def __floordiv__(self, _):
-        raise NotImplementedError("Cannot floor divide")
-
-    def __rfloordiv__(self, _):
-        raise NotImplementedError("Cannot floor divide")
-
-    def __ifloordiv__(self, _):
-        raise NotImplementedError("Cannot floor divide")
-
-    def __mod__(self, _):
-        raise NotImplementedError("Cannot mod")
-
     def __pow__(self, other) -> "Tensor":
         if isinstance(other, self.xp.ndarray) and not isinstance(
             other, Tensor
@@ -311,31 +300,37 @@ class Tensor:
     def __lt__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.array < other.array)
+
         return Tensor(self.array < other)
 
     def __le__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.array <= other.array)
+
         return Tensor(self.array <= other)
 
     def __eq__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.array == other.array)
+
         return Tensor(self.array == other)
 
     def __ne__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.array != other.array)
+
         return Tensor(self.array != other)
 
     def __gt__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.array > other.array)
+
         return Tensor(self.array > other)
 
     def __ge__(self, other):
         if isinstance(other, Tensor):
             return Tensor(self.array >= other.array)
+
         return Tensor(self.array >= other)
 
     def __repr__(self):
@@ -427,7 +422,7 @@ class Tensor:
 
     def from_batched(self):
         """
-        Treat a batched tensor as a normal tensor
+        Treat a batched tensor as a normal, non-batched, tensor
         """
         return unbatch(self)
 
@@ -441,7 +436,7 @@ class Tensor:
 
     def to_gpu(self, device: int = 0):
         """
-        Move this tensor to the GPU
+        Move this tensor to the GPU, if cupy is enabled
         """
         if not CUPY_ENABLED:
             raise GPUDisabledException(
@@ -455,7 +450,7 @@ class Tensor:
 
     def from_gpu(self):
         """
-        Move this tensor from the GPU
+        Move this tensor from the GPU to CPU
         """
         if not CUPY_ENABLED:
             raise GPUDisabledException(
@@ -467,6 +462,9 @@ class Tensor:
         return self
 
     def zero_grad(self):
+        """
+        Remove any gradients or references to other tensors
+        """
         self.grad = None
         self.args = None
         self.back_fns = None
@@ -474,6 +472,9 @@ class Tensor:
         return self
 
     def numpy(self):
+        """
+        Return the underlying array as a numpy array
+        """
         if not CUPY_ENABLED:
             return self.array
 
@@ -488,12 +489,12 @@ def to_tensor(
     requires_grad: bool = True,
     is_batched: bool = False,
     _id: int | None = None,
-    dtype: np.dtype | None = np.float32,
+    dtype: np.dtype | None = None,
     **kwargs,
 ) -> Tensor:
     """
-    Create a new Tensor instance. First, we convert the argument to a numpy
-    array and then to a tensor
+    Create a new Tensor instance. If the input is not a numpy or cupy
+    array, try to convert it to one.
     """
     if CUPY_ENABLED:
         import cupy
@@ -505,8 +506,6 @@ def to_tensor(
             if dtype is not None:
                 array = array.astype(dtype)
         else:
-            if dtype is None:
-                dtype = np.float32
             array = np.asarray(tensor_like, dtype=dtype, **kwargs)
 
     elif isinstance(tensor_like, Tensor):

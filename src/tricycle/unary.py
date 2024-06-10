@@ -93,9 +93,7 @@ class UnaryPower(Op):
     def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        self._grad = xp.power(
-            self._input, self._constant - 1, dtype=self._input.dtype
-        )
+        self._grad = xp.power(self._input, self._constant - 1)
         self._grad *= self._constant * grad.array
 
         return Tensor(array=self._grad, is_batched=grad.is_batched)
