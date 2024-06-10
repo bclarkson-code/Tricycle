@@ -1,6 +1,8 @@
 """
-The Ops that have a single input and output are called Unary Ops
-This file contains all of the unary operations in Tricycle
+The Ops that have a single input and output are called Unary Ops.
+Usually this means that an Operation is applied elementwise.
+
+This file contains all of the unary operations in Tricycle.
 """
 
 import numbers
