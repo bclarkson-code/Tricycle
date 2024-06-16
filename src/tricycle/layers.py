@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Sequence
 
+from numpy._typing import ArrayLike
+
 from tricycle.binary import BinaryMultiply
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
@@ -475,8 +477,37 @@ class RotaryEncode(Layer):
         self.embedding_dim = embedding_dim
         self.n_heads = n_heads
         self.context_window = context_window
+
+        self.head_size = self.context_window // self.n_heads
+
         if theta is not None:
             self.theta = theta
+
+        self.freqs_cos, self.freqs_sin = self.precompute_constants()
+
+    def precompute_constants(self) -> tuple[ArrayLike, ArrayLike]:
+        # this is run at initialisation so we dont get anything from cupy
+        import numpy as np
+
+        # [0, 1, 2, ..., (dim//2) - 1]
+        head_idx = np.arange(0, self.head_size // 2)
+
+        # [0/dim, 2/dim, 4/dim, ... (dim-4) / dim, (dim-2) / dim]
+        power = 2 * head_idx / self.head_size
+        freqs = 1 / (self.theta**power)
+
+        # assign an index to each token
+        token_idx = np.arange(self.context_window)
+
+        # this is a 2d matrix
+        # freqs = t / theta**(2*d / dim)
+        # where t is a token index and d is a head index
+        freqs = np.outer(token_idx, freqs)
+
+        freqs_cos = np.cos(freqs)
+        freqs_sin = np.sin(freqs)
+
+        return freqs_cos, freqs_sin
 
     def forward(self, query: Tensor, key: Tensor) -> tuple[Tensor, Tensor]:
         xp = query.xp
@@ -491,12 +522,18 @@ class RotaryEncode(Layer):
         key_imaginary = key.array[..., 1::2]
 
         # combine the real an imaginary parts together with frequencies
-        query_out_real = query_real * freqs_cos - query_imaginary * freqs_sin
-        query_out_imaginary = (
-            query_real * freqs_sin + query_imaginary * freqs_cos
+        query_out_real = (
+            query_real * self.freqs_cos - query_imaginary * self.freqs_sin
         )
-        key_out_real = key_real * freqs_cos - key_imaginary * freqs_sin
-        key_out_imaginary = key_real * freqs_sin + key_imaginary * freqs_cos
+        query_out_imaginary = (
+            query_real * self.freqs_sin + query_imaginary * self.freqs_cos
+        )
+        key_out_real = (
+            key_real * self.freqs_cos - key_imaginary * self.freqs_sin
+        )
+        key_out_imaginary = (
+            key_real * self.freqs_sin + key_imaginary * self.freqs_cos
+        )
 
         # Interleave the real and imaginary parts
         # back together so we get:
@@ -506,7 +543,7 @@ class RotaryEncode(Layer):
         query_out[..., 0::2] = query_out_real
         query_out[..., 1::2] = query_out_imaginary
 
-        key_out = np.empty(key.shape)
+        key_out = xp.empty(key.shape)
         key_out[..., 0::2] = key_out_real
         key_out[..., 1::2] = key_out_imaginary
 
