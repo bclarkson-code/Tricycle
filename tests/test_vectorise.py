@@ -4,8 +4,9 @@ from tricycle.activation import ReLU
 from tricycle.einsum import Einsum
 from tricycle.functions import Softmax
 from tricycle.layers import Dense, Sequential
-from tricycle.loss import CrossEntropy, mean_square_error
-from tricycle.tensor import batch, to_tensor, unbatch
+from tricycle.loss import mean_square_error
+from tricycle.tensor import to_tensor
+from tricycle.unary import Batch, Unbatch
 
 
 def test_can_batch_single_einsum():
@@ -24,10 +25,10 @@ def test_can_batch_single_einsum():
     assert output_3 == 12
 
     input_batch = to_tensor([input_1, input_2, input_3])
-    input_batch = batch(input_batch)
+    input_batch = Batch()(input_batch)
     op = Einsum("a->")
     output_batch = op(input_batch)
-    output_batch = unbatch(output_batch)
+    output_batch = Unbatch()(output_batch)
 
     assert output_batch.close_to([6, 9, 12])
 
@@ -52,10 +53,10 @@ def test_can_batch_entire_model():
         [output_1.array, output_2.array, output_3.array]
     )
 
-    input_batch = batch(input_batch)
-    correct_output = batch(correct_output)
+    input_batch = Batch()(input_batch)
+    correct_output = Batch()(correct_output)
     output_batch = model(input_batch)
-    output_batch = unbatch(output_batch)
+    output_batch = Unbatch()(output_batch)
 
     assert output_batch.close_to(correct_output)
 
@@ -79,10 +80,10 @@ def test_can_batch_mse():
         np.array([output_1.array, output_2.array, output_3.array]).sum()
     )
 
-    input_y_true = batch(input_y_true)
-    input_batch = batch(input_batch)
+    input_y_true = Batch()(input_y_true)
+    input_batch = Batch()(input_batch)
     output_batch = mean_square_error(input_y_true, input_batch)
-    output_batch = unbatch(output_batch)
+    output_batch = Unbatch()(output_batch)
 
     assert output_batch.close_to(correct_output)
 
@@ -103,9 +104,9 @@ def test_can_batch_softmax():
         np.array([output_1.array, output_2.array, output_3.array])
     )
 
-    input_batch = batch(input_batch)
+    input_batch = Batch()(input_batch)
     output_batch = Softmax()(input_batch)
-    output_batch = unbatch(output_batch)
+    output_batch = Unbatch()(output_batch)
 
     assert output_batch.close_to(correct_output)
 

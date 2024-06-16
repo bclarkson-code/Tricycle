@@ -6,10 +6,15 @@ from numpy._typing import ArrayLike
 from tricycle.binary import BinaryMultiply
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, nothing, to_tensor
+from tricycle.tensor import Tensor, to_tensor
+from tricycle.unary import nothing
 
 
 class Layer(ABC):
+    """
+    A generic Layer object, representing a single operation in a neural network
+    """
+
     tensors: dict[str, Tensor] = {}
     layers: Sequence["Layer"] = []
 

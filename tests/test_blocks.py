@@ -56,9 +56,9 @@ def test_attention_individually():
     v = v.transpose(-3, -2)
 
     # tricycle
-    key = key.reshape(head_shape).e("TNH -> NTH")
-    query = query.reshape(head_shape).e("TNH -> NTH")
-    value = value.reshape(head_shape).e("TNH -> NTH")
+    key = key.reshape(head_shape).einsum("TNH -> NTH")
+    query = query.reshape(head_shape).einsum("TNH -> NTH")
+    value = value.reshape(head_shape).einsum("TNH -> NTH")
 
     assert query.close_to(qu)
     assert key.close_to(k)
@@ -288,7 +288,7 @@ def test_attention_block():
         andrej_result.detach().numpy(), rtol=1e-3, atol=1e-4
     )
 
-    tricycle_loss = tricycle_result.from_batched().e("abc->")
+    tricycle_loss = tricycle_result.from_batched().einsum("abc->")
     andrej_loss = andrej_result.sum()
 
     assert tricycle_loss.close_to(andrej_loss.detach().numpy())
