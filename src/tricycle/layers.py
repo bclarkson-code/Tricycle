@@ -509,42 +509,49 @@ class RotaryEncode(Layer):
 
         return freqs_cos, freqs_sin
 
-    def forward(self, query: Tensor, key: Tensor) -> tuple[Tensor, Tensor]:
-        xp = query.xp
+    def backward(
+        self, grad: Tensor, dout_key: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        xp = grad.xp
+
+        # Split dout_query and dout_key into real and imaginary parts
+        grad_real = grad.array[..., 0::2]
+        grad_imaginary = grad.array[..., 1::2]
+
+        # Compute the gradients with respect to query and key
+        d_query_real = (
+            grad_real * self.freqs_cos + grad_imaginary * self.freqs_sin
+        )
+        d_query_imaginary = (
+            -grad_real * self.freqs_sin + grad_imaginary * self.freqs_cos
+        )
+
+        # Interleave the gradients back together
+        self._grad = xp.empty_like(grad.array)
+        self._grad[..., 0::2] = d_query_real
+        self._grad[..., 1::2] = d_query_imaginary
+
+        return self._grad
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        xp = tensor.xp
 
         # split the final dimension in 2 putting every
         # 2i'th value an a tensor called "real"
         # and every 2i + 1'th value in a tensor called "imaginary"
-        query_real = query.array[..., 0::2]
-        query_imaginary = query.array[..., 1::2]
-
-        key_real = key.array[..., 0::2]
-        key_imaginary = key.array[..., 1::2]
+        real = tensor.array[..., 0::2]
+        imaginary = tensor.array[..., 1::2]
 
         # combine the real an imaginary parts together with frequencies
-        query_out_real = (
-            query_real * self.freqs_cos - query_imaginary * self.freqs_sin
-        )
-        query_out_imaginary = (
-            query_real * self.freqs_sin + query_imaginary * self.freqs_cos
-        )
-        key_out_real = (
-            key_real * self.freqs_cos - key_imaginary * self.freqs_sin
-        )
-        key_out_imaginary = (
-            key_real * self.freqs_sin + key_imaginary * self.freqs_cos
-        )
+        out_real = real * self.freqs_cos - imaginary * self.freqs_sin
+        out_imaginary = real * self.freqs_sin + imaginary * self.freqs_cos
 
         # Interleave the real and imaginary parts
         # back together so we get:
         # real, imaginary, real, imaginary, ...
         # in the final dimension
-        query_out = xp.empty(query.shape)
-        query_out[..., 0::2] = query_out_real
-        query_out[..., 1::2] = query_out_imaginary
+        out = xp.empty(tensor.shape)
+        out[..., 0::2] = out_real
+        out[..., 1::2] = out_imaginary
 
-        key_out = xp.empty(key.shape)
-        key_out[..., 0::2] = key_out_real
-        key_out[..., 1::2] = key_out_imaginary
-
-        return query_out, key_out
+        return out
