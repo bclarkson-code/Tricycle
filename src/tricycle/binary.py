@@ -1,7 +1,7 @@
 """
 In tricycle (because it makes the derivatives easier) we only allow operations
 on two matrices if they are the same shape. We call these `binary` operations.
-Because each binary Op has 2 inputs, they also need two back_fns, one for 
+Because each binary Op has 2 inputs, they also need two back_fns, one for
 each input.
 
 This file contains all of the binary operations in tricycle

@@ -1,6 +1,6 @@
 """
 A lot of features of Tricycle are quite hard to test. For example, there are
-a lot of different ways to combine `Op`s. 
+a lot of different ways to combine `Op`s.
 
 To fix this, this file contains several property-based tests where, instead
 of defining a specific situation and checking the output, inputs are generated
@@ -11,6 +11,7 @@ the input so we can build a property based test that tries a whole bunch
 of random inputs and checks that they are unmodified by the decode(encode())
 operation.
 """
+
 import numbers
 from warnings import warn
 
