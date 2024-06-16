@@ -33,7 +33,7 @@ class StochasticGradientDescent(Optimiser):
         assert tensor.grad is not None
 
         if tensor.grad.is_batched:
-            tensor.grad = tensor.grad.from_batched().e("z...->...")
+            tensor.grad = tensor.grad.from_batched().einsum("z...->...")
 
         grad = self.learning_rate * tensor.grad
 

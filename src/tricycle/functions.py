@@ -5,12 +5,13 @@ from tricycle.unary import UnaryDivide, UnaryExp
 
 
 class Softmax(Op):
-    def backward(self, grad: Tensor) -> Tensor:
+    def back_fn(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
         inner = xp.sum(grad.array * self._out, axis=-1, keepdims=True)
         self._grad = self._out * (grad.array - inner)
-        return to_tensor(
+
+        return Tensor(
             self._grad,
             is_batched=grad.is_batched,
             requires_grad=grad.requires_grad,
@@ -32,13 +33,13 @@ class Softmax(Op):
         denominator = xp.sum(exp, axis=-1, keepdims=True)
         self._out = exp / denominator
 
-        result = to_tensor(self._out)
-        result.args = (tensor,)
-        result.name = "softmax"
-        result.is_batched = tensor.is_batched
-        result.back_fns = (self.backward,)
-
-        return result
+        return Tensor(
+            self._out,
+            args=(tensor,),
+            name="softmax",
+            is_batched=tensor.is_batched,
+            back_fns=(self.back_fn,),
+        )
 
 
 def sigmoid(tensor: Tensor):

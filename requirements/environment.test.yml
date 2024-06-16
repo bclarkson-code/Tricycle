@@ -27,7 +27,7 @@ dependencies:
   - scikit-learn
   - pytest
   - hypothesis
-  - pytorch # we use this to test correctness, not to cheat
+  - pytorch==2 # we use this to test correctness, not to cheat
   - pre-commit
   # install tricycle
   - pip

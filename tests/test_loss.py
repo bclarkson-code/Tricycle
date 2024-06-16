@@ -250,8 +250,8 @@ def test_linear_regression_multi_input_output():
         assert slope.grad is not None
         assert intercept.grad is not None
 
-        slope.grad = slope.grad.from_batched().e("abc->bc")
-        intercept.grad = intercept.grad.from_batched().e("ab->b")
+        slope.grad = slope.grad.from_batched().einsum("abc->bc")
+        intercept.grad = intercept.grad.from_batched().einsum("ab->b")
 
         slope = (slope - slope.grad * learning_rate).zero_grad()
         intercept = (intercept - intercept.grad * learning_rate).zero_grad()
