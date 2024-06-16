@@ -486,7 +486,8 @@ class RotaryEncode(Layer):
         self.freqs_cos, self.freqs_sin = self.precompute_constants()
 
     def precompute_constants(self) -> tuple[ArrayLike, ArrayLike]:
-        # this is run at initialisation so we dont get anything from cupy
+        # this is run once at initialisation so we dont get any benefit from
+        # cupy using
         import numpy as np
 
         # [0, 1, 2, ..., (dim//2) - 1]
@@ -509,29 +510,34 @@ class RotaryEncode(Layer):
 
         return freqs_cos, freqs_sin
 
-    def backward(
-        self, grad: Tensor, dout_key: Tensor
-    ) -> tuple[Tensor, Tensor]:
+    def backward(self, grad: Tensor) -> Tensor:
         xp = grad.xp
 
-        # Split dout_query and dout_key into real and imaginary parts
+        # split the final dimension in 2 putting every
+        # 2i'th value in a tensor called "grad_real"
+        # and every 2i + 1'th value in a tensor called "grad_imaginary"
         grad_real = grad.array[..., 0::2]
         grad_imaginary = grad.array[..., 1::2]
 
-        # Compute the gradients with respect to query and key
-        d_query_real = (
+        input_grad_real = (
             grad_real * self.freqs_cos + grad_imaginary * self.freqs_sin
         )
-        d_query_imaginary = (
+        input_grad_imaginary = (
             -grad_real * self.freqs_sin + grad_imaginary * self.freqs_cos
         )
 
-        # Interleave the gradients back together
-        self._grad = xp.empty_like(grad.array)
-        self._grad[..., 0::2] = d_query_real
-        self._grad[..., 1::2] = d_query_imaginary
+        # Interleave the gradients back together so we get:
+        # real, imaginary, real, imaginary, ...
+        self._grad = xp.empty(grad.shape)
+        self._grad[..., 0::2] = input_grad_real
+        self._grad[..., 1::2] = input_grad_imaginary
 
-        return self._grad
+        return to_tensor(
+            self._grad,
+            requires_grad=grad.requires_grad,
+            name="back_rotary",
+            is_batched=grad.is_batched,
+        )
 
     def forward(self, tensor: Tensor) -> Tensor:
         xp = tensor.xp
