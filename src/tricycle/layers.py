@@ -452,3 +452,62 @@ class Sequential(Layer):
     def from_gpu(self):
         for layer in self.layers:
             layer.from_gpu()
+
+
+class RotaryEncode(Layer):
+    """
+    Apply rotary positional encoding to a key and query
+    """
+
+    embedding_dim: int
+    n_heads: int
+    context_window: int
+    theta: float = 10_000.0
+
+    def __init__(
+        self,
+        embedding_dim: int,
+        n_heads: int,
+        context_window: int,
+        theta: float | None = None,
+    ):
+        super().__init__()
+        self.embedding_dim = embedding_dim
+        self.n_heads = n_heads
+        self.context_window = context_window
+        if theta is not None:
+            self.theta = theta
+
+    def forward(self, query: Tensor, key: Tensor) -> tuple[Tensor, Tensor]:
+        xp = query.xp
+
+        # split the final dimension in 2 putting every
+        # 2i'th value an a tensor called "real"
+        # and every 2i + 1'th value in a tensor called "imaginary"
+        query_real = query.array[..., 0::2]
+        query_imaginary = query.array[..., 1::2]
+
+        key_real = key.array[..., 0::2]
+        key_imaginary = key.array[..., 1::2]
+
+        # combine the real an imaginary parts together with frequencies
+        query_out_real = query_real * freqs_cos - query_imaginary * freqs_sin
+        query_out_imaginary = (
+            query_real * freqs_sin + query_imaginary * freqs_cos
+        )
+        key_out_real = key_real * freqs_cos - key_imaginary * freqs_sin
+        key_out_imaginary = key_real * freqs_sin + key_imaginary * freqs_cos
+
+        # Interleave the real and imaginary parts
+        # back together so we get:
+        # real, imaginary, real, imaginary, ...
+        # in the final dimension
+        query_out = xp.empty(query.shape)
+        query_out[..., 0::2] = query_out_real
+        query_out[..., 1::2] = query_out_imaginary
+
+        key_out = np.empty(key.shape)
+        key_out[..., 0::2] = key_out_real
+        key_out[..., 1::2] = key_out_imaginary
+
+        return query_out, key_out
