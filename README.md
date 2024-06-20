@@ -656,6 +656,7 @@ as well as where it is in the context window.
 
 Putting these operations together, we finally get our input block:
 
+<img width="1419" alt="input_block" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/8f789407-faf6-4a7f-a3ca-593b4777604b">
 
 
 ## Contact
