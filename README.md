@@ -837,8 +837,8 @@ Splitting each vector into multiple head make our variant of attention
 "causal" and splitting our input into 3 pieces that we then combine with each
 other makes our attention "self-attention". Putting this all together, the
 formal name for this variant of attention is "Muti-head causal self attention".
-This entire block is called [MultiHeadSelfAttention](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/blocks.py#L45)
-in tricycle.
+In Tricycle, I've called it [MultiHeadSelfAttention](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/blocks.py#L45).
+
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
