@@ -605,6 +605,35 @@ To build our GPT, we first need to understand it's architecture:
 
 ![smol_gpt_dark_mode](https://github.com/bclarkson-code/Tricycle/assets/57139598/231a5998-1838-4349-b6b9-72a3006bb488)
 
+There are a few important things to note in this diagram. First, the
+transformer is built out of 3 main pieces, the input block, a stack of
+transformer blocks and then an output layer. The input layer turns a list of
+tokens into a list of embeddings (each token get projected to an embedding
+vector). The stack of transformer blocks process the embeddings, but leave
+their shape untouched and then the output converts each embedding into a
+vector that is the same length as the number of tokens in our vocabulary (more
+on this later).
+
+This means that the transformer accepts a fixed number of tokens and predicts
+a fixed number of tokens. The number of tokens it accepts is usually called
+the context window but sometimes called the block size or sequence length.
+
+Also, it means that we can make our transformer bigger or smaller pretty easily
+by simply increasing the number of tokens in our context window, the size of
+our embeddings and the number of transformer blocks in our stack. (There is
+also the number of transformer heads but more on this later too).
+
+#### Input block
+
+We know the input block needs to take a list of tokens as an input and return
+a list of embeddings. We can do this with a dense layer. We can one-hot
+encode a token into a vector of 0's with a single 1 corresponding to the
+token id (e.g `2 -> [0,0,1,0,...,0]`). Then we can pass this through a dense
+layer to convert it from a `1 x vocab_size` vector to a `1 x embedding_size`
+vector.
+
+
+
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
