@@ -648,15 +648,28 @@ When they are given information about where a given token is in the context
 window (e.g is a token at the start, end or somewhere in the middle?). In the
 original [transformer paper](https://arxiv.org/abs/1706.03762), this was done
 by with some sine waves but GPT-2 uses learned embeddings which are
-conceptually simpler (although computationally more expensive). When we pass
-a token through an embedding layer, we also pass the index of the token through
-a different embedding layer and then add the two embeddings together. This way,
-the embedding contains information about which token was passed into the model,
-as well as where it is in the context window.
+conceptually simpler. (Modern langauge models use rotary embeddings which are
+in development). When we pass a token through an embedding layer, we also pass
+the index of the token through a different embedding layer and then add the two
+embeddings together. This way, the embedding contains information about which
+token was passed into the model, as well as where it is in the context window.
 
 Putting these operations together, we finally get our input block:
 
 <img width="1419" alt="input_block" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/8f789407-faf6-4a7f-a3ca-593b4777604b">
+
+#### Transformer Block
+
+The transformer block is the core of a transfomer. It is built from two main
+pieces: an attention block and a multi-layer-perceptron block. Whenever we
+pass some data through one of these sub-blocks, we add whatever the sub-block
+outputs to the input to the block. This is called a residual layer (sometimes
+also called a skip layer). I think of transformers as having a "highway" that
+the embeddings pass along with each sub-block adding extra context. You can
+imagine lower blocks information to the embeddings that are then read by
+blocks further along in the stack. Whether this mental model is helpful remains
+to be seen (and I'd love to be corrected if there is something I'm missing).
+
 
 
 ## Contact
