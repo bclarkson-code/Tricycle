@@ -869,9 +869,9 @@ as a probablility distribution over all tokens where larger numbers mean that
 the model thinks a token is more likely to come next and smaller numbers mean
 that the model thinks a token is less likely to come next.
 
-### Training a Language model
-
-
+<!-- ### Training a Language model -->
+<!---->
+<!-- Now we've built our langauge model, we need to actually train it.  -->
 
 
 
