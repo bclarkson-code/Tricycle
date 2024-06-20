@@ -603,7 +603,7 @@ GPUs, we'll be training a smaller (49M parameter) version.
 
 To build our GPT, we first need to understand it's architecture:
 
-![smol_gpt](https://github.com/bclarkson-code/Tricycle/assets/57139598/45be8b80-9842-458e-9ed0-96202c70cd7b)
+![smol_gpt_dark_mode](https://github.com/bclarkson-code/Tricycle/assets/57139598/6b23e3ae-6765-4240-bad1-c8655f1709ba)
 
 
 ## Contact
