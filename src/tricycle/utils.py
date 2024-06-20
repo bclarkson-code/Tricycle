@@ -1,7 +1,7 @@
 import time
 from abc import abstractmethod
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 import humanize
 import numpy as np
@@ -9,7 +9,10 @@ import numpy as np
 from tricycle import CUPY_ENABLED
 from tricycle.configs import SmolGPTConfig
 from tricycle.exceptions import GPUDisabledException
-from tricycle.models import GPT
+
+if TYPE_CHECKING:
+    from tricycle.models import GPT
+    from tricycle.tensor import Tensor
 
 
 class Dataset:
@@ -27,6 +30,33 @@ class Dataset:
 
     def __next__(self):
         return self.__getitem__(next(iter(self)))
+
+
+def shapes_match(tensor_1: "Tensor", tensor_2: "Tensor") -> bool:
+    """
+    Binary operations can only be performed if the matrices are the same shape
+    This function checks that we are allowed to apply a binary Op.
+    """
+    # sourcery skip: assign-if-exp, merge-duplicate-blocks, remove-redundant-if
+    if tensor_1.is_batched and tensor_2.is_batched:
+        shape_1 = tensor_1.shape
+        shape_2 = tensor_2.shape
+    elif tensor_1.is_batched:
+        shape_1 = tensor_1.shape[1:]
+        shape_2 = tensor_2.shape
+    elif tensor_2.is_batched:
+        shape_1 = tensor_1.shape
+        shape_2 = tensor_2.shape[1:]
+    else:
+        shape_1 = tensor_1.shape
+        shape_2 = tensor_2.shape
+
+    if shape_1 != shape_2:
+        raise ValueError(
+            f"Shapes {shape_1} and {shape_2} do not match: "
+            f"{tensor_1.array.shape}, {tensor_2.array.shape}"
+        )
+    return shape_1 == shape_2
 
 
 def smooth(iterable: Iterable, factor: float):
@@ -80,7 +110,7 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
         )
 
 
-def optimal_n_tokens(model: GPT, config: SmolGPTConfig):
+def optimal_n_tokens(model: "GPT", config: SmolGPTConfig):
     """
     Use corrected chinchilla scaling to estimate the compute-optimal number of
     tokens to train on.

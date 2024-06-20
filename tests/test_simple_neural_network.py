@@ -110,7 +110,7 @@ def test_can_train_simple_neural_network_gpu():
         y_out = y_out.to_gpu()
 
         y_pred = model(x_in)
-        loss = loss_fn(y_out, y_pred).from_batched().e("a->") / BATCH_SIZE
+        loss = loss_fn(y_out, y_pred).from_batched().einsum("a->") / BATCH_SIZE
         loss.backward()
 
         model.update(optimiser)
