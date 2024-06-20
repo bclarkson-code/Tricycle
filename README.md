@@ -1,24 +1,24 @@
 # Tricycle
+
 <p align="center">
     <img width="223" alt="tricycle_logo" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/62405944-b27b-49bc-93c3-17ba93fc8ad7">
 </p>
 
-Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and numpy.
+Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and Numpy.
 
 The file `train_smol_gpt.py` trains a 49M parameter, GPT-2 style language model that can produce passable python code in ~2 days on a single RTX 3090.
 
-The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + numpy code.
+The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + Numpy code.
 
-Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a Cuda-capable GPU or a CPU.
-
-
+Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a CUDA-capable GPU or a CPU.
 
 ## Table of Contents
-
-- [Installation](#installation)
+- [Tricycle](#tricycle)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
     - [CPU Installation](#cpu-installation)
-- [Training a GPT on shakespeare](#training-a-gpt-on-shakespeare)
-- [How it works](#how-it-works)
+  - [Training a GPT on Shakespeare](#training-a-gpt-on-shakespeare)
+  - [How it works](#how-it-works)
     - [Automatic Differentiation](#automatic-differentiation)
     - [Einsum](#einsum)
       - [Summing along an axis](#summing-along-an-axis)
@@ -34,12 +34,20 @@ Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a Cuda-capa
         - [Inplace tensor updates](#inplace-tensor-updates)
         - [Mathematical optimisations](#mathematical-optimisations)
         - [Hardware optimisations](#hardware-optimisations)
-- [Contact](#contact)
+    - [Building a Language model](#building-a-language-model)
+      - [Input block](#input-block)
+      - [Transformer Block](#transformer-block)
+      - [Attention Block](#attention-block)
+      - [MLP Block](#mlp-block)
+      - [Output](#output)
+  - [Contact](#contact)
 
 ## Installation
+
 Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, optimisation efforts have been focussed on GPU computation so it is pretty slow. If you do have a CUDA capable GPU I would strongly recommend installing the gpu version of Tricycle.
 
 If you have a CUDA capable GPU, you can install Tricycle as follows.
+
 ```bash
 conda env create -f environment.yml -n tricycle
 conda activate tricycle
@@ -55,21 +63,25 @@ conda activate tricycle
 ```
 
 ### CPU Installation
+
 If you want to install Tricycle for CPU, you can do the following.
+
 ```bash
 conda env create -f environment.cpu.yml -n tricycle
 conda activate tricycle
 ```
 
 If you want to install test dependencies on CPU you can do the following.
+
 ```bash
 conda env create -f environment.cpu.test.yml -n tricycle
 conda activate tricycle
 ```
+
 </details>
 
-
 ## Training a GPT on Shakespeare
+
 The following toy script will train a small GPT to generate convincing Shakespeare.
 On my RTX 3090, this takes ~30 mins. For a more realistic training script with metric tracking, gradient accumulation, a validation dataset etc, take a look at `train_smol_gpt.py`
 
@@ -126,6 +138,7 @@ for step in loading_bar:
 with open("model.pkl", "wb") as f:
     pickle.dump(model, f)
 ```
+
 Once trained, you can generate infinite shakespeare plays as follows:
 
 ```bash
@@ -133,7 +146,8 @@ python inference.py model.pkl
 ```
 
 ## How it works
-Tricycle code centers around objects called `Tensors`. A `Tensor` is a wrapper around a numpy array that adds some extra features:
+
+Tricycle code centers around objects called `Tensors`. A `Tensor` is a wrapper around a Numpy array that adds some extra features:
 
 ```python
 from tricycle.tensor import to_tensor
@@ -162,7 +176,8 @@ print(Softmax()(a)) # Output: Tensor([0.09003057 0.24472848 0.66524094], name=so
 ```
 
 ### Automatic Differentiation
-Unlike vanilla numpy, every operation in Tricycle is attached to a derivative.
+
+Unlike vanilla Numpy, every operation in Tricycle is attached to a derivative.
 When you do some operations on your `Tensor`, Tricycle keeps track of what you did and allows you to differentiate the output.
 
 ```python
@@ -216,15 +231,15 @@ assert input.grad.shape == (4,32,32)
 ```
 
 When you run an operation (`Op`), the output has two pieces of information attached:
- - `args`: The inputs to the function
- - `back_fns`: The functions that should be executed to calculate the derivative wrt each of the inputs
+
+- `args`: The inputs to the function
+- `back_fns`: The functions that should be executed to calculate the derivative wrt each of the inputs
 
 Surprisingly, this all that you need to perform automatic differentiation on an arbitrarily complicated sequence of `Op`s.
 Because we keep track of the `args` for each operation, we can start at the output of a set of `Op`s and traverse through them to reach every input to the sequence: the operations form a tree.
 
 Thanks to the [chain rule](https://en.wikipedia.org/wiki/Chain_rule), if we apply each `back_fn` that we pass through on our way through the tree, when we get to an input, we will have calculated the derivative of the output wrt the input.
 Despite implementing it myself, I still feel like this couldn't possibly work, and yet it does!
-
 
 The entirety of the algorithm can be found in [`tensor.py`](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/tensor.py#L145).
 
@@ -254,21 +269,24 @@ print(Einsum("ij->ji")(a)) # Output: Tensor([[1. 3.], [2. 4.]], name=einsum ij->
 Here, we use einsum to swap indices i and j: a transpose.
 
 There are only two rules to remember with einsum:
- - If an index does not appear in the output, any inputs that contain it
-   will be summed along that axis:
-    ```python
-    print(Einsum("ij->i")(a)) # Tensor([3. 7.], name=einsum ij->i)
-    ```
 
- - If an index appears in more than one input, the tensors will be multiplied
-   along that axis
+- If an index does not appear in the output, any inputs that contain it
+  will be summed along that axis:
 
-    ```python
-    b = to_tensor([[5,6],[7,8])
-    print(Einsum("ij,jk->ik")(a,b)) # Tensor([[19. 22.], [43. 50.]], name=einsum ij,jk->ik)
-    ```
+  ```python
+  print(Einsum("ij->i")(a)) # Tensor([3. 7.], name=einsum ij->i)
+  ```
+
+- If an index appears in more than one input, the tensors will be multiplied
+  along that axis
+
+  ```python
+  b = to_tensor([[5,6],[7,8])
+  print(Einsum("ij,jk->ik")(a,b)) # Tensor([[19. 22.], [43. 50.]], name=einsum ij,jk->ik)
+  ```
 
 For example:
+
 #### Summing along an axis
 
 https://github.com/bclarkson-code/Tricycle/assets/57139598/c575c958-19ed-4406-8a1b-d2390663ba96
@@ -285,14 +303,14 @@ https://github.com/bclarkson-code/Tricycle/assets/57139598/f8b35a6b-f102-44f1-a7
 
 https://github.com/bclarkson-code/Tricycle/assets/57139598/1ed18428-11de-4990-a0f4-12d1310d6898
 
-Becuase every `Op` in Tricycle needs a derivative, we need to figure out what the
+Because every `Op` in Tricycle needs a derivative, we need to figure out what the
 derivative of `Einsum` is. Thankfully, if you sit down and go through the
 maths (index notation is really helpful here) you'll find that you can follow
 these two, really simple rules to differentiate an einsum operation wrt a
 given input:
 
- - Swap the indices for the input and output
- - Replace the original input with your current derivative
+- Swap the indices for the input and output
+- Replace the original input with your current derivative
 
 For example, the derivative of a transpose works like this:
 
@@ -338,10 +356,9 @@ layer = Dense(from_size=3, to_size=1)
 print(layer(x)) # Output: Tensor([-2.238703], name=dense)
 ```
 
-Next, neural networks need a nonlinearity (otherwise they reduce to expensive linear regressions).
+Next, neural networks need a non-linearity (otherwise they reduce to expensive linear regressions).
 
-Tricycle has a few [nonlinearities](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/activation.py) (also called activation functions). Here we can choose the simplest: `ReLU`.
-
+Tricycle has a few [non-linearities](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/activation.py) (also called activation functions). Here we can choose the simplest: `ReLU`.
 
 ```python
 from tricycle.activation import ReLU
@@ -410,7 +427,7 @@ np.random.seed(42)
 X, y = load_iris(return_X_y=True)
 inputs = to_tensor(X, is_batched=True)
 
-# The class labels need to be ints for crossentropy
+# The class labels need to be ints for cross entropy
 outputs = to_tensor(y, is_batched=True, dtype=int)
 
 # create a model
@@ -445,6 +462,7 @@ Deep learning is famously computationally heavy. If we want to train anything
 in a reasonable amount of time, there are several optimisations we need to make.
 
 #### Batching
+
 The first, and arguably most important, optimisation is batching. Instead of
 applying operations to each input individually, if we are clever about how we design
 an operation, we can apply an operation to multiple operations at once.
@@ -470,20 +488,21 @@ output = Einsum('aij,jk->aik')(inputs, weights)
 
 Which is more than 2x faster.
 
-Some `Op`s in tricycle behave slightly differenly, depending on
+Some `Op`s in tricycle behave slightly differently, depending on
 whether a tensor batched or not. You can tell tricycle to use the batched
 version of `Op`s for a tensor by simply calling `.to_batched`. To convert it
 back, you can call `.from_batched`.
 
 #### GPU
+
 As well as batching, another improvement that has a big impact on performance
 is using a GPU. For this, we can use a library called [CuPY](https://cupy.dev/).
-CuPY lets you run numpy code on a GPU. This means that we can use the same code
+CuPY lets you run Numpy code on a GPU. This means that we can use the same code
 for CPU as well as GPU computation which greatly simplifies the codebase (
 and avoids me needing to write CUDA kernels, for now).
 
 Every tensor in tricycle has an `.xp` method. By default, this is just the
-numpy library:
+Numpy library:
 
 ```
 import numpy as np
@@ -493,7 +512,7 @@ tensor = to_tensor([1,2,3])
 assert tensor.xp == np
 ```
 
-But if you call `.to_gpu` on a tensor, this is the cupy library:
+But if you call `.to_gpu` on a tensor, this is the Cupy library:
 
 ```
 import cupy as cp
@@ -533,7 +552,7 @@ def forward(self, tensor: Tensor):
     return result
 ```
 
-Becuase cupy has the same interface as numpy, this function will automatically
+Because Cupy has the same interface as Numpy, this function will automatically
 run on the right device, with no code changes.
 
 #### Fusing
@@ -569,20 +588,24 @@ would usually have 10s of intermediate values, with a single `forward` and
 `backward` function with a minimal set of intermediate values.
 
 #### Other optimisations
+
 While batching, using a GPU and fusing are the major optimisations, I'd like
-to provide some honorable mentions.
+to provide some honourable mentions.
 
 ##### Inplace tensor updates
+
 While probably obvious to many readers, updating tensors in-place rather than
-replacing them with a new tensor caused a big speedup.
+replacing them with a new tensor caused a big speed up.
 
 ##### Mathematical optimisations
+
 Operations like `CrossEntropy` can be implemented by applying a softmax and then
-applying the crossentropy operation but, if you do a bit of algebra,
+applying the cross entropy operation but, if you do a bit of algebra,
 you can do something called the `log-sum-exp` trick to simplify the expression
 and cut down on the computations needed.
 
 ##### Hardware optimisations
+
 As mentioned above, the GPU computation was performed on an NVIDIA RTX 3090.
 Understandably, this gets quite hot when training (probably something to do with
 it being in my cupboard?) which can reduce performance due to thermal
@@ -594,6 +617,7 @@ a household fan on top, I get about 30% better performance.
 Putting all of these things together, Tricycle can train a small language model on shakespeare in ~30 mins. Andrej Karpathy can [do this in pytorch](https://github.com/karpathy/nanoGPT/tree/master) in around 7 minutes on my machine (with a like-for-like config) which, given that the entire Tricycle project is in python, means that Tricycle is surprisingly fast. That said, more work is needed to get the speed up.
 
 ### Building a Language model
+
 Now that we've got an automatic differentiation engine, we can start actually
 doing things with it. GPT 2 was arguably the first to use the modern stack for
 language generation. Even modern state of the art models like llama3 use the
@@ -601,9 +625,8 @@ same basic architecture and training methods, with only a few small tweaks
 (e.g swapping layer norm with rms norm). Because I don't have access to many
 GPUs, we'll be training a smaller (49M parameter) version.
 
-To build our GPT, we first need to understand it's architecture:
-
-![GPT diagram](https://github.com/bclarkson-code/Tricycle/assets/GPT.svg)
+To build our GPT, we first need to understand its architecture:
+![GPT](https://github.com/bclarkson-code/Tricycle/assets/57139598/14b16802-2bfd-4d10-99b9-168e5cc6290e)
 
 There are a few important things to note in this diagram. First, the
 transformer is built out of 3 main pieces, the input block, a stack of
@@ -634,7 +657,7 @@ vector.
 
 ![embeding_layer](https://github.com/bclarkson-code/Tricycle/assets/57139598/b0157816-b797-452a-b2aa-090b3305141b)
 
-However, this is a very exprensive operation. For each token, we need to
+However, this is a very expensive operation. For each token, we need to
 do a multiplication by a `vocab_size x embedding_size` matrix. However,
 we can notice that the one-hot encoded vector is almost entirely 0's. If
 you go through the algebra, this means that the matrix multiplication is
@@ -648,7 +671,7 @@ When they are given information about where a given token is in the context
 window (e.g is a token at the start, end or somewhere in the middle?). In the
 original [transformer paper](https://arxiv.org/abs/1706.03762), this was done
 by with some sine waves but GPT-2 uses learned embeddings which are
-conceptually simpler. (Modern langauge models use rotary embeddings which are
+conceptually simpler. (Modern language models use rotary embeddings which are
 in development). When we pass a token through an embedding layer, we also pass
 the index of the token through a different embedding layer and then add the two
 embeddings together. This way, the embedding contains information about which
@@ -660,7 +683,7 @@ Putting these operations together, we finally get our input block:
 
 #### Transformer Block
 
-The transformer block is the core of a transfomer. It is built from two main
+The transformer block is the core of a transformer. It is built from two main
 pieces: an attention block and a multi-layer-perceptron block. Whenever we
 pass some data through one of these sub-blocks, we add whatever the sub-block
 outputs to the input to the block. This is called a residual layer (sometimes
@@ -695,7 +718,7 @@ heading towards:
 
 The first thing we do is to pass the input embedding through a dense layer
 to make each embedding 3 times longer than it used to be. Then we split the
-resulting embedding into 3 separate peices, unhelpfully called the key, query
+resulting embedding into 3 separate pieces, unhelpfully called the key, query
 and value vectors. Because we projected each embedding before splitting,
 each of the new vectors is the same length as the original input. We won't
 use the value vector until later so we'll focus on the key and query vectors
@@ -735,7 +758,7 @@ attention = xp.einsum("BNIh, BNJh -> BNIJ", query, key)
 attention = attention / self.divisor
 ```
 
-I'd strongly reccommend having a play around with the code here to get a feel
+I'd strongly recommend having a play around with the code here to get a feel
 for what these operations actually do.
 
 Next, we need to digress slightly into how we train the model. To get our
@@ -759,7 +782,7 @@ the original `n_tokens x embedding_dim` shape we started with. For reasons
 that I'm unclear about, we pass this output through a dense layer and
 optionally apply dropout if we want to regularise our model.
 
-And thats it. My implementation of attention (without the dense layer on
+And that's it. My implementation of attention (without the dense layer on
 the end) is as follows:
 
 ```python
@@ -768,7 +791,7 @@ def forward(self, tensor: Tensor):
 
     assert tensor.is_batched
 
-    # split the input into 3 peices
+    # split the input into 3 pieces
     self._input = tensor
     query = tensor[:, :, : self.embedding_dim]
     key = tensor[:, :, self.embedding_dim : self.embedding_dim * 2]
@@ -837,7 +860,7 @@ Splitting each vector into multiple head make our variant of attention
 "multi-head". Applying a mask to hide future tokens makes our attention
 "causal" and splitting our input into 3 pieces that we then combine with each
 other makes our attention "self-attention". Putting this all together, the
-formal name for this variant of attention is "Muti-head causal self attention".
+formal name for this variant of attention is "Multi-head causal self attention".
 In Tricycle, I've called it [MultiHeadSelfAttention](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/blocks.py#L45).
 
 #### MLP Block
@@ -847,9 +870,9 @@ of attention as letting different embedding vectors interact with each other,
 You can think of the MLP block as adding information to each embedding
 individually. First, we pass each embedding through a Dense layer that projects
 it into a bigger vector. This is was chosen to be 4 times longer than the
-original vector in the GPT-2 paper so thats what we're using.
+original vector in the GPT-2 paper so that's what we're using.
 
-Next, we pass it through a nonlinearity. This step is really important because
+Next, we pass it through a non-linearity. This step is really important because
 if you skip this step, mathematically, your MLP block reduces to a single (very
 expensive) matrix multiplication and performance plummets. In GPT-2 we're
 using [GeLU](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/activation.py#L24)
@@ -865,16 +888,14 @@ Finally, once we've embedded our tokens and passed them through a stack of
 transformer blocks, all that remains is to turn the embeddings back into
 tokens. We can do this by passing them through a dense layer to turn each
 embedding into a `1 x vocab_size` vector. We can treat each of these outputs
-as a probablility distribution over all tokens where larger numbers mean that
+as a probability distribution over all tokens where larger numbers mean that
 the model thinks a token is more likely to come next and smaller numbers mean
 that the model thinks a token is less likely to come next.
 
-### Training a Language model
-
-
-
-
-
+<!-- ### Training a Language model -->
+<!---->
+<!-- Now we've built our langauge model, we need to actually train it.  -->
 
 ## Contact
+
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
