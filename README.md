@@ -899,19 +899,19 @@ that the model thinks a token is less likely to come next.
 ## What's Next?
 
  - Documentation
-    [ ] Explain how to train a language model
-    [ ] Explain the tokeniser
+     - [ ] Explain how to train a language model
+     - [ ] Explain the tokeniser
 
  - Code
-    [ ] Rotary Embeddings
-    [ ] Test RMS Norm
-    [ ] Multi-GPU support
-    [ ] Optimise and use the tokeniser
+     - [ ] Rotary Embeddings
+     - [ ] Test RMS Norm
+     - [ ] Multi-GPU support
+     - [ ] Optimise and use the tokeniser
 
  - Experiments
-    [ ] Try a language dataset rather than pure code
-    [ ] Build a LLama style model
-    [ ] Build a bigger langauge model (GPT-2 sized?)
+     - [ ] Try a language dataset rather than pure code
+     - [ ] Build a LLama style model
+     - [ ] Build a bigger langauge model (GPT-2 sized?)
 
 <!-- ### Training a Language model -->
 <!---->
