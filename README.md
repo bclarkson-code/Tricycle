@@ -632,6 +632,7 @@ token id (e.g `2 -> [0,0,1,0,...,0]`). Then we can pass this through a dense
 layer to convert it from a `1 x vocab_size` vector to a `1 x embedding_size`
 vector.
 
+![embeding_layer](https://github.com/bclarkson-code/Tricycle/assets/57139598/b0157816-b797-452a-b2aa-090b3305141b)
 
 
 
