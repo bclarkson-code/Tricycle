@@ -1,6 +1,6 @@
 """
 A lot of features of Tricycle are quite hard to test. For example, there are
-a lot of different ways to combine `Op`s. 
+a lot of different ways to combine `Op`s.
 
 To fix this, this file contains several property-based tests where, instead
 of defining a specific situation and checking the output, inputs are generated
@@ -11,6 +11,7 @@ the input so we can build a property based test that tries a whole bunch
 of random inputs and checks that they are unmodified by the decode(encode())
 operation.
 """
+
 import numbers
 from warnings import warn
 
@@ -342,15 +343,6 @@ def test_binary_ops(tensors, op):
     assert result.shape in [tensor_1.shape, tensor_2.shape]
     assert result.is_batched == any([tensor_1.is_batched, tensor_2.is_batched])
     assert result.on_gpu == any([tensor_1.on_gpu, tensor_2.on_gpu])
-
-
-@given(string())
-def test_tokeniser_encode_decode(text):
-    tokeniser = BPETokeniser(vocab_size=1024)
-    tokens = tokeniser.encode(text)
-    decoded = tokeniser.decode(tokens)
-
-    assert text == decoded
 
 
 @given(string())

@@ -533,14 +533,13 @@ class RotaryEncode(Layer):
 
         # Interleave the gradients back together so we get:
         # real, imaginary, real, imaginary, ...
-        self._grad = xp.empty(grad.shape)
-        self._grad[..., 0::2] = input_grad_real
-        self._grad[..., 1::2] = input_grad_imaginary
+        out = xp.empty(grad.shape)
+        out[..., 0::2] = input_grad_real
+        out[..., 1::2] = input_grad_imaginary
 
-        return to_tensor(
-            self._grad,
-            requires_grad=grad.requires_grad,
-            name="back_rotary",
+        return Tensor(
+            array=out,
+            name="back_rotary_encode",
             is_batched=grad.is_batched,
         )
 
@@ -565,4 +564,10 @@ class RotaryEncode(Layer):
         out[..., 0::2] = out_real
         out[..., 1::2] = out_imaginary
 
-        return out
+        return Tensor(
+            array=out,
+            args=(tensor,),
+            back_fns=(self.backward,),
+            name="rotary_encode",
+            is_batched=tensor.is_batched,
+        )

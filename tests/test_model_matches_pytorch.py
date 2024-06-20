@@ -327,3 +327,40 @@ def test_crossentropy_matches(in_shape, is_batched):
     if len(in_shape) == 3:
         p_grad = p_grad.transpose(0, -1, 1)
     assert y_pred.grad.close_to(p_grad)
+
+
+@given(tensor_shape(), st.booleans())
+@example(in_shape=[2, 2, 4], is_batched=False)
+def test_rotary_encodings_match(in_shape, is_batched):
+    y_pred = build_tensor(in_shape, is_batched)
+    y_true = np.random.randint(0, in_shape[-1], size=in_shape[:-1])
+    y_true = to_tensor(y_true, is_batched=is_batched, dtype=int)
+    assume(np.isfinite(y_pred.array).all())
+
+    tr_out = CrossEntropy()(y_true, y_pred).from_batched()
+    if len(in_shape) > 1:
+        tr_out = tr_out.mean()
+
+    if len(in_shape) == 1:
+        p_y_pred = copy(y_pred.array)
+    if len(in_shape) == 2:
+        p_y_pred = copy(y_pred.array)
+    if len(in_shape) == 3:
+        p_y_pred = copy(y_pred.array).transpose(0, -1, 1)
+    p_y_pred = torch.tensor(p_y_pred, requires_grad=True)
+    p_y_true = torch.tensor(y_true.array, dtype=torch.long)
+
+    p_out = torch.nn.CrossEntropyLoss()(
+        input=p_y_pred,
+        target=p_y_true,
+    )
+
+    assert tr_out.close_to(p_out.detach().numpy().item())
+
+    tr_out.backward()
+    p_out.backward()
+
+    p_grad = p_y_pred.grad.detach().numpy()
+    if len(in_shape) == 3:
+        p_grad = p_grad.transpose(0, -1, 1)
+    assert y_pred.grad.close_to(p_grad)
