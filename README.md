@@ -625,7 +625,7 @@ same basic architecture and training methods, with only a few small tweaks
 (e.g swapping layer norm with rms norm). Because I don't have access to many
 GPUs, we'll be training a smaller (49M parameter) version.
 
-To build our GPT, we first need to understand it's architecture:
+To build our GPT, we first need to understand its architecture:
 ![GPT](https://github.com/bclarkson-code/Tricycle/assets/57139598/14b16802-2bfd-4d10-99b9-168e5cc6290e)
 
 There are a few important things to note in this diagram. First, the
