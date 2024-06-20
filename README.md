@@ -643,6 +643,19 @@ for token `t`, the output is the `t`th row in the matrix. Returning a single
 row from a matrix is dramatically faster than doing a matrix multiplication so
 we'll do that instead. We can wrap this logic up in a new layer: [Embedding](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L365).
 
+We aren't quite done with the input block however. Transformers perform better
+When they are given information about where a given token is in the context
+window (e.g is a token at the start, end or somewhere in the middle?). In the
+original [transformer paper](https://arxiv.org/abs/1706.03762), this was done
+by with some sine waves but GPT-2 uses learned embeddings which are
+conceptually simpler (although computationally more expensive). When we pass
+a token through an embedding layer, we also pass the index of the token through
+a different embedding layer and then add the two embeddings together. This way,
+the embedding contains information about which token was passed into the model,
+as well as where it is in the context window.
+
+Putting these operations together, we finally get our input block:
+
 
 
 ## Contact
