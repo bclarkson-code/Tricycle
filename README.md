@@ -688,6 +688,7 @@ other embeddings.
 Because this section gets a bit hairy it'll be helpful to see the goal we're
 heading towards:
 
+![attention_block](https://github.com/bclarkson-code/Tricycle/assets/57139598/17a79e58-d145-4a02-8772-c3dc98e81d2a)
 
 
 
