@@ -632,15 +632,15 @@ To build our GPT, we first need to understand its architecture:
 There are a few important things to note in this diagram. First, the
 transformer is built out of 3 main pieces, the input block, a stack of
 transformer blocks and then an output layer. The input layer turns a list of
-tokens into a list of embeddings (each token get projected to an embedding
+tokens into a list of embeddings (each token gets projected to an embedding
 vector). The stack of transformer blocks process the embeddings, but leave
-their shape untouched and then the output converts each embedding into a
+their shape untouched and then the output layer converts each embedding into a
 vector that is the same length as the number of tokens in our vocabulary (more
 on this later).
 
 This means that the transformer accepts a fixed number of tokens and predicts
 a fixed number of tokens. The number of tokens it accepts is usually called
-the context window but sometimes called the block size or sequence length.
+the context window but is sometimes called the block size or sequence length.
 
 Also, it means that we can make our transformer bigger or smaller pretty easily
 by simply increasing the number of tokens in our context window, the size of
@@ -651,12 +651,10 @@ also the number of transformer heads but more on this later too).
 
 We know the input block needs to take a list of tokens as an input and return
 a list of embeddings. We can do this with a dense layer. We can one-hot
-encode a token into a vector of 0's with a single 1 corresponding to the
+encode a token into a vector of 0s with a single 1 corresponding to the
 token id (e.g `2 -> [0,0,1,0,...,0]`). Then we can pass this through a dense
 layer to convert it from a `1 x vocab_size` vector to a `1 x embedding_size`
 vector.
-
-![embeding_layer](https://github.com/bclarkson-code/Tricycle/assets/57139598/b0157816-b797-452a-b2aa-090b3305141b)
 
 However, this is a very expensive operation. For each token, we need to
 do a multiplication by a `vocab_size x embedding_size` matrix. However,
@@ -666,6 +664,8 @@ actually equivalent to simply returning a row from the weights matrix. That is,
 for token `t`, the output is the `t`th row in the matrix. Returning a single
 row from a matrix is dramatically faster than doing a matrix multiplication so
 we'll do that instead. We can wrap this logic up in a new layer: [Embedding](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L365).
+
+![embeding_layer](https://github.com/bclarkson-code/Tricycle/assets/57139598/b0157816-b797-452a-b2aa-090b3305141b)
 
 We aren't quite done with the input block however. Transformers perform better
 When they are given information about where a given token is in the context
@@ -690,9 +690,10 @@ pass some data through one of these sub-blocks, we add whatever the sub-block
 outputs to the input to the block. This is called a residual layer (sometimes
 also called a skip layer). I think of transformers as having a "highway" that
 the embeddings pass along with each sub-block adding extra context. You can
-imagine lower blocks information to the embeddings that are then read by
-blocks further along in the stack. Whether this mental model is helpful remains
-to be seen (and I'd love to be corrected if there is something I'm missing).
+imagine lower blocks adding information intto the embeddings that are then 
+read by blocks further along in the stack. Whether this mental model is helpful 
+remains to be seen (and I'd love to be corrected if there is something I'm 
+missing).
 
 <img width="874" alt="transformer_block_high_level" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/cfaf971b-662d-4ca3-b1fa-3c6786d627e0">
 
@@ -764,7 +765,7 @@ for what these operations actually do.
 
 Next, we need to digress slightly into how we train the model. To get our
 model to generate text, we'll train it by asking it to predict the next token
-in a sequence of tokens. Importantly, we do this fo every token in the
+in a sequence of tokens. Importantly, we do this for every token in the
 sequence: token 0 in the input is used to predict token 1 in the output etc.
 This means that the embeddings for earlier tokens can't be allowed to contain
 information about embeddings for later tokens. Otherwise, predicting the next
@@ -783,8 +784,8 @@ the original `n_tokens x embedding_dim` shape we started with. For reasons
 that I'm unclear about, we pass this output through a dense layer and
 optionally apply dropout if we want to regularise our model.
 
-And that's it. My implementation of attention (without the dense layer on
-the end) is as follows:
+And that's it. My implementation of attention (without the dense layers) is 
+as follows:
 
 ```python
 def forward(self, tensor: Tensor):
@@ -857,11 +858,11 @@ def forward(self, tensor: Tensor):
 Again, if you want to really understand this, I'd strongly suggest playing
 around with the code to understand what each little piece does.
 
-Splitting each vector into multiple head make our variant of attention
+Splitting each vector into multiple heads make our variant of attention
 "multi-head". Applying a mask to hide future tokens makes our attention
 "causal" and splitting our input into 3 pieces that we then combine with each
 other makes our attention "self-attention". Putting this all together, the
-formal name for this variant of attention is "Multi-head causal self attention".
+formal name for this variant of attention is "multi-head causal self attention".
 In Tricycle, I've called it [MultiHeadSelfAttention](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/blocks.py#L45).
 
 #### MLP Block
@@ -870,7 +871,7 @@ Unlike the attention block, the MLP block is much simpler. While you can think
 of attention as letting different embedding vectors interact with each other,
 You can think of the MLP block as adding information to each embedding
 individually. First, we pass each embedding through a Dense layer that projects
-it into a bigger vector. This is was chosen to be 4 times longer than the
+it into a bigger vector. This was chosen to be 4 times longer than the
 original vector in the GPT-2 paper so that's what we're using.
 
 Next, we pass it through a non-linearity. This step is really important because
