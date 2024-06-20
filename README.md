@@ -859,7 +859,7 @@ try out if you're interested.
 Finally, we project the output back down to its original size with another
 dense layer and optionally apply a dropout for regularisation.
 
-
+![mlp_block](https://github.com/bclarkson-code/Tricycle/assets/57139598/7661dae7-435c-4157-a28d-651df35c717c)
 
 
 ## Contact
