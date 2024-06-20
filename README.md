@@ -672,8 +672,8 @@ to be seen (and I'd love to be corrected if there is something I'm missing).
 
 <img width="874" alt="transformer_block_high_level" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/cfaf971b-662d-4ca3-b1fa-3c6786d627e0">
 
-Gradients (derivatives) in deep learning models have a habit of rapidly 
-increasing in value (exploding) or decreasing to 0 (vanishing) so it is 
+Gradients (derivatives) in deep learning models have a habit of rapidly
+increasing in value (exploding) or decreasing to 0 (vanishing) so it is
 important to frequently rescale embeddings throughout the model. You'll
 notice that the embeddings are normalised before being passed through each
 sub-block. In GPT-2, this is done with a [layer norm](https://github.com/bclarkson-code/Tricycle/blob/4b29bc63ec81dc22d3ff1194818e0bd2e6c095ed/src/tricycle/layers.py#L153).
@@ -681,7 +681,15 @@ sub-block. In GPT-2, this is done with a [layer norm](https://github.com/bclarks
 #### Attention Block
 
 If you have heard anything about transformers, it is probably that they use
-attention. 
+attention. This is certainly the most complex part of a transformer but, at a
+high level, its goal is pretty simple: let each embedding interact with the
+other embeddings.
+
+Because this section gets a bit hairy it'll be helpful to see the goal we're
+heading towards:
+
+
+
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
