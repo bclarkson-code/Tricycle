@@ -859,6 +859,20 @@ try out if you're interested.
 Finally, we project the output back down to its original size with another
 dense layer and optionally apply a dropout for regularisation.
 
+#### Output
+
+Finally, once we've embedded our tokens and passed them through a stack of
+transformer blocks, all that remains is to turn the embeddings back into
+tokens. We can do this by passing them through a dense layer to turn each
+embedding into a `1 x vocab_size` vector. We can treat each of these outputs
+as a probablility distribution over all tokens where larger numbers mean that
+the model thinks a token is more likely to come next and smaller numbers mean
+that the model thinks a token is less likely to come next.
+
+### Training a Language model
+
+
+
 
 
 
