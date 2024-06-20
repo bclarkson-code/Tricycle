@@ -602,8 +602,8 @@ same basic architecture and training methods, with only a few small tweaks
 GPUs, we'll be training a smaller (49M parameter) version.
 
 To build our GPT, we first need to understand it's architecture:
+![GPT](https://github.com/bclarkson-code/Tricycle/assets/57139598/14b16802-2bfd-4d10-99b9-168e5cc6290e)
 
-![GPT diagram](https://github.com/bclarkson-code/Tricycle/blob/main/assets/GPT.svg)
 
 There are a few important things to note in this diagram. First, the
 transformer is built out of 3 main pieces, the input block, a stack of
