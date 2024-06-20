@@ -857,7 +857,7 @@ but I've added several other activation functions to Tricycle that you can
 try out if you're interested.
 
 Finally, we project the output back down to its original size with another
-dense layer.
+dense layer and optionally apply a dropout for regularisation.
 
 
 
