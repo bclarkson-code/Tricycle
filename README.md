@@ -759,7 +759,7 @@ the original `n_tokens x embedding_dim` shape we started with. For reasons
 that I'm unclear about, we pass this output through a dense layer and
 optionally apply dropout if we want to regularise our model.
 
-And thats it. My full implementation of attention (without the dense layer on
+And thats it. My implementation of attention (without the dense layer on
 the end) is as follows:
 
 ```python
@@ -818,6 +818,7 @@ def forward(self, tensor: Tensor):
     denominator = xp.sum(exp, axis=-1, keepdims=True)
     attention = exp / denominator
 
+    # TODO: come up with a better name
     # smush the heads back together
     self._before_smush = attention
     attention = xp.einsum("BNTj, BNjH -> BTNH", attention, value)
@@ -838,6 +839,27 @@ Splitting each vector into multiple head make our variant of attention
 other makes our attention "self-attention". Putting this all together, the
 formal name for this variant of attention is "Muti-head causal self attention".
 In Tricycle, I've called it [MultiHeadSelfAttention](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/blocks.py#L45).
+
+#### MLP Block
+
+Unlike the attention block, the MLP block is much simpler. While you can think
+of attention as letting different embedding vectors interact with each other,
+You can think of the MLP block as adding information to each embedding
+individually. First, we pass each embedding through a Dense layer that projects
+it into a bigger vector. This is was chosen to be 4 times longer than the
+original vector in the GPT-2 paper so thats what we're using.
+
+Next, we pass it through a nonlinearity. This step is really important because
+if you skip this step, mathematically, your MLP block reduces to a single (very
+expensive) matrix multiplication and performance plummets. In GPT-2 we're
+using [GeLU](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/activation.py#L24)
+but I've added several other activation functions to Tricycle that you can
+try out if you're interested.
+
+Finally, we project the output back down to its original size with another
+dense layer.
+
+
 
 
 ## Contact
