@@ -12,6 +12,7 @@ The entire library, from the automatic differentiation engine to a GPT, is writt
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a Cuda-capable GPU or a CPU.
 
 
+
 ## Table of Contents
 
 - [Installation](#installation)
@@ -591,6 +592,288 @@ a household fan on top, I get about 30% better performance.
 ![IMG_0713](https://github.com/bclarkson-code/Tricycle/assets/57139598/958f12b4-caaa-4f2a-b9d0-2f5a7fc1e5a5)
 
 Putting all of these things together, Tricycle can train a small language model on shakespeare in ~30 mins. Andrej Karpathy can [do this in pytorch](https://github.com/karpathy/nanoGPT/tree/master) in around 7 minutes on my machine (with a like-for-like config) which, given that the entire Tricycle project is in python, means that Tricycle is surprisingly fast. That said, more work is needed to get the speed up.
+
+### Building a Language model
+Now that we've got an automatic differentiation engine, we can start actually
+doing things with it. GPT 2 was arguably the first to use the modern stack for
+language generation. Even modern state of the art models like llama3 use the
+same basic architecture and training methods, with only a few small tweaks
+(e.g swapping layer norm with rms norm). Because I don't have access to many
+GPUs, we'll be training a smaller (49M parameter) version.
+
+To build our GPT, we first need to understand it's architecture:
+
+![GPT diagram](https://github.com/bclarkson-code/Tricycle/assets/GPT.svg)
+
+There are a few important things to note in this diagram. First, the
+transformer is built out of 3 main pieces, the input block, a stack of
+transformer blocks and then an output layer. The input layer turns a list of
+tokens into a list of embeddings (each token get projected to an embedding
+vector). The stack of transformer blocks process the embeddings, but leave
+their shape untouched and then the output converts each embedding into a
+vector that is the same length as the number of tokens in our vocabulary (more
+on this later).
+
+This means that the transformer accepts a fixed number of tokens and predicts
+a fixed number of tokens. The number of tokens it accepts is usually called
+the context window but sometimes called the block size or sequence length.
+
+Also, it means that we can make our transformer bigger or smaller pretty easily
+by simply increasing the number of tokens in our context window, the size of
+our embeddings and the number of transformer blocks in our stack. (There is
+also the number of transformer heads but more on this later too).
+
+#### Input block
+
+We know the input block needs to take a list of tokens as an input and return
+a list of embeddings. We can do this with a dense layer. We can one-hot
+encode a token into a vector of 0's with a single 1 corresponding to the
+token id (e.g `2 -> [0,0,1,0,...,0]`). Then we can pass this through a dense
+layer to convert it from a `1 x vocab_size` vector to a `1 x embedding_size`
+vector.
+
+![embeding_layer](https://github.com/bclarkson-code/Tricycle/assets/57139598/b0157816-b797-452a-b2aa-090b3305141b)
+
+However, this is a very exprensive operation. For each token, we need to
+do a multiplication by a `vocab_size x embedding_size` matrix. However,
+we can notice that the one-hot encoded vector is almost entirely 0's. If
+you go through the algebra, this means that the matrix multiplication is
+actually equivalent to simply returning a row from the weights matrix. That is,
+for token `t`, the output is the `t`th row in the matrix. Returning a single
+row from a matrix is dramatically faster than doing a matrix multiplication so
+we'll do that instead. We can wrap this logic up in a new layer: [Embedding](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L365).
+
+We aren't quite done with the input block however. Transformers perform better
+When they are given information about where a given token is in the context
+window (e.g is a token at the start, end or somewhere in the middle?). In the
+original [transformer paper](https://arxiv.org/abs/1706.03762), this was done
+by with some sine waves but GPT-2 uses learned embeddings which are
+conceptually simpler. (Modern langauge models use rotary embeddings which are
+in development). When we pass a token through an embedding layer, we also pass
+the index of the token through a different embedding layer and then add the two
+embeddings together. This way, the embedding contains information about which
+token was passed into the model, as well as where it is in the context window.
+
+Putting these operations together, we finally get our input block:
+
+<img width="1419" alt="input_block" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/8f789407-faf6-4a7f-a3ca-593b4777604b">
+
+#### Transformer Block
+
+The transformer block is the core of a transfomer. It is built from two main
+pieces: an attention block and a multi-layer-perceptron block. Whenever we
+pass some data through one of these sub-blocks, we add whatever the sub-block
+outputs to the input to the block. This is called a residual layer (sometimes
+also called a skip layer). I think of transformers as having a "highway" that
+the embeddings pass along with each sub-block adding extra context. You can
+imagine lower blocks information to the embeddings that are then read by
+blocks further along in the stack. Whether this mental model is helpful remains
+to be seen (and I'd love to be corrected if there is something I'm missing).
+
+<img width="874" alt="transformer_block_high_level" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/cfaf971b-662d-4ca3-b1fa-3c6786d627e0">
+
+Gradients (derivatives) in deep learning models have a habit of rapidly
+increasing in value (exploding) or decreasing to 0 (vanishing) so it is
+important to frequently rescale embeddings throughout the model. You'll
+notice that the embeddings are normalised before being passed through each
+sub-block. In GPT-2, this is done with a [layer norm](https://github.com/bclarkson-code/Tricycle/blob/4b29bc63ec81dc22d3ff1194818e0bd2e6c095ed/src/tricycle/layers.py#L153).
+
+#### Attention Block
+
+If you have heard anything about transformers, it is probably that they use
+attention. This is certainly the most complex part of a transformer but, at a
+high level, its goal is pretty simple: let each embedding interact with the
+other embeddings. This "interaction" will be in the form of a matrix, called
+the attention matrix, that is `n_tokens x n_tokens x embedding_dim`. Each
+entry in the matrix is a vector that represents the interaction between two
+embeddings in the input.
+
+Because this section gets a bit hairy it'll be helpful to see the goal we're
+heading towards:
+
+![attention_block](https://github.com/bclarkson-code/Tricycle/assets/57139598/17a79e58-d145-4a02-8772-c3dc98e81d2a)
+
+The first thing we do is to pass the input embedding through a dense layer
+to make each embedding 3 times longer than it used to be. Then we split the
+resulting embedding into 3 separate peices, unhelpfully called the key, query
+and value vectors. Because we projected each embedding before splitting,
+each of the new vectors is the same length as the original input. We won't
+use the value vector until later so we'll focus on the key and query vectors
+for now.
+
+We could build our attention matrix by multiplying our key vector by our query
+vector and this does work. However, in the original [transformer paper](https://arxiv.org/abs/1706.03762),
+they first split each query into several smaller chunks (that they call heads)
+that they compute attention matrices for individually and then recombine into
+a single attention matrix at the end. They claim this improves performance
+with a similar computational cost and I don't have the resources to figure out
+whether this is actually true. For computational efficiency, I've avoided
+explicitly splitting and recombining by doing everything inplace:
+
+```python
+# key.shape = batch_size x n_tokens x embedding_dim
+# query.shape = batch_size x n_tokens x embedding_dim
+
+head_shape = (
+    self.batch_size,
+    self.n_tokens,  # number of tokens
+    self.n_heads,  # number of heads
+    self.head_size,  # embedding per head
+)
+
+# split into multiple heads
+key = key.reshape(head_shape)
+query = query.reshape(head_shape)
+
+# reorder
+key = xp.einsum("BTNH->BNTH", key)
+query = xp.einsum("BTNH->BNTH", query)
+
+# attend
+self.divisor = sqrt(self.head_size)
+attention = xp.einsum("BNIh, BNJh -> BNIJ", query, key)
+attention = attention / self.divisor
+```
+
+I'd strongly reccommend having a play around with the code here to get a feel
+for what these operations actually do.
+
+Next, we need to digress slightly into how we train the model. To get our
+model to generate text, we'll train it by asking it to predict the next token
+in a sequence of tokens. Importantly, we do this fo every token in the
+sequence: token 0 in the input is used to predict token 1 in the output etc.
+This means that the embeddings for earlier tokens can't be allowed to contain
+information about embeddings for later tokens. Otherwise, predicting the next
+token would be trivially easy for all but the final token.
+
+Because we calculate the interaction between every token and every other token
+in the attention matrix, we end up sneaking information about later tokens
+into the attention for earlier tokens. To avoid this leakage, we apply a "mask"
+to the attention matrix. If you work it out, you find that the leakage happens
+entirely in the upper triangle of the attention matrix. We can remove this
+information by manually setting each of these values to -infinity.
+
+Finally, we normalise the matrix by softmaxing each row, multiply the
+attention matrix by the value vector and reshape it to convert it back into
+the original `n_tokens x embedding_dim` shape we started with. For reasons
+that I'm unclear about, we pass this output through a dense layer and
+optionally apply dropout if we want to regularise our model.
+
+And thats it. My implementation of attention (without the dense layer on
+the end) is as follows:
+
+```python
+def forward(self, tensor: Tensor):
+    xp = tensor.xp
+
+    assert tensor.is_batched
+
+    # split the input into 3 peices
+    self._input = tensor
+    query = tensor[:, :, : self.embedding_dim]
+    key = tensor[:, :, self.embedding_dim : self.embedding_dim * 2]
+    value = tensor[:, :, self.embedding_dim * 2 :]
+
+    # Figure out how big everything is
+    self.batch_size = key.array.shape[0]
+    self.head_size = self.embedding_dim // self.n_heads
+    self.n_tokens = key.shape[-2]
+    head_shape = (
+        self.batch_size,
+        self.n_tokens,  # number of tokens
+        self.n_heads,  # number of heads
+        self.head_size,  # embedding per head
+    )
+    out_shape = (self.batch_size, self.n_tokens, self.embedding_dim)
+
+    # reshape and reorder the heads
+    key = key.array
+    query = query.array
+    value = value.array
+
+    key = key.reshape(head_shape)
+    query = query.reshape(head_shape)
+    value = value.reshape(head_shape)
+
+    key = xp.einsum("BTNH->BNTH", key)
+    query = xp.einsum("BTNH->BNTH", query)
+    value = xp.einsum("BTNH->BNTH", value)
+
+    self._key = key
+    self._query = query
+    self._value = value
+
+    # attend
+    self.divisor = sqrt(self.head_size)
+    attention = xp.einsum("BNIh, BNJh -> BNIJ", query, key)
+    attention = attention / self.divisor
+
+    # mask
+    attention = xp.where(
+        self.mask[:, : self.n_tokens, : self.n_tokens], -xp.inf, attention
+    )
+
+    # softmax
+    exp = xp.exp(attention - xp.max(attention, axis=-1, keepdims=True))
+    denominator = xp.sum(exp, axis=-1, keepdims=True)
+    attention = exp / denominator
+
+    # TODO: come up with a better name
+    # smush the heads back together
+    self._before_smush = attention
+    attention = xp.einsum("BNTj, BNjH -> BTNH", attention, value)
+    attention = attention.reshape(out_shape)
+
+    result = to_tensor(attention, is_batched=True)
+    result.back_fns = (self.backward,)
+    result.args = (self._input,)
+    return result
+```
+
+Again, if you want to really understand this, I'd strongly suggest playing
+around with the code to understand what each little piece does.
+
+Splitting each vector into multiple head make our variant of attention
+"multi-head". Applying a mask to hide future tokens makes our attention
+"causal" and splitting our input into 3 pieces that we then combine with each
+other makes our attention "self-attention". Putting this all together, the
+formal name for this variant of attention is "Muti-head causal self attention".
+In Tricycle, I've called it [MultiHeadSelfAttention](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/blocks.py#L45).
+
+#### MLP Block
+
+Unlike the attention block, the MLP block is much simpler. While you can think
+of attention as letting different embedding vectors interact with each other,
+You can think of the MLP block as adding information to each embedding
+individually. First, we pass each embedding through a Dense layer that projects
+it into a bigger vector. This is was chosen to be 4 times longer than the
+original vector in the GPT-2 paper so thats what we're using.
+
+Next, we pass it through a nonlinearity. This step is really important because
+if you skip this step, mathematically, your MLP block reduces to a single (very
+expensive) matrix multiplication and performance plummets. In GPT-2 we're
+using [GeLU](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/activation.py#L24)
+but I've added several other activation functions to Tricycle that you can
+try out if you're interested.
+
+Finally, we project the output back down to its original size with another
+dense layer and optionally apply a dropout for regularisation.
+
+#### Output
+
+Finally, once we've embedded our tokens and passed them through a stack of
+transformer blocks, all that remains is to turn the embeddings back into
+tokens. We can do this by passing them through a dense layer to turn each
+embedding into a `1 x vocab_size` vector. We can treat each of these outputs
+as a probablility distribution over all tokens where larger numbers mean that
+the model thinks a token is more likely to come next and smaller numbers mean
+that the model thinks a token is less likely to come next.
+
+### Training a Language model
+
+
+
+
 
 
 ## Contact
