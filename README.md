@@ -1,4 +1,5 @@
 # Tricycle
+
 <p align="center">
     <img width="223" alt="tricycle_logo" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/62405944-b27b-49bc-93c3-17ba93fc8ad7">
 </p>
@@ -11,14 +12,13 @@ The entire library, from the automatic differentiation engine to a GPT, is writt
 
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a Cuda-capable GPU or a CPU.
 
-
-
 ## Table of Contents
-
-- [Installation](#installation)
+- [Tricycle](#tricycle)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
     - [CPU Installation](#cpu-installation)
-- [Training a GPT on shakespeare](#training-a-gpt-on-shakespeare)
-- [How it works](#how-it-works)
+  - [Training a GPT on Shakespeare](#training-a-gpt-on-shakespeare)
+  - [How it works](#how-it-works)
     - [Automatic Differentiation](#automatic-differentiation)
     - [Einsum](#einsum)
       - [Summing along an axis](#summing-along-an-axis)
@@ -34,12 +34,20 @@ Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a Cuda-capa
         - [Inplace tensor updates](#inplace-tensor-updates)
         - [Mathematical optimisations](#mathematical-optimisations)
         - [Hardware optimisations](#hardware-optimisations)
-- [Contact](#contact)
+    - [Building a Language model](#building-a-language-model)
+      - [Input block](#input-block)
+      - [Transformer Block](#transformer-block)
+      - [Attention Block](#attention-block)
+      - [MLP Block](#mlp-block)
+      - [Output](#output)
+  - [Contact](#contact)
 
 ## Installation
+
 Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, optimisation efforts have been focussed on GPU computation so it is pretty slow. If you do have a CUDA capable GPU I would strongly recommend installing the gpu version of Tricycle.
 
 If you have a CUDA capable GPU, you can install Tricycle as follows.
+
 ```bash
 conda env create -f environment.yml -n tricycle
 conda activate tricycle
@@ -55,21 +63,25 @@ conda activate tricycle
 ```
 
 ### CPU Installation
+
 If you want to install Tricycle for CPU, you can do the following.
+
 ```bash
 conda env create -f environment.cpu.yml -n tricycle
 conda activate tricycle
 ```
 
 If you want to install test dependencies on CPU you can do the following.
+
 ```bash
 conda env create -f environment.cpu.test.yml -n tricycle
 conda activate tricycle
 ```
+
 </details>
 
-
 ## Training a GPT on Shakespeare
+
 The following toy script will train a small GPT to generate convincing Shakespeare.
 On my RTX 3090, this takes ~30 mins. For a more realistic training script with metric tracking, gradient accumulation, a validation dataset etc, take a look at `train_smol_gpt.py`
 
@@ -126,6 +138,7 @@ for step in loading_bar:
 with open("model.pkl", "wb") as f:
     pickle.dump(model, f)
 ```
+
 Once trained, you can generate infinite shakespeare plays as follows:
 
 ```bash
@@ -133,6 +146,7 @@ python inference.py model.pkl
 ```
 
 ## How it works
+
 Tricycle code centers around objects called `Tensors`. A `Tensor` is a wrapper around a numpy array that adds some extra features:
 
 ```python
@@ -162,6 +176,7 @@ print(Softmax()(a)) # Output: Tensor([0.09003057 0.24472848 0.66524094], name=so
 ```
 
 ### Automatic Differentiation
+
 Unlike vanilla numpy, every operation in Tricycle is attached to a derivative.
 When you do some operations on your `Tensor`, Tricycle keeps track of what you did and allows you to differentiate the output.
 
@@ -216,15 +231,15 @@ assert input.grad.shape == (4,32,32)
 ```
 
 When you run an operation (`Op`), the output has two pieces of information attached:
- - `args`: The inputs to the function
- - `back_fns`: The functions that should be executed to calculate the derivative wrt each of the inputs
+
+- `args`: The inputs to the function
+- `back_fns`: The functions that should be executed to calculate the derivative wrt each of the inputs
 
 Surprisingly, this all that you need to perform automatic differentiation on an arbitrarily complicated sequence of `Op`s.
 Because we keep track of the `args` for each operation, we can start at the output of a set of `Op`s and traverse through them to reach every input to the sequence: the operations form a tree.
 
 Thanks to the [chain rule](https://en.wikipedia.org/wiki/Chain_rule), if we apply each `back_fn` that we pass through on our way through the tree, when we get to an input, we will have calculated the derivative of the output wrt the input.
 Despite implementing it myself, I still feel like this couldn't possibly work, and yet it does!
-
 
 The entirety of the algorithm can be found in [`tensor.py`](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/tensor.py#L145).
 
@@ -254,21 +269,24 @@ print(Einsum("ij->ji")(a)) # Output: Tensor([[1. 3.], [2. 4.]], name=einsum ij->
 Here, we use einsum to swap indices i and j: a transpose.
 
 There are only two rules to remember with einsum:
- - If an index does not appear in the output, any inputs that contain it
-   will be summed along that axis:
-    ```python
-    print(Einsum("ij->i")(a)) # Tensor([3. 7.], name=einsum ij->i)
-    ```
 
- - If an index appears in more than one input, the tensors will be multiplied
-   along that axis
+- If an index does not appear in the output, any inputs that contain it
+  will be summed along that axis:
 
-    ```python
-    b = to_tensor([[5,6],[7,8])
-    print(Einsum("ij,jk->ik")(a,b)) # Tensor([[19. 22.], [43. 50.]], name=einsum ij,jk->ik)
-    ```
+  ```python
+  print(Einsum("ij->i")(a)) # Tensor([3. 7.], name=einsum ij->i)
+  ```
+
+- If an index appears in more than one input, the tensors will be multiplied
+  along that axis
+
+  ```python
+  b = to_tensor([[5,6],[7,8])
+  print(Einsum("ij,jk->ik")(a,b)) # Tensor([[19. 22.], [43. 50.]], name=einsum ij,jk->ik)
+  ```
 
 For example:
+
 #### Summing along an axis
 
 https://github.com/bclarkson-code/Tricycle/assets/57139598/c575c958-19ed-4406-8a1b-d2390663ba96
@@ -291,8 +309,8 @@ maths (index notation is really helpful here) you'll find that you can follow
 these two, really simple rules to differentiate an einsum operation wrt a
 given input:
 
- - Swap the indices for the input and output
- - Replace the original input with your current derivative
+- Swap the indices for the input and output
+- Replace the original input with your current derivative
 
 For example, the derivative of a transpose works like this:
 
@@ -341,7 +359,6 @@ print(layer(x)) # Output: Tensor([-2.238703], name=dense)
 Next, neural networks need a nonlinearity (otherwise they reduce to expensive linear regressions).
 
 Tricycle has a few [nonlinearities](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/activation.py) (also called activation functions). Here we can choose the simplest: `ReLU`.
-
 
 ```python
 from tricycle.activation import ReLU
@@ -445,6 +462,7 @@ Deep learning is famously computationally heavy. If we want to train anything
 in a reasonable amount of time, there are several optimisations we need to make.
 
 #### Batching
+
 The first, and arguably most important, optimisation is batching. Instead of
 applying operations to each input individually, if we are clever about how we design
 an operation, we can apply an operation to multiple operations at once.
@@ -476,6 +494,7 @@ version of `Op`s for a tensor by simply calling `.to_batched`. To convert it
 back, you can call `.from_batched`.
 
 #### GPU
+
 As well as batching, another improvement that has a big impact on performance
 is using a GPU. For this, we can use a library called [CuPY](https://cupy.dev/).
 CuPY lets you run numpy code on a GPU. This means that we can use the same code
@@ -569,20 +588,24 @@ would usually have 10s of intermediate values, with a single `forward` and
 `backward` function with a minimal set of intermediate values.
 
 #### Other optimisations
+
 While batching, using a GPU and fusing are the major optimisations, I'd like
 to provide some honorable mentions.
 
 ##### Inplace tensor updates
+
 While probably obvious to many readers, updating tensors in-place rather than
 replacing them with a new tensor caused a big speedup.
 
 ##### Mathematical optimisations
+
 Operations like `CrossEntropy` can be implemented by applying a softmax and then
 applying the crossentropy operation but, if you do a bit of algebra,
 you can do something called the `log-sum-exp` trick to simplify the expression
 and cut down on the computations needed.
 
 ##### Hardware optimisations
+
 As mentioned above, the GPU computation was performed on an NVIDIA RTX 3090.
 Understandably, this gets quite hot when training (probably something to do with
 it being in my cupboard?) which can reduce performance due to thermal
@@ -594,6 +617,7 @@ a household fan on top, I get about 30% better performance.
 Putting all of these things together, Tricycle can train a small language model on shakespeare in ~30 mins. Andrej Karpathy can [do this in pytorch](https://github.com/karpathy/nanoGPT/tree/master) in around 7 minutes on my machine (with a like-for-like config) which, given that the entire Tricycle project is in python, means that Tricycle is surprisingly fast. That said, more work is needed to get the speed up.
 
 ### Building a Language model
+
 Now that we've got an automatic differentiation engine, we can start actually
 doing things with it. GPT 2 was arguably the first to use the modern stack for
 language generation. Even modern state of the art models like llama3 use the
@@ -603,7 +627,6 @@ GPUs, we'll be training a smaller (49M parameter) version.
 
 To build our GPT, we first need to understand it's architecture:
 ![GPT](https://github.com/bclarkson-code/Tricycle/assets/57139598/14b16802-2bfd-4d10-99b9-168e5cc6290e)
-
 
 There are a few important things to note in this diagram. First, the
 transformer is built out of 3 main pieces, the input block, a stack of
@@ -873,8 +896,6 @@ that the model thinks a token is less likely to come next.
 <!---->
 <!-- Now we've built our langauge model, we need to actually train it.  -->
 
-
-
-
 ## Contact
+
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
