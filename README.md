@@ -593,6 +593,16 @@ a household fan on top, I get about 30% better performance.
 
 Putting all of these things together, Tricycle can train a small language model on shakespeare in ~30 mins. Andrej Karpathy can [do this in pytorch](https://github.com/karpathy/nanoGPT/tree/master) in around 7 minutes on my machine (with a like-for-like config) which, given that the entire Tricycle project is in python, means that Tricycle is surprisingly fast. That said, more work is needed to get the speed up.
 
+### Building a Language model
+Now that we've got an automatic differentiation engine, we can start actually
+doing things with it. GPT 2 was arguably the first to use the modern stack for
+language generation. Even modern state of the art models like llama3 use the
+same basic architecture and training methods, with only a few small tweaks
+(e.g swapping layer norm with rms norm). Because I don't have access to many
+GPUs, we'll be training a smaller (49M parameter) version.
+
+To build our GPT, we first need to understand it's architecture:
+
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
