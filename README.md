@@ -634,6 +634,15 @@ vector.
 
 ![embeding_layer](https://github.com/bclarkson-code/Tricycle/assets/57139598/b0157816-b797-452a-b2aa-090b3305141b)
 
+However, this is a very exprensive operation. For each token, we need to
+do a multiplication by a `vocab_size x embedding_size` matrix. However,
+we can notice that the one-hot encoded vector is almost entirely 0's. If
+you go through the algebra, this means that the matrix multiplication is
+actually equivalent to simply returning a row from the weights matrix. That is,
+for token `t`, the output is the `t`th row in the matrix. Returning a single
+row from a matrix is dramatically faster than doing a matrix multiplication so
+we'll do that instead. We can wrap this logic up in a new layer: `[Embedding](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L365)`.
+
 
 
 ## Contact
