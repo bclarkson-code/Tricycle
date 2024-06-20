@@ -40,6 +40,7 @@ Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a CUDA-capa
       - [Attention Block](#attention-block)
       - [MLP Block](#mlp-block)
       - [Output](#output)
+  - [What's Next?](#whats-next)
   - [Contact](#contact)
 
 ## Installation
