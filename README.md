@@ -683,14 +683,160 @@ sub-block. In GPT-2, this is done with a [layer norm](https://github.com/bclarks
 If you have heard anything about transformers, it is probably that they use
 attention. This is certainly the most complex part of a transformer but, at a
 high level, its goal is pretty simple: let each embedding interact with the
-other embeddings.
+other embeddings. This "interaction" will be in the form of a matrix, called
+the attention matrix, that is `n_tokens x n_tokens x embedding_dim`. Each
+entry in the matrix is a vector that represents the interaction between two
+embeddings in the input.
 
 Because this section gets a bit hairy it'll be helpful to see the goal we're
 heading towards:
 
 ![attention_block](https://github.com/bclarkson-code/Tricycle/assets/57139598/17a79e58-d145-4a02-8772-c3dc98e81d2a)
 
+The first thing we do is to pass the input embedding through a dense layer
+to make each embedding 3 times longer than it used to be. Then we split the
+resulting embedding into 3 separate peices, unhelpfully called the key, query
+and value vectors. Because we projected each embedding before splitting,
+each of the new vectors is the same length as the original input. We won't
+use the value vector until later so we'll focus on the key and query vectors
+for now.
 
+We could build our attention matrix by multiplying our key vector by our query
+vector and this does work. However, in the original [transformer paper](https://arxiv.org/abs/1706.03762),
+they first split each query into several smaller chunks (that they call heads)
+that they compute attention matrices for individually and then recombine into
+a single attention matrix at the end. They claim this improves performance
+with a similar computational cost and I don't have the resources to figure out
+whether this is actually true. For computational efficiency, I've avoided
+explicitly splitting and recombining by doing everything inplace:
+
+```python
+# key.shape = batch_size x n_tokens x embedding_dim
+# query.shape = batch_size x n_tokens x embedding_dim
+
+head_shape = (
+    self.batch_size,
+    self.n_tokens,  # number of tokens
+    self.n_heads,  # number of heads
+    self.head_size,  # embedding per head
+)
+
+# split into multiple heads
+key = key.reshape(head_shape)
+query = query.reshape(head_shape)
+
+# reorder
+key = xp.einsum("BTNH->BNTH", key)
+query = xp.einsum("BTNH->BNTH", query)
+
+# attend
+self.divisor = sqrt(self.head_size)
+attention = xp.einsum("BNIh, BNJh -> BNIJ", query, key)
+attention = attention / self.divisor
+```
+
+I'd strongly reccommend having a play around with the code here to get a feel
+for what these operations actually do.
+
+Next, we need to digress slightly into how we train the model. To get our
+model to generate text, we'll train it by asking it to predict the next token
+in a sequence of tokens. Importantly, we do this fo every token in the
+sequence: token 0 in the input is used to predict token 1 in the output etc.
+This means that the embeddings for earlier tokens can't be allowed to contain
+information about embeddings for later tokens. Otherwise, predicting the next
+token would be trivially easy for all but the final token.
+
+Because we calculate the interaction between every token and every other token
+in the attention matrix, we end up sneaking information about later tokens
+into the attention for earlier tokens. To avoid this leakage, we apply a "mask"
+to the attention matrix. If you work it out, you find that the leakage happens
+entirely in the upper triangle of the attention matrix. We can remove this
+information by manually setting each of these values to -infinity.
+
+Finally, we normalise the matrix by softmaxing each row, multiply the
+attention matrix by the value vector and reshape it to convert it back into
+the original `n_tokens x embedding_dim` shape we started with. For reasons
+that I'm unclear about, we pass this output through a dense layer and
+optionally apply dropout if we want to regularise our model.
+
+And thats it. My full implementation of attention (without the dense layer on
+the end) is as follows:
+
+```python
+def forward(self, tensor: Tensor):
+    xp = tensor.xp
+
+    assert tensor.is_batched
+
+    # split the input into 3 peices
+    self._input = tensor
+    query = tensor[:, :, : self.embedding_dim]
+    key = tensor[:, :, self.embedding_dim : self.embedding_dim * 2]
+    value = tensor[:, :, self.embedding_dim * 2 :]
+
+    # Figure out how big everything is
+    self.batch_size = key.array.shape[0]
+    self.head_size = self.embedding_dim // self.n_heads
+    self.n_tokens = key.shape[-2]
+    head_shape = (
+        self.batch_size,
+        self.n_tokens,  # number of tokens
+        self.n_heads,  # number of heads
+        self.head_size,  # embedding per head
+    )
+    out_shape = (self.batch_size, self.n_tokens, self.embedding_dim)
+
+    # reshape and reorder the heads
+    key = key.array
+    query = query.array
+    value = value.array
+
+    key = key.reshape(head_shape)
+    query = query.reshape(head_shape)
+    value = value.reshape(head_shape)
+
+    key = xp.einsum("BTNH->BNTH", key)
+    query = xp.einsum("BTNH->BNTH", query)
+    value = xp.einsum("BTNH->BNTH", value)
+
+    self._key = key
+    self._query = query
+    self._value = value
+
+    # attend
+    self.divisor = sqrt(self.head_size)
+    attention = xp.einsum("BNIh, BNJh -> BNIJ", query, key)
+    attention = attention / self.divisor
+
+    # mask
+    attention = xp.where(
+        self.mask[:, : self.n_tokens, : self.n_tokens], -xp.inf, attention
+    )
+
+    # softmax
+    exp = xp.exp(attention - xp.max(attention, axis=-1, keepdims=True))
+    denominator = xp.sum(exp, axis=-1, keepdims=True)
+    attention = exp / denominator
+
+    # smush the heads back together
+    self._before_smush = attention
+    attention = xp.einsum("BNTj, BNjH -> BTNH", attention, value)
+    attention = attention.reshape(out_shape)
+
+    result = to_tensor(attention, is_batched=True)
+    result.back_fns = (self.backward,)
+    result.args = (self._input,)
+    return result
+```
+
+
+Splitting each vector into multiple head make our variant of attention
+"multi-head". Applying a mask to hide future tokens makes our attention
+"causal" and splitting our input into 3 pieces that we then combine with each
+other makes our attention "self-attention". Putting this all together, the
+formal name for this variant of attention is "Muti-head causal self attention".
+This entire block is called [MultiHeadSelfAttention](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/blocks.py#L45)
+in tricycle.
 
 ## Contact
 Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
