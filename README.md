@@ -892,6 +892,23 @@ as a probability distribution over all tokens where larger numbers mean that
 the model thinks a token is more likely to come next and smaller numbers mean
 that the model thinks a token is less likely to come next.
 
+## What's Next?
+
+ - Documentation
+    [ ] Explain how to train a language model
+    [ ] Explain the tokeniser
+
+ - Code
+    [ ] Rotary Embeddings
+    [ ] Test RMS Norm
+    [ ] Multi-GPU support
+    [ ] Optimise and use the tokeniser
+
+ - Experiments
+    [ ] Try a language dataset rather than pure code
+    [ ] Build a LLama style model
+    [ ] Build a bigger langauge model (GPT-2 sized?)
+
 <!-- ### Training a Language model -->
 <!---->
 <!-- Now we've built our langauge model, we need to actually train it.  -->
