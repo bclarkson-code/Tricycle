@@ -829,6 +829,8 @@ def forward(self, tensor: Tensor):
     return result
 ```
 
+Again, if you want to really understand this, I'd strongly suggest playing
+around with the code to understand what each little piece does.
 
 Splitting each vector into multiple head make our variant of attention
 "multi-head". Applying a mask to hide future tokens makes our attention
