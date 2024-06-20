@@ -882,6 +882,8 @@ try out if you're interested.
 Finally, we project the output back down to its original size with another
 dense layer and optionally apply a dropout for regularisation.
 
+![mlp_block](https://github.com/bclarkson-code/Tricycle/assets/57139598/e09015a5-21ff-419b-b596-d5df1a4ba728)
+
 #### Output
 
 Finally, once we've embedded our tokens and passed them through a stack of
@@ -891,6 +893,8 @@ embedding into a `1 x vocab_size` vector. We can treat each of these outputs
 as a probability distribution over all tokens where larger numbers mean that
 the model thinks a token is more likely to come next and smaller numbers mean
 that the model thinks a token is less likely to come next.
+
+![output](https://github.com/bclarkson-code/Tricycle/assets/57139598/44900085-febf-4819-8ab3-b056cbfec7cc)
 
 ## What's Next?
 
