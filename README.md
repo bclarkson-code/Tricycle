@@ -603,7 +603,7 @@ GPUs, we'll be training a smaller (49M parameter) version.
 
 To build our GPT, we first need to understand it's architecture:
 
-![smol_gpt_dark_mode](https://github.com/bclarkson-code/Tricycle/assets/57139598/231a5998-1838-4349-b6b9-72a3006bb488)
+![smol_gpt_dark_mode](https://github.com/bclarkson-code/Tricycle/assets/GPT.svg)
 
 There are a few important things to note in this diagram. First, the
 transformer is built out of 3 main pieces, the input block, a stack of
