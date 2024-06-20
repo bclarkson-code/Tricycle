@@ -641,7 +641,7 @@ you go through the algebra, this means that the matrix multiplication is
 actually equivalent to simply returning a row from the weights matrix. That is,
 for token `t`, the output is the `t`th row in the matrix. Returning a single
 row from a matrix is dramatically faster than doing a matrix multiplication so
-we'll do that instead. We can wrap this logic up in a new layer: `[Embedding](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L365)`.
+we'll do that instead. We can wrap this logic up in a new layer: [Embedding](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/layers.py#L365).
 
 
 
