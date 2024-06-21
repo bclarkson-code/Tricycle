@@ -1,6 +1,6 @@
 """
 The core of Tricycle is the Tensor object, which is implemented in this file.
-A Tensor is a wrapper around a numpy/cupy array that adds automatic 
+A Tensor is a wrapper around a numpy/cupy array that adds automatic
 differentiation.
 
 The autodiff algorithm itself can be found in `Tensor.backward`.
@@ -395,7 +395,7 @@ class Tensor:
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        divisor = self.shape[-1] if self.shape else 1
+        divisor = np.prod(self.shape) if self.shape else 1
         return self.sum() / divisor
 
     def sum(self) -> "Tensor":

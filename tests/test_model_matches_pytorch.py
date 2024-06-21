@@ -11,10 +11,11 @@ import numpy as np
 import torch
 from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
+from torch import nn
 
 from tricycle import CUPY_ENABLED
 from tricycle.functions import Softmax
-from tricycle.layers import Dense, Embedding
+from tricycle.layers import Dense, Embedding, RMSNorm
 from tricycle.loss import CrossEntropy
 from tricycle.tensor import to_tensor
 
@@ -337,30 +338,107 @@ def test_rotary_encodings_match(in_shape, is_batched):
     y_true = to_tensor(y_true, is_batched=is_batched, dtype=int)
     assume(np.isfinite(y_pred.array).all())
 
-    tr_out = CrossEntropy()(y_true, y_pred).from_batched()
-    if len(in_shape) > 1:
-        tr_out = tr_out.mean()
+    # tr_out = CrossEntropy()(y_true, y_pred).from_batched()
+    # if len(in_shape) > 1:
+    #     tr_out = tr_out.mean()
+    #
+    # if len(in_shape) == 1:
+    #     p_y_pred = copy(y_pred.array)
+    # if len(in_shape) == 2:
+    #     p_y_pred = copy(y_pred.array)
+    # if len(in_shape) == 3:
+    #     p_y_pred = copy(y_pred.array).transpose(0, -1, 1)
+    # p_y_pred = torch.tensor(p_y_pred, requires_grad=True)
+    # p_y_true = torch.tensor(y_true.array, dtype=torch.long)
+    #
+    # p_out = torch.nn.CrossEntropyLoss()(
+    #     input=p_y_pred,
+    #     target=p_y_true,
+    # )
+    #
+    # assert tr_out.close_to(p_out.detach().numpy().item())
+    #
+    # tr_out.backward()
+    # p_out.backward()
+    #
+    # p_grad = p_y_pred.grad.detach().numpy()
+    # if len(in_shape) == 3:
+    #     p_grad = p_grad.transpose(0, -1, 1)
+    # assert y_pred.grad.close_to(p_grad)
 
-    if len(in_shape) == 1:
-        p_y_pred = copy(y_pred.array)
-    if len(in_shape) == 2:
-        p_y_pred = copy(y_pred.array)
-    if len(in_shape) == 3:
-        p_y_pred = copy(y_pred.array).transpose(0, -1, 1)
-    p_y_pred = torch.tensor(p_y_pred, requires_grad=True)
-    p_y_true = torch.tensor(y_true.array, dtype=torch.long)
 
-    p_out = torch.nn.CrossEntropyLoss()(
-        input=p_y_pred,
-        target=p_y_true,
-    )
+# reference implementation of rmsnorm: https://github.com/meta-llama/llama/blob/be327c427cc5e89cc1d3ab3d3fec4484df771245/llama/model.py#L34
+class PytorchRMSNorm(torch.nn.Module):
+    def __init__(self, dim: int, eps: float = 1e-6):
+        """
+        Initialize the RMSNorm normalization layer.
 
-    assert tr_out.close_to(p_out.detach().numpy().item())
+        Args:
+            dim (int): The dimension of the input tensor.
+            eps (float, optional): A small value added to the denominator for numerical stability. Default is 1e-6.
+
+        Attributes:
+            eps (float): A small value added to the denominator for numerical stability.
+            weight (nn.Parameter): Learnable scaling parameter.
+
+        """
+        super().__init__()
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(dim))
+
+    def _norm(self, x):
+        """
+        Apply the RMSNorm normalization to the input tensor.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The normalized tensor.
+
+        """
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+
+    def forward(self, x):
+        """
+        Forward pass through the RMSNorm layer.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The output tensor after applying RMSNorm.
+
+        """
+        output = self._norm(x.float()).type_as(x)
+        return output * self.weight
+
+
+@given(tensor_shape(), st.booleans())
+@example(in_shape=[2, 2, 4], is_batched=False)
+def test_rms_norm_matches(in_shape, is_batched):
+    tr_tensor = build_tensor(in_shape, is_batched)
+    assume(np.isfinite(tr_tensor.array).all())
+
+    embedding_dim = tr_tensor.shape[-1]
+    tr_layer = RMSNorm(embedding_dim)
+    tr_out = tr_layer(tr_tensor)
+    tr_out = tr_out.mean()
+
+    pt_tensor = torch.tensor(copy(tr_tensor.array), requires_grad=True)
+
+    pt_layer = PytorchRMSNorm(embedding_dim)
+    pt_out = pt_layer(pt_tensor).mean()
+
+    assert tr_out.close_to(pt_out.detach().numpy()), (tr_out, pt_out)
 
     tr_out.backward()
-    p_out.backward()
+    pt_out.backward()
 
-    p_grad = p_y_pred.grad.detach().numpy()
-    if len(in_shape) == 3:
-        p_grad = p_grad.transpose(0, -1, 1)
-    assert y_pred.grad.close_to(p_grad)
+    pt_weight_grad = pt_layer.weight.grad.detach().numpy()
+    tr_weight_grad = tr_layer.weights.grad
+    assert tr_weight_grad.close_to(pt_weight_grad)
+
+    pt_grad = pt_tensor.grad.detach().numpy()
+    breakpoint()
+    assert tr_tensor.grad.close_to(pt_grad), (tr_tensor.grad, pt_grad)

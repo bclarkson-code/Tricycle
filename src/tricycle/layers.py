@@ -279,75 +279,85 @@ class LayerNorm(Layer):
 
 
 class RMSNorm(Layer):
-    """
-    Normalise tensors by their sum of squares. This is similar to layer norm
-    but removes means
-    """
-
-    REALLY_SMALL_NUMBER = 1e-6
-
-    def __init__(self, to_size: int):
-        raise NotImplementedError(
-            "RMSNorm is still in development and not ready for use"
-        )
+    def __init__(self, embedding_dim: int, REALLY_SMALL_NUMBER=1e-6):
         import numpy as np
 
-        self.weights = to_tensor(np.ones(to_size))
-
-    def build_back_fn(self, rms, input_):
-        def rmsnorm_weight_back_fn(grad):
-            xp = grad.xp
-            result = xp.sum(input_ / rms, axis=-2).sum(0).squeeze()
-            return to_tensor(result, is_batched=False)
-
-        def rmsnorm_back_fn(grad):
-            xp = grad.xp
-            scaled_grad = xp.multiply(grad.array, self.weights.array)
-
-            left = scaled_grad / rms
-
-            coef = scaled_grad / (384 * rms**3)
-
-            match input_.ndim:
-                case 2:
-                    square_prod = xp.einsum("AB,Ac->AB", input_, input_)
-                case 3:
-                    square_prod = xp.einsum("zAB,zAc->zAB", input_, input_)
-                case 4:
-                    square_prod = xp.einsum("zxAB,zxAc->zxAB", input_, input_)
-                case _:
-                    raise NotImplementedError(
-                        f"RMSNorm with tensors of size {input_.ndim} are not yet supported"
-                    )
-            right = square_prod * coef
-            return to_tensor(left - right, is_batched=grad.is_batched)
-
-        return rmsnorm_weight_back_fn, rmsnorm_back_fn
+        self.REALLY_SMALL_NUMBER = REALLY_SMALL_NUMBER
+        self.embedding_dim = embedding_dim
+        self.weights = to_tensor(
+            np.ones((embedding_dim,)), requires_grad=True, is_batched=False
+        )
 
     def forward(self, tensor: Tensor):
+        """
+        Performs Layer Normalization on the input tensor x.
+
+        Args:
+            x (numpy.ndarray): Input tensor of shape (batch_size, *).
+
+        Returns:
+            numpy.ndarray: Normalized tensor of the same shape as x.
+        """
         xp = tensor.xp
-        square_sum = (tensor.array * tensor.array).mean(axis=-1)
-        rms = xp.sqrt(square_sum)
-        rms = xp.expand_dims(rms, -1)
-        result = xp.divide(tensor.array, (rms + self.REALLY_SMALL_NUMBER))
-        result = xp.einsum("...a,a->...a", result, self.weights.array)
+        x = tensor.array
 
-        weight_back_fn, back_fn = self.build_back_fn(
-            rms=rms, input_=tensor.array, is_batched=tensor.is_batched
-        )
-        result = to_tensor(
-            result, is_batched=tensor.is_batched, name="rmsnorm"
-        )
-        result.back_fns = (
-            weight_back_fn,
-            back_fn,
-        )
-        result.args = (
-            self.weights,
-            tensor,
+        # Compute square mean along the feature dimension
+        mean_square = (x**2).mean(axis=-1, keepdims=True)
+        self._input = x
+
+        # Rescale
+        self.divisor = 1 / xp.sqrt(mean_square + self.REALLY_SMALL_NUMBER)
+        x_norm = (x) * self.divisor
+        output = self.weights.array * x_norm
+
+        return Tensor(
+            output,
+            is_batched=tensor.is_batched,
+            requires_grad=tensor.requires_grad,
+            back_fns=(self.back_fn, self.weight_back_fn),
+            args=(tensor, self.weights),
+            name="rms_norm",
         )
 
-        return result
+    def weight_back_fn(self, grad: Tensor):
+        """
+        backward pass for grad
+        """
+        xp = grad.xp
+
+        # Compute intermediate values
+        # We could have stored this but I've opted for saving memory by
+        # recomputing
+        x_norm = self._input * self.divisor
+        axes = tuple(range(grad.ndim - 1))
+        result = xp.sum(grad.array * x_norm, axis=axes)
+        return Tensor(result, is_batched=False)
+
+    def back_fn(self, grad: Tensor):
+        """
+        backward pass for grad
+        """
+        xp = grad.xp
+
+        # Gradients with respect to x
+        scaled_grad = grad.array * self.weights.array
+        scaled_input = xp.sum(
+            scaled_grad * self._input,
+            axis=-1,
+            keepdims=True,
+        )
+        result = (
+            (scaled_grad - scaled_input * self._input / self.embedding_dim)
+            * self.divisor
+            / xp.sqrt(self.embedding_dim)
+        )
+
+        return Tensor(
+            result,
+            is_batched=grad.is_batched,
+            requires_grad=grad.requires_grad,
+            name="back_rms_norm",
+        )
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)

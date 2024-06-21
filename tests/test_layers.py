@@ -167,20 +167,3 @@ def test_embedding_batched():
             ],
         ]
     )
-
-
-@pytest.mark.skip(reason="not implemented yet")
-def test_rms_norm():
-    np.random.seed(0)
-    in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
-    layer_norm = RMSNorm(100)
-    out_tensor = layer_norm(in_tensor.to_batched())
-
-    assert out_tensor.shape == in_tensor.shape
-    assert np.allclose((out_tensor.array**2).mean(), 1)
-    out_tensor.backward()
-
-    assert in_tensor.grad is not None
-    assert in_tensor.grad.shape == in_tensor.shape
-
-    # TODO: do a proper check here
