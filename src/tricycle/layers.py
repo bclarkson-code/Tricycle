@@ -306,8 +306,8 @@ class RMSNorm(Layer):
         self._input = x
 
         # Rescale
-        self.divisor = 1 / xp.sqrt(mean_square + self.REALLY_SMALL_NUMBER)
-        x_norm = (x) * self.divisor
+        self._divisor = 1 / xp.sqrt(mean_square + self.REALLY_SMALL_NUMBER)
+        x_norm = x * self._divisor
         output = self.weights.array * x_norm
 
         return Tensor(
@@ -328,7 +328,7 @@ class RMSNorm(Layer):
         # Compute intermediate values
         # We could have stored this but I've opted for saving memory by
         # recomputing
-        x_norm = self._input * self.divisor
+        x_norm = self._input * self._divisor
         axes = tuple(range(grad.ndim - 1))
         result = xp.sum(grad.array * x_norm, axis=axes)
         return Tensor(result, is_batched=False)
@@ -339,18 +339,14 @@ class RMSNorm(Layer):
         """
         xp = grad.xp
 
-        # Gradients with respect to x
-        scaled_grad = grad.array * self.weights.array
-        scaled_input = xp.sum(
-            scaled_grad * self._input,
-            axis=-1,
-            keepdims=True,
-        )
-        result = (
-            (scaled_grad - scaled_input * self._input / self.embedding_dim)
-            * self.divisor
-            / xp.sqrt(self.embedding_dim)
-        )
+        left = grad.array * self.weights.array
+
+        right = self._input * self.weights.array
+        right *= (self._divisor**2) / self.embedding_dim
+        right *= xp.sum(self._input * grad.array, axis=-1, keepdims=True)
+
+        result = left - right
+        result *= self._divisor
 
         return Tensor(
             result,

@@ -2,12 +2,20 @@
 Several layers can be grouped together into a single layer called a block
 """
 
+from typing import Literal
+
 import numpy as np
 
 from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
 from tricycle.attention import Attention
 from tricycle.initialisers import init_xavier
-from tricycle.layers import Dense, Dropout, Layer, LayerNorm  # noqa E501
+from tricycle.layers import (  # noqa E501
+    Dense,
+    Dropout,
+    Layer,
+    LayerNorm,
+    RMSNorm,
+)
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -229,6 +237,7 @@ class GPT2TransformerBlock(Layer):
         context_window: int,
         expansion_ratio: float = 4,
         activation_fn: Layer | str = GeLU(),
+        norm_fn: Literal["layer_norm"] | Literal["rms_norm"] = "layer_norm",
         residual_dropout_prob: float = 0,
         linear_dropout_prob: float = 0,
     ):
@@ -245,23 +254,31 @@ class GPT2TransformerBlock(Layer):
             expansion_ratio,
             activation_fn,
         )
-        self.layer_norm_1 = LayerNorm(embedding_dim)
-        self.layer_norm_2 = LayerNorm(embedding_dim)
+
+        match norm_fn:
+            case "layer_norm":
+                self.norm_1 = LayerNorm(embedding_dim)
+                self.norm_2 = LayerNorm(embedding_dim)
+            case "rms_norm":
+                self.norm_1 = RMSNorm(embedding_dim)
+                self.norm_2 = RMSNorm(embedding_dim)
+            case _:
+                raise ValueError(f"Unknown norm: {norm_fn}")
 
         self.layers = [
-            self.layer_norm_1,
+            self.norm_1,
             self.attention_block,
-            self.layer_norm_2,
+            self.norm_2,
             self.mlp_block,
         ]
 
     def forward(self, x: Tensor):
-        normed = self.layer_norm_1(x)
+        normed = self.norm_1(x)
 
         attn = self.attention_block(normed)
         attn += x
 
-        x = self.layer_norm_2(attn)
+        x = self.norm_2(attn)
 
         x = self.mlp_block(x)
         x += attn
@@ -271,23 +288,23 @@ class GPT2TransformerBlock(Layer):
     def update(self, optimiser: Optimiser):
         self.attention_block.update(optimiser)
         self.mlp_block.update(optimiser)
-        self.layer_norm_1.update(optimiser)
-        self.layer_norm_2.update(optimiser)
+        self.norm_1.update(optimiser)
+        self.norm_2.update(optimiser)
 
     def zero_grad(self):
         self.attention_block.zero_grad()
         self.mlp_block.zero_grad()
-        self.layer_norm_1.zero_grad()
-        self.layer_norm_2.zero_grad()
+        self.norm_1.zero_grad()
+        self.norm_2.zero_grad()
 
     def to_gpu(self, device: int = 0):
         self.attention_block.to_gpu(device)
         self.mlp_block.to_gpu(device)
-        self.layer_norm_1.to_gpu(device)
-        self.layer_norm_2.to_gpu(device)
+        self.norm_1.to_gpu(device)
+        self.norm_2.to_gpu(device)
 
     def from_gpu(self):
         self.attention_block.from_gpu()
         self.mlp_block.from_gpu()
-        self.layer_norm_1.from_gpu()
-        self.layer_norm_1.from_gpu()
+        self.norm_1.from_gpu()
+        self.norm_1.from_gpu()

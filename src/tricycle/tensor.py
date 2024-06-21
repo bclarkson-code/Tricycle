@@ -395,7 +395,10 @@ class Tensor:
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        divisor = np.prod(self.shape) if self.shape else 1
+        if self.is_batched:
+            divisor = np.prod(self.shape[1:]) if self.shape else 1
+        else:
+            divisor = np.prod(self.shape) if self.shape else 1
         return self.sum() / divisor
 
     def sum(self) -> "Tensor":

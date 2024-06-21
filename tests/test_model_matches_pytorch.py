@@ -415,17 +415,15 @@ class PytorchRMSNorm(torch.nn.Module):
 
 
 @given(tensor_shape(), st.booleans())
-@example(in_shape=[2, 2, 4], is_batched=False)
+@example(in_shape=[32, 1], is_batched=False)
 def test_rms_norm_matches(in_shape, is_batched):
     tr_tensor = build_tensor(in_shape, is_batched)
     assume(np.isfinite(tr_tensor.array).all())
+    pt_tensor = torch.tensor(copy(tr_tensor.array), requires_grad=True)
 
     embedding_dim = tr_tensor.shape[-1]
     tr_layer = RMSNorm(embedding_dim)
-    tr_out = tr_layer(tr_tensor)
-    tr_out = tr_out.mean()
-
-    pt_tensor = torch.tensor(copy(tr_tensor.array), requires_grad=True)
+    tr_out = tr_layer(tr_tensor).from_batched().mean()
 
     pt_layer = PytorchRMSNorm(embedding_dim)
     pt_out = pt_layer(pt_tensor).mean()
@@ -439,6 +437,6 @@ def test_rms_norm_matches(in_shape, is_batched):
     tr_weight_grad = tr_layer.weights.grad
     assert tr_weight_grad.close_to(pt_weight_grad)
 
+    tr_grad = tr_tensor.grad
     pt_grad = pt_tensor.grad.detach().numpy()
-    breakpoint()
-    assert tr_tensor.grad.close_to(pt_grad), (tr_tensor.grad, pt_grad)
+    assert tr_grad.close_to(pt_grad, atol=1e-6, rtol=1e-4)

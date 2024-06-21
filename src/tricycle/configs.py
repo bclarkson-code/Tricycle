@@ -91,6 +91,7 @@ class SmolGPTConfig(GPTConfig):
     n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
+    norm_fn = "layer_norm"
 
     input_dropout_prob = 0.2
     residual_dropout_prob = 0.2
