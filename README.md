@@ -690,9 +690,9 @@ pass some data through one of these sub-blocks, we add whatever the sub-block
 outputs to the input to the block. This is called a residual layer (sometimes
 also called a skip layer). I think of transformers as having a "highway" that
 the embeddings pass along with each sub-block adding extra context. You can
-imagine lower blocks adding information intto the embeddings that are then 
-read by blocks further along in the stack. Whether this mental model is helpful 
-remains to be seen (and I'd love to be corrected if there is something I'm 
+imagine lower blocks adding information intto the embeddings that are then
+read by blocks further along in the stack. Whether this mental model is helpful
+remains to be seen (and I'd love to be corrected if there is something I'm
 missing).
 
 <img width="874" alt="transformer_block_high_level" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/cfaf971b-662d-4ca3-b1fa-3c6786d627e0">
@@ -784,7 +784,7 @@ the original `n_tokens x embedding_dim` shape we started with. For reasons
 that I'm unclear about, we pass this output through a dense layer and
 optionally apply dropout if we want to regularise our model.
 
-And that's it. My implementation of attention (without the dense layers) is 
+And that's it. My implementation of attention (without the dense layers) is
 as follows:
 
 ```python
