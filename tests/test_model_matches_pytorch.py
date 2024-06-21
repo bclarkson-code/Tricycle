@@ -14,6 +14,7 @@ from hypothesis.extra import numpy as xp
 from torch import nn
 
 from tricycle import CUPY_ENABLED
+from tricycle.activation import SwiGLU
 from tricycle.functions import Softmax
 from tricycle.layers import Dense, Embedding, RMSNorm
 from tricycle.loss import CrossEntropy
@@ -370,46 +371,14 @@ def test_rotary_encodings_match(in_shape, is_batched):
 # reference implementation of rmsnorm: https://github.com/meta-llama/llama/blob/be327c427cc5e89cc1d3ab3d3fec4484df771245/llama/model.py#L34
 class PytorchRMSNorm(torch.nn.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
-        """
-        Initialize the RMSNorm normalization layer.
-
-        Args:
-            dim (int): The dimension of the input tensor.
-            eps (float, optional): A small value added to the denominator for numerical stability. Default is 1e-6.
-
-        Attributes:
-            eps (float): A small value added to the denominator for numerical stability.
-            weight (nn.Parameter): Learnable scaling parameter.
-
-        """
         super().__init__()
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
 
     def _norm(self, x):
-        """
-        Apply the RMSNorm normalization to the input tensor.
-
-        Args:
-            x (torch.Tensor): The input tensor.
-
-        Returns:
-            torch.Tensor: The normalized tensor.
-
-        """
         return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
 
     def forward(self, x):
-        """
-        Forward pass through the RMSNorm layer.
-
-        Args:
-            x (torch.Tensor): The input tensor.
-
-        Returns:
-            torch.Tensor: The output tensor after applying RMSNorm.
-
-        """
         output = self._norm(x.float()).type_as(x)
         return output * self.weight
 
@@ -426,6 +395,50 @@ def test_rms_norm_matches(in_shape, is_batched):
     tr_out = tr_layer(tr_tensor).from_batched().mean()
 
     pt_layer = PytorchRMSNorm(embedding_dim)
+    pt_out = pt_layer(pt_tensor).mean()
+
+    assert tr_out.close_to(pt_out.detach().numpy()), (tr_out, pt_out)
+
+    tr_out.backward()
+    pt_out.backward()
+
+    pt_weight_grad = pt_layer.weight.grad.detach().numpy()
+    tr_weight_grad = tr_layer.weights.grad
+    assert tr_weight_grad.close_to(pt_weight_grad)
+
+    tr_grad = tr_tensor.grad
+    pt_grad = pt_tensor.grad.detach().numpy()
+    assert tr_grad.close_to(pt_grad, atol=1e-6, rtol=1e-4)
+
+
+# reference swiglu implementation
+class PytorchSwiGLU(nn.Module):
+
+    def __init__(self, w1, w2, w3) -> None:
+        super().__init__()
+        self.w1 = w1
+        self.w2 = w2
+        self.w3 = w3
+
+    def forward(self, x):
+        x1 = nn.functional.linear(x, self.w1.weight)
+        x2 = nn.functional.linear(x, self.w2.weight)
+        hidden = nn.functional.silu(x1) * x2
+        return nn.functional.linear(hidden, self.w3.weight)
+
+
+@given(tensor_shape(), st.booleans())
+@example(in_shape=[32], is_batched=False)
+def test_swiglu_matches(in_shape, is_batched):
+    tr_tensor = build_tensor(in_shape, is_batched)
+    assume(np.isfinite(tr_tensor.array).all())
+    pt_tensor = torch.tensor(copy(tr_tensor.array), requires_grad=True)
+
+    embedding_dim = tr_tensor.shape[-1]
+    tr_layer = SwiGLU(embedding_dim)
+    tr_out = tr_layer(tr_tensor).from_batched().mean()
+
+    pt_layer = PytorchSwiGLU(embedding_dim)
     pt_out = pt_layer(pt_tensor).mean()
 
     assert tr_out.close_to(pt_out.detach().numpy()), (tr_out, pt_out)

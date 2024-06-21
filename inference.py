@@ -12,7 +12,8 @@ from tricycle.layers import Dropout, Layer
 from tricycle.models import GPT
 from tricycle.tensor import to_tensor
 from tricycle.tokeniser import BPETokeniser
-from tricycle_datasets.codeparrot import CodeParrot
+
+# from tricycle_datasets.codeparrot import CodeParrot
 from tricycle_datasets.shakespeare import Shakespeare
 
 config = SmolGPTConfig()

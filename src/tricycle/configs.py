@@ -14,6 +14,7 @@ class GPTConfig:
     n_layers: int
     expansion_ratio: float
     activation_fn: str
+    norm_fn: str
 
     input_dropout_prob: float
     residual_dropout_prob: float
@@ -57,6 +58,7 @@ class ShakespeareConfig(GPTConfig):
     n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
+    norm_fn = "layer_norm"
 
     input_dropout_prob = 0.2
     residual_dropout_prob = 0.2
@@ -77,7 +79,7 @@ class ShakespeareConfig(GPTConfig):
     gradient_accumulation_steps = 1
     sample_size = 512
 
-    device_idx = 0
+    device_idx = 1
 
     mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"
@@ -91,7 +93,7 @@ class SmolGPTConfig(GPTConfig):
     n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
-    norm_fn = "layer_norm"
+    norm_fn = "rms_norm"
 
     input_dropout_prob = 0.2
     residual_dropout_prob = 0.2

@@ -308,3 +308,94 @@ class GPT2TransformerBlock(Layer):
         self.mlp_block.from_gpu()
         self.norm_1.from_gpu()
         self.norm_1.from_gpu()
+
+
+class FeedForward(Layer):
+    """
+    A simple llama style feed forward block with 2 linear layers around a swiglu
+    function
+
+    The size of the hidden dimension is expansion_ratio * the size of the
+    input
+    """
+
+    embedding_dim: int
+    dropout_prob: float
+    expansion_ratio: float
+    activation_fn: Layer
+    linear_1: Dense
+    linear_2: Dense
+
+    def __init__(
+        self,
+        embedding_dim: int,
+        dropout_prob: float,
+        expansion_ratio: float = 4,
+        activation_fn: Layer | str = GeLU(),
+    ):
+        self.linear_1 = Dense(
+            from_size=embedding_dim,
+            to_size=int(expansion_ratio * embedding_dim),
+            initialiser=init_xavier,
+            name="linear_1",
+        )
+        self.linear_2 = Dense(
+            from_size=int(expansion_ratio * embedding_dim),
+            to_size=embedding_dim,
+            initialiser=init_xavier,
+            name="linear_2",
+        )
+        self.dropout = Dropout(dropout_prob)
+        if isinstance(activation_fn, str):
+            match activation_fn:
+                case "gelu":
+                    activation_fn = GeLU()
+                case "relu":
+                    activation_fn = ReLU()
+                case "swish":
+                    activation_fn = Swish()
+                case "glu":
+                    activation_fn = GLU(int(expansion_ratio * embedding_dim))
+                case "swiglu":
+                    activation_fn = SwiGLU(
+                        int(expansion_ratio * embedding_dim)
+                    )
+                case _:
+                    raise NotImplementedError(
+                        f"Activation function {activation_fn} is not "
+                        "yet implemented"
+                    )
+        self.activation_fn = activation_fn
+        self.layers = [
+            self.linear_1,
+            self.activation_fn,
+            self.linear_2,
+            self.dropout,
+        ]
+
+    def forward(self, x: Tensor):
+        x = self.linear_1(x)
+        x = self.activation_fn(x)
+        x = self.linear_2(x)
+        x = self.dropout(x)
+        return x
+
+    def update(self, optimiser: Optimiser):
+        self.linear_1.update(optimiser)
+        self.linear_2.update(optimiser)
+        return self
+
+    def zero_grad(self):
+        self.linear_1.zero_grad()
+        self.linear_2.zero_grad()
+        return self
+
+    def to_gpu(self, device: int = 0):
+        self.linear_1.to_gpu(device)
+        self.linear_2.to_gpu(device)
+        return self
+
+    def from_gpu(self):
+        self.linear_1.from_gpu()
+        self.linear_2.from_gpu()
+        return self

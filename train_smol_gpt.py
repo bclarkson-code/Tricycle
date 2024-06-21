@@ -14,7 +14,8 @@ import uuid
 from pathlib import Path
 
 from tricycle import CUPY_ENABLED
-from tricycle.tensor import Op, Tensor
+from tricycle.ops import Op
+from tricycle.tensor import Tensor
 from tricycle.utils import optimal_n_tokens
 
 if CUPY_ENABLED:
@@ -32,7 +33,9 @@ from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
-from tricycle_datasets.codeparrot import CodeParrot
+
+# from tricycle_datasets.codeparrot import CodeParrot
+from tricycle_datasets.shakespeare import Shakespeare
 
 # fix the seed for reproducibility
 xp.random.seed(0)
@@ -46,9 +49,7 @@ model.display()
 n_tokens, n_steps = optimal_n_tokens(model, config)
 
 
-def load_datasets(
-    n_tokens: int, config: SmolGPTConfig
-) -> tuple[CodeParrot, CodeParrot, CausalLMDataset, CausalLMDataset]:
+def load_datasets(n_tokens: int, config: SmolGPTConfig):
     """
     Load tokens, batch and shuffle them.
     """
@@ -57,11 +58,12 @@ def load_datasets(
     # it will create some big cache files in ~/.cache/huggingface that you might
     # want to clean up once you are done with the dataset
     print("Loading dataset")
-    train_dataset = CodeParrot(config.vocab_size, split="train")
+    train_dataset = Shakespeare(config.vocab_size)
+    # train_dataset = CodeParrot(config.vocab_size, split="train")
 
     # trim the training dataset to the chinchilla optimal number of tokens
     train_dataset.tokens = train_dataset.tokens[:n_tokens]
-    valid_dataset = CodeParrot(config.vocab_size, split="valid")
+    valid_dataset = Shakespeare(config.vocab_size)
 
     print("Loading dataloaders")
     train_dataloader = (
@@ -142,7 +144,7 @@ if CUPY_ENABLED:
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:codeparrot:base")
+mlflow.set_experiment("SmolGPT:codeparrot:debug")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 with mlflow.start_run() as run:
     unique_id = uuid.uuid4()

@@ -26,6 +26,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_DTYPE = np.float16
+
 
 class Tensor:
     """
@@ -50,6 +52,7 @@ class Tensor:
         is_batched: bool = False,
         args: tuple["Tensor", ...] | None = None,
         back_fns: tuple["Op", ...] | None = None,
+        dtype: np.typing.DTypeLike | None = None,
         name: str | None = None,
         _id: int | None = None,
     ):
@@ -63,6 +66,8 @@ class Tensor:
                 self.array = np.array(array)
         else:
             self.array = np.array(array)
+        if dtype is None:
+            self.array = self.array.astype(DEFAULT_DTYPE)
 
         self.requires_grad = requires_grad
         self.is_batched = is_batched
@@ -508,7 +513,7 @@ def to_tensor(
     requires_grad: bool = True,
     is_batched: bool = False,
     _id: int | None = None,
-    dtype: np.dtype | None = None,
+    dtype: np.typing.DTypeLike | None = None,
     **kwargs,
 ) -> Tensor:
     """
@@ -537,6 +542,7 @@ def to_tensor(
         name=name,
         requires_grad=requires_grad,
         is_batched=is_batched,
+        dtype=dtype,
         _id=_id,
     )
 
