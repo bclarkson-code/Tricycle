@@ -59,7 +59,7 @@ conda activate tricycle
 If you want to install test dependencies you can do the following.
 
 ```bash
-conda env create -f environment.test.yml -n tricycle
+conda env create -f requirements/environment.test.yml -n tricycle
 conda activate tricycle
 ```
 
