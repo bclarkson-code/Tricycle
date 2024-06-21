@@ -116,26 +116,24 @@ class SwiGLU(Layer):
     the sigmoid with a swish
     """
 
-    linear: Dense
-    bias: Tensor
+    weights: Dense
 
     def __init__(
         self,
         from_size: int,
         to_size: int,
         initialiser=init_xavier,
-        tunable_bias=True,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.bias = to_tensor(1.0, requires_grad=tunable_bias, name="bias")
-        self.tunable_bias = tunable_bias
         self.weights = initialiser((from_size, 2 * to_size))
         self.tensors = {"weights": self.weights}
+        self.from_size = from_size
+        self.to_size = to_size
 
     def _sigmoid(self, x, xp) -> ArrayLike:
-        return 1 / (1 + xp.exp(x))
+        return 1 / (1 + xp.exp(-x))
 
     def forward(self, tensor: Tensor):
         match tensor.ndim:
@@ -163,16 +161,17 @@ class SwiGLU(Layer):
                 )
 
         xp = tensor.xp
-        x = tensor.array
+        self._inputs = tensor.array
 
-        breakpoint()
-        projected = xp.einsum(subscript, x, self.weights.array)
-        left = projected[..., : self.size]
-        right = projected[..., self.size :]
+        projected = xp.einsum(subscript, self._inputs, self.weights.array)
+        # we could do this with two different sets of weights but it is
+        # mor efficient to do everything in a single array
+        left = projected[..., : self.to_size]
+        right = projected[..., self.to_size :]
 
-        self.sigmoid_out = self._sigmoid(right, xp)
+        self.sigmoid_out = self._sigmoid(left, xp)
 
-        result = left * self.sigmoid_out
+        result = left * self.sigmoid_out * right
         return Tensor(
             result,
             args=(tensor, self.weights),
@@ -180,26 +179,54 @@ class SwiGLU(Layer):
             is_batched=tensor.is_batched,
         )
 
-    def backwards(self, grad: Tensor) -> Tensor:
+    def backwards(self, grad: Tensor):
         xp = grad.xp
-        sigmoid_grad = self.sigmoid_output * (1 - self.sigmoid_output)
-        out = grad.array * (
-            self.sigmoid_out
-            + self._input
-            * xp.einsum(self.grad_subscript, sigmoid_grad, self.weights)
-        )
-        return Tensor(out, name="back_swiglu", is_batched=grad.is_batched)
 
-    def back_weights(self, grad: Tensor) -> Tensor:
+        sigmoid_grad = grad.array * (
+            self.sigmoid_out + (1 - self.sigmoid_out) * self.sigmoid_out
+        )
+
+        left = xp.einsum(
+            self.grad_subscript,
+            self.weights.array[:, self.to_size :],
+            sigmoid_grad,
+        )
+
+        right_grad = grad.array * self.sigmoid_out
+        right = xp.einsum(
+            self.grad_subscript,
+            self.weights.array[:, : self.to_size],
+            right_grad,
+        )
+
+        out = left + right
+        return Tensor(out, is_batched=grad.is_batched)
+
+    def back_weights(self, grad: Tensor):
         xp = grad.xp
-        sigmoid_grad = self.sigmoid_output * (1 - self.sigmoid_output)
-        left = grad.array * self._input * sigmoid_grad
-        right = self._input
-        weight_grad = xp.einsum(self.weight_subscript, left, right)
 
-        return Tensor(
-            weight_grad, name="back_swiglu_weights", is_batched=grad.is_batched
+        sigmoid_grad = grad.array * (
+            self.sigmoid_out + (1 - self.sigmoid_out) * self.sigmoid_out
         )
+
+        left = xp.einsum(
+            self.weight_subscript,
+            self._inputs,
+            sigmoid_grad,
+        )
+
+        right_grad = grad.array * self.sigmoid_out
+        right = xp.einsum(
+            self.weight_subscript,
+            self._inputs,
+            right_grad,
+        )
+
+        out = xp.empty_like(self.weights.array)
+        out[..., : self.to_size] = left
+        out[..., self.to_size :] = right
+
+        return Tensor(out, is_batched=grad.is_batched)
 
     def update(self, optimiser: Optimiser):
         self.linear.update(optimiser)

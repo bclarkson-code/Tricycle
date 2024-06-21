@@ -333,7 +333,7 @@ class FeedForward(Layer):
         expansion_ratio: float = 4,
         activation_fn: Layer | str = GeLU(),
     ):
-        self.linear_1 = Dense(
+        self.swiglu = SwiGLU(
             from_size=embedding_dim,
             to_size=int(expansion_ratio * embedding_dim),
             initialiser=init_xavier,
@@ -365,10 +365,8 @@ class FeedForward(Layer):
                         f"Activation function {activation_fn} is not "
                         "yet implemented"
                     )
-        self.activation_fn = activation_fn
         self.layers = [
             self.linear_1,
-            self.activation_fn,
             self.linear_2,
             self.dropout,
         ]

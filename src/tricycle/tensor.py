@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DTYPE = np.float16
+DEFAULT_DTYPE = np.float32
 
 
 class Tensor:

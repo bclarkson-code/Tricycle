@@ -414,17 +414,15 @@ def test_rms_norm_matches(in_shape, is_batched):
 # reference swiglu implementation
 class PytorchSwiGLU(nn.Module):
 
-    def __init__(self, w1, w2, w3) -> None:
+    def __init__(self, w1, w2) -> None:
         super().__init__()
         self.w1 = w1
         self.w2 = w2
-        self.w3 = w3
 
     def forward(self, x):
-        x1 = nn.functional.linear(x, self.w1.weight)
-        x2 = nn.functional.linear(x, self.w2.weight)
-        hidden = nn.functional.silu(x1) * x2
-        return nn.functional.linear(hidden, self.w3.weight)
+        x1 = self.w1.T @ x
+        x2 = self.w2.T @ x
+        return nn.functional.silu(x1) * x2
 
 
 @given(tensor_shape(), st.booleans())
@@ -435,10 +433,15 @@ def test_swiglu_matches(in_shape, is_batched):
     pt_tensor = torch.tensor(copy(tr_tensor.array), requires_grad=True)
 
     embedding_dim = tr_tensor.shape[-1]
-    tr_layer = SwiGLU(embedding_dim)
+    tr_layer = SwiGLU(from_size=embedding_dim, to_size=4 * embedding_dim)
     tr_out = tr_layer(tr_tensor).from_batched().mean()
 
-    pt_layer = PytorchSwiGLU(embedding_dim)
+    left_weights = tr_layer.weights[..., : 4 * embedding_dim].array
+    right_weights = tr_layer.weights[..., 4 * embedding_dim :].array
+    left_weights = torch.tensor(left_weights)
+    right_weights = torch.tensor(right_weights)
+
+    pt_layer = PytorchSwiGLU(left_weights, right_weights)
     pt_out = pt_layer(pt_tensor).mean()
 
     assert tr_out.close_to(pt_out.detach().numpy()), (tr_out, pt_out)
@@ -446,9 +449,13 @@ def test_swiglu_matches(in_shape, is_batched):
     tr_out.backward()
     pt_out.backward()
 
-    pt_weight_grad = pt_layer.weight.grad.detach().numpy()
-    tr_weight_grad = tr_layer.weights.grad
-    assert tr_weight_grad.close_to(pt_weight_grad)
+    breakpoint()
+    pt_w1_grad = pt_layer.w1.grad.detach().numpy()
+    pt_w2_grad = pt_layer.w2.grad.detach().numpy()
+    tr_w1_grad = tr_layer.weights.grad[..., : tr_layer.to_size].array
+    tr_w2_grad = tr_layer.weights.grad[..., tr_layer.to_size :].array
+    assert np.allclose(pt_w1_grad, tr_w1_grad)
+    assert np.allclose(pt_w2_grad, tr_w2_grad)
 
     tr_grad = tr_tensor.grad
     pt_grad = pt_tensor.grad.detach().numpy()
