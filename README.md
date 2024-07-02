@@ -6,7 +6,7 @@
 
 Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and Numpy.
 
-The file `train_smol_gpt.py` trains a 49M parameter, GPT-2 style language model that can produce passable python code in ~2 days on a single RTX 3090.
+The file `train_smol_gpt.py` can train GPT-2 (124M), ~5 days on a single RTX 3090.
 
 The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + Numpy code.
 
