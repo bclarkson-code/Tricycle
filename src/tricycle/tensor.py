@@ -67,7 +67,8 @@ class Tensor:
         else:
             self.array = np.array(array)
         if dtype is None:
-            self.array = self.array.astype(DEFAULT_DTYPE)
+            dtype = DEFAULT_DTYPE
+        self.array = self.array.astype(dtype)
 
         self.requires_grad = requires_grad
         self.is_batched = is_batched
@@ -122,7 +123,7 @@ class Tensor:
         child node if all of its parents have been visited through every
         possible path: a topological sort.
         """
-        self.grad = to_tensor(
+        self.grad = Tensor(
             self.xp.ones(self.array.shape, dtype=self.dtype),
             requires_grad=False,
             is_batched=self.is_batched,

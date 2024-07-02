@@ -33,9 +33,7 @@ from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.scheduler import lr_schedule
-
-# from tricycle_datasets.codeparrot import CodeParrot
-from tricycle_datasets.shakespeare import Shakespeare
+from tricycle_datasets.fineweb import FineWeb
 
 # fix the seed for reproducibility
 xp.random.seed(0)
@@ -58,12 +56,11 @@ def load_datasets(n_tokens: int, config: SmolGPTConfig):
     # it will create some big cache files in ~/.cache/huggingface that you might
     # want to clean up once you are done with the dataset
     print("Loading dataset")
-    train_dataset = Shakespeare(config.vocab_size)
-    # train_dataset = CodeParrot(config.vocab_size, split="train")
+    train_dataset = FineWeb(config.vocab_size, split="train")
 
-    # trim the training dataset to the chinchilla optimal number of tokens
-    train_dataset.tokens = train_dataset.tokens[:n_tokens]
-    valid_dataset = Shakespeare(config.vocab_size)
+    # we cant fit more than 7B indices in memory
+    train_dataset.tokens = train_dataset.tokens[:3_000_000_000]
+    valid_dataset = FineWeb(config.vocab_size, split="valid")
 
     print("Loading dataloaders")
     train_dataloader = (
@@ -144,7 +141,7 @@ if CUPY_ENABLED:
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:codeparrot:debug")
+mlflow.set_experiment("SmolGPT:fineweb:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 with mlflow.start_run() as run:
     unique_id = uuid.uuid4()

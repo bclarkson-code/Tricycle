@@ -86,11 +86,11 @@ class ShakespeareConfig(GPTConfig):
 
 
 class SmolGPTConfig(GPTConfig):
-    embedding_dim = 384
-    context_window = 256
-    vocab_size = 100276
-    n_heads = 6
-    n_layers = 6
+    embedding_dim = 768
+    context_window = 1024
+    vocab_size = 50256
+    n_heads = 12
+    n_layers = 12
     expansion_ratio = 4
     activation_fn = "gelu"
     norm_fn = "rms_norm"
@@ -99,19 +99,19 @@ class SmolGPTConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    max_learning_rate = 1e-3
-    min_learning_rate = 1e-4
+    max_learning_rate = 1e-4
+    min_learning_rate = 1e-5
     warmup_steps = 100
     weight_decay = 1e-1
     momentum = 0
     beta1 = 0.9
-    beta2 = 0.99
+    beta2 = 0.95
 
     steps = "chinchilla_optimal"
     eval_interval = 250
     eval_steps = 128
-    batch_size = 20
-    gradient_accumulation_steps = 4
+    batch_size = 3
+    gradient_accumulation_steps = 12
     sample_size = 512
 
     device_idx = 0

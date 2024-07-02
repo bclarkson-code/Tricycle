@@ -243,7 +243,7 @@ class UnaryExp(Op):
 
 
 class UnaryLog(Op):
-    REALLY_SMALL_NUMBER = 1e-8
+    REALLY_SMALL_NUMBER = 1e-6
 
     _input: ArrayLike
 

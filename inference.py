@@ -10,10 +10,9 @@ from tricycle.configs import ShakespeareConfig, SmolGPTConfig
 from tricycle.functions import Softmax
 from tricycle.layers import Dropout, Layer
 from tricycle.models import GPT
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 from tricycle.tokeniser import BPETokeniser
-
-# from tricycle_datasets.codeparrot import CodeParrot
+from tricycle_datasets.fineweb import FineWeb
 from tricycle_datasets.shakespeare import Shakespeare
 
 config = SmolGPTConfig()
@@ -46,7 +45,6 @@ def deactivate_dropout(model: Layer) -> Layer:
     return model
 
 
-# TODO: allow tokensiers that arent shakespeare
 def generate(
     model: GPT,
     tokens: np.ndarray | None = None,
@@ -63,9 +61,9 @@ def generate(
         tokens = tokens[-config.context_window :]
         assert len(tokens) == config.context_window
 
-        encoded = to_tensor(
-            [tokens], dtype=int, requires_grad=False
-        ).to_batched()
+        encoded = Tensor(
+            [tokens], dtype=np.uint16, requires_grad=False, is_batched=True
+        )
 
         pred = model(encoded)
         pred = Softmax()(pred / temperature)
@@ -102,7 +100,6 @@ def get_sample(
             generate(
                 tokens=sample_tokens,
                 model=model,
-                tokeniser=tokeniser,
             )
         ),
         desc="Sampling",
@@ -123,20 +120,35 @@ def get_sample(
 if __name__ == "__main__":
     np.random.seed(0)
 
-    config = ShakespeareConfig()
-    dataset = Shakespeare(config.vocab_size)
+    # config = ShakespeareConfig()
+    # dataset = Shakespeare(config.vocab_size)
+    config = SmolGPTConfig()
+    dataset = FineWeb(config.vocab_size, split="valid")
 
     import cupy
 
-    with cupy.cuda.Device(1):
-        model = load_model(sys.argv[1])
-        model.to_gpu(1)
+    model = load_model(sys.argv[1])
+    model.to_gpu(0)
 
+    # model.from_gpu()
+    model.zero_grad()
     deactivate_dropout(model)
 
-    sample_text = dataset.raw_data_path.read_text()[:2048]
-    sample_tokens = dataset.tokeniser.encode(sample_text)
+    # with open('models/smol_gpt_fineweb.pkl', 'wb') as f:
+    #     pickle.dump(model, f)
+
+    START = 5_000
+    sample_tokens = dataset.tokens[START : START + 1024]
+    line = []
+    prev = ""
     for token in generate(tokens=sample_tokens, model=model, sample=True):
+        if token == dataset.tokeniser.eot_token:
+            break
         token = int(token)
-        token = dataset.decode([token])
-        print(token, end="", flush=True)
+        line = line + [token]
+        new = dataset.decode(line)
+        if ord(new[-1]) != 65533:
+            diff = new[len(prev) :]
+            prev = new
+
+            print(diff, end="", flush=True)
