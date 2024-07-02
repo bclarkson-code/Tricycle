@@ -165,4 +165,4 @@ class Attention(Op):
         if CUPY_ENABLED:
             import cupy as cp
 
-            self._mask = cp.asnumpy(self._mask)
+            self.mask = cp.asnumpy(self.mask)

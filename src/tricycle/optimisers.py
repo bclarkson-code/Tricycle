@@ -75,7 +75,7 @@ class AdamW(Optimiser):
         self,
         learning_rate=1e-3,
         betas=(0.9, 0.999),
-        eps=1e-8,
+        eps=1e-6,
         weight_decay=0.01,
     ):
         self.learning_rate = learning_rate
@@ -100,9 +100,11 @@ class AdamW(Optimiser):
 
         # initialise stores
         if key not in self.m:
-            self.m[key] = xp.zeros_like(tensor.array)
+            self.m[key] = xp.zeros_like(tensor.array, dtype=tensor.array.dtype)
         if key not in self.v:
-            self.v[key] = tensor.xp.zeros_like(tensor.array)
+            self.v[key] = tensor.xp.zeros_like(
+                tensor.array, dtype=tensor.array.dtype
+            )
 
         self.m[key] = (
             self.betas[0] * self.m[key]
