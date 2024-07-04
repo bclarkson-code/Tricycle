@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
+from tricycle.activation import GLU, GeLU, ReLU, Swish
 from tricycle.tensor import to_tensor
 
 
