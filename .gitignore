@@ -33,3 +33,4 @@ python*.json
 # binaries
 *.pkl
 build/lib
+datasets/fineweb
