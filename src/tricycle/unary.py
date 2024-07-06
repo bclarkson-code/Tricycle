@@ -472,6 +472,7 @@ class Batch(Op):
             is_batched=True,
             args=(tensor,),
             back_fns=(self.back_fn,),
+            dtype=tensor.dtype,
         )
 
 
@@ -496,4 +497,5 @@ class Unbatch(Op):
             is_batched=False,
             args=(tensor,),
             back_fns=(self.back_fn,),
+            dtype=tensor.dtype,
         )
