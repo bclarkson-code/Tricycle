@@ -6,7 +6,7 @@ from typing import Literal
 
 import numpy as np
 
-from tricycle.activation import GLU, GeLU, ReLU, SwiGLU, Swish
+from tricycle.activation import GLU, GeLU, ReLU, Swish
 from tricycle.attention import Attention
 from tricycle.initialisers import init_xavier
 from tricycle.layers import (  # noqa E501
@@ -41,9 +41,8 @@ def masked_fill(
     """
     xp = tensor.xp
     repeats = tensor.shape[1] if tensor.is_batched else tensor.shape[0]
-    mask = xp.stack(
-        [full_mask[: mask_shape[0], : mask_shape[1]].array] * repeats
-    )
+    breakpoint()
+    mask = xp.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
     mask = to_tensor(mask, requires_grad=False, name="mask")
     result = tensor + mask
     result.name = "masked"
@@ -178,10 +177,6 @@ class MLPBlock(Layer):
                     activation_fn = Swish()
                 case "glu":
                     activation_fn = GLU(int(expansion_ratio * embedding_dim))
-                case "swiglu":
-                    activation_fn = SwiGLU(
-                        int(expansion_ratio * embedding_dim)
-                    )
                 case _:
                     raise NotImplementedError(
                         f"Activation function {activation_fn} is not "
