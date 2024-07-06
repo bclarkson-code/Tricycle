@@ -402,7 +402,7 @@ class Embedding(Layer):
                     f"{grad.ndim=}, {self.input.ndim=} are not supported"
                 )
 
-        return to_tensor(out)
+        return Tensor(out, requires_grad=grad.requires_grad)
 
     def forward(self, tensor: Tensor):
         assert (
