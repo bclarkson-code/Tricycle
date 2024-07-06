@@ -19,8 +19,23 @@ class Swish(Layer):
     is equivalent to the Silu activation function
     """
 
+    def backward(self, grad: Tensor):
+        xp = grad.xp
+
+        exp = xp.exp(-self._input)
+        numerator = 1 + exp + self._input * exp
+        denominator = (1 + exp) ** 2
+        coef = numerator / denominator
+
+        return Tensor(grad * coef)
+
     def forward(self, x: Tensor):
-        return x * sigmoid(x)
+        xp = x.xp
+
+        self._input = x.array
+        out = x.array / (1 + xp.exp(-x.array))
+
+        return Tensor(out, args=(x,), back_fns=(self.backward,), name="swish")
 
 
 class GeLU(Layer):
