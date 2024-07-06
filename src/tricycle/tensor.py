@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from tricycle import CUPY_ENABLED
+from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DTYPE = np.float16
+DEFAULT_DTYPE = np.float32
 
 
 class Tensor:
@@ -52,7 +52,7 @@ class Tensor:
         is_batched: bool = False,
         args: tuple["Tensor", ...] | None = None,
         back_fns: tuple["Op", ...] | None = None,
-        dtype: np.typing.DTypeLike | None = None,
+        dtype: np.typing.DTypeLike = None,
         name: str | None = None,
         _id: int | None = None,
     ):
@@ -66,8 +66,13 @@ class Tensor:
                 self.array = np.array(array)
         else:
             self.array = np.array(array)
+
         if dtype is None:
-            dtype = DEFAULT_DTYPE
+            if TRICYCLE_CONTEXT.use_mixed_precision:
+                dtype = np.float16
+            else:
+                dtype = DEFAULT_DTYPE
+
         self.array = self.array.astype(dtype)
 
         self.requires_grad = requires_grad

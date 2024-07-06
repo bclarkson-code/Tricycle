@@ -1,6 +1,7 @@
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.binary import BinaryDivide
 from tricycle.ops import Op
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 from tricycle.unary import UnaryDivide, UnaryExp
 
 
@@ -25,6 +26,10 @@ class Softmax(Op):
         """
         xp = tensor.xp
 
+        # Exponents tend to overflow/underflow when using 16 bit precision
+        # so we need to switch to 32 bit
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array = tensor.array.astype(xp.float32)
         exp = xp.exp(
             # subtract the largest value for numeric stability
             tensor.array
@@ -32,6 +37,8 @@ class Softmax(Op):
         )
         denominator = xp.sum(exp, axis=-1, keepdims=True)
         self._out = exp / denominator
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._out = self._out.astype(xp.float16)
 
         return Tensor(
             self._out,
