@@ -58,8 +58,8 @@ def load_datasets(n_tokens: int, config: SmolGPTConfig):
     print("Loading dataset")
     train_dataset = FineWeb(config.vocab_size, split="train")
 
-    # we cant fit more than 7B indices in memory
-    train_dataset.tokens = train_dataset.tokens[:3_000_000_000]
+    # we cant fit more than 3B indices in memory
+    train_dataset.tokens = train_dataset.tokens[: int(3e9)]
     valid_dataset = FineWeb(config.vocab_size, split="valid")
 
     print("Loading dataloaders")
@@ -111,7 +111,7 @@ def estimate_loss(
             inputs = inputs.to_gpu(config.device_idx)
             outputs = outputs.to_gpu(config.device_idx)
 
-        # forward and backward pass
+        # forward pass
         logits = model(inputs)
         loss = loss_fn(outputs, logits)
         batch_loss += loss.array / config.eval_steps
@@ -119,8 +119,52 @@ def estimate_loss(
     return batch_loss
 
 
-train_dataset, valid_dataset, train_dataloader, valid_dataloader = (
-    load_datasets(n_tokens, config)
+def validate(
+    model: GPT,
+    valid_dataset: CausalLMDataset,
+    config: SmolGPTConfig,
+    loss_fn: Op,
+    best_loss: float,
+):
+    # generate some text
+    predicted = get_sample(
+        model=model,
+        tokeniser=valid_dataset.tokeniser,
+        sample_tokens=valid_dataset.tokens[: config.context_window],
+    )
+    mlflow.log_text(predicted, f"generated/{step}.txt")
+
+    # esimate validation loss
+    valid_loss = estimate_loss(
+        model=model,
+        valid_dataloader=valid_dataloader,
+        config=config,
+        loss_fn=loss_fn,
+    )
+    mlflow.log_metric("valid_loss", valid_loss, step=step)
+
+    # checkpoint if new model better than old
+    if valid_loss < best_loss:
+        Path("models").mkdir(exist_ok=True)
+        with open(f"models/model_{unique_id}.pkl", "wb") as f:
+            pickle.dump(model, f)
+        best_loss = valid_loss
+    return best_loss
+
+
+model = GPT(config)
+model.display()
+
+# Use corrected Chinchilla scaling to estimate the compute-optimal number of
+# tokens and steps we should train for
+n_tokens, n_steps = optimal_n_tokens(model, config)
+
+loss_fn = CrossEntropy()
+scheduler = CosineSchedule(
+    max_learning_rate=config.max_learning_rate,
+    min_learning_rate=config.min_learning_rate,
+    warmup_steps=config.warmup_steps,
+    total_steps=n_steps,
 )
 loss_fn = CrossEntropy()
 optimiser = AdamW(
@@ -178,36 +222,20 @@ with mlflow.start_run() as run:
         mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
 
         # step the learning rate
-        optimiser.learning_rate = lr_schedule(
-            step,
-            max_learning_rate=config.max_learning_rate,
-            min_learning_rate=config.min_learning_rate,
-            warmup_steps=config.warmup_steps,
-            total_steps=n_steps,
-        )
-        losses[step] = batch_loss
+        optimiser.learning_rate = scheduler(step)
 
         if step % config.eval_interval == 0:
-            # generate some text
-            predicted = get_sample(
+            best_loss = validate(
                 model=model,
-                tokeniser=valid_dataset.tokeniser,
-                sample_tokens=valid_dataset.tokens[: config.context_window],
-            )
-            mlflow.log_text(predicted, f"generated/{step}.txt")
-
-            # esimate validation loss
-            valid_loss = estimate_loss(
-                model=model,
-                valid_dataloader=valid_dataloader,
+                valid_dataset=valid_dataset,
                 config=config,
                 loss_fn=loss_fn,
+                best_loss=best_loss,
             )
-            mlflow.log_metric("valid_loss", valid_loss, step=step)
-
-            # checkpoint if new model better than old
-            if valid_loss < best_loss:
-                Path("models").mkdir(exist_ok=True)
-                with open(f"models/model_{unique_id}.pkl", "wb") as f:
-                    pickle.dump(model, f)
-                best_loss = valid_loss
+validate(
+    model=model,
+    valid_dataset=valid_dataset,
+    config=config,
+    loss_fn=loss_fn,
+    best_loss=best_loss,
+)

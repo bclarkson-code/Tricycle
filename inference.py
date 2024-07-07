@@ -6,14 +6,13 @@ import numpy as np
 import tiktoken
 from tqdm import tqdm
 
-from tricycle.configs import ShakespeareConfig, SmolGPTConfig
+from tricycle.configs import SmolGPTConfig
 from tricycle.functions import Softmax
 from tricycle.layers import Dropout, Layer
 from tricycle.models import GPT
 from tricycle.tensor import Tensor
 from tricycle.tokeniser import BPETokeniser
 from tricycle_datasets.fineweb import FineWeb
-from tricycle_datasets.shakespeare import Shakespeare
 
 config = SmolGPTConfig()
 
@@ -103,11 +102,11 @@ def get_sample(
             )
         ),
         desc="Sampling",
-        total=config.sample_size,
+        total=config.n_tokens_to_generate,
         position=1,
         leave=False,
     ):
-        if i > config.sample_size:
+        if i > config.n_tokens_to_generate:
             break
         sampled.append(next_token)
 

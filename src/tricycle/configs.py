@@ -99,20 +99,20 @@ class SmolGPTConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    max_learning_rate = 1e-4
-    min_learning_rate = 1e-5
-    warmup_steps = 100
+    max_learning_rate = 6e-4
+    min_learning_rate = 0
+    warmup_steps = 150  # roughly matches andrej's warmup steps in llm.c
     weight_decay = 1e-1
     momentum = 0
     beta1 = 0.9
     beta2 = 0.95
 
     steps = "chinchilla_optimal"
-    eval_interval = 250
+    eval_interval = 100
     eval_steps = 128
-    batch_size = 3
-    gradient_accumulation_steps = 12
-    sample_size = 512
+    batch_size = 4
+    gradient_accumulation_steps = 128  # effective batch size of 524288 tokens
+    n_tokens_to_generate = 512
 
     device_idx = 0
 

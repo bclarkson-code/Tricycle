@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Iterable
 import humanize
 import numpy as np
 
-from tricycle import CUPY_ENABLED
-from tricycle.configs import SmolGPTConfig
+from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
+from tricycle.configs import GPTConfig, SmolGPTConfig
 from tricycle.exceptions import GPUDisabledException
 
 if TYPE_CHECKING:
@@ -110,23 +110,51 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
         )
 
 
-def optimal_n_tokens(model: "GPT", config: SmolGPTConfig):
+def optimal_n_tokens(model: "GPT", config: GPTConfig) -> tuple[int, int]:
     """
     Use corrected chinchilla scaling to estimate the compute-optimal number of
     tokens to train on.
     See https://arxiv.org/abs/2404.10102 for details
     """
-    # constants from the paper
-    CONST = 1.82
-    A = 514
-    B = 2115.2
-    pow_1 = 0.35
-    pow_2 = 0.37
-    tokens_per_param = 20
+    # values from the appendix of the paper
+    flops = [
+        1.84e19,
+        1.20e20,
+        1.32e22,
+        6.88e23,
+        4.54e24,
+        1.18e25,
+        4.19e25,
+        1.59e26,
+        1.75e28,
+    ]
+    tokens = [
+        7.7e9,
+        20e9,
+        219.5e9,
+        1.7e12,
+        4.3e12,
+        7.1e12,
+        13.4e12,
+        26.5e12,
+        292e12,
+    ]
 
-    model_size = sum(size for _, size, _ in model._contents())
-    n_tokens = model_size * tokens_per_param
-    n_steps = n_tokens // (
+    # fit a linear regression
+    slope, intercept = np.polyfit(np.log(flops), np.log(tokens), 1)
+
+    n_parameters = sum(size for _, size, _ in model._contents())
+
+    # rearrange regression to get number of tokens:
+    #
+    # assuming flops ~= 6 * n_tokens * n_parameters, we get
+    # log(tokens) = slope * log(6 * n_tokens * n_parameters) + intercept
+    # which rearranges to the following:
+    power = 1 / (1 - slope)
+    constant = (6**slope) * (n_parameters**slope) * np.exp(intercept)
+    n_tokens = int(constant**power)
+
+    tokens_per_step = (
         config.batch_size
         * config.gradient_accumulation_steps
         * config.context_window
