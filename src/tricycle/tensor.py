@@ -12,7 +12,6 @@ converts tensors to batched tensors.
 import logging
 import numbers
 import uuid
-import weakref
 from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 
 import numpy as np
@@ -20,6 +19,7 @@ from numpy.typing import ArrayLike
 
 from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
+from tricycle.weakset import WeakSet
 
 if TYPE_CHECKING:
     from tricycle.ops import Op
@@ -106,7 +106,7 @@ class Tensor:
                     # which can't be garbage collected, leading to a memory
                     # leak so we need to do a weakref to avoid the circular
                     # reference
-                    arg.parents = weakref.WeakSet()
+                    arg.parents = WeakSet()
 
                 # if a node has a parent we haven't visited yet, store it
                 if node not in arg.parents:
@@ -334,7 +334,9 @@ class Tensor:
 
     def __eq__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self.array == other.array)
+            if other._id == self._id:
+                return Tensor(True)
+            return Tensor(self.xp.array_equal(self.array == other.array))
 
         return Tensor(self.array == other)
 
