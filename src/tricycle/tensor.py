@@ -406,11 +406,9 @@ class Tensor:
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        if self.is_batched:
-            divisor = np.prod(self.shape[1:]) if self.shape else 1
-        else:
-            divisor = np.prod(self.shape) if self.shape else 1
-        return self.sum() / divisor
+        from tricycle.ops import Mean
+
+        return Mean()(self)
 
     def sum(self) -> "Tensor":
         from tricycle.unary import UnarySum

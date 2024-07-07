@@ -41,7 +41,6 @@ def masked_fill(
     """
     xp = tensor.xp
     repeats = tensor.shape[1] if tensor.is_batched else tensor.shape[0]
-    breakpoint()
     mask = xp.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
     mask = to_tensor(mask, requires_grad=False, name="mask")
     result = tensor + mask

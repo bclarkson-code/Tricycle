@@ -1,6 +1,7 @@
 from numpy.typing import ArrayLike
 
-from tricycle.functions import sigmoid
+from tricycle import TRICYCLE_CONTEXT
+from tricycle.functions import Sigmoid
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
 from tricycle.optimisers import Optimiser
@@ -22,20 +23,38 @@ class Swish(Layer):
     def backward(self, grad: Tensor):
         xp = grad.xp
 
+        # Exponents tend to overflow/underflow when using 16 bit precision
+        # so we need to switch to 32 bit
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._input = self._input.astype(xp.float32)
+
         exp = xp.exp(-self._input)
         numerator = 1 + exp + self._input * exp
         denominator = (1 + exp) ** 2
         coef = numerator / denominator
 
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            coef = coef.astype(xp.float16)
+
         return Tensor(grad * coef)
 
-    def forward(self, x: Tensor):
-        xp = x.xp
+    def forward(self, tensor: Tensor):
+        xp = tensor.xp
 
-        self._input = x.array
-        out = x.array / (1 + xp.exp(-x.array))
+        self._input = tensor.array
+        # Exponents tend to overflow/underflow when using 16 bit precision
+        # so we need to switch to 32 bit
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._input = self._input.astype(xp.float32)
+        out = tensor.array / (1 + xp.exp(-tensor.array))
 
-        return Tensor(out, args=(x,), back_fns=(self.backward,), name="swish")
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._input = self._input.astype(xp.float16)
+            out = out.astype(xp.float16)
+
+        return Tensor(
+            out, args=(tensor,), back_fns=(self.backward,), name="swish"
+        )
 
 
 class GeLU(Layer):
@@ -56,6 +75,12 @@ class GeLU(Layer):
     def backward(self, grad: Tensor):
         xp = grad.xp
 
+        # Hyperbolic trig functions (cosh and tanh) use exponents under the
+        # hood which can overflow/underflow when using 16 bit precision so
+        # we need to switch to 32 bit precision
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._input = self._input.astype(xp.float32)
+
         inner = (
             self.CONST_1 * self._input * (1 + self.CONST_2 * self._input**2)
         )
@@ -68,6 +93,11 @@ class GeLU(Layer):
         left = xp.tanh(inner)
         cosh = xp.cosh(inner)
         right = coef / (cosh * cosh)
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            left = left.astype(xp.float16)
+            right = right.astype(xp.float16)
+
         self._grad = 0.5 * (1 + left + right) * grad.array
 
         result = to_tensor(
@@ -81,8 +111,18 @@ class GeLU(Layer):
     def forward(self, tensor: Tensor):
         xp = tensor.xp
         self._input = tensor.array
-        inner = self.CONST_1 * (tensor.array + self.CONST_2 * tensor.array**3)
-        result = tensor.array * 0.5 * (1 + xp.tanh(inner))
+
+        # Tanh tends to overflow/underflow when using 16 bit precision
+        # so we need to switch to 32 bit
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._input = self._input.astype(xp.float32)
+
+        inner = self.CONST_1 * (self._input + self.CONST_2 * self._input**3)
+        result = self._input * 0.5 * (1 + xp.tanh(inner))
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._input = self._input.astype(xp.float16)
+            result = result.astype(xp.float16)
 
         result = to_tensor(
             result,
@@ -106,11 +146,12 @@ class GLU(Layer):
         super().__init__(*args, **kwargs)
         self.linear = Dense(size, 2 * size, initialiser)
         self.layers = [self.linear]
+        self.sigmoid = Sigmoid()
 
     def forward(self, x: Tensor):
         x = self.linear(x)
         left, right = x.split(2)
-        return left * sigmoid(right)
+        return left * self.sigmoid(right)
 
     def update(self, optimiser: Optimiser):
         self.linear.update(optimiser)

@@ -152,7 +152,7 @@ with mlflow.start_run() as run:
     for step in tqdm(range(n_steps), position=0):
         mlflow.log_params(config.dict())
 
-        optimiser.step()
+        optimiser.timestep()
         batch_loss = 0
 
         # perform several forward and backward passes before doing a gradient
