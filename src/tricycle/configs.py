@@ -51,11 +51,11 @@ class GPTConfig:
 
 
 class DebugConfig(GPTConfig):
-    embedding_dim = 384
-    context_window = 256
+    embedding_dim = 768
+    context_window = 1024
     vocab_size = 1024
-    n_heads = 1
-    n_layers = 1
+    n_heads = 6
+    n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
     norm_fn = "layer_norm"
@@ -72,7 +72,7 @@ class DebugConfig(GPTConfig):
     beta1 = 0.9
     beta2 = 0.99
 
-    steps = 5
+    steps = 250
     eval_interval = 1
     eval_steps = 1
     batch_size = 4
@@ -128,15 +128,15 @@ class SmolGPTConfig(GPTConfig):
     n_layers = 12
     expansion_ratio = 4
     activation_fn = "gelu"
-    norm_fn = "rms_norm"
+    norm_fn = "layer_norm"
 
-    input_dropout_prob = 0.2
-    residual_dropout_prob = 0.2
-    linear_dropout_prob = 0.2
+    input_dropout_prob = 0
+    residual_dropout_prob = 0
+    linear_dropout_prob = 0
 
-    max_learning_rate = 1e-4
-    min_learning_rate = 1e-5
-    warmup_steps = 100
+    max_learning_rate = 6e-4
+    min_learning_rate = 0
+    warmup_steps = 700
     weight_decay = 1e-1
     momentum = 0
     beta1 = 0.9
@@ -145,8 +145,8 @@ class SmolGPTConfig(GPTConfig):
     steps = "chinchilla_optimal"
     eval_interval = 250
     eval_steps = 128
-    batch_size = 3
-    gradient_accumulation_steps = 12
+    batch_size = 4
+    gradient_accumulation_steps = 128  # effective batch size of 524288 tokens
     sample_size = 512
 
     device_idx = 0
