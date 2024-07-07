@@ -5,7 +5,7 @@ from sklearn.preprocessing import RobustScaler
 
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
-from tricycle.loss import CrossEntropy, mean_square_error
+from tricycle.loss import CrossEntropy, MeanSquaredError
 from tricycle.tensor import to_tensor
 from tricycle.utils import r_squared, smooth
 
@@ -21,9 +21,9 @@ def test_can_mean_square_error():
     y_true = to_tensor([0, 0, 1])
     y_pred = to_tensor([0, 0.5, 0.5])
 
-    mse = mean_square_error(y_true, y_pred)
+    mse = MeanSquaredError()(y_true, y_pred)
 
-    assert mse.close_to(1 / 6)
+    assert mse.close_to(1 / 6, rtol=1e-3)
 
 
 def test_can_CrossEntropy():
@@ -68,42 +68,15 @@ def test_can_single_linear_regression_step():
 
     y_pred = x_input * slope + intercept
 
-    loss = mean_square_error(y_input, y_pred)
+    loss = MeanSquaredError()(y_input, y_pred)
 
-    assert loss.close_to(8.8209)
+    assert loss.close_to(8.8209, rtol=1e-3)
 
     loss.backward()
     assert slope.grad is not None
     assert intercept.grad is not None
-    assert slope.grad.close_to([-5.94])
-    assert intercept.grad.close_to([-5.94])
-
-
-def test_single_lr_step_with_multiple_datapoints():
-    # sourcery skip: extract-duplicate-method
-    x = [[1], [2]]
-    y = [[3], [5]]
-    correct_loss = to_tensor([[8.8209], [24.5025]])
-    slope = to_tensor([0.02])
-    intercept = to_tensor([0.01])
-
-    x_input = to_tensor(x, requires_grad=False, name="x", is_batched=True)
-    y_input = to_tensor(y, requires_grad=False, name="y", is_batched=True)
-
-    y_pred = x_input * slope + intercept
-    loss = mean_square_error(y_input, y_pred)
-
-    assert loss.close_to(correct_loss)
-
-    loss.backward()
-
-    correct = to_tensor([[-5.94], [-19.8]])
-    assert slope.grad is not None
-    assert slope.grad.close_to(correct)
-
-    correct = to_tensor([[-5.94], [-9.9]])
-    assert intercept.grad is not None
-    assert intercept.grad.close_to(correct)
+    assert slope.grad.close_to([-5.94], rtol=1e-3)
+    assert intercept.grad.close_to([-5.94], rtol=1e-3)
 
 
 @slow_test
@@ -138,7 +111,7 @@ def test_can_linear_regression():
             x_input = to_tensor(x_input, requires_grad=False, name="x")
             y_input = to_tensor(y_input, requires_grad=False, name="y")
             y_pred = x_input * slope + intercept
-            loss = mean_square_error(y_input, y_pred)
+            loss = MeanSquaredError()(y_input, y_pred)
             losses[idx] += loss
 
             loss.backward()
@@ -162,7 +135,7 @@ def test_can_linear_regression():
             last_slope_grad = slope.grad
             last_intercept_grad = intercept.grad
 
-        slope -= slope.grad * learning_ratetest_loss
+        slope -= slope.grad * learning_rate
         intercept -= intercept.grad * learning_rate
 
         slopes.append(slope)

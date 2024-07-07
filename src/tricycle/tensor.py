@@ -12,21 +12,21 @@ converts tensors to batched tensors.
 import logging
 import numbers
 import uuid
-import weakref
 from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from tricycle import CUPY_ENABLED
+from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
+from tricycle.weakset import WeakSet
 
 if TYPE_CHECKING:
     from tricycle.ops import Op
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DTYPE = np.float16
+DEFAULT_DTYPE = np.float32
 
 
 class Tensor:
@@ -52,7 +52,7 @@ class Tensor:
         is_batched: bool = False,
         args: tuple["Tensor", ...] | None = None,
         back_fns: tuple["Op", ...] | None = None,
-        dtype: np.typing.DTypeLike | None = None,
+        dtype: np.typing.DTypeLike = None,
         name: str | None = None,
         _id: int | None = None,
     ):
@@ -66,8 +66,13 @@ class Tensor:
                 self.array = np.array(array)
         else:
             self.array = np.array(array)
+
         if dtype is None:
-            dtype = DEFAULT_DTYPE
+            if TRICYCLE_CONTEXT.use_mixed_precision:
+                dtype = np.float16
+            else:
+                dtype = DEFAULT_DTYPE
+
         self.array = self.array.astype(dtype)
 
         self.requires_grad = requires_grad
@@ -101,7 +106,7 @@ class Tensor:
                     # which can't be garbage collected, leading to a memory
                     # leak so we need to do a weakref to avoid the circular
                     # reference
-                    arg.parents = weakref.WeakSet()
+                    arg.parents = WeakSet()
 
                 # if a node has a parent we haven't visited yet, store it
                 if node not in arg.parents:
@@ -329,7 +334,9 @@ class Tensor:
 
     def __eq__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self.array == other.array)
+            if other._id == self._id:
+                return Tensor(True)
+            return Tensor(self.xp.array_equal(self.array == other.array))
 
         return Tensor(self.array == other)
 
@@ -401,11 +408,9 @@ class Tensor:
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        if self.is_batched:
-            divisor = np.prod(self.shape[1:]) if self.shape else 1
-        else:
-            divisor = np.prod(self.shape) if self.shape else 1
-        return self.sum() / divisor
+        from tricycle.ops import Mean
+
+        return Mean()(self)
 
     def sum(self) -> "Tensor":
         from tricycle.unary import UnarySum

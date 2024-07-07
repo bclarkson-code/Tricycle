@@ -1,3 +1,4 @@
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.tensor import Tensor, to_tensor
 
 
@@ -30,29 +31,39 @@ class StochasticGradientDescent(Optimiser):
         Perform a gradient update on a tensor, optionally
         including weight decay and momentum
         """
+        xp = tensor.xp
         assert tensor.grad is not None
+
+        # We need to do gradient updates in full precision otherwise we get
+        # stability issues
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array.grad = tensor.array.grad.astype(xp.float32)
 
         if tensor.grad.is_batched:
             tensor.grad = tensor.grad.from_batched().einsum("z...->...")
 
-        grad = self.learning_rate * tensor.grad
+        grad = self.learning_rate * tensor.grad.array
 
         if self.weight_decay is not None:
             wd = self.learning_rate * self.weight_decay * tensor
-            grad += to_tensor(wd, name=f"weight_decay({self.weight_decay})")
+            grad += wd
 
         if self.momentum is not None and self.momentum > 0:
             if tensor._id not in self.momentum_store:
-                last_momentum = to_tensor(tensor.xp.zeros(grad.shape))
+                last_momentum = tensor.xp.zeros(grad.shape)
             else:
                 last_momentum = self.momentum_store[tensor._id]
 
             grad += self.momentum * last_momentum
-            self.momentum_store[tensor._id] = to_tensor(grad.array)
+            self.momentum_store[tensor._id] = grad.array
+
+        out = tensor - grad
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            out = out.astype(xp.float16)
 
         # update the value only, leave everything else
-        result = to_tensor(
-            tensor - grad,
+        result = Tensor(
+            out,
             requires_grad=tensor.requires_grad,
             name=tensor.name,
             is_batched=tensor.is_batched,
@@ -61,6 +72,7 @@ class StochasticGradientDescent(Optimiser):
 
         assert result.shape == tensor.shape
 
+        # TODO: figure out whether these can be safely removed
         del tensor
         del grad
 
@@ -82,48 +94,59 @@ class AdamW(Optimiser):
         self.betas = betas
         self.eps = eps
         self.weight_decay = weight_decay
-        self.t = 0
+        self.timestep = 0
 
-        self.m = {}
-        self.v = {}
+        self.momentum = {}
+        self.square_momentum = {}
 
     def step(self):
         # we compute the updates dynamically so we'll need to remember to
         # call this
-        self.t += 1
+        self.timestep += 1
 
     def update_weight(self, tensor: Tensor) -> Tensor:
         key = tensor._id
         xp = tensor.xp
 
         assert tensor.grad is not None
+        grad = tensor.grad.array
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            grad = grad.astype(xp.float32)
+            tensor.array = tensor.array.astype(xp.float32)
 
         # initialise stores
-        if key not in self.m:
-            self.m[key] = xp.zeros_like(tensor.array, dtype=tensor.array.dtype)
-        if key not in self.v:
-            self.v[key] = tensor.xp.zeros_like(
-                tensor.array, dtype=tensor.array.dtype
+        if key not in self.momentum:
+            self.momentum[key] = xp.zeros_like(grad, dtype=grad.dtype)
+        if key not in self.square_momentum:
+            self.square_momentum[key] = tensor.xp.zeros_like(
+                grad, dtype=grad.dtype
             )
 
-        self.m[key] = (
-            self.betas[0] * self.m[key]
-            + (1 - self.betas[0]) * tensor.grad.array
+        self.momentum[key] = (
+            self.betas[0] * self.momentum[key] + (1 - self.betas[0]) * grad
         )
 
-        self.v[key] = self.betas[1] * self.v[key] + (1 - self.betas[1]) * (
-            tensor.grad.array * tensor.grad.array
-        )
+        self.square_momentum[key] = self.betas[1] * self.square_momentum[
+            key
+        ] + (1 - self.betas[1]) * (grad * grad)
 
-        m_hat = self.m[key] / (1 - self.betas[0] ** self.t)
-        v_hat = self.v[key] / (1 - self.betas[1] ** self.t)
+        momentum_estimate = self.momentum[key] / (
+            1 - self.betas[0] ** self.timestep
+        )
+        square_momentum_estimate = self.square_momentum[key] / (
+            1 - self.betas[1] ** self.timestep
+        )
 
         tensor.array -= self.learning_rate * (
-            m_hat / (xp.sqrt(v_hat) + self.eps)
+            momentum_estimate / (xp.sqrt(square_momentum_estimate) + self.eps)
             + self.weight_decay * tensor.array
         )
 
         tensor.grad.array.fill(0)
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.grad.array = tensor.grad.array.astype(xp.float16)
+            tensor.array = tensor.array.astype(xp.float16)
 
         return tensor
 

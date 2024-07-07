@@ -2,9 +2,11 @@ import time
 from abc import abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
+from warnings import warn
 
 import humanize
 import numpy as np
+from matplotlib import pyplot as plt
 
 from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
 from tricycle.configs import GPTConfig, SmolGPTConfig
@@ -30,6 +32,23 @@ class Dataset:
 
     def __next__(self):
         return self.__getitem__(next(iter(self)))
+
+
+class UseMixedPrecision:
+    def __init__(self):
+        self.active = False
+        warn(
+            "Mixed precision training is unstable. Expect your loss to "
+            "explode/vanish."
+        )
+
+    def __enter__(self):
+        self.active = True
+        TRICYCLE_CONTEXT.use_mixed_precision = True
+
+    def __exit__(self):
+        self.active = False
+        TRICYCLE_CONTEXT.use_mixed_precision = False
 
 
 def shapes_match(tensor_1: "Tensor", tensor_2: "Tensor") -> bool:
@@ -112,7 +131,7 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
 
 def optimal_n_tokens(model: "GPT", config: GPTConfig) -> tuple[int, int]:
     """
-    Use corrected chinchilla scaling to estimate the compute-optimal number of
+    Use chinchilla scaling to estimate the compute-optimal number of
     tokens to train on.
     See https://arxiv.org/abs/2404.10102 for details
     """
@@ -159,11 +178,17 @@ def optimal_n_tokens(model: "GPT", config: GPTConfig) -> tuple[int, int]:
         * config.gradient_accumulation_steps
         * config.context_window
     )
-    estimated_loss = (
-        CONST + (A / (model_size**pow_1)) + (B / (n_tokens**pow_2))
-    )
-    print("Corrected Chinchilla Optimal Parameters:")
+    tokens_per_parameter = n_tokens / n_parameters
+
+    n_steps = n_tokens // tokens_per_step
+
+    print("Chinchilla Optimal Parameters:")
     print(f" - Number of tokens: {humanize.intword(n_tokens)}")
     print(f" - Number of steps: {humanize.intword(n_steps)}")
-    print(f" - Estimated final loss: {estimated_loss:.3f}")
+    print(f" - Tokens per parameters: {tokens_per_parameter:.1f}")
     return n_tokens, n_steps
+
+
+if __name__ == "__main__":
+    config = SmolGPTConfig()
+    optimal_n_tokens(config)
