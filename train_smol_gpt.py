@@ -32,19 +32,12 @@ from tricycle.dataset import CausalLMDataset
 from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
-from tricycle.scheduler import lr_schedule
+from tricycle.scheduler import CosineSchedule
 from tricycle_datasets.fineweb import FineWeb
 
 # fix the seed for reproducibility
 xp.random.seed(0)
 config = SmolGPTConfig()
-model = GPT(config)
-
-model.display()
-
-# Use corrected Chinchilla scaling to estimate the compute-optimal number of
-# tokens and steps we should train for
-n_tokens, n_steps = optimal_n_tokens(model, config)
 
 
 def load_datasets(n_tokens: int, config: SmolGPTConfig):
@@ -59,7 +52,7 @@ def load_datasets(n_tokens: int, config: SmolGPTConfig):
     train_dataset = FineWeb(config.vocab_size, split="train")
 
     # we cant fit more than 7B indices in memory
-    train_dataset.tokens = train_dataset.tokens[:3_000_000_000]
+    train_dataset.tokens = train_dataset.tokens[: int(1e6)]
     valid_dataset = FineWeb(config.vocab_size, split="valid")
 
     print("Loading dataloaders")
@@ -119,29 +112,36 @@ def estimate_loss(
     return batch_loss
 
 
-train_dataset, valid_dataset, train_dataloader, valid_dataloader = (
-    load_datasets(n_tokens, config)
-)
+model = GPT(config)
+model.display()
+
+# Use corrected Chinchilla scaling to estimate the compute-optimal number of
+# tokens and steps we should train for
+n_tokens, n_steps = optimal_n_tokens(model, config)
+
 loss_fn = CrossEntropy()
+scheduler = CosineSchedule(
+    max_learning_rate=config.max_learning_rate,
+    min_learning_rate=config.min_learning_rate,
+    warmup_steps=config.warmup_steps,
+    total_steps=n_steps,
+)
 optimiser = AdamW(
-    learning_rate=lr_schedule(
-        0,
-        max_learning_rate=config.max_learning_rate,
-        min_learning_rate=config.min_learning_rate,
-        warmup_steps=config.warmup_steps,
-        total_steps=n_steps,
-    ),
+    learning_rate=scheduler(0),
     weight_decay=config.weight_decay,
     betas=(config.beta1, config.beta2),
 )
 
+train_dataset, valid_dataset, train_dataloader, valid_dataloader = (
+    load_datasets(n_tokens, config)
+)
 
 if CUPY_ENABLED:
     model.to_gpu(config.device_idx)
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:fineweb:base")
+mlflow.set_experiment("SmolGPT:fineweb:debug")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 with mlflow.start_run() as run:
     unique_id = uuid.uuid4()
@@ -178,7 +178,7 @@ with mlflow.start_run() as run:
         mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
 
         # step the learning rate
-        optimiser.learning_rate = lr_schedule(
+        optimiser.learning_rate = cosine_schedule(
             step,
             max_learning_rate=config.max_learning_rate,
             min_learning_rate=config.min_learning_rate,
