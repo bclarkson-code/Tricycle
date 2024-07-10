@@ -1,6 +1,7 @@
 import numpy as np
 
-from tricycle.ops import to_tensor
+from tricycle.ops import Tensor
+from tricycle.tensor import DEFAULT_DTYPE
 
 
 def init_xavier(shape: tuple[int, int], name: str = ""):
@@ -9,9 +10,9 @@ def init_xavier(shape: tuple[int, int], name: str = ""):
     """
     f_in, f_out = shape
     bound = np.sqrt(6) / np.sqrt(f_in + f_out)
-    return to_tensor(
-        np.random.uniform(low=-bound, high=bound, size=shape).astype(
-            np.float32
-        ),
+    out = Tensor(
+        np.random.uniform(low=-bound, high=bound, size=shape),
+        dtype=DEFAULT_DTYPE,
         name=name,
     )
+    return out

@@ -2,7 +2,7 @@ from math import sqrt
 
 import numpy as np
 
-from tricycle import CUPY_ENABLED
+from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
 from tricycle.ops import Op
 from tricycle.tensor import Tensor, to_tensor
 
@@ -139,14 +139,22 @@ class Attention(Op):
             self.mask[:, : self.n_tokens, : self.n_tokens], -xp.inf, attention
         )
 
+        # Exponents tend to overflow/underflow when using 16 bit precision
+        # so we need to switch to 32 bit
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            attention = attention.astype(xp.float32)
+
         # softmax
         exp = xp.exp(attention - xp.max(attention, axis=-1, keepdims=True))
         denominator = xp.sum(exp, axis=-1, keepdims=True)
         attention = exp / denominator
 
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            attention = attention.astype(xp.float16)
+
         # smush the heads back together
         self._before_smush = attention
-        attention = xp.einsum("BNIj, BNjH -> BINH", attention, value)
+        attention = xp.einsum("BNTi, BNiH -> BTNH", attention, value)
         attention = attention.reshape(out_shape)
 
         result = to_tensor(attention, is_batched=True)
@@ -165,4 +173,4 @@ class Attention(Op):
         if CUPY_ENABLED:
             import cupy as cp
 
-            self._mask = cp.asnumpy(self._mask)
+            self.mask = cp.asnumpy(self.mask)

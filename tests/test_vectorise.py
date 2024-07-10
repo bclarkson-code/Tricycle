@@ -4,7 +4,7 @@ from tricycle.activation import ReLU
 from tricycle.einsum import Einsum
 from tricycle.functions import Softmax
 from tricycle.layers import Dense, Sequential
-from tricycle.loss import mean_square_error
+from tricycle.loss import MeanSquaredError
 from tricycle.tensor import to_tensor
 from tricycle.unary import Batch, Unbatch
 
@@ -68,9 +68,9 @@ def test_can_batch_mse():
     input_2 = to_tensor(np.arange(2, 6))
     input_3 = to_tensor(np.arange(3, 7))
 
-    output_1 = mean_square_error(y_true, input_1)
-    output_2 = mean_square_error(y_true, input_2)
-    output_3 = mean_square_error(y_true, input_3)
+    output_1 = MeanSquaredError()(y_true, input_1)
+    output_2 = MeanSquaredError()(y_true, input_2)
+    output_3 = MeanSquaredError()(y_true, input_3)
 
     input_y_true = to_tensor(np.array([y_true.array] * 3))
     input_batch = to_tensor(
@@ -82,7 +82,7 @@ def test_can_batch_mse():
 
     input_y_true = Batch()(input_y_true)
     input_batch = Batch()(input_batch)
-    output_batch = mean_square_error(input_y_true, input_batch)
+    output_batch = MeanSquaredError()(input_y_true, input_batch)
     output_batch = Unbatch()(output_batch)
 
     assert output_batch.close_to(correct_output)

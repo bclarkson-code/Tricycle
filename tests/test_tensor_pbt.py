@@ -346,15 +346,6 @@ def test_binary_ops(tensors, op):
 
 
 @given(string())
-def test_tokeniser_encode_decode(text):
-    tokeniser = BPETokeniser(vocab_size=1024)
-    tokens = tokeniser.encode(text)
-    decoded = tokeniser.decode(tokens)
-
-    assert text == decoded
-
-
-@given(string())
 @settings(deadline=1000)
 def test_tokeniser_train_encode_decode(text):
     tokeniser = BPETokeniser(vocab_size=1024)

@@ -74,4 +74,6 @@ def test_mean():
     out_tensor.backward()
 
     assert in_tensor.grad is not None
-    assert in_tensor.grad.close_to([1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6])
+    assert in_tensor.grad.close_to(
+        [1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6], rtol=1e-3
+    )

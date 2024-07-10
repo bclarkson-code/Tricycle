@@ -14,6 +14,7 @@ class GPTConfig:
     n_layers: int
     expansion_ratio: float
     activation_fn: str
+    norm_fn: str
 
     input_dropout_prob: float
     residual_dropout_prob: float
@@ -49,6 +50,41 @@ class GPTConfig:
         return out
 
 
+class DebugConfig(GPTConfig):
+    embedding_dim = 768
+    context_window = 1024
+    vocab_size = 1024
+    n_heads = 6
+    n_layers = 6
+    expansion_ratio = 4
+    activation_fn = "gelu"
+    norm_fn = "layer_norm"
+
+    input_dropout_prob = 0.2
+    residual_dropout_prob = 0.2
+    linear_dropout_prob = 0.2
+
+    max_learning_rate = 1e-3
+    min_learning_rate = 1e-4
+    warmup_steps = 100
+    weight_decay = 1e-1
+    momentum = 0
+    beta1 = 0.9
+    beta2 = 0.99
+
+    steps = 250
+    eval_interval = 1
+    eval_steps = 1
+    batch_size = 4
+    gradient_accumulation_steps = 1
+    sample_size = 4
+
+    device_idx = 0
+
+    mlflow_enabled = False
+    mlflow_tracking_uri = ""
+
+
 class ShakespeareConfig(GPTConfig):
     embedding_dim = 384
     context_window = 256
@@ -57,6 +93,7 @@ class ShakespeareConfig(GPTConfig):
     n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
+    norm_fn = "layer_norm"
 
     input_dropout_prob = 0.2
     residual_dropout_prob = 0.2
@@ -70,46 +107,47 @@ class ShakespeareConfig(GPTConfig):
     beta1 = 0.9
     beta2 = 0.99
 
-    steps = 5000
+    steps = 3000
     eval_interval = 250
     eval_steps = 128
     batch_size = 32
     gradient_accumulation_steps = 1
     sample_size = 512
 
-    device_idx = 0
+    device_idx = 1
 
     mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"
 
 
 class SmolGPTConfig(GPTConfig):
-    embedding_dim = 384
-    context_window = 256
-    vocab_size = 100276
-    n_heads = 6
-    n_layers = 6
+    embedding_dim = 768
+    context_window = 1024
+    vocab_size = 50256
+    n_heads = 12
+    n_layers = 12
     expansion_ratio = 4
     activation_fn = "gelu"
+    norm_fn = "layer_norm"
 
-    input_dropout_prob = 0.2
-    residual_dropout_prob = 0.2
-    linear_dropout_prob = 0.2
+    input_dropout_prob = 0
+    residual_dropout_prob = 0
+    linear_dropout_prob = 0
 
-    max_learning_rate = 1e-3
-    min_learning_rate = 1e-4
-    warmup_steps = 100
+    max_learning_rate = 6e-4
+    min_learning_rate = 0
+    warmup_steps = 150  # roughly matches andrej's warmup steps in llm.c
     weight_decay = 1e-1
     momentum = 0
     beta1 = 0.9
-    beta2 = 0.99
+    beta2 = 0.95
 
     steps = "chinchilla_optimal"
-    eval_interval = 250
+    eval_interval = 100
     eval_steps = 128
-    batch_size = 20
-    gradient_accumulation_steps = 4
-    sample_size = 512
+    batch_size = 4
+    gradient_accumulation_steps = 128  # effective batch size of 524288 tokens
+    n_tokens_to_generate = 512
 
     device_idx = 0
 

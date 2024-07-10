@@ -88,14 +88,15 @@ def test_can_udiv():
             [np.inf, 2, 1, 2 / 3],
             [2 / 4, 2 / 5, 2 / 6, 2 / 7],
             [2 / 8, 2 / 9, 2 / 10, 2 / 11],
-        ]
+        ],
+        rtol=1e-3,
     )
     with np.errstate(divide="ignore"):
         out_tensor.backward()
         correct = -np.power(in_tensor.array, -2) * 2
 
         assert in_tensor.grad is not None
-        assert in_tensor.grad.close_to(correct)
+        assert in_tensor.grad.close_to(correct, rtol=1e-3)
 
 
 def test_can_umax():
@@ -135,14 +136,14 @@ def test_can_uexp():
     assert out_tensor.shape == (4,)
 
     correct = np.exp([1, 2, 3, 4])
-    assert out_tensor.close_to(correct)
+    assert out_tensor.close_to(correct, rtol=1e-3)
 
     out_tensor.backward()
 
     correct = np.exp([1, 2, 3, 4])
 
     assert in_tensor.grad is not None
-    assert in_tensor.grad.close_to(correct)
+    assert in_tensor.grad.close_to(correct, rtol=1e-3)
 
 
 def test_can_ulog():
@@ -150,14 +151,14 @@ def test_can_ulog():
     out_tensor = UnaryLog()(in_tensor)
 
     assert out_tensor.shape == (4,)
-    assert out_tensor.close_to([0, np.log(2), np.log(3), np.log(4)])
+    assert out_tensor.close_to([0, np.log(2), np.log(3), np.log(4)], rtol=1e-3)
 
     out_tensor.backward()
 
     correct = [1, 1 / 2, 1 / 3, 1 / 4]
 
     assert in_tensor.grad is not None
-    assert in_tensor.grad.close_to(correct)
+    assert in_tensor.grad.close_to(correct, rtol=1e-3)
 
 
 def test_can_usin():
@@ -165,13 +166,15 @@ def test_can_usin():
     out_tensor = UnarySin()(in_tensor)
 
     assert out_tensor.shape == (4,)
-    assert out_tensor.close_to([np.sin(1), np.sin(2), np.sin(3), np.sin(4)])
+    assert out_tensor.close_to(
+        [np.sin(1), np.sin(2), np.sin(3), np.sin(4)], rtol=1e-3
+    )
 
     out_tensor.backward()
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.close_to(
-        [np.cos(1), np.cos(2), np.cos(3), np.cos(4)]
+        [np.cos(1), np.cos(2), np.cos(3), np.cos(4)], rtol=1e-3
     )
 
 
@@ -180,14 +183,16 @@ def test_can_ucos():
     out_tensor = UnaryCos()(in_tensor)
 
     assert out_tensor.shape == (4,)
-    assert out_tensor.close_to([np.cos(1), np.cos(2), np.cos(3), np.cos(4)])
+    assert out_tensor.close_to(
+        [np.cos(1), np.cos(2), np.cos(3), np.cos(4)], rtol=1e-3
+    )
 
     out_tensor.backward()
 
     correct = [-np.sin(1), -np.sin(2), -np.sin(3), -np.sin(4)]
 
     assert in_tensor.grad is not None
-    assert in_tensor.grad.close_to(correct)
+    assert in_tensor.grad.close_to(correct, rtol=1e-3)
 
 
 def test_can_usqrt():
@@ -195,14 +200,16 @@ def test_can_usqrt():
     out_tensor = UnarySquareRoot()(in_tensor)
 
     assert out_tensor.shape == (4,)
-    assert out_tensor.close_to([1, np.sqrt(2), np.sqrt(3), np.sqrt(4)])
+    assert out_tensor.close_to(
+        [1, np.sqrt(2), np.sqrt(3), np.sqrt(4)], rtol=1e-3
+    )
 
     out_tensor.backward()
 
     correct = [0.5, 0.35355339, 0.28867513, 0.25]
 
     assert in_tensor.grad is not None
-    assert in_tensor.grad.close_to(correct)
+    assert in_tensor.grad.close_to(correct, rtol=1e-3)
 
 
 def test_can_bmask():

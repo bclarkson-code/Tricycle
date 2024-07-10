@@ -14,7 +14,8 @@ import uuid
 from pathlib import Path
 
 from tricycle import CUPY_ENABLED
-from tricycle.tensor import Op, Tensor
+from tricycle.ops import Op
+from tricycle.tensor import Tensor
 from tricycle.utils import optimal_n_tokens
 
 if CUPY_ENABLED:
@@ -31,37 +32,28 @@ from tricycle.dataset import CausalLMDataset
 from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
-from tricycle.scheduler import lr_schedule
-from tricycle_datasets.codeparrot import CodeParrot
+from tricycle.scheduler import CosineSchedule
+from tricycle_datasets.fineweb import FineWeb
 
 # fix the seed for reproducibility
 xp.random.seed(0)
 config = SmolGPTConfig()
-model = GPT(config)
-
-model.display()
-
-# Use corrected Chinchilla scaling to estimate the compute-optimal number of
-# tokens and steps we should train for
-n_tokens, n_steps = optimal_n_tokens(model, config)
 
 
-def load_datasets(
-    n_tokens: int, config: SmolGPTConfig
-) -> tuple[CodeParrot, CodeParrot, CausalLMDataset, CausalLMDataset]:
+def load_datasets(n_tokens: int, config: SmolGPTConfig):
     """
     Load tokens, batch and shuffle them.
     """
 
     # if you are loading this for the first time, this can take a while.
-    # it will create some big cache files in ~/.cache/huggingface that you might
-    # want to clean up once you are done with the dataset
+    # it will create some big cache files in ~/.cache/huggingface that you
+    # might want to clean up once you are done with the dataset
     print("Loading dataset")
-    train_dataset = CodeParrot(config.vocab_size, split="train")
+    train_dataset = FineWeb(config.vocab_size, split="train")
 
-    # trim the training dataset to the chinchilla optimal number of tokens
-    train_dataset.tokens = train_dataset.tokens[:n_tokens]
-    valid_dataset = CodeParrot(config.vocab_size, split="valid")
+    # we cant fit more than 3B indices in memory
+    train_dataset.tokens = train_dataset.tokens[: int(3e9)]
+    valid_dataset = FineWeb(config.vocab_size, split="valid")
 
     print("Loading dataloaders")
     train_dataloader = (
@@ -112,7 +104,7 @@ def estimate_loss(
             inputs = inputs.to_gpu(config.device_idx)
             outputs = outputs.to_gpu(config.device_idx)
 
-        # forward and backward pass
+        # forward pass
         logits = model(inputs)
         loss = loss_fn(outputs, logits)
         batch_loss += loss.array / config.eval_steps
@@ -120,29 +112,76 @@ def estimate_loss(
     return batch_loss
 
 
-train_dataset, valid_dataset, train_dataloader, valid_dataloader = (
-    load_datasets(n_tokens, config)
+def validate(
+    model: GPT,
+    valid_dataset: CausalLMDataset,
+    config: SmolGPTConfig,
+    loss_fn: Op,
+    best_loss: float,
+):
+    # generate some text
+    predicted = get_sample(
+        model=model,
+        tokeniser=valid_dataset.tokeniser,
+        sample_tokens=valid_dataset.tokens[: config.context_window],
+    )
+    mlflow.log_text(predicted, f"generated/{step}.txt")
+
+    # esimate validation loss
+    valid_loss = estimate_loss(
+        model=model,
+        valid_dataloader=valid_dataloader,
+        config=config,
+        loss_fn=loss_fn,
+    )
+    mlflow.log_metric("valid_loss", valid_loss, step=step)
+
+    # checkpoint if new model better than old
+    if valid_loss < best_loss:
+        Path("models").mkdir(exist_ok=True)
+        with open(f"models/model_{unique_id}.pkl", "wb") as f:
+            pickle.dump(model, f)
+        best_loss = valid_loss
+    return best_loss
+
+
+model = GPT(config)
+model.display()
+
+# Use corrected Chinchilla scaling to estimate the compute-optimal number of
+# tokens and steps we should train for
+n_tokens, n_steps = optimal_n_tokens(model, config)
+
+loss_fn = CrossEntropy()
+scheduler = CosineSchedule(
+    max_learning_rate=config.max_learning_rate,
+    min_learning_rate=config.min_learning_rate,
+    warmup_steps=config.warmup_steps,
+    total_steps=n_steps,
 )
 loss_fn = CrossEntropy()
+scheduler = CosineSchedule(
+    max_learning_rate=config.max_learning_rate,
+    min_learning_rate=config.min_learning_rate,
+    warmup_steps=config.warmup_steps,
+    total_steps=n_steps,
+)
 optimiser = AdamW(
-    learning_rate=lr_schedule(
-        0,
-        max_learning_rate=config.max_learning_rate,
-        min_learning_rate=config.min_learning_rate,
-        warmup_steps=config.warmup_steps,
-        total_steps=n_steps,
-    ),
+    learning_rate=scheduler(0),
     weight_decay=config.weight_decay,
     betas=(config.beta1, config.beta2),
 )
 
+train_dataset, valid_dataset, train_dataloader, valid_dataloader = (
+    load_datasets(n_tokens, config)
+)
 
 if CUPY_ENABLED:
     model.to_gpu(config.device_idx)
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:codeparrot:base")
+mlflow.set_experiment("SmolGPT:fineweb:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 with mlflow.start_run() as run:
     unique_id = uuid.uuid4()
@@ -179,36 +218,20 @@ with mlflow.start_run() as run:
         mlflow.log_metric("lr", float(optimiser.learning_rate), step=step)
 
         # step the learning rate
-        optimiser.learning_rate = lr_schedule(
-            step,
-            max_learning_rate=config.max_learning_rate,
-            min_learning_rate=config.min_learning_rate,
-            warmup_steps=config.warmup_steps,
-            total_steps=n_steps,
-        )
-        losses[step] = batch_loss
+        optimiser.learning_rate = scheduler(step)
 
         if step % config.eval_interval == 0:
-            # generate some text
-            predicted = get_sample(
+            best_loss = validate(
                 model=model,
-                tokeniser=valid_dataset.tokeniser,
-                sample_tokens=valid_dataset.tokens[: config.context_window],
-            )
-            mlflow.log_text(predicted, f"generated/{step}.txt")
-
-            # esimate validation loss
-            valid_loss = estimate_loss(
-                model=model,
-                valid_dataloader=valid_dataloader,
+                valid_dataset=valid_dataset,
                 config=config,
                 loss_fn=loss_fn,
+                best_loss=best_loss,
             )
-            mlflow.log_metric("valid_loss", valid_loss, step=step)
-
-            # checkpoint if new model better than old
-            if valid_loss < best_loss:
-                Path("models").mkdir(exist_ok=True)
-                with open(f"models/model_{unique_id}.pkl", "wb") as f:
-                    pickle.dump(model, f)
-                best_loss = valid_loss
+validate(
+    model=model,
+    valid_dataset=valid_dataset,
+    config=config,
+    loss_fn=loss_fn,
+    best_loss=best_loss,
+)

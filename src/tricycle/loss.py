@@ -1,22 +1,52 @@
 import logging
 
-from tricycle.functions import Softmax
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.ops import Op
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 logger = logging.getLogger(__name__)
 
 
-def mean_square_error(y_true: Tensor, y_pred: Tensor):
-    # sourcery skip: assign-if-exp, reintroduce-else
-    square_error = (y_true - y_pred) ** 2
-    assert isinstance(square_error, Tensor)
+class MeanSquaredError(Op):
+    """
+    Calculate Mean Squared Error loss
+    """
 
-    divisor = square_error.shape[-1]
-    if divisor == 1:
-        return square_error
+    def backward(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
 
-    return square_error.mean()
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            grad.array = grad.array.astype(xp.float32)
+
+        out = self.diff * 2 * grad.array * self.divisor
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            out = out.astype(xp.float16)
+
+        return Tensor(out)
+
+    def forward(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
+        xp = y_pred.xp
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            y_pred.array = y_pred.array.astype(xp.float32)
+            y_true.array = y_true.array.astype(xp.float32)
+
+        self.diff = y_pred.array - y_true.array
+        self.divisor = 1 / xp.prod(y_pred.shape[-1])
+
+        out = (self.diff**2).sum() * self.divisor
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            out = out.astype(xp.float16)
+
+        # only y_pred is differentiable: y_true is a constant
+        return Tensor(
+            out,
+            args=(y_pred,),
+            back_fns=(self.backward,),
+            name="mean_squared_error",
+        )
 
 
 class CrossEntropy(Op):
@@ -38,8 +68,12 @@ class CrossEntropy(Op):
         Calculate the cross entropy loss
         """
         xp = y_pred.xp
+        # cross entropy reduces a huge matrix to a single number which makes
+        # it really sensitive to errors. To rememdy this, we need to use
+        # full precision
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            y_pred.array = y_pred.array.astype(xp.float32)
 
-        # Calculate log softmax
         log_softmax_pred = self.log_softmax(y_pred)
 
         # Cache for backward pass
@@ -68,17 +102,23 @@ class CrossEntropy(Op):
         loss = loss.mean()
 
         self._out = loss
-        result = to_tensor(self._out, is_batched=False)
-        result.back_fns = (self.backward,)
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._out = self._out.astype(xp.float16)
 
-        result.args = (y_pred,)
-        result.name = "cross_entropy"
-
-        return result
+        return Tensor(
+            self._out,
+            is_batched=False,
+            back_fns=(self.backward,),
+            args=(y_pred,),
+            name="cross_entropy",
+        )
 
     def backward(self, grad: Tensor) -> Tensor:
         xp = grad.xp
         ndim = self._log_softmax_pred.ndim
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            grad.array = grad.array.astype(xp.float32)
 
         if ndim == 3:
             batch_indices = xp.arange(self._y_true.shape[0], dtype=int)
@@ -106,4 +146,9 @@ class CrossEntropy(Op):
             )
 
         self._grad = grad_output
-        return to_tensor(self._grad, is_batched=grad.is_batched)
+
+        # remember to convert the gradient back to the right precision
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._grad = self._grad.astype(xp.float16)
+
+        return Tensor(self._grad, is_batched=grad.is_batched)
