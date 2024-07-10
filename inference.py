@@ -1,18 +1,20 @@
+import argparse
 import pickle
-import sys
+from copy import copy
 from pathlib import Path
 
 import numpy as np
 import tiktoken
 from tqdm import tqdm
 
-from tricycle.configs import SmolGPTConfig
+from tricycle.configs import DebugConfig, ShakespeareConfig, SmolGPTConfig
 from tricycle.functions import Softmax
 from tricycle.layers import Dropout, Layer
 from tricycle.models import GPT
 from tricycle.tensor import Tensor
 from tricycle.tokeniser import BPETokeniser
 from tricycle_datasets.fineweb import FineWeb
+from tricycle_datasets.shakespeare import Shakespeare
 
 config = SmolGPTConfig()
 
@@ -49,6 +51,7 @@ def generate(
     tokens: np.ndarray | None = None,
     sample=True,
     temperature=0.8,
+    pad_token=-1,
 ):
     """
     Given a prompt, yield next token predictions for a model
@@ -58,21 +61,24 @@ def generate(
 
     while True:
         tokens = tokens[-config.context_window :]
-        assert len(tokens) == config.context_window
+        n_tokens = len(tokens)
+        if n_tokens < config.context_window:
+            pad_tokens = [pad_token] * (config.context_window - n_tokens)
+            tokens += pad_tokens
 
         encoded = Tensor(
-            [tokens], dtype=np.uint16, requires_grad=False, is_batched=True
+            tokens, dtype=np.uint32, requires_grad=False, is_batched=False
         )
 
         pred = model(encoded)
         pred = Softmax()(pred / temperature)
 
+        next_token_idx = n_tokens - 1
+
         if pred.on_gpu:
-            probabilities = pred.xp.asnumpy(
-                pred.array[0][config.context_window - 1]
-            )
+            probabilities = pred.xp.asnumpy(pred.array[0][next_token_idx])
         else:
-            probabilities = pred.array[0][config.context_window - 1]
+            probabilities = pred.array[0][next_token_idx]
 
         # sample according to probabilities
         if sample:
@@ -81,8 +87,13 @@ def generate(
             )
         else:
             next_token = np.argmax(probabilities)
+
+        # remove padding + add new token
+        tokens = tokens[:n_tokens]
         tokens.append(next_token)
-        yield next_token
+
+        # convert from numpy int to python int
+        yield int(next_token)
 
 
 def get_sample(
@@ -117,37 +128,83 @@ def get_sample(
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="inference.py", description="Generate predictions from a GPT"
+    )
+
+    parser.add_argument("model_path")
+    parser.add_argument("prompt", help="Text that will be passed to the model")
+    parser.add_argument(
+        "-c",
+        "--model_config",
+        choices=["debug", "smol_gpt", "shakespeare"],
+        default="shakespeare",
+    )
+    parser.add_argument(
+        "-d",
+        "--dataset",
+        choices=["shakespeare", "fineweb"],
+        default="shakespeare",
+    )
+    parser.add_argument("--use-gpu", default=True)
+
+    args = parser.parse_args()
+
+    match args.model_config:
+        case "shakespeare":
+            config = ShakespeareConfig()
+        case "smol_gpt":
+            config = SmolGPTConfig()
+        case "debug":
+            config = DebugConfig()
+        case _:
+            raise ValueError(f"Unknown dataset: {args.config}")
+
+    match args.dataset:
+        case "shakespeare":
+            dataset = Shakespeare(config.vocab_size)
+        case "fineweb":
+            dataset = FineWeb(config.vocab_size, split="valid")
+        case _:
+            raise ValueError(f"Unknown dataset: {args.dataset}")
+
     np.random.seed(0)
 
-    # config = ShakespeareConfig()
-    # dataset = Shakespeare(config.vocab_size)
-    config = SmolGPTConfig()
-    dataset = FineWeb(config.vocab_size, split="valid")
+    model_path = Path(args.model_path)
+    if model_path.exists():
+        model = load_model(model_path)
+    else:
+        raise FileNotFoundError(
+            f"Could not find model file: {model_path.absolute()}"
+        )
 
-    import cupy
+    if args.use_gpu:
+        model.to_gpu(0)
 
-    model = load_model(sys.argv[1])
-    model.to_gpu(0)
-
-    # model.from_gpu()
     model.zero_grad()
     deactivate_dropout(model)
 
-    # with open('models/smol_gpt_fineweb.pkl', 'wb') as f:
-    #     pickle.dump(model, f)
-
-    START = 5_000
-    sample_tokens = dataset.tokens[START : START + 1024]
-    line = []
-    prev = ""
-    for token in generate(tokens=sample_tokens, model=model, sample=True):
-        if token == dataset.tokeniser.eot_token:
+    sample_tokens = dataset.tokeniser.encode(args.prompt)
+    if isinstance(sample_tokens, np.ndarray):
+        sample_tokens = sample_tokens.tolist()
+    generated = copy(sample_tokens)
+    prev = args.prompt
+    for token in generate(
+        tokens=sample_tokens, model=model, sample=True, pad_token=0
+    ):
+        if args.dataset == "fineweb" and token == dataset.tokeniser.eot_token:
             break
-        token = int(token)
-        line = line + [token]
-        new = dataset.decode(line)
-        if ord(new[-1]) != 65533:
-            diff = new[len(prev) :]
-            prev = new
+        generated += [token]
+        try:
+            if isinstance(dataset.tokeniser, BPETokeniser):
+                decoded = dataset.tokeniser.decode(np.array(generated))
+            else:
+                decoded = dataset.tokeniser.decode(generated, errors="strict")
+        except UnicodeDecodeError:
+            new = decoded[len(prev) :]
+            prev = decoded
+            continue
 
-            print(diff, end="", flush=True)
+        new = decoded[len(prev) :]
+        print(new, end="", flush=True)
+        prev = decoded

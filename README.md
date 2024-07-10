@@ -4,11 +4,11 @@
     <img width="223" alt="tricycle_logo" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/62405944-b27b-49bc-93c3-17ba93fc8ad7">
 </p>
 
-Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and Numpy.
+Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and numpy.
 
-The file `train_smol_gpt.py` trains a 49M parameter, GPT-2 style language model that can produce passable python code in ~2 days on a single RTX 3090.
+While I've tried to make it easy to follow, Tricycle is not just an educational toy: the file `train_smol_gpt.py` trains GPT-2 (124M) on 2.5B (chinchilla optimal) tokens in just under 3 days on my GPU (RTX 3090).
 
-The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + Numpy code.
+The entire library, from the automatic differentiation engine to a GPT, should be understandable to anyone with a bit of python experience and I encourage you to explore the codebase.
 
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a CUDA-capable GPU or a CPU.
 
@@ -86,6 +86,9 @@ conda activate tricycle
 The following toy script will train a small GPT to generate convincing Shakespeare.
 On my RTX 3090, this takes ~30 mins. For a more realistic training script with metric tracking, gradient accumulation, a validation dataset etc, take a look at `train_smol_gpt.py`
 
+I've chosen some sensible default values for this model in `src/tricycle/configs.py:ShakespeareConfig`. Feel free to play around with these and see what happens.
+If you are running out of GPU memory, try dropping the batch size and if your GPU is slow, try reducing the number of steps.
+
 ```python
 import pickle
 
@@ -132,12 +135,12 @@ for step in loading_bar:
     loss = loss_fn(outputs, logits)
     loss.backward()
 
-    loading_bar.set_description(f"loss: {loss:.3f}")
+    loading_bar.set_description(f"loss: {loss.numpy().item():.3f}")
     model.update(optimiser)
 
 # save results
 with open("model.pkl", "wb") as f:
-    pickle.dump(model, f)
+    pickle.dump(model.from_gpu(), f)
 ```
 
 Once trained, you can generate infinite shakespeare plays as follows:

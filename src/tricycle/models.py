@@ -72,18 +72,20 @@ class GPT(Layer):
         """
         xp = tensor.xp
         if tensor.ndim == 1:
-            n_tokens = 1
-            context_window = tensor.shape[-1]
+            n_tokens = tensor.shape[-1]
             tensor.array = xp.expand_dims(tensor.array, 0)
+            tensor = tensor.to_batched()
         else:
-            n_tokens, context_window = tensor.shape
-        assert n_tokens <= self.context_window, (
-            "Can't have more tokens than context window. ",
+            n_tokens = tensor.shape[-1]
+        assert n_tokens == self.context_window, (
+            "Expected a full context window. ",
             f"Found {n_tokens=} and {self.context_window=}",
         )
 
         position = to_tensor(
-            xp.arange(context_window), requires_grad=False, dtype=int
+            xp.arange(self.context_window),
+            requires_grad=False,
+            dtype=int,
         )
 
         pos_embedding = self.position_embedding(position)
