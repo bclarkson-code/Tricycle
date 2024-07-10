@@ -1,11 +1,16 @@
 import numpy as np
 import torch
 
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.attention import Attention, build_mask
-from tricycle.blocks import MultiHeadSelfAttention, masked_fill
+from tricycle.blocks import MultiHeadSelfAttention
 from tricycle.einsum import Einsum
 from tricycle.functions import Softmax
 from tricycle.tensor import DEFAULT_DTYPE, Tensor, to_tensor
+
+TORCH_DTYPE = (
+    torch.float16 if TRICYCLE_CONTEXT.use_mixed_precision else torch.float32
+)
 
 
 def pytorch_attention(q, k, v, B, T, C, n_head):
@@ -42,7 +47,7 @@ def andrej_attention(q, k, v, B, T, C, n_head, block_size=32, bias=None):
     v = v.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
 
     att = (q.to(torch.float32) @ k.to(torch.float32).transpose(-2, -1)).to(
-        torch.float16
+        TORCH_DTYPE
     )
     att *= 1.0 / math.sqrt(k.size(-1))
     att = att.masked_fill(bias[:, :, :T, :T] == 0, float("-inf"))
@@ -50,7 +55,7 @@ def andrej_attention(q, k, v, B, T, C, n_head, block_size=32, bias=None):
     y = att @ v.to(
         torch.float32
     )  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-    return y.to(torch.float16).transpose(1, 2).contiguous().view(B, T, C)
+    return y.to(TORCH_DTYPE).transpose(1, 2).contiguous().view(B, T, C)
 
 
 def andrej_attention_block(
@@ -61,7 +66,7 @@ def andrej_attention_block(
     """
     q, k, v = c_attn(x).split(n_embd, dim=-1)
     y = andrej_attention(q, k, v, B, T, C, n_head, block_size)
-    return c_proj(y.to(torch.float32)).to(torch.float16)
+    return c_proj(y.to(torch.float32)).to(TORCH_DTYPE)
 
 
 def test_attention_individually():
@@ -265,7 +270,7 @@ def test_attention_block():
     c_attn = torch.nn.Linear(embedding_dim, 3 * embedding_dim, bias=False)
     c_attn.weight = torch.nn.Parameter(torch.tensor(in_projection_weights.T))
     c_proj = torch.nn.Linear(embedding_dim, embedding_dim, bias=False)
-    c_proj.weight = torch.nn.Parameter(torch.tensor(out_projection_weights))
+    c_proj.weight = torch.nn.Parameter(torch.tensor(out_projection_weights.T))
 
     andrej_result = andrej_attention_block(
         torch.tensor(x),

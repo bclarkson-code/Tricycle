@@ -45,7 +45,7 @@ class StochasticGradientDescent(Optimiser):
         grad = self.learning_rate * tensor.grad.array
 
         if self.weight_decay is not None:
-            wd = self.learning_rate * self.weight_decay * tensor
+            wd = self.learning_rate * self.weight_decay * tensor.array
             grad += wd
 
         if self.momentum is not None and self.momentum > 0:
@@ -55,9 +55,9 @@ class StochasticGradientDescent(Optimiser):
                 last_momentum = self.momentum_store[tensor._id]
 
             grad += self.momentum * last_momentum
-            self.momentum_store[tensor._id] = grad.array
+            self.momentum_store[tensor._id] = grad
 
-        out = tensor - grad
+        out = tensor.array - grad
         if TRICYCLE_CONTEXT.use_mixed_precision:
             out = out.astype(xp.float16)
 

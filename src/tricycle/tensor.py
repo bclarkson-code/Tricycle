@@ -56,6 +56,9 @@ class Tensor:
         name: str | None = None,
         _id: int | None = None,
     ):
+        if isinstance(array, Tensor):
+            self = array
+            return
         self._id = _id or uuid.uuid4().int
         if CUPY_ENABLED:
             import cupy
