@@ -46,8 +46,8 @@ def load_datasets(n_tokens: int, config: SmolGPTConfig):
     """
 
     # if you are loading this for the first time, this can take a while.
-    # it will create some big cache files in ~/.cache/huggingface that you might
-    # want to clean up once you are done with the dataset
+    # it will create some big cache files in ~/.cache/huggingface that you
+    # might want to clean up once you are done with the dataset
     print("Loading dataset")
     train_dataset = FineWeb(config.vocab_size, split="train")
 
@@ -181,7 +181,7 @@ if CUPY_ENABLED:
 
 
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
-mlflow.set_experiment("SmolGPT:fineweb:debug")
+mlflow.set_experiment("SmolGPT:fineweb:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 with mlflow.start_run() as run:
     unique_id = uuid.uuid4()
@@ -192,7 +192,7 @@ with mlflow.start_run() as run:
     for step in tqdm(range(n_steps), position=0):
         mlflow.log_params(config.dict())
 
-        optimiser.timestep()
+        optimiser.step()
         batch_loss = 0
 
         # perform several forward and backward passes before doing a gradient
