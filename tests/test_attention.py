@@ -121,7 +121,7 @@ def test_attention_individually():
 
     # pytorch
     att = qu.to(torch.float32) @ k.transpose(-2, -1).to(torch.float32)
-    att = att.half()
+    att = att.to(TORCH_DTYPE)
     att *= 1 / np.sqrt(k.size(-1))
 
     # tricycle
@@ -154,7 +154,7 @@ def test_attention_individually():
 
     # pytorch
     att = att.to(torch.float32) @ v.to(torch.float32)
-    att = att.half().transpose(0, 1).contiguous()
+    att = att.to(TORCH_DTYPE).transpose(0, 1).contiguous()
 
     # tricycle
     attention = Einsum("NIj, NjH -> INH")(attention, value)
