@@ -8,7 +8,8 @@ Tricycle is a fast, minimal, fully functional deep learning library written from
 
 The file `train_smol_gpt.py` trains a 49M parameter, GPT-2 style language model that can produce passable python code in ~2 days on a single RTX 3090.
 
-The entire library, from the automatic differentiation engine to a GPT, is written in ~4500 lines of python + Numpy code.
+
+The entire library, from the automatic differentiation engine to a GPT, should be understandable to anyone with a bit of python experience.
 
 Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a CUDA-capable GPU or a CPU.
 
@@ -53,21 +54,19 @@ conda env create -f environment.yml -n tricycle
 conda activate tricycle
 ```
 
-<details>
-    <summary>CPU and test installation</summary>
-If you want to install test dependencies you can do the following.
-
-```bash
-conda env create -f environment.test.yml -n tricycle
-conda activate tricycle
-```
-
-### CPU Installation
-
-If you want to install Tricycle for CPU, you can do the following.
+If you want to install Tricycle for CPU only, you can do the following.
 
 ```bash
 conda env create -f environment.cpu.yml -n tricycle
+conda activate tricycle
+```
+
+<details>
+    <summary>Test installation</summary>
+If you want to install test dependencies with GPU support you can do the following.
+
+```bash
+conda env create -f requirements/environment.test.yml -n tricycle
 conda activate tricycle
 ```
 
@@ -83,8 +82,12 @@ conda activate tricycle
 ## Training a GPT on Shakespeare
 
 The following toy script will train a small GPT to generate convincing Shakespeare.
-On my RTX 3090, this takes ~30 mins. For a more realistic training script with metric tracking, gradient accumulation, a validation dataset etc, take a look at `train_smol_gpt.py`
+On my RTX 3090, this takes ~9 mins. For a more realistic training script with metric tracking, gradient accumulation, a validation dataset etc, take a look at `train_smol_gpt.py`
 
+I've chosen some sensible default values for this model in `src/tricycle/configs.py:ShakespeareConfig`. Feel free to play around with these and see what happens.
+If you are running out of GPU memory, try dropping the batch size and if your GPU is slow, try reducing the number of steps.
+
+If you don't have a CUDA capable GPU, you can run the script on CPU but it will take a while. For 1000 steps on an M2 macbook air, this took ~ 9 hours so you'll probably want to leave this running overnight.
 ```python
 import pickle
 
