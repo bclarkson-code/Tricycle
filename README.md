@@ -1034,6 +1034,29 @@ Generating text from a language model is great, but it isn't very helpful if
 the model isn't trained. For this, we need to figure out how to adjust the
 model weights to produce the outputs that we want.
 
+A good place to start is with a function called a loss function. A loss
+function is just a way of measuring how correct our model outputs are. There
+are a lot of different ways that we can do this but in our case, because we
+are trying to select a category, a loss function that works quite well is
+cross entropy.
+
+You can find the full implementation of cross entropy in `src/tricycle/loss.py`
+but at a high level, we pass in our array of scores for each token, as 
+well as the correct token, and it tells us how good the predictions were in 
+the form of a single number. A higher number means a worse prediction and a 
+0 is a perfect prediction. 
+
+One way to think about our loss is that it is the result of taking our input, 
+passing it through a load of `Op`s (some of which also involve weights), and
+eventually producing our loss. This means that, in mathematical terms, the loss
+is a (very complex) function of the inputs and weights.
+
+Because every `Op` in Tricycle is differentiable, we're able to differentiate
+our loss w.r.t each of the weights in the network. This is a really powerful
+idea because there is a theorem in vector calculus that says that the 
+
+
+
 ## What's Next?
 
  - Documentation
