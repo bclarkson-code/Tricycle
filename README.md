@@ -947,6 +947,7 @@ As explained above, our GPT accepts an array of integers as an input. Each of
 these integers is called a token and represents a string of data. For example,
 in the tokeniser I used for GPT-2, the phrase "artificial intelligence" gets
 converted into `[433, 9542, 4430]`:
+![Screenshot 2024-07-11 at 12 57 52](https://github.com/bclarkson-code/Tricycle/assets/57139598/3503d3e8-7b26-44b1-8e68-286ad1bef139)
 
 
 ## What's Next?
