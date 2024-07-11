@@ -947,7 +947,42 @@ As explained above, our GPT accepts an array of integers as an input. Each of
 these integers is called a token and represents a string of data. For example,
 in the tokeniser I used for GPT-2, the phrase "artificial intelligence" gets
 converted into `[433, 9542, 4430]`:
+
 ![Screenshot 2024-07-11 at 12 57 52](https://github.com/bclarkson-code/Tricycle/assets/57139598/3503d3e8-7b26-44b1-8e68-286ad1bef139)
+
+Our tokeniser needs to have a few properties:
+ - It should be able to convert any string into tokens (including unicode 
+characters so we can support non-english languages).
+ - Common substrings should be given their own tokens (otherwise our model has
+to spend a while learning which letters go after each other rather than 
+learning higher level features of language)
+
+There is an elegant algorithm that meets these requirements that tricycle uses
+for tokenising called byte pair encoding.
+
+First of all, the text is converted into an array of bytes and each individual
+byte is replaced with a token. This gives us 256 unique tokens (one for each 
+byte). Then, we start the training loop.
+
+We search through our array and find the most common pair of tokens. We give
+this pair a new token and then replace every ocurrence of this pair with the
+new token. Then we repeat until we have the desired number of tokens.
+
+Then, if we want to convert some new text into tokens, we can convert it into
+bytes and look through our list of unique tokens to see if we can replace
+any pairs with tokens. We continue this process until we can no longer replace
+pairs with tokens in our list.
+
+The full details of this algorithm can be found in the [BPETokeniser](https://github.com/bclarkson-code/Tricycle/blob/main/src/tricycle/tokeniser.py#L55). At time of writing, the tokeniser is too slow for practical use on large
+datasets but development is ongoing. In the mean time, `train_smol_gpt.py` uses
+OpenAI's tiktoken tokeniser.
+
+### Getting data into the model
+Now we have an array of tokens, all that remains is to feed them into the 
+model. When we're training the model, we want to feed in some tokens and ask
+the model to predict the next token. In practice, we select a fixed number
+of tokens (the context window) and feed this into the model. Then we shift 
+that context window along by one token in the dataset and use this as a label.
 
 
 ## What's Next?
