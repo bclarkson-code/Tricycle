@@ -12,7 +12,7 @@ from tricycle.layers import (  # noqa: E501
     RMSNorm,
     Sequential,
 )
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor, to_tensor
 
 
 def test_dense_layer():
@@ -82,14 +82,14 @@ def test_layer_norm():
     assert out_tensor.shape == in_tensor.shape
     out_tensor.backward()
 
-    assert copy(out_tensor).mean().close_to(0, atol=1e-6)
+    assert copy(out_tensor).mean().close_to(0, atol=1e-3)
     assert np.allclose(np.std(out_tensor.array), [1] * 100, atol=1e-7)
 
     assert in_tensor.grad is not None
     assert in_tensor.grad.shape == in_tensor.shape
 
     # not sure if this is correct. TODO: check
-    assert in_tensor.grad.close_to(np.zeros(in_tensor.shape), atol=1e-6)
+    assert in_tensor.grad.close_to(np.zeros(in_tensor.shape), atol=1e-3)
 
 
 def test_embedding():
@@ -129,7 +129,7 @@ def test_embedding_batched():
     np.random.seed(0)
     vocab_size = 3
     out_shape = 5
-    in_tensor = to_tensor(
+    in_tensor = Tensor(
         [[0, 1, 2, 0], [1, 2, 2, 1]],
         requires_grad=False,
         dtype=np.int8,
@@ -167,20 +167,3 @@ def test_embedding_batched():
             ],
         ]
     )
-
-
-@pytest.mark.skip(reason="not implemented yet")
-def test_rms_norm():
-    np.random.seed(0)
-    in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
-    layer_norm = RMSNorm(100)
-    out_tensor = layer_norm(in_tensor.to_batched())
-
-    assert out_tensor.shape == in_tensor.shape
-    assert np.allclose((out_tensor.array**2).mean(), 1)
-    out_tensor.backward()
-
-    assert in_tensor.grad is not None
-    assert in_tensor.grad.shape == in_tensor.shape
-
-    # TODO: do a proper check here

@@ -3,6 +3,7 @@ from typing import Sequence
 
 from numpy.typing import ArrayLike
 
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.einsum import Einsum, Subscript
 from tricycle.tensor import Tensor, to_tensor
 
@@ -155,14 +156,35 @@ class Reshape(Op):
 
 class Mean(Op):
     """
-    Find the mean of a tensor along the final axis
+    Find the mean of a tensor
     """
+
+    def backward(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        result = xp.full(self._in_shape, self.divisor)
+        out = grad.array * result
+
+        return Tensor(out, is_batched=self._is_batched)
 
     def forward(self, tensor: Tensor) -> Tensor:
         """
-        Find the mean of a tensor along the final axis
+        Find the mean of a tensor
         """
-        if tensor.ndim == 1 and tensor.shape[0] == 1:
-            return tensor
+        xp = tensor.xp
+        self._is_batched = tensor.is_batched
+        self._in_shape = tensor.shape
 
-        return tensor.einsum("...a->...") / tensor.shape[-1]
+        # we can overflow here with large arrays so we'll use full precision
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array = tensor.array.astype(xp.float32)
+
+        self.divisor = 1 / xp.prod(tensor.shape) if tensor.shape else 1
+        out = tensor.array.sum() * self.divisor
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            out = out.astype(xp.float16)
+
+        return Tensor(
+            out, name="mean", back_fns=(self.backward,), args=(tensor,)
+        )

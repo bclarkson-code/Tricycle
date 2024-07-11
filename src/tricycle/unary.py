@@ -10,6 +10,7 @@ from typing import Sequence
 
 from numpy.typing import ArrayLike
 
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.ops import Op
 from tricycle.tensor import Tensor, select_backend
 from tricycle.utils import shapes_match
@@ -149,7 +150,16 @@ class UnaryDivide(Op):
         """
         upow = UnaryPower()
         umul = UnaryMultiply()
-        return umul(upow(tensor, -1.0), constant)
+
+        xp = tensor.xp
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array = tensor.array.astype(xp.float32)
+
+        out = umul(upow(tensor, -1.0), constant)
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            out.array = out.array.astype(xp.float16)
+        return out
 
 
 class UnaryMax(Op):
@@ -231,7 +241,12 @@ class UnaryExp(Op):
         """
         xp = tensor.xp
 
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array = tensor.array.astype(xp.float32)
         self._out = xp.exp(tensor.array)
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._out = self._out.astype(xp.float16)
 
         return Tensor(
             self._out,
@@ -243,7 +258,7 @@ class UnaryExp(Op):
 
 
 class UnaryLog(Op):
-    REALLY_SMALL_NUMBER = 1e-8
+    REALLY_SMALL_NUMBER = 1e-6
 
     _input: ArrayLike
 
@@ -472,6 +487,7 @@ class Batch(Op):
             is_batched=True,
             args=(tensor,),
             back_fns=(self.back_fn,),
+            dtype=tensor.dtype,
         )
 
 
@@ -496,4 +512,5 @@ class Unbatch(Op):
             is_batched=False,
             args=(tensor,),
             back_fns=(self.back_fn,),
+            dtype=tensor.dtype,
         )

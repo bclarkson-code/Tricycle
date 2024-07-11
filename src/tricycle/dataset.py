@@ -4,7 +4,7 @@ from typing import Sequence
 import numpy as np
 from sklearn.datasets import fetch_olivetti_faces
 
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 
 
 class Dataset:
@@ -81,12 +81,12 @@ class InfiniteBatchDataset(Dataset):
         batch_outputs = np.vstack([self.outputs[i] for i in indices])
 
         if self._to_tensor:
-            batch_inputs = to_tensor(
+            batch_inputs = Tensor(
                 batch_inputs,
                 is_batched=self.is_batched,
                 dtype=batch_outputs.dtype,
             )
-            batch_outputs = to_tensor(
+            batch_outputs = Tensor(
                 batch_outputs,
                 is_batched=self.is_batched,
                 dtype=batch_outputs.dtype,
@@ -144,19 +144,19 @@ class CausalLMDataset:
             outputs = tokens[1:]
 
         if self.as_tensor:
-            inputs = to_tensor(
+            inputs = Tensor(
                 inputs,
                 requires_grad=False,
                 name="inputs",
                 is_batched=self.is_batch,
-                dtype=np.uint32,
+                dtype=outputs.dtype,
             )
-            outputs = to_tensor(
+            outputs = Tensor(
                 outputs,
                 requires_grad=False,
                 name="output",
                 is_batched=self.is_batch,
-                dtype=np.uint32,
+                dtype=outputs.dtype,
             )
             if self.device is not None:
                 inputs.to_gpu(self.device)
@@ -195,7 +195,10 @@ class CausalLMDataset:
                 "Shuffling non-batched datasets is not currently supported"
             )
         else:
-            np.random.shuffle(self.batch_indices)
+            n_batches = len(self.tokens) - self.context_window - 1
+            self.batch_indices = np.random.choice(
+                n_batches, size=n_batches, replace=False
+            )
         return self
 
     def to_gpu(self, device: int = 0):

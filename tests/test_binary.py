@@ -8,7 +8,7 @@ from tricycle.binary import (
     BinaryMultiply,
     BinarySubtract,
 )
-from tricycle.tensor import to_tensor
+from tricycle.tensor import DEFAULT_DTYPE, to_tensor
 
 
 def test_can_badd():  # sourcery skip: extract-duplicate-method
@@ -86,10 +86,10 @@ def test_can_bmul():
 
 def test_can_bdiv():
     in_tensor_1 = to_tensor(
-        np.arange(12).reshape(3, 4), is_batched=True, dtype=float
+        np.arange(12).reshape(3, 4), is_batched=True, dtype=DEFAULT_DTYPE
     )
     in_tensor_2 = to_tensor(
-        np.arange(1, 13).reshape(3, 4), is_batched=True, dtype=float
+        np.arange(1, 13).reshape(3, 4), is_batched=True, dtype=DEFAULT_DTYPE
     )
 
     out_tensor = BinaryDivide()(in_tensor_1, in_tensor_2)
@@ -100,19 +100,20 @@ def test_can_bdiv():
             [0, 1 / 2, 2 / 3, 3 / 4],
             [4 / 5, 5 / 6, 6 / 7, 7 / 8],
             [8 / 9, 9 / 10, 10 / 11, 11 / 12],
-        ]
+        ],
+        dtype=DEFAULT_DTYPE,
     )
 
-    assert out_tensor.close_to(correct)
+    assert out_tensor.close_to(correct, rtol=1e-3)
 
     out_tensor.backward()
 
     assert in_tensor_1.grad is not None
     assert in_tensor_2.grad is not None
-    assert in_tensor_1.grad.close_to(1 / in_tensor_2.array)
+    assert in_tensor_1.grad.close_to(1 / in_tensor_2.array, rtol=1e-3)
 
     assert in_tensor_2.grad.close_to(
-        -in_tensor_1.array / (in_tensor_2.array**2)
+        -in_tensor_1.array / (in_tensor_2.array**2), rtol=1e-3
     )
 
 

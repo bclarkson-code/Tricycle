@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Sequence
 
+from numpy._typing import ArrayLike
+
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.binary import BinaryMultiply
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
@@ -55,67 +58,39 @@ class Dense(Layer):
 
     def weight_back_fn(self, grad: Tensor):
         xp = grad.xp
-        result = xp.einsum(self._weight_subscript, self._input, grad.array)
-        return to_tensor(
+
+        indices = list(range(grad.ndim - 1))
+        result = xp.tensordot(self._input, grad.array, axes=[indices, indices])
+        return Tensor(
             result,
             requires_grad=grad.requires_grad,
-            name="back_dense",
+            name="back_dense_weight",
             is_batched=False,
         )
 
     def grad_back_fn(self, grad: Tensor):
         xp = grad.xp
-        result = xp.einsum(
-            self._grad_subscript, self.weights.array, grad.array
-        )
-        return to_tensor(
+        result = xp.tensordot(grad.array, self.weights.array, axes=[-1, -1])
+        return Tensor(
             result,
             requires_grad=grad.requires_grad,
-            name="back_dense",
+            name="back_dense_grad",
             is_batched=True,
         )
 
     def forward(self, tensor: Tensor):
-        match tensor.ndim:
-            case 1:
-                subscript = "a,aW->W"
-                weight_subscript = "a,W->aW"
-                grad_subscript = "aW,W->a"
-            case 2:
-                subscript = "Tb,bW->TW"
-                weight_subscript = "Tb,TW->bW"
-                grad_subscript = "bW,TW->Tb"
-            case 3:
-                subscript = "zTb,bW->zTW"
-                weight_subscript = "zTb,zTW->bW"
-                grad_subscript = "bW,zTW->zTb"
-            case 4:
-                subscript = "zxTb,bW->zxTW"
-                weight_subscript = "zxTb,zxTW->bW"
-                grad_subscript = "bW,zxTW->zxTb"
-            case _:
-                raise NotImplementedError(
-                    f"Cannot pass tensor with shape {tensor.shape} "
-                    f"and {tensor.is_batched=}"
-                    "through a Dense layer"
-                )
-        result = to_tensor(
-            tensor.xp.einsum(
-                subscript,
-                tensor.array,
-                self.weights.array,
-            )
-        )
-        self._grad_subscript = grad_subscript
-        self._weight_subscript = weight_subscript
+        xp = tensor.xp
+
         self._input = tensor.array
+        result = xp.tensordot(tensor.array, self.weights.array, axes=[-1, 0])
 
-        result.name = "dense"
-        result.args = (self.weights, tensor)
-        result.back_fns = (self.weight_back_fn, self.grad_back_fn)
-        result.is_batched = tensor.is_batched
-
-        return result
+        return Tensor(
+            result,
+            name="dense",
+            args=(self.weights, tensor),
+            back_fns=(self.weight_back_fn, self.grad_back_fn),
+            is_batched=tensor.is_batched,
+        )
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)
@@ -176,6 +151,10 @@ class LayerNorm(Layer):
         x = tensor.array
 
         # Compute mean and variance along the feature dimension
+        # This is pretty sensitive to errors so we need to do it at full
+        # precision
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            x = x.astype(xp.float32)
         self._mean = x.mean(axis=-1, keepdims=True)
         self._var = x.var(axis=-1, keepdims=True)
         self._input = x
@@ -184,16 +163,17 @@ class LayerNorm(Layer):
         x_norm = (x - self._mean) / xp.sqrt(self._var + self.eps)
         output = self.gamma.array * x_norm + self.beta.array
 
-        output = to_tensor(
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            output = output.astype(xp.float16)
+
+        return Tensor(
             output,
             is_batched=tensor.is_batched,
             requires_grad=tensor.requires_grad,
+            back_fns=(self.back_fn, self.beta_back_fn, self.gamma_back_fn),
+            args=(tensor, self.beta, self.gamma),
+            name="layer_norm",
         )
-        output.back_fns = (self.back_fn, self.beta_back_fn, self.gamma_back_fn)
-        output.args = (tensor, self.beta, self.gamma)
-        output.name = "layer_norm"
-
-        return output
 
     def gamma_back_fn(self, grad: Tensor):
         """
@@ -205,7 +185,10 @@ class LayerNorm(Layer):
         x_norm = (self._input - self._mean) / xp.sqrt(self._var + self.eps)
         axes = tuple(range(grad.ndim - 1))
         result = xp.sum(grad.array * x_norm, axis=axes)
-        return to_tensor(result, is_batched=False)
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            result = result.astype(xp.float16)
+        return Tensor(result, is_batched=False)
 
     def beta_back_fn(self, grad: Tensor):
         """
@@ -216,7 +199,9 @@ class LayerNorm(Layer):
         # Compute intermediate values
         axes = tuple(range(grad.ndim - 1))
         result = xp.sum(grad.array, axis=axes)
-        return to_tensor(result, is_batched=False)
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            result = result.astype(xp.float16)
+        return Tensor(result, is_batched=False)
 
     def back_fn(self, grad: Tensor):
         """
@@ -250,7 +235,9 @@ class LayerNorm(Layer):
             + dmean / n
         )
 
-        return to_tensor(
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            result = result.astype(xp.float16)
+        return Tensor(
             result,
             is_batched=grad.is_batched,
             requires_grad=grad.requires_grad,
@@ -277,75 +264,96 @@ class LayerNorm(Layer):
 
 
 class RMSNorm(Layer):
-    """
-    Normalise tensors by their sum of squares. This is similar to layer norm
-    but removes means
-    """
-
-    REALLY_SMALL_NUMBER = 1e-6
-
-    def __init__(self, to_size: int):
-        raise NotImplementedError(
-            "RMSNorm is still in development and not ready for use"
-        )
+    def __init__(self, embedding_dim: int, REALLY_SMALL_NUMBER=1e-4):
         import numpy as np
 
-        self.weights = to_tensor(np.ones(to_size))
-
-    def build_back_fn(self, rms, input_):
-        def rmsnorm_weight_back_fn(grad):
-            xp = grad.xp
-            result = xp.sum(input_ / rms, axis=-2).sum(0).squeeze()
-            return to_tensor(result, is_batched=False)
-
-        def rmsnorm_back_fn(grad):
-            xp = grad.xp
-            scaled_grad = xp.multiply(grad.array, self.weights.array)
-
-            left = scaled_grad / rms
-
-            coef = scaled_grad / (384 * rms**3)
-
-            match input_.ndim:
-                case 2:
-                    square_prod = xp.einsum("AB,Ac->AB", input_, input_)
-                case 3:
-                    square_prod = xp.einsum("zAB,zAc->zAB", input_, input_)
-                case 4:
-                    square_prod = xp.einsum("zxAB,zxAc->zxAB", input_, input_)
-                case _:
-                    raise NotImplementedError(
-                        f"RMSNorm with tensors of size {input_.ndim} are not yet supported"
-                    )
-            right = square_prod * coef
-            return to_tensor(left - right, is_batched=grad.is_batched)
-
-        return rmsnorm_weight_back_fn, rmsnorm_back_fn
+        self.REALLY_SMALL_NUMBER = REALLY_SMALL_NUMBER
+        self.embedding_dim = embedding_dim
+        self.weights = Tensor(
+            np.ones((embedding_dim,)), requires_grad=True, is_batched=False
+        )
 
     def forward(self, tensor: Tensor):
+        """
+        Performs Layer Normalization on the input tensor x.
+
+        Args:
+            x (numpy.ndarray): Input tensor of shape (batch_size, *).
+
+        Returns:
+            numpy.ndarray: Normalized tensor of the same shape as x.
+        """
         xp = tensor.xp
-        square_sum = (tensor.array * tensor.array).mean(axis=-1)
-        rms = xp.sqrt(square_sum)
-        rms = xp.expand_dims(rms, -1)
-        result = xp.divide(tensor.array, (rms + self.REALLY_SMALL_NUMBER))
-        result = xp.einsum("...a,a->...a", result, self.weights.array)
+        x = tensor.array
 
-        weight_back_fn, back_fn = self.build_back_fn(
-            rms=rms, input_=tensor.array, is_batched=tensor.is_batched
-        )
-        result = to_tensor(
-            result, is_batched=tensor.is_batched, name="rmsnorm"
-        )
-        result.back_fns = (
-            weight_back_fn,
-            back_fn,
-        )
-        result.args = (
-            self.weights,
-            tensor,
+        # RMSNorm is pretty sensitive to errors so we'll use full precision
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            x = x.astype(xp.float32)
+            self.weights.array = self.weights.array.astype(xp.float32)
+
+        # breakpoint()
+        # Compute square mean along the feature dimension
+        mean_square = (x**2).mean(axis=-1, keepdims=True)
+        self._input = x
+
+        # Rescale
+        self._divisor = 1 / xp.sqrt(mean_square) + self.REALLY_SMALL_NUMBER
+        x_norm = x * self._divisor
+        output = self.weights.array * x_norm
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            output = output.astype(xp.float16)
+
+        return Tensor(
+            output,
+            is_batched=tensor.is_batched,
+            requires_grad=tensor.requires_grad,
+            back_fns=(self.back_fn, self.weight_back_fn),
+            args=(tensor, self.weights),
+            name="rms_norm",
         )
 
-        return result
+    def weight_back_fn(self, grad: Tensor):
+        """
+        backward pass for grad
+        """
+        xp = grad.xp
+
+        # Compute intermediate values
+        # We could have stored this but I've opted for saving memory by
+        # recomputing
+
+        x_norm = self._input * self._divisor
+        axes = tuple(range(grad.ndim - 1))
+        result = xp.sum(grad.array * x_norm, axis=axes)
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            result = result.astype(xp.float16)
+        return Tensor(result, is_batched=False)
+
+    def back_fn(self, grad: Tensor):
+        """
+        backward pass for grad
+        """
+        xp = grad.xp
+
+        left = grad.array * self.weights.array
+
+        right = self._input * self.weights.array
+        right *= (self._divisor**2) / self.embedding_dim
+        right *= xp.sum(self._input * grad.array, axis=-1, keepdims=True)
+
+        result = left - right
+        result *= self._divisor
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            result = result.astype(xp.float16)
+        return Tensor(
+            result,
+            is_batched=grad.is_batched,
+            requires_grad=grad.requires_grad,
+            name="back_rms_norm",
+        )
 
     def update(self, optimiser: Optimiser):
         self.weights = optimiser(self.weights)
@@ -394,7 +402,7 @@ class Embedding(Layer):
                     f"{grad.ndim=}, {self.input.ndim=} are not supported"
                 )
 
-        return to_tensor(out)
+        return Tensor(out, requires_grad=grad.requires_grad)
 
     def forward(self, tensor: Tensor):
         assert (
@@ -457,3 +465,115 @@ class Sequential(Layer):
     def from_gpu(self):
         for layer in self.layers:
             layer.from_gpu()
+
+
+class RotaryEncode(Layer):
+    """
+    Apply rotary positional encoding to a key and query
+    """
+
+    embedding_dim: int
+    n_heads: int
+    context_window: int
+    theta: float = 10_000.0
+
+    def __init__(
+        self,
+        embedding_dim: int,
+        n_heads: int,
+        context_window: int,
+        theta: float | None = None,
+    ):
+        super().__init__()
+        self.embedding_dim = embedding_dim
+        self.n_heads = n_heads
+        self.context_window = context_window
+
+        self.head_size = self.context_window // self.n_heads
+
+        if theta is not None:
+            self.theta = theta
+
+        self.freqs_cos, self.freqs_sin = self.precompute_constants()
+
+    def precompute_constants(self) -> tuple[ArrayLike, ArrayLike]:
+        # this is run once at initialisation so we dont get any benefit from
+        # cupy using
+        import numpy as np
+
+        # [0, 1, 2, ..., (dim//2) - 1]
+        head_idx = np.arange(0, self.head_size // 2)
+
+        # [0/dim, 2/dim, 4/dim, ... (dim-4) / dim, (dim-2) / dim]
+        power = 2 * head_idx / self.head_size
+        freqs = 1 / (self.theta**power)
+
+        # assign an index to each token
+        token_idx = np.arange(self.context_window)
+
+        # this is a 2d matrix
+        # freqs = t / theta**(2*d / dim)
+        # where t is a token index and d is a head index
+        freqs = np.outer(token_idx, freqs)
+
+        freqs_cos = np.cos(freqs)
+        freqs_sin = np.sin(freqs)
+
+        return freqs_cos, freqs_sin
+
+    def backward(self, grad: Tensor) -> Tensor:
+        xp = grad.xp
+
+        # split the final dimension in 2 putting every
+        # 2i'th value in a tensor called "grad_real"
+        # and every 2i + 1'th value in a tensor called "grad_imaginary"
+        grad_real = grad.array[..., 0::2]
+        grad_imaginary = grad.array[..., 1::2]
+
+        input_grad_real = (
+            grad_real * self.freqs_cos + grad_imaginary * self.freqs_sin
+        )
+        input_grad_imaginary = (
+            -grad_real * self.freqs_sin + grad_imaginary * self.freqs_cos
+        )
+
+        # Interleave the gradients back together so we get:
+        # real, imaginary, real, imaginary, ...
+        out = xp.empty(grad.shape)
+        out[..., 0::2] = input_grad_real
+        out[..., 1::2] = input_grad_imaginary
+
+        return Tensor(
+            array=out,
+            name="back_rotary_encode",
+            is_batched=grad.is_batched,
+        )
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        xp = tensor.xp
+
+        # split the final dimension in 2 putting every
+        # 2i'th value an a tensor called "real"
+        # and every 2i + 1'th value in a tensor called "imaginary"
+        real = tensor.array[..., 0::2]
+        imaginary = tensor.array[..., 1::2]
+
+        # combine the real an imaginary parts together with frequencies
+        out_real = real * self.freqs_cos - imaginary * self.freqs_sin
+        out_imaginary = real * self.freqs_sin + imaginary * self.freqs_cos
+
+        # Interleave the real and imaginary parts
+        # back together so we get:
+        # real, imaginary, real, imaginary, ...
+        # in the final dimension
+        out = xp.empty(tensor.shape)
+        out[..., 0::2] = out_real
+        out[..., 1::2] = out_imaginary
+
+        return Tensor(
+            array=out,
+            args=(tensor,),
+            back_fns=(self.backward,),
+            name="rotary_encode",
+            is_batched=tensor.is_batched,
+        )

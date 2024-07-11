@@ -3,7 +3,14 @@ import numpy as np
 
 from tricycle.blocks import GPT2TransformerBlock
 from tricycle.configs import GPTConfig
-from tricycle.layers import Dense, Dropout, Embedding, Layer, LayerNorm
+from tricycle.layers import (
+    Dense,
+    Dropout,
+    Embedding,
+    Layer,
+    LayerNorm,
+    RMSNorm,
+)
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor, to_tensor
 
@@ -31,6 +38,7 @@ class GPT(Layer):
                 context_window=self.context_window,
                 expansion_ratio=config.expansion_ratio,
                 activation_fn=config.activation_fn,
+                norm_fn=config.norm_fn,
             )
             for _ in range(config.n_layers)
         ]
@@ -40,13 +48,20 @@ class GPT(Layer):
             from_size=self.embedding_dim,
             name="head",
         )
-        self.layer_norm = LayerNorm(self.embedding_dim)
+        match config.norm_fn:
+            case "layer_norm":
+                self.norm = LayerNorm(self.embedding_dim)
+            case "rms_norm":
+                self.norm = RMSNorm(self.embedding_dim)
+            case _:
+                raise ValueError(f"Unknown norm: {config.norm_fn}")
+
         self.layers = [
             self.token_embedding,
             self.position_embedding,
             self.input_dropout,
             *self.blocks,
-            self.layer_norm,
+            self.norm,
             self.head,
         ]
 
@@ -57,18 +72,20 @@ class GPT(Layer):
         """
         xp = tensor.xp
         if tensor.ndim == 1:
-            n_tokens = 1
-            context_window = tensor.shape[-1]
+            n_tokens = tensor.shape[-1]
             tensor.array = xp.expand_dims(tensor.array, 0)
+            tensor = tensor.to_batched()
         else:
-            n_tokens, context_window = tensor.shape
-        assert n_tokens <= self.context_window, (
-            "Can't have more tokens than context window. ",
+            n_tokens = tensor.shape[-1]
+        assert n_tokens == self.context_window, (
+            "Expected a full context window. ",
             f"Found {n_tokens=} and {self.context_window=}",
         )
 
         position = to_tensor(
-            xp.arange(context_window), requires_grad=False, dtype=int
+            xp.arange(self.context_window),
+            requires_grad=False,
+            dtype=int,
         )
 
         pos_embedding = self.position_embedding(position)
@@ -81,7 +98,7 @@ class GPT(Layer):
         for i, block in enumerate(self.blocks):
             embedding = block(embedding)
 
-        embedding = self.layer_norm(embedding)
+        embedding = self.norm(embedding)
 
         embedding = self.head(embedding)
         return embedding
@@ -89,7 +106,7 @@ class GPT(Layer):
     def zero_grad(self):
         self.token_embedding.zero_grad()
         self.position_embedding.zero_grad()
-        self.layer_norm.zero_grad()
+        self.norm.zero_grad()
         self.head.zero_grad()
         for block in self.blocks:
             block.zero_grad()
@@ -98,7 +115,7 @@ class GPT(Layer):
     def update(self, optimiser: Optimiser):
         self.token_embedding.update(optimiser)
         self.position_embedding.update(optimiser)
-        self.layer_norm.update(optimiser)
+        self.norm.update(optimiser)
         self.head.update(optimiser)
         for block in self.blocks:
             block.update(optimiser)
@@ -109,7 +126,7 @@ class GPT(Layer):
         self.position_embedding.to_gpu(device)
         for block in self.blocks:
             block.to_gpu(device)
-        self.layer_norm.to_gpu(device)
+        self.norm.to_gpu(device)
         self.head.to_gpu(device)
         return self
 
@@ -118,7 +135,7 @@ class GPT(Layer):
         self.position_embedding.from_gpu()
         for block in self.blocks:
             block.from_gpu()
-        self.layer_norm.from_gpu()
+        self.norm.from_gpu()
         self.head.from_gpu()
         return self
 

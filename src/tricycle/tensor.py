@@ -12,19 +12,21 @@ converts tensors to batched tensors.
 import logging
 import numbers
 import uuid
-import weakref
 from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from tricycle import GPU_ENABLED
+from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
+from tricycle.weakset import WeakSet
 
 if TYPE_CHECKING:
     from tricycle.ops import Op
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_DTYPE = np.float32
 
 
 class Tensor:
@@ -50,9 +52,13 @@ class Tensor:
         is_batched: bool = False,
         args: tuple["Tensor", ...] | None = None,
         back_fns: tuple["Op", ...] | None = None,
+        dtype: np.typing.DTypeLike = None,
         name: str | None = None,
         _id: int | None = None,
     ):
+        if isinstance(array, Tensor):
+            self = array
+            return
         self._id = _id or uuid.uuid4().int
         if GPU_ENABLED:
             import cupy
@@ -63,6 +69,14 @@ class Tensor:
                 self.array = np.array(array)
         else:
             self.array = np.array(array)
+
+        if dtype is None:
+            if TRICYCLE_CONTEXT.use_mixed_precision:
+                dtype = np.float16
+            else:
+                dtype = DEFAULT_DTYPE
+
+        self.array = self.array.astype(dtype)
 
         self.requires_grad = requires_grad
         self.is_batched = is_batched
@@ -95,7 +109,7 @@ class Tensor:
                     # which can't be garbage collected, leading to a memory
                     # leak so we need to do a weakref to avoid the circular
                     # reference
-                    arg.parents = weakref.WeakSet()
+                    arg.parents = WeakSet()
 
                 # if a node has a parent we haven't visited yet, store it
                 if node not in arg.parents:
@@ -117,7 +131,7 @@ class Tensor:
         child node if all of its parents have been visited through every
         possible path: a topological sort.
         """
-        self.grad = to_tensor(
+        self.grad = Tensor(
             self.xp.ones(self.array.shape, dtype=self.dtype),
             requires_grad=False,
             is_batched=self.is_batched,
@@ -323,7 +337,9 @@ class Tensor:
 
     def __eq__(self, other):
         if isinstance(other, Tensor):
-            return Tensor(self.array == other.array)
+            if other._id == self._id:
+                return Tensor(True)
+            return Tensor(self.xp.array_equal(self.array == other.array))
 
         return Tensor(self.array == other)
 
@@ -395,8 +411,9 @@ class Tensor:
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
-        divisor = self.shape[-1] if self.shape else 1
-        return self.sum() / divisor
+        from tricycle.ops import Mean
+
+        return Mean()(self)
 
     def sum(self) -> "Tensor":
         from tricycle.unary import UnarySum
@@ -505,7 +522,7 @@ def to_tensor(
     requires_grad: bool = True,
     is_batched: bool = False,
     _id: int | None = None,
-    dtype: np.dtype | None = None,
+    dtype: np.typing.DTypeLike | None = None,
     **kwargs,
 ) -> Tensor:
     """
@@ -534,6 +551,7 @@ def to_tensor(
         name=name,
         requires_grad=requires_grad,
         is_batched=is_batched,
+        dtype=dtype,
         _id=_id,
     )
 

@@ -1,7 +1,6 @@
-from tricycle.binary import BinaryDivide
+from tricycle import TRICYCLE_CONTEXT
 from tricycle.ops import Op
-from tricycle.tensor import Tensor, to_tensor
-from tricycle.unary import UnaryDivide, UnaryExp
+from tricycle.tensor import Tensor
 
 
 class Softmax(Op):
@@ -25,6 +24,11 @@ class Softmax(Op):
         """
         xp = tensor.xp
 
+        # Exponents tend to overflow/underflow when using 16 bit precision
+        # so we need to switch to 32 bit
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array = tensor.array.astype(xp.float32)
+
         exp = xp.exp(
             # subtract the largest value for numeric stability
             tensor.array
@@ -32,6 +36,8 @@ class Softmax(Op):
         )
         denominator = xp.sum(exp, axis=-1, keepdims=True)
         self._out = exp / denominator
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self._out = self._out.astype(xp.float16)
 
         return Tensor(
             self._out,
@@ -42,17 +48,26 @@ class Softmax(Op):
         )
 
 
-def sigmoid(tensor: Tensor):
-    """
-    Apply the sigmoid function
-    """
-    return UnaryDivide()(1, (UnaryExp()(-tensor) + 1))
+class Sigmoid(Op):
+    def backward(self, grad: Tensor) -> Tensor:
+        self._grad = self._out * (1 - self._out) * grad.array
+        return Tensor(self._grad, requires_grad=grad)
 
+    def forward(self, tensor: Tensor) -> Tensor:
+        """
+        Apply the sigmoid function
+        """
+        xp = tensor.xp
 
-def tanh(tensor: Tensor):
-    """
-    Apply the tanh function
-    """
-    numerator = UnaryExp()(tensor * 2) - 1
-    denominator = UnaryExp()(tensor * 2) + 1
-    return BinaryDivide()(numerator, denominator)
+        # Exponents tend to overflow/underflow when using 16 bit precision
+        # so we need to switch to 32 bit
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array = tensor.array.astype(xp.float32)
+
+        self._out = 1 / (1 + xp.exp(-tensor.array))
+        return Tensor(
+            self._out,
+            back_fns=(self.backward,),
+            args=(tensor,),
+            requires_grad=tensor.requires_grad,
+        )
