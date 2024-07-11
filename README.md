@@ -984,6 +984,7 @@ the model to predict the next token. In practice, we select a fixed number
 of tokens (the context window) and feed this into the model. Then we shift 
 that context window along by one token in the dataset and use this as a label.
 
+![Screenshot 2024-07-11 at 14 17 30](https://github.com/bclarkson-code/Tricycle/assets/57139598/773798a4-b2ee-4513-b07c-2856929ea3eb)
 
 ## What's Next?
 
