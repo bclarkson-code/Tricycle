@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
 from tricycle.weakset import WeakSet
 

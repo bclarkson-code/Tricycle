@@ -8,7 +8,7 @@ import humanize
 import numpy as np
 from matplotlib import pyplot as plt
 
-from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
 from tricycle.configs import GPTConfig, SmolGPTConfig
 from tricycle.exceptions import GPUDisabledException
 

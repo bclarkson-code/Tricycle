@@ -160,7 +160,7 @@ def small_tensor(draw):
     if GPU_ENABLED:
         on_gpu = draw(st.booleans())
     else:
-        warn("CUPY_ENABLED = False so GPU tests have been disabled")
+        warn("GPU_ENABLED = False so GPU tests have been disabled")
         on_gpu = False
 
     tensor = to_tensor(

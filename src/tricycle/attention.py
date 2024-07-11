@@ -2,7 +2,7 @@ from math import sqrt
 
 import numpy as np
 
-from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
 from tricycle.ops import Op
 from tricycle.tensor import Tensor, to_tensor
 
