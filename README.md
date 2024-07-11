@@ -253,7 +253,7 @@ The entirety of the algorithm can be found in [`tensor.py`](https://github.com/b
 
 It ends up being a topological sort to figure out which order to traverse the tree and then a simple traversal, applying the `back_fns` along the way.
 
-If you want a more detailed explanation, I've talked about it on [my blog](https://bclarkson-code.com/posts/llm-from-scratch-scalar-autograd/post.html).
+There isn't enough space to explain this properly here so you can find a detailed explanation [here](https://bclarkson-code.com/posts/llm-from-scratch-scalar-autograd/post.html).
 
 ### Einsum
 
@@ -899,6 +899,46 @@ embedding into a `1 x vocab_size` vector. We can treat each of these outputs
 as a probability distribution over all tokens where larger numbers mean that
 the model thinks a token is more likely to come next and smaller numbers mean
 that the model thinks a token is less likely to come next.
+
+## Building a dataset
+Now we've built a model, the next stage is to build a dataset. Because we are 
+building a language model, we'll start with a bunch of text data.
+
+### Data Collection
+For training GPT-2 we need a massive amount of text data. The way this is 
+primarily collected is with a web-scraper that explores the public internet
+and stores the content of pages that it visits. This data is often combined
+with data from other sources (e.g every book and academic paper ever written).
+
+Unfortunately, a lot of this data is bad. As I am sure the reader is well
+aware, there is a lot of content on the internet that you probably don't want 
+in your model. This includes NSFW content, but also includes things like 
+long strings of random data or multiple copies of the same text. To fix this,
+datasets are almost always passed through a variety of different filters. 
+
+The stated goal of this project was to built a language model completely from
+scratch. Maybe this means that I should have built and cleaned a dataset
+myself but, in interest of time, I've decided that it isn't cheating to use
+a dataset built by someone else.
+
+As far as I can tell, the best dataset of web data for our model is
+[FineWeb](https://arxiv.org/abs/2406.17557). It has a 10B token version, which is
+around the right size that we'll need, and its authors claim that their 
+filtering produces models that work well.
+
+The exact blend of text data, data from other sources and filtering has a big
+impact on performance which means that it is a closely guarded secret by the
+big AI companies. The only way I can think of to build a dataset that produces
+great models is to train several models with different blends of data and
+investigate the properties of the resulting models. Because this is an
+extremely expensive process, the only people that are able to do these
+experiments are the big AI labs and they understandably keep the results secret.
+
+Because nobody has let me borrow a datacenter to perform these experiments,
+I'm keeping things simple with a purely web-data dataset.
+
+### Tokenising
+
 
 ## What's Next?
 
