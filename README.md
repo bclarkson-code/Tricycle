@@ -986,6 +986,54 @@ that context window along by one token in the dataset and use this as a label.
 
 ![Screenshot 2024-07-11 at 14 17 30](https://github.com/bclarkson-code/Tricycle/assets/57139598/773798a4-b2ee-4513-b07c-2856929ea3eb)
 
+Now, every time we want to get some data to put into the model, we can choose
+an index in our array of tokens and generate our input and label from that.
+Finally, as mentioned above, performing batched operations is much faster than
+single operations so we'll gather a number of input-label pairs and combine
+them into two arrays, one for inputs and one for outputs. Then we can pass our
+inputs into the model, calculate the loss with the labels, backpropagate and
+update our weights (more on this in a bit).
+
+## Training a Language model
+At this point, we have a model and a dataset so all that remains is to
+start training. The process of training a deep learning model can be split 
+into 3 main peices: the forward pass, the backward pass and the weight update.
+
+### Forward pass
+The forward pass is pretty simple. We choose a batch of inputs and pass them
+through the model. Because we're using Tricycle, this means that every 
+operation is tracked by the automatic differentiation engine. The final output
+is an array the same size as our input, but with an extra dimension. The length
+of this dimension is the same as the number of unique tokens in our tokeniser.
+
+If we passed in a `32 x 1024` array as our input, and we had 50,000 unique
+tokens in our tokeniser, we would get an array of size `32 x 1024 x 50000`
+as an output.
+
+This means that each input token has a corresponding array in the output. 
+Because this array is the same length as the number of tokens in our tokeniser,
+we can think of each of these arrays as a score assigned to each possible
+token where a larger score corresponds to the model thinking that a given
+token has a larger probability of coming next.
+
+If we had a fully trained model, we could simply choose the largest value in
+each of these arrays and generate a prediction for the next token. In fact, 
+we only really care about the prediction for the final token (because all of
+the other predictions correspond to tokens the we already know the correct
+value for because we passed them into the model. 
+
+This means that we can select the token that has the highest score from the
+final array in the output, append it to our input tokens and repeat. This is
+how we generate new text with a language model! It is also why models like
+ChatGPT, Claude and Gemini (if any recruiters from OpenAI, Anthropic and 
+Deepmind are reading, I'm open to opportunities, so HMU) produce outputs 
+word-by-word. They can only generate outputs a single token at a time.
+
+### Backwards pass
+Generating text from a language model is great, but it isn't very helpful if
+the model isn't trained. For this, we need to figure out how to adjust the
+model weights to produce the outputs that we want.
+
 ## What's Next?
 
  - Documentation
