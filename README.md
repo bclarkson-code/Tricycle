@@ -467,9 +467,9 @@ in a reasonable amount of time, there are several optimisations we need to make.
 
 #### Batching
 
-The first, and arguably most important, optimisation is batching. Instead of
-applying operations to each input individually, if we are clever about how we design
-an operation, we can apply an operation to multiple operations at once.
+The first, optimisation is batching. Instead of applying operations to each 
+input individually, if we are clever about how we design an operation, we can
+apply an operation to multiple operations at once.
 
 For example, suppose we are multiplying a batch of tensors by a weight matrix.
 We could do it like this:
@@ -529,7 +529,7 @@ assert tensor.xp == cp
 ```
 
 (`xp` stands for `np` or `cp` because x is an "unknown"). This is really handy
-because it lets us write functions like this:
+because it lets us write device-agnostic functions like this:
 
 ```python
 def forward(self, tensor: Tensor):
@@ -542,18 +542,19 @@ def forward(self, tensor: Tensor):
 
     exp = xp.exp(
         # subtract the largest value for numeric stability
-        tensor.array - xp.max(tensor.array, axis=-1, keepdims=True)
+        tensor.array
+        - xp.max(tensor.array, axis=-1, keepdims=True)
     )
     denominator = xp.sum(exp, axis=-1, keepdims=True)
     self._out = exp / denominator
 
-    result = to_tensor(self._out)
-    result.args = (tensor,)
-    result.name = "softmax"
-    result.is_batched = tensor.is_batched
-    result.back_fns = (self.backward,)
-
-    return result
+    return Tensor(
+        self._out,
+        args=(tensor,),
+        name="softmax",
+        is_batched=tensor.is_batched,
+        back_fns=(self.back_fn,),
+    )
 ```
 
 Because Cupy has the same interface as Numpy, this function will automatically
@@ -566,7 +567,7 @@ a lot more memory than I expected. Because the `args` and `back_fns` need to
 be stored for every `Op`, a lot of memory was being used to store intermediate
 values.
 
-For more operations like `Softmax`, this quickly adds up. However,
+For more complex operations like `Softmax`, this quickly adds up. However,
 we can avoid a lot of this overhead by pre-computing the combined derivative.
 In the case of `Softmax` (see above), we could have built it entirely out of
 low level Tricycle operations and this does work. When you sit down and work
@@ -937,6 +938,15 @@ Because nobody has let me borrow a datacenter to perform these experiments,
 I'm keeping things simple with a purely web-data dataset.
 
 ### Tokenising
+At time of writing, nobody has figured out how to pass text data directly to a
+language model in a way that results in a working model so we instead need to
+convert our text data into numbers. This is done through a process called 
+tokenising.
+
+As explained above, our GPT accepts an array of integers as an input. Each of
+these integers is called a token and represents a string of data. For example,
+in the tokeniser I used for GPT-2, the phrase "artificial intelligence" gets
+converted into `[433, 9542, 4430]`:
 
 
 ## What's Next?

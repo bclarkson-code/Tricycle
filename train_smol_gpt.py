@@ -13,7 +13,7 @@ import pickle
 import uuid
 from pathlib import Path
 
-from tricycle import CUPY_ENABLED
+from tricycle import GPU_ENABLED
 from tricycle.ops import Op
 from tricycle.tensor import Tensor
 from tricycle.utils import optimal_n_tokens
