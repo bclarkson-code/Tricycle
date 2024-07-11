@@ -93,6 +93,7 @@ class GPT(Layer):
         self.head.zero_grad()
         for block in self.blocks:
             block.zero_grad()
+        return self
 
     def update(self, optimiser: Optimiser):
         self.token_embedding.update(optimiser)
@@ -101,6 +102,7 @@ class GPT(Layer):
         self.head.update(optimiser)
         for block in self.blocks:
             block.update(optimiser)
+        return self
 
     def to_gpu(self, device: int = 0):
         self.token_embedding.to_gpu(device)
@@ -109,6 +111,7 @@ class GPT(Layer):
             block.to_gpu(device)
         self.layer_norm.to_gpu(device)
         self.head.to_gpu(device)
+        return self
 
     def from_gpu(self):
         self.token_embedding.from_gpu()
@@ -117,6 +120,7 @@ class GPT(Layer):
             block.from_gpu()
         self.layer_norm.from_gpu()
         self.head.from_gpu()
+        return self
 
     def display(self):
         print(self)

@@ -22,7 +22,7 @@ import torch
 from hypothesis import assume, given, settings
 from hypothesis.extra import numpy as xp
 
-from tricycle import CUPY_ENABLED
+from tricycle import GPU_ENABLED
 from tricycle.binary import (
     BinaryAdd,
     BinaryDivide,
@@ -157,7 +157,7 @@ def small_tensor(draw):
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
     is_batched = len(shape) in {3, 4}
     requires_grad = draw(st.booleans())
-    if CUPY_ENABLED:
+    if GPU_ENABLED:
         on_gpu = draw(st.booleans())
     else:
         warn("CUPY_ENABLED = False so GPU tests have been disabled")
@@ -299,7 +299,7 @@ def test_can_batch_and_unbatch(tensor):
 @given(tensor())
 def test_can_move_to_and_from_gpu(tensor):
     # only run this test if we have a gpu enabled
-    if not CUPY_ENABLED:
+    if not GPU_ENABLED:
         pytest.skip("GPU not enabled")
     assume(not tensor.on_gpu)
 
@@ -343,15 +343,6 @@ def test_binary_ops(tensors, op):
     assert result.shape in [tensor_1.shape, tensor_2.shape]
     assert result.is_batched == any([tensor_1.is_batched, tensor_2.is_batched])
     assert result.on_gpu == any([tensor_1.on_gpu, tensor_2.on_gpu])
-
-
-@given(string())
-def test_tokeniser_encode_decode(text):
-    tokeniser = BPETokeniser(vocab_size=1024)
-    tokens = tokeniser.encode(text)
-    decoded = tokeniser.decode(tokens)
-
-    assert text == decoded
 
 
 @given(string())

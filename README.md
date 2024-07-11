@@ -11,7 +11,7 @@ The file `train_smol_gpt.py` trains a 49M parameter, GPT-2 style language model 
 
 The entire library, from the automatic differentiation engine to a GPT, should be understandable to anyone with a bit of python experience.
 
-Using [CuPY](https://cupy.dev/), all Tricycle code can run on either a CUDA-capable GPU or a CPU.
+All Tricycle code can run on either a CUDA-capable GPU or a CPU (although optimisation efforts have been focussed on the GPU so CPU computation is really slow).
 
 ## Table of Contents
 - [Tricycle](#tricycle)
@@ -50,14 +50,14 @@ Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. 
 If you have a CUDA capable GPU, you can install Tricycle as follows.
 
 ```bash
-conda env create -f environment.yml -n tricycle
+conda env create -f requirements/environment.yml -n tricycle
 conda activate tricycle
 ```
 
 If you want to install Tricycle for CPU only, you can do the following.
 
 ```bash
-conda env create -f environment.cpu.yml -n tricycle
+conda env create -f requirements/environment.cpu.yml -n tricycle
 conda activate tricycle
 ```
 
@@ -73,7 +73,7 @@ conda activate tricycle
 If you want to install test dependencies on CPU you can do the following.
 
 ```bash
-conda env create -f environment.cpu.test.yml -n tricycle
+conda env create -f requirements/environment.cpu.test.yml -n tricycle
 conda activate tricycle
 ```
 
@@ -87,12 +87,13 @@ On my RTX 3090, this takes ~9 mins. For a more realistic training script with me
 I've chosen some sensible default values for this model in `src/tricycle/configs.py:ShakespeareConfig`. Feel free to play around with these and see what happens.
 If you are running out of GPU memory, try dropping the batch size and if your GPU is slow, try reducing the number of steps.
 
-If you don't have a CUDA capable GPU, you can run the script on CPU but it will take a while. For 1000 steps on an M2 macbook air, this took ~ 9 hours so you'll probably want to leave this running overnight.
+If you don't have a CUDA capable GPU, you can run the script on CPU but it will take a while. You'll probably want to try dropping the number of steps and leave this running overnight.
 ```python
 import pickle
 
 from tqdm import tqdm
 
+from tricycle import GPU_ENABLED
 from tricycle.configs import ShakespeareConfig
 from tricycle.dataset import CausalLMDataset
 from tricycle.loss import CrossEntropy
@@ -122,23 +123,26 @@ optimiser = AdamW(
     betas=(config.beta1, config.beta2),
 )
 
-model.to_gpu()
+if GPU_ENABLED:
+    dataset = dataset.to_gpu()
+    model.to_gpu()
+
 loading_bar = tqdm(range(config.steps))
 for step in loading_bar:
     optimiser.step()
     inputs, outputs = next(dataset)
-    inputs = inputs.to_gpu()
-    outputs = outputs.to_gpu()
 
     logits = model(inputs)
     loss = loss_fn(outputs, logits)
     loss.backward()
 
-    loading_bar.set_description(f"loss: {loss:.3f}")
+    loading_bar.set_description(f"loss: {loss.numpy().item():.3f}")
     model.update(optimiser)
 
 # save results
 with open("model.pkl", "wb") as f:
+    if GPU_ENABLED:
+        model.from_gpu()
     pickle.dump(model, f)
 ```
 
@@ -181,7 +185,8 @@ print(Softmax()(a)) # Output: Tensor([0.09003057 0.24472848 0.66524094], name=so
 ### Automatic Differentiation
 
 Unlike vanilla Numpy, every operation in Tricycle is attached to a derivative.
-When you do some operations on your `Tensor`, Tricycle keeps track of what you did and allows you to differentiate the output.
+When you do some operations on your `Tensor`, Tricycle keeps track of what 
+you did and allows you to differentiate the output.
 
 ```python
 x = to_tensor(2)
@@ -307,10 +312,10 @@ https://github.com/bclarkson-code/Tricycle/assets/57139598/f8b35a6b-f102-44f1-a7
 https://github.com/bclarkson-code/Tricycle/assets/57139598/1ed18428-11de-4990-a0f4-12d1310d6898
 
 Because every `Op` in Tricycle needs a derivative, we need to figure out what the
-derivative of `Einsum` is. Thankfully, if you sit down and go through the
-maths (index notation is really helpful here) you'll find that you can follow
-these two, really simple rules to differentiate an einsum operation wrt a
-given input:
+derivative of `Einsum` is. I was worried that this would be complex but
+thankfully, if you sit down and go through the
+maths (index notation is really helpful here) it turns out to be pretty simple:
+Just follow these two rules:
 
 - Swap the indices for the input and output
 - Replace the original input with your current derivative

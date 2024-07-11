@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Iterable
 import humanize
 import numpy as np
 
-from tricycle import CUPY_ENABLED
+from tricycle import GPU_ENABLED
 from tricycle.configs import SmolGPTConfig
 from tricycle.exceptions import GPUDisabledException
 
@@ -87,7 +87,7 @@ def log_memory_and_time(stage: str, path: Path = Path("memory.log")):
     """
     Log the current GPU memory usage to a file
     """
-    if not CUPY_ENABLED:
+    if not GPU_ENABLED:
         raise GPUDisabledException(
             "Cannot log GPU memory if GPU is not enabled"
         )
