@@ -1068,7 +1068,7 @@ $$f(x_1,x_2) = \frac{x_1^2 + x_2^2}{20} - \frac{\cos{(3x_1 + 3x_2)}}{4}$$
 
 Looks like this:
 
-
+https://github.com/user-attachments/assets/0c19af21-9e3f-4d35-ac3a-71d53a980463
 
 ## What's Next?
 
