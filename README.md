@@ -181,7 +181,7 @@ print(Softmax()(a)) # Output: Tensor([0.09003057 0.24472848 0.66524094], name=so
 ### Automatic Differentiation
 
 Unlike vanilla Numpy, every operation in Tricycle is attached to a derivative.
-When you do some operations on your `Tensor`, Tricycle keeps track of what 
+When you do some operations on your `Tensor`, Tricycle keeps track of what
 you did and allows you to differentiate the output.
 
 ```python
@@ -467,7 +467,7 @@ in a reasonable amount of time, there are several optimisations we need to make.
 
 #### Batching
 
-The first, optimisation is batching. Instead of applying operations to each 
+The first, optimisation is batching. Instead of applying operations to each
 input individually, if we are clever about how we design an operation, we can
 apply an operation to multiple operations at once.
 
@@ -901,20 +901,20 @@ the model thinks a token is more likely to come next and smaller numbers mean
 that the model thinks a token is less likely to come next.
 
 ## Building a dataset
-Now we've built a model, the next stage is to build a dataset. Because we are 
+Now we've built a model, the next stage is to build a dataset. Because we are
 building a language model, we'll start with a bunch of text data.
 
 ### Data Collection
-For training GPT-2 we need a massive amount of text data. The way this is 
+For training GPT-2 we need a massive amount of text data. The way this is
 primarily collected is with a web-scraper that explores the public internet
 and stores the content of pages that it visits. This data is often combined
 with data from other sources (e.g every book and academic paper ever written).
 
 Unfortunately, a lot of this data is bad. As I am sure the reader is well
-aware, there is a lot of content on the internet that you probably don't want 
-in your model. This includes NSFW content, but also includes things like 
+aware, there is a lot of content on the internet that you probably don't want
+in your model. This includes NSFW content, but also includes things like
 long strings of random data or multiple copies of the same text. To fix this,
-datasets are almost always passed through a variety of different filters. 
+datasets are almost always passed through a variety of different filters.
 
 The stated goal of this project was to built a language model completely from
 scratch. Maybe this means that I should have built and cleaned a dataset
@@ -923,7 +923,7 @@ a dataset built by someone else.
 
 As far as I can tell, the best dataset of web data for our model is
 [FineWeb](https://arxiv.org/abs/2406.17557). It has a 10B token version, which is
-around the right size that we'll need, and its authors claim that their 
+around the right size that we'll need, and its authors claim that their
 filtering produces models that work well.
 
 The exact blend of text data, data from other sources and filtering has a big
@@ -940,7 +940,7 @@ I'm keeping things simple with a purely web-data dataset.
 ### Tokenising
 At time of writing, nobody has figured out how to pass text data directly to a
 language model in a way that results in a working model so we instead need to
-convert our text data into numbers. This is done through a process called 
+convert our text data into numbers. This is done through a process called
 tokenising.
 
 As explained above, our GPT accepts an array of integers as an input. Each of
@@ -951,17 +951,17 @@ converted into `[433, 9542, 4430]`:
 ![Screenshot 2024-07-11 at 12 57 52](https://github.com/bclarkson-code/Tricycle/assets/57139598/3503d3e8-7b26-44b1-8e68-286ad1bef139)
 
 Our tokeniser needs to have a few properties:
- - It should be able to convert any string into tokens (including unicode 
+ - It should be able to convert any string into tokens (including unicode
 characters so we can support non-english languages).
  - Common substrings should be given their own tokens (otherwise our model has
-to spend a while learning which letters go after each other rather than 
+to spend a while learning which letters go after each other rather than
 learning higher level features of language)
 
 There is an elegant algorithm that meets these requirements that tricycle uses
 for tokenising called byte pair encoding.
 
 First of all, the text is converted into an array of bytes and each individual
-byte is replaced with a token. This gives us 256 unique tokens (one for each 
+byte is replaced with a token. This gives us 256 unique tokens (one for each
 byte). Then, we start the training loop.
 
 We search through our array and find the most common pair of tokens. We give
@@ -978,10 +978,10 @@ datasets but development is ongoing. In the mean time, `train_smol_gpt.py` uses
 OpenAI's tiktoken tokeniser.
 
 ### Getting data into the model
-Now we have an array of tokens, all that remains is to feed them into the 
+Now we have an array of tokens, all that remains is to feed them into the
 model. When we're training the model, we want to feed in some tokens and ask
 the model to predict the next token. In practice, we select a fixed number
-of tokens (the context window) and feed this into the model. Then we shift 
+of tokens (the context window) and feed this into the model. Then we shift
 that context window along by one token in the dataset and use this as a label.
 
 ![Screenshot 2024-07-11 at 14 17 30](https://github.com/bclarkson-code/Tricycle/assets/57139598/773798a4-b2ee-4513-b07c-2856929ea3eb)
@@ -996,12 +996,12 @@ update our weights (more on this in a bit).
 
 ## Training a Language model
 At this point, we have a model and a dataset so all that remains is to
-start training. The process of training a deep learning model can be split 
+start training. The process of training a deep learning model can be split
 into 3 main peices: the forward pass, the backward pass and the weight update.
 
 ### Forward pass
 The forward pass is pretty simple. We choose a batch of inputs and pass them
-through the model. Because we're using Tricycle, this means that every 
+through the model. Because we're using Tricycle, this means that every
 operation is tracked by the automatic differentiation engine. The final output
 is an array the same size as our input, but with an extra dimension. The length
 of this dimension is the same as the number of unique tokens in our tokeniser.
@@ -1010,23 +1010,23 @@ If we passed in a `32 x 1024` array as our input, and we had 50,000 unique
 tokens in our tokeniser, we would get an array of size `32 x 1024 x 50000`
 as an output.
 
-This means that each input token has a corresponding array in the output. 
+This means that each input token has a corresponding array in the output.
 Because this array is the same length as the number of tokens in our tokeniser,
 we can think of each of these arrays as a score assigned to each possible
 token where a larger score corresponds to the model thinking that a given
 token has a larger probability of coming next.
 
 If we had a fully trained model, we could simply choose the largest value in
-each of these arrays and generate a prediction for the next token. In fact, 
+each of these arrays and generate a prediction for the next token. In fact,
 we only really care about the prediction for the final token (because all of
 the other predictions correspond to tokens the we already know the correct
-value for because we passed them into the model. 
+value for because we passed them into the model.
 
 This means that we can select the token that has the highest score from the
 final array in the output, append it to our input tokens and repeat. This is
 how we generate new text with a language model! It is also why models like
-ChatGPT, Claude and Gemini (if any recruiters from OpenAI, Anthropic and 
-Deepmind are reading, I'm open to opportunities, so HMU) produce outputs 
+ChatGPT, Claude and Gemini (if any recruiters from OpenAI, Anthropic and
+Deepmind are reading, I'm open to opportunities, so HMU) produce outputs
 word-by-word. They can only generate outputs a single token at a time.
 
 ### Backwards pass
@@ -1041,19 +1041,32 @@ are trying to select a category, a loss function that works quite well is
 cross entropy.
 
 You can find the full implementation of cross entropy in `src/tricycle/loss.py`
-but at a high level, we pass in our array of scores for each token, as 
-well as the correct token, and it tells us how good the predictions were in 
-the form of a single number. A higher number means a worse prediction and a 
-0 is a perfect prediction. 
+but at a high level, we pass in our array of scores for each token, as
+well as the correct token, and it tells us how good the predictions were in
+the form of a single number. A higher number means a worse prediction and a
+0 is a perfect prediction.
 
-One way to think about our loss is that it is the result of taking our input, 
+One way to think about our loss is that it is the result of taking our input,
 passing it through a load of `Op`s (some of which also involve weights), and
 eventually producing our loss. This means that, in mathematical terms, the loss
 is a (very complex) function of the inputs and weights.
 
 Because every `Op` in Tricycle is differentiable, we're able to differentiate
-our loss w.r.t each of the weights in the network. This is a really powerful
-idea because there is a theorem in vector calculus that says that the 
+our loss w.r.t each of the weights in the network and this turns out to be a
+really powerful idea, thanks to a theorem from vector calculus.
+
+#### Deriving Backpropagation
+Suppose we have some function that takes several inputs and returns a single
+output:
+
+$$f(x_1, x_2, ..., x_n):  \mathbb{R}^n \rightarrow \mathbb{R}$$
+
+If this function has only 2 inputs, we can plot it with $x_1$ on the x axis,
+$x_2$ on the y axis and $f(x_1,x_2)$ on the z axis to get a 2d surface (manifold). For example:
+
+$$f(x_1,x_2) = \frac{x_1^2 + x_2^2}{20} - \frac{\cos{(3x_1 + 3x_2)}}{4}$$
+
+Looks like this:
 
 
 
@@ -1061,7 +1074,7 @@ idea because there is a theorem in vector calculus that says that the
 
  - Documentation
     [ ] Explain how to train a language model
-    [ ] Explain the tokeniser
+    [X] Explain the tokeniser
 
  - Code
     [ ] Rotary Embeddings
@@ -1070,9 +1083,9 @@ idea because there is a theorem in vector calculus that says that the
     [ ] Optimise and use the tokeniser
 
  - Experiments
-    [ ] Try a language dataset rather than pure code
+    [X] Try a language dataset rather than pure code
     [ ] Build a LLama style model
-    [ ] Build a bigger langauge model (GPT-2 sized?)
+    [X] Build a bigger langauge model (GPT-2 sized?)
 
 <!-- ### Training a Language model -->
 <!---->
