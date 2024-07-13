@@ -6,14 +6,19 @@
 
 Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and numpy.
 
-While I've tried to make it easy to follow, Tricycle is not just an educational toy: the file `train_smol_gpt.py` trains GPT-2 (124M) on 2.5B (chinchilla optimal) tokens in just under 3 days on my GPU (RTX 3090).
+While I've tried to make it easy to follow, Tricycle is not just another toy
+neural network: the file `train_smol_gpt.py` trains GPT-2 (124M) on 2.5B
+(chinchilla optimal) tokens in just under 3 days on my GPU (RTX 3090).
 
 
-The entire library, from the automatic differentiation engine to a GPT, should be understandable to anyone with a bit of python experience and I encourage you to explore the codebase.
+The entire library, from the automatic differentiation engine to a GPT,
+should be understandable to anyone with a bit of python experience and I
+strongly encourage you to have a play around with the codebase to understand
+how everything works.
 
-The entire library, from the automatic differentiation engine to a GPT, should be understandable to anyone with a bit of python experience.
-
-All Tricycle code can run on either a CUDA-capable GPU or a CPU (although optimisation efforts have been focussed on the GPU so CPU computation is really slow).
+All Tricycle code can run on either a CUDA-capable GPU or a CPU (although
+optimisation efforts have been focussed on the GPU so CPU computation is
+really slow).
 
 ## Table of Contents
 - [Tricycle](#tricycle)
@@ -26,12 +31,22 @@ All Tricycle code can run on either a CUDA-capable GPU or a CPU (although optimi
 
 ## Installation
 
-Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies. While we do support CPU-only computation, optimisation efforts have been focussed on GPU computation so it is pretty slow. If you do have a CUDA capable GPU I would strongly recommend installing the gpu version of Tricycle.
+Tricycle uses [conda](https://docs.conda.io/en/latest/) to manage dependencies.
+While we do support CPU-only computation, optimisation efforts have been
+focussed on GPU computation so it is pretty slow. If you do have a CUDA
+capable GPU I would strongly recommend installing the gpu version of Tricycle.
 
 If you have a CUDA capable GPU, you can install Tricycle as follows.
 
 ```bash
 conda env create -f requirements/environment.yml -n tricycle
+conda activate tricycle
+```
+
+Otherwise, you can install the cpu-only version like this:
+
+```bash
+conda env create -f requirements/environment.cpu.yml -n tricycle
 conda activate tricycle
 ```
 
