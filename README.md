@@ -149,7 +149,7 @@ terminal for tracking metrics during training. You can do this as follows:
 mlflow server --host 0.0.0.0
 ```
 
-Then should be able to just run
+Then you should be able to just run
 ```bash
 python train_smol_gpt.py
 ```
