@@ -25,7 +25,7 @@ really slow).
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
   - [Training a GPT on Shakespeare](#training-a-gpt-on-shakespeare)
-  - [Training GPT-2 (124M)](#training-GPT-2-(124M))
+  - [Training GPT-2 (124M)](#training-gpt-2-124m)
   - [How it works](#how-it-works)
   - [What's Next?](#whats-next)
   - [Contact](#contact)
