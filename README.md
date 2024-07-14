@@ -8,7 +8,7 @@ Tricycle is a fast, minimal, fully functional deep learning library written from
 
 While I've tried to make it easy to follow, Tricycle is not just another toy
 neural network: the file `train_smol_gpt.py` trains GPT-2 (124M) on 2.5B
-(chinchilla optimal) tokens in just under 3 days on my GPU (RTX 3090).
+tokens in just under 3 days on my GPU (RTX 3090).
 
 
 The entire library, from the automatic differentiation engine to a GPT,
@@ -24,8 +24,9 @@ really slow).
 - [Tricycle](#tricycle)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
-    - [CPU Installation](#cpu-installation)
   - [Training a GPT on Shakespeare](#training-a-gpt-on-shakespeare)
+  - [Training GPT-2 (124M)](#training-GPT-2-(124M))
+  - [How it works](#how-it-works)
   - [What's Next?](#whats-next)
   - [Contact](#contact)
 
