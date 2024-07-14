@@ -201,6 +201,14 @@ class CausalLMDataset:
             )
         return self
 
+    def to_gpu(self, device: int = 0):
+        self.device = device
+        return self
+
+    def from_gpu(self):
+        self.device = None
+        return self
+
     def to_tensor(self):
         print("converting to tensor")
         self.as_tensor = True

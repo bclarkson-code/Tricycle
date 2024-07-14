@@ -146,9 +146,10 @@ if __name__ == "__main__":
         choices=["shakespeare", "fineweb"],
         default="shakespeare",
     )
-    parser.add_argument("--use-gpu", default=True)
+    parser.add_argument("--use-gpu", action='store_true')
 
     args = parser.parse_args()
+    print(args)
 
     match args.model_config:
         case "shakespeare":

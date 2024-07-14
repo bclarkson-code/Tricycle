@@ -13,7 +13,7 @@ from hypothesis import assume, example, given, settings
 from hypothesis.extra import numpy as xp
 from torch import nn
 
-from tricycle import CUPY_ENABLED
+from tricycle import GPU_ENABLED
 from tricycle.functions import Softmax
 from tricycle.layers import Dense, Embedding, RMSNorm
 from tricycle.loss import CrossEntropy
@@ -99,10 +99,10 @@ def tensor(draw):
         case 3:
             is_batched = True
     requires_grad = True
-    if CUPY_ENABLED:
+    if GPU_ENABLED:
         on_gpu = draw(st.booleans())
     else:
-        warn("CUPY_ENABLED = False so GPU tests have been disabled")
+        warn("GPU_ENABLED = False so GPU tests have been disabled")
         on_gpu = False
 
     tensor = to_tensor(
@@ -164,10 +164,10 @@ def small_tensor(draw):
     data = draw(xp.arrays(dtype=np.float64, shape=shape))
     is_batched = len(shape) in {3, 4}
     requires_grad = draw(st.booleans())
-    if CUPY_ENABLED:
+    if GPU_ENABLED:
         on_gpu = draw(st.booleans())
     else:
-        warn("CUPY_ENABLED = False so GPU tests have been disabled")
+        warn("GPU_ENABLED = False so GPU tests have been disabled")
         on_gpu = False
 
     tensor = to_tensor(

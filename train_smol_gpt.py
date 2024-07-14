@@ -13,12 +13,12 @@ import pickle
 import uuid
 from pathlib import Path
 
-from tricycle import CUPY_ENABLED
+from tricycle import GPU_ENABLED
 from tricycle.ops import Op
 from tricycle.tensor import Tensor
 from tricycle.utils import optimal_n_tokens
 
-if CUPY_ENABLED:
+if GPU_ENABLED:
     import cupy as xp
 else:
     import numpy as xp
@@ -100,7 +100,7 @@ def estimate_loss(
 
         assert isinstance(inputs, Tensor)
         assert isinstance(outputs, Tensor)
-        if CUPY_ENABLED:
+        if GPU_ENABLED:
             inputs = inputs.to_gpu(config.device_idx)
             outputs = outputs.to_gpu(config.device_idx)
 
@@ -176,7 +176,7 @@ train_dataset, valid_dataset, train_dataloader, valid_dataloader = (
     load_datasets(n_tokens, config)
 )
 
-if CUPY_ENABLED:
+if GPU_ENABLED:
     model.to_gpu(config.device_idx)
 
 
@@ -201,7 +201,7 @@ with mlflow.start_run() as run:
             inputs, outputs = next(train_dataloader)
             assert isinstance(inputs, Tensor)
             assert isinstance(outputs, Tensor)
-            if CUPY_ENABLED:
+            if GPU_ENABLED:
                 inputs = inputs.to_gpu(config.device_idx)
                 outputs = outputs.to_gpu(config.device_idx)
 

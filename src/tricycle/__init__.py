@@ -5,12 +5,12 @@ try:
     import cupy
 
     cupy.array([1, 2, 3]) * 2
-    CUPY_ENABLED = True
+    GPU_ENABLED = True
 except ImportError:
     warn("Could not find CuPY, disabling GPU features")
-    CUPY_ENABLED = False
+    GPU_ENABLED = False
 except Exception as e:
-    CUPY_ENABLED = False
+    GPU_ENABLED = False
     warn(f"Failed to build cupy array: {e}. Disabling GPU features")
 
 # We use this to store state (e.g whether we're using 16 bit or not)

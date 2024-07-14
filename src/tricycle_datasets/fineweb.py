@@ -7,8 +7,8 @@ import numpy as np
 import tiktoken
 from tqdm.auto import tqdm
 
-import datasets
-from datasets import load_dataset
+# import datasets
+# from datasets import load_dataset
 
 N_CORES = os.cpu_count()
 SAVE_DIR = Path("datasets/fineweb")

@@ -2,7 +2,7 @@ from math import sqrt
 
 import numpy as np
 
-from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
 from tricycle.ops import Op
 from tricycle.tensor import Tensor, to_tensor
 
@@ -163,14 +163,14 @@ class Attention(Op):
         return result
 
     def to_gpu(self, device: int):
-        if CUPY_ENABLED:
+        if GPU_ENABLED:
             import cupy as cp
 
             cp.cuda.Device(device).use()
             self.mask = cp.array(self.mask)
 
     def from_gpu(self):
-        if CUPY_ENABLED:
+        if GPU_ENABLED:
             import cupy as cp
 
             self.mask = cp.asnumpy(self.mask)

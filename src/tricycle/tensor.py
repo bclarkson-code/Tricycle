@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from tricycle import CUPY_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
 from tricycle.weakset import WeakSet
 
@@ -60,7 +60,7 @@ class Tensor:
             self = array
             return
         self._id = _id or uuid.uuid4().int
-        if CUPY_ENABLED:
+        if GPU_ENABLED:
             import cupy
 
             if isinstance(array, (np.ndarray, cupy.ndarray)):
@@ -461,7 +461,7 @@ class Tensor:
 
     @property
     def on_gpu(self):
-        if not CUPY_ENABLED:
+        if not GPU_ENABLED:
             return False
         import cupy
 
@@ -471,7 +471,7 @@ class Tensor:
         """
         Move this tensor to the GPU, if cupy is enabled
         """
-        if not CUPY_ENABLED:
+        if not GPU_ENABLED:
             raise GPUDisabledException(
                 "Cannot move tensor to GPU because CuPY is not enabled"
             )
@@ -485,7 +485,7 @@ class Tensor:
         """
         Move this tensor from the GPU to CPU
         """
-        if not CUPY_ENABLED:
+        if not GPU_ENABLED:
             raise GPUDisabledException(
                 "Cannot move tensor from GPU because CuPY is not enabled"
             )
@@ -508,7 +508,7 @@ class Tensor:
         """
         Return the underlying array as a numpy array
         """
-        if not CUPY_ENABLED:
+        if not GPU_ENABLED:
             return self.array
 
         import cupy
@@ -529,7 +529,7 @@ def to_tensor(
     Create a new Tensor instance. If the input is not a numpy or cupy
     array, try to convert it to one.
     """
-    if CUPY_ENABLED:
+    if GPU_ENABLED:
         import cupy
 
         if isinstance(tensor_like, Tensor):
@@ -561,7 +561,7 @@ def select_backend(*tensors: Tensor | np.ndarray | ArrayLike):
     Given some tensors, if any of them are on the GPU, return the cupy
     backend. Otherwise default to the numpy backend
     """
-    if not CUPY_ENABLED:
+    if not GPU_ENABLED:
         return np
 
     import cupy
