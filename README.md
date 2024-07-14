@@ -4,9 +4,9 @@
     <img width="223" alt="tricycle_logo" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/62405944-b27b-49bc-93c3-17ba93fc8ad7">
 </p>
 
-Tricycle is a fast, minimal, fully functional deep learning library written from scratch using only python and numpy.
+Tricycle is a fast, minimal, fully functional deep learning library written from scratch in python and numpy.
 
-While I've tried to make it easy to follow, Tricycle is not just another toy
+While I've tried to make it easy to follow, Tricycle is not just a toy
 neural network: the file `train_smol_gpt.py` trains GPT-2 (124M) on 2.5B
 tokens in just under 3 days on my GPU (RTX 3090).
 
