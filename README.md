@@ -141,11 +141,29 @@ Once trained, you can generate infinite shakespeare plays as follows:
 python inference.py model.pkl
 ```
 
-## How it works
+## Training GPT-2 (124M)
+To train GPT-2, you'll first want to start an MLFlow server in a separate
+terminal for tracking metrics during training. You can do this as follows:
+```bash
+mlflow server --host 0.0.0.0
+```
 
+Then should be able to just run
+```bash
+python train_smol_gpt.py
+```
+If you have a CUDA capable GPU, training should start immediately.
+
+The parameters for the model can be found at `src/tricycle/configs.py:SmolGPTConfig`.
+If you aren't using an RTX 3090, you'll probably want to play around with the
+parameters a bit to optimise things for your setup (e.g increasing batch size
+if you have a GPU with more VRAM).
+
+## How it works
 Tricycle started as a thin wrapper around a numpy array and has developed into
-a modern deep learning framework. If you'd like to know how this is even
-possible, check out the [Tricycle Wiki](https://github.com/bclarkson-code/Tricycle/wiki/How-it-works)
+a modern deep learning framework. If you'd like to know how, check out the
+[Tricycle Wiki](https://github.com/bclarkson-code/Tricycle/wiki/How-it-works)
+
 ## What's Next?
 
  - Documentation
