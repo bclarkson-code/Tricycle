@@ -4,8 +4,8 @@
     <img width="223" alt="tricycle_logo" src="https://github.com/bclarkson-code/Tricycle/assets/57139598/62405944-b27b-49bc-93c3-17ba93fc8ad7">
 </p>
 
-Every wanted to learn how deep learning *actually* works? Tricycle is a fast, 
-minimal, fully functional deep learning library written from scratch in python 
+Every wanted to learn how deep learning *actually* works? Tricycle is a fast,
+minimal, fully functional deep learning library written from scratch in python
 and numpy.
 
 While I've tried to make it easy to follow, Tricycle is not just a toy
@@ -101,7 +101,7 @@ print(a < b) # Output: Tensor([ True  True  True])
 print(Softmax()(a)) # Output: Tensor([0.09003057 0.24472848 0.66524094], name=softmax)
 ```
 
-Most importantly, this includes differentiation. 
+Most importantly, this includes differentiation.
 
 ```python
 x = Tensor(2)
@@ -191,7 +191,7 @@ def forward(self, tensor: Tensor):
     )
 ```
 
-All of the logic in Tricycle is device-agnostic and can run on CPU or GPU 
+All of the logic in Tricycle is device-agnostic and can run on CPU or GPU
 with Cupy.
 
 ```python
@@ -202,7 +202,7 @@ class UnaryMultiply(Op):
     _constant: float
 
     def back_fn(self, grad: Tensor) -> Tensor:
-        xp = grad.xp # use the backend that grad is using. 
+        xp = grad.xp # use the backend that grad is using.
                      # `xp` is either numpy or cupy (x is unknown)
 
         self._grad = xp.multiply(grad.array, self._constant)
