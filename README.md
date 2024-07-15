@@ -8,9 +8,9 @@ Every wanted to learn how deep learning *actually* works? Tricycle is a fast,
 minimal, fully functional deep learning library written from scratch in python
 and numpy.
 
-While I've tried to make it easy to follow, Tricycle is not just a toy
-neural network: the file `train_smol_gpt.py` trains GPT-2 (124M) on 2.5B
-tokens in just under 3 days on my GPU (RTX 3090).
+While the amount of code is nothing like what you'd find in pytorch, Tricycle is 
+not just a toy neural network: the file `train_smol_gpt.py` trains GPT-2 (124M) 
+on 2.5B tokens in just under 3 days on my GPU (RTX 3090).
 
 The entire library, from the automatic differentiation engine to a GPT,
 should be understandable to anyone with a bit of python experience and I
