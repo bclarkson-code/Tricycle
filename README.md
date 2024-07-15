@@ -400,4 +400,4 @@ a modern deep learning framework. If you'd like to know how, check out the
 
 ## Contact
 
-Want to work together? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
+Want to work together (I'm looking for a research engineer role)? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
