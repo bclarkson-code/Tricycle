@@ -242,6 +242,11 @@ tensor = tensor.to_gpu()
 print(multiply(tensor, 2)) # Tensor([2. 4. 6.], name=+ 2)
 ```
 
+If you take away one thing from this readme, it should be to look 
+into the code! The best way to learn something is by getting your 
+hands dirty and playing around with a deep learning library that
+doesn't hide anything is a great place to start.
+
 ## Training a GPT on Shakespeare
 
 The following toy script will train a small GPT to generate convincing
