@@ -18,7 +18,6 @@ from warnings import warn
 import hypothesis.strategies as st
 import numpy as np
 import pytest
-import torch
 from hypothesis import assume, given, settings
 from hypothesis.extra import numpy as xp
 
@@ -32,8 +31,7 @@ from tricycle.binary import (
     BinarySubtract,
 )
 from tricycle.einsum import EinsumBackOp
-from tricycle.layers import Dense
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 from tricycle.tokeniser import BPETokeniser
 from tricycle.unary import (
     UnaryAdd,
@@ -140,7 +138,7 @@ def tensor(draw):
         case 4:
             is_batched = True
     requires_grad = draw(st.booleans())
-    return to_tensor(
+    return Tensor(
         data,
         is_batched=is_batched,
         requires_grad=requires_grad,
@@ -163,7 +161,7 @@ def small_tensor(draw):
         warn("GPU_ENABLED = False so GPU tests have been disabled")
         on_gpu = False
 
-    tensor = to_tensor(
+    tensor = Tensor(
         data,
         is_batched=is_batched,
         requires_grad=requires_grad,
@@ -190,7 +188,7 @@ def tensor_pair_same_shape(draw):
         if draw(st.booleans()):
             data = data[1:]
 
-        tensor = to_tensor(data, is_batched=is_batched)
+        tensor = Tensor(data, is_batched=is_batched)
         tensors.append(tensor)
 
     return tensors

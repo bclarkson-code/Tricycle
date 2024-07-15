@@ -7,7 +7,7 @@ from tricycle import TRICYCLE_CONTEXT
 from tricycle.binary import BinaryMultiply
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 from tricycle.unary import nothing
 
 
@@ -119,9 +119,7 @@ class Dropout(Layer):
         random_mask = (
             xp.random.rand(*tensor.shape) > self.probability
         ).astype(tensor.dtype) * coef
-        random_mask = to_tensor(
-            random_mask, is_batched=True, requires_grad=False
-        )
+        random_mask = Tensor(random_mask, is_batched=True, requires_grad=False)
         return BinaryMultiply()(tensor, random_mask)
 
 
@@ -130,10 +128,10 @@ class LayerNorm(Layer):
         import numpy as np
 
         self.eps = eps
-        self.gamma = to_tensor(
+        self.gamma = Tensor(
             np.ones((embedding_dim,)), requires_grad=True, is_batched=False
         )
-        self.beta = to_tensor(
+        self.beta = Tensor(
             np.zeros((embedding_dim,)), requires_grad=True, is_batched=False
         )
 
@@ -416,7 +414,7 @@ class Embedding(Layer):
             )
         else:
             self._out = self.weights.array[tensor.array]
-        result = to_tensor(self._out, is_batched=tensor.is_batched)
+        result = Tensor(self._out, is_batched=tensor.is_batched)
 
         result.args = (tensor, self.weights)
 

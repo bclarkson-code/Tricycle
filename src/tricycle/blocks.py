@@ -17,7 +17,7 @@ from tricycle.layers import (  # noqa E501
     RMSNorm,
 )
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 def build_mask(context_window: int) -> Tensor:
@@ -30,7 +30,7 @@ def build_mask(context_window: int) -> Tensor:
     idx = np.tril(mask.astype(bool))
     mask[~idx] = NEGATIVE_INFINITY
     mask[idx] = 0
-    return to_tensor(mask, requires_grad=False, name="mask")
+    return Tensor(mask, requires_grad=False, name="mask")
 
 
 def masked_fill(
@@ -42,7 +42,7 @@ def masked_fill(
     xp = tensor.xp
     repeats = tensor.shape[1] if tensor.is_batched else tensor.shape[0]
     mask = xp.stack([full_mask[: mask_shape[0], : mask_shape[1]]] * repeats)
-    mask = to_tensor(mask, requires_grad=False, name="mask")
+    mask = Tensor(mask, requires_grad=False, name="mask")
     result = tensor + mask
     result.name = "masked"
     return result

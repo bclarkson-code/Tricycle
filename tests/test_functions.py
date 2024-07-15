@@ -1,9 +1,9 @@
 from tricycle.functions import Sigmoid
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 
 
 def test_sigmoid():
-    in_tensor = to_tensor([0, 1, 2, 3])
+    in_tensor = Tensor([0, 1, 2, 3])
     out_tensor = Sigmoid()(in_tensor)
 
     assert out_tensor.shape == (4,)

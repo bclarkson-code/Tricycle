@@ -6,7 +6,7 @@ from sklearn.preprocessing import RobustScaler
 from tricycle.einsum import Einsum
 from tricycle.initialisers import init_xavier
 from tricycle.loss import CrossEntropy, MeanSquaredError
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 from tricycle.utils import r_squared, smooth
 
 slow_test = pytest.mark.skipif(
@@ -18,8 +18,8 @@ slow_test = pytest.mark.skipif(
 
 
 def test_can_mean_square_error():
-    y_true = to_tensor([0, 0, 1])
-    y_pred = to_tensor([0, 0.5, 0.5])
+    y_true = Tensor([0, 0, 1])
+    y_pred = Tensor([0, 0.5, 0.5])
 
     mse = MeanSquaredError()(y_true, y_pred)
 
@@ -27,8 +27,8 @@ def test_can_mean_square_error():
 
 
 def test_can_CrossEntropy():
-    y_true = to_tensor([1], dtype=int)
-    y_pred = to_tensor([[0, 0, 0]])
+    y_true = Tensor([1], dtype=int)
+    y_pred = Tensor([[0, 0, 0]])
 
     loss = CrossEntropy()(y_true, y_pred)
 
@@ -43,8 +43,8 @@ def test_CrossEntropy_batched():
     y_true = np.random.randint(0, vocab_size, size=(batch_size, n_tokens))
     y_pred = np.random.random((batch_size, n_tokens, vocab_size))
 
-    y_true = to_tensor(y_true, dtype=int).to_batched()
-    y_pred = to_tensor(y_pred).to_batched()
+    y_true = Tensor(y_true, dtype=int).to_batched()
+    y_pred = Tensor(y_pred).to_batched()
 
     loss = CrossEntropy()(y_true, y_pred)
 
@@ -60,11 +60,11 @@ def test_can_single_linear_regression_step():
     """
     x_input = [1]
     y_input = [3]
-    slope = to_tensor([0.02])
-    intercept = to_tensor([0.01])
+    slope = Tensor([0.02])
+    intercept = Tensor([0.01])
 
-    x_input = to_tensor(x_input, requires_grad=False, name="x")
-    y_input = to_tensor(y_input, requires_grad=False, name="y")
+    x_input = Tensor(x_input, requires_grad=False, name="x")
+    y_input = Tensor(y_input, requires_grad=False, name="y")
 
     y_pred = x_input * slope + intercept
 
@@ -89,11 +89,11 @@ def test_can_linear_regression():
     x = np.linspace(-10, 10, n)
     y = x * 2 + 1 + np.random.normal(loc=0, scale=0.01, size=n)
 
-    x = to_tensor(x.reshape(-1, 1), requires_grad=False, name="x")
-    y = to_tensor(y.reshape(-1, 1), requires_grad=False, name="y")
+    x = Tensor(x.reshape(-1, 1), requires_grad=False, name="x")
+    y = Tensor(y.reshape(-1, 1), requires_grad=False, name="y")
 
-    slope = to_tensor([0.02], name="slope")
-    intercept = to_tensor([0.0], name="intercept")
+    slope = Tensor([0.02], name="slope")
+    intercept = Tensor([0.0], name="intercept")
 
     def slope_derivative(x, y, slope, intercept):
         return -2 * (y - x * slope - intercept) * x
@@ -105,11 +105,11 @@ def test_can_linear_regression():
     intercepts = []
     slopes = []
     for idx in range(100):
-        last_slope_grad = to_tensor([0])
-        last_intercept_grad = to_tensor([0])
+        last_slope_grad = Tensor([0])
+        last_intercept_grad = Tensor([0])
         for x_input, y_input in zip(x, y):
-            x_input = to_tensor(x_input, requires_grad=False, name="x")
-            y_input = to_tensor(y_input, requires_grad=False, name="y")
+            x_input = Tensor(x_input, requires_grad=False, name="x")
+            y_input = Tensor(y_input, requires_grad=False, name="y")
             y_pred = x_input * slope + intercept
             loss = MeanSquaredError()(y_input, y_pred)
             losses[idx] += loss
@@ -157,8 +157,8 @@ def test_linear_regression_real_data():
     X = x_scaler.fit_transform(X)
     y = y_scaler.fit_transform(y.reshape(-1, 1))
 
-    X = to_tensor(X)
-    y = to_tensor(y)
+    X = Tensor(X)
+    y = Tensor(y)
 
     loops = 100
     learning_rate = 1e-1
@@ -166,7 +166,7 @@ def test_linear_regression_real_data():
     learning_rate /= n
 
     slope = init_xavier((X.shape[1], 1))
-    intercept = to_tensor([0], name="intercept")
+    intercept = Tensor([0], name="intercept")
 
     for _ in range(loops):
         for x_in, y_in in zip(X, y):
@@ -174,8 +174,8 @@ def test_linear_regression_real_data():
             loss = mean_square_error(y_in, y_pred)
             loss.backward()
 
-        slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
-        intercept = to_tensor(
+        slope = Tensor(slope - slope.grad * learning_rate, name="slope")
+        intercept = Tensor(
             intercept - intercept.grad * learning_rate, name="intercept"
         )
 
@@ -198,7 +198,7 @@ def test_linear_regression_multi_input_output():
     loops = 100
 
     slope = init_xavier((X_data.shape[1], y_data.shape[1]), name="slope")
-    intercept = to_tensor([-0.01, 0.01, 0.02], name="intercept")
+    intercept = Tensor([-0.01, 0.01, 0.02], name="intercept")
 
     losses: list[np.ndarray | int] = [0] * loops
 
@@ -206,8 +206,8 @@ def test_linear_regression_multi_input_output():
         return Einsum("i,ij->j")(X, slope) + intercept
 
     for idx in range(loops):
-        X = to_tensor(X_data).to_batched()
-        y = to_tensor(y_data).to_batched()
+        X = Tensor(X_data).to_batched()
+        y = Tensor(y_data).to_batched()
 
         # predict an output
         y_pred = model(X, slope, intercept)
@@ -245,8 +245,8 @@ def test_CrossEntropy():
     # one hot encode y
     y = np.eye(3)[y.astype(int)]
 
-    X = to_tensor(X)
-    y = to_tensor(y)
+    X = Tensor(X)
+    y = Tensor(y)
 
     learning_rate = 1e0
     n = len(X)
@@ -254,7 +254,7 @@ def test_CrossEntropy():
     loops = 100
 
     slope = init_xavier((X.shape[1], y.shape[1]), name="slope")
-    intercept = to_tensor([-0.01, 0.01, 0.02], name="intercept")
+    intercept = Tensor([-0.01, 0.01, 0.02], name="intercept")
 
     losses = [0] * loops
     for idx in range(loops):
@@ -264,8 +264,8 @@ def test_CrossEntropy():
             losses[idx] += loss
             loss.backward()
 
-        slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
-        intercept = to_tensor(
+        slope = Tensor(slope - slope.grad * learning_rate, name="slope")
+        intercept = Tensor(
             intercept - intercept.grad * learning_rate, name="intercept"
         )
 
@@ -297,7 +297,7 @@ def test_CrossEntropy_minibatch():
     loops = 500
 
     slope = init_xavier((X.shape[1], y.shape[1]), name="slope")
-    intercept = to_tensor([-0.01, 0.01, 0.02], name="intercept")
+    intercept = Tensor([-0.01, 0.01, 0.02], name="intercept")
 
     losses = []
     for idx, batch in enumerate(dataset(X, y, batch_size=16)):
@@ -305,8 +305,8 @@ def test_CrossEntropy_minibatch():
             break
         batch_loss = 0
         for x_in, y_in in batch:
-            x_in = to_tensor(x_in)
-            y_in = to_tensor(y_in)
+            x_in = Tensor(x_in)
+            y_in = Tensor(y_in)
 
             y_pred = Einsum("i,ij->j")(x_in, slope) + intercept
             loss = CrossEntropy()(y_in, y_pred)
@@ -315,8 +315,8 @@ def test_CrossEntropy_minibatch():
 
         losses.append(batch_loss)
 
-        slope = to_tensor(slope - slope.grad * learning_rate, name="slope")
-        intercept = to_tensor(
+        slope = Tensor(slope - slope.grad * learning_rate, name="slope")
+        intercept = Tensor(
             intercept - intercept.grad * learning_rate, name="intercept"
         )
 

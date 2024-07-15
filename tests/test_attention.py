@@ -6,7 +6,7 @@ from tricycle.attention import Attention, build_mask
 from tricycle.blocks import MultiHeadSelfAttention
 from tricycle.einsum import Einsum
 from tricycle.functions import Softmax
-from tricycle.tensor import DEFAULT_DTYPE, Tensor, to_tensor
+from tricycle.tensor import DEFAULT_DTYPE, Tensor
 
 TORCH_DTYPE = (
     torch.float16 if TRICYCLE_CONTEXT.use_mixed_precision else torch.float32
@@ -90,7 +90,7 @@ def test_attention_individually():
 
     # random input tensor
     in_tensor = np.random.uniform(-5, 5, (n_tokens, projected_size))
-    in_tensor = to_tensor(in_tensor)
+    in_tensor = Tensor(in_tensor)
     xp = in_tensor.xp
 
     x = torch.from_numpy(in_tensor.array)
@@ -189,7 +189,7 @@ def test_attention_combined():
     in_tensor = np.random.uniform(
         -5, 5, (batch_size, n_tokens, projected_size)
     )
-    in_tensor = to_tensor(in_tensor).to_batched()
+    in_tensor = Tensor(in_tensor).to_batched()
 
     x = torch.from_numpy(in_tensor.array)
     x.requires_grad = True
@@ -257,14 +257,14 @@ def test_attention_block():
         context_window=context_window,
         residual_dropout_prob=0,
     )
-    tricycle_attention.in_projection.weights = to_tensor(
+    tricycle_attention.in_projection.weights = Tensor(
         in_projection_weights, name="in_proj"
     )
-    tricycle_attention.out_projection.weights = to_tensor(
+    tricycle_attention.out_projection.weights = Tensor(
         out_projection_weights, name="out_proj"
     )
 
-    in_tensor = to_tensor(x, requires_grad=False).to_batched()
+    in_tensor = Tensor(x, requires_grad=False).to_batched()
     tricycle_result = tricycle_attention(in_tensor)
 
     c_attn = torch.nn.Linear(embedding_dim, 3 * embedding_dim, bias=False)

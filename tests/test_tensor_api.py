@@ -8,13 +8,13 @@ from tricycle.binary import (
     BinaryMultiply,
     BinarySubtract,
 )
-from tricycle.ops import to_tensor
+from tricycle.ops import Tensor
 from tricycle.unary import UnaryAdd, UnaryDivide, UnaryMultiply, UnarySubtract
 
 
 def test_can_add_tensors():
-    tensor_1 = to_tensor(np.arange(12).reshape(3, 4))
-    tensor_2 = to_tensor(np.arange(12).reshape(3, 4))
+    tensor_1 = Tensor(np.arange(12).reshape(3, 4))
+    tensor_2 = Tensor(np.arange(12).reshape(3, 4))
 
     assert (tensor_1 + 1).close_to(UnaryAdd()(tensor_1, 1))
 
@@ -27,8 +27,8 @@ def test_can_add_tensors():
 
 
 def test_can_subtract_tensors():
-    tensor_1 = to_tensor(np.arange(12).reshape(3, 4))
-    tensor_2 = to_tensor(np.arange(12).reshape(3, 4))
+    tensor_1 = Tensor(np.arange(12).reshape(3, 4))
+    tensor_2 = Tensor(np.arange(12).reshape(3, 4))
 
     assert (tensor_1 - 1).close_to(UnarySubtract()(tensor_1, 1))
 
@@ -41,8 +41,8 @@ def test_can_subtract_tensors():
 
 
 def test_can_multiply_tensors():
-    tensor_1 = to_tensor(np.arange(12).reshape(3, 4))
-    tensor_2 = to_tensor(np.arange(12).reshape(3, 4))
+    tensor_1 = Tensor(np.arange(12).reshape(3, 4))
+    tensor_2 = Tensor(np.arange(12).reshape(3, 4))
 
     assert (tensor_1 * 2).close_to(UnaryMultiply()(tensor_1, 2))
 
@@ -55,8 +55,8 @@ def test_can_multiply_tensors():
 
 
 def test_can_divide_tensors():
-    tensor_1 = to_tensor(np.arange(1, 13).reshape(3, 4).astype(float))
-    tensor_2 = to_tensor(np.arange(1, 13).reshape(3, 4).astype(float))
+    tensor_1 = Tensor(np.arange(1, 13).reshape(3, 4).astype(float))
+    tensor_2 = Tensor(np.arange(1, 13).reshape(3, 4).astype(float))
 
     assert (2 / tensor_1).close_to(UnaryDivide()(2, tensor_1))
 
@@ -64,6 +64,6 @@ def test_can_divide_tensors():
 
 
 def test_can_pow_tensors():
-    tensor_1 = to_tensor(np.arange(12).reshape(3, 4))
+    tensor_1 = Tensor(np.arange(12).reshape(3, 4))
 
     assert (tensor_1**2).close_to(pow(tensor_1, 2))

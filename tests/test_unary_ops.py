@@ -1,6 +1,6 @@
 import numpy as np
 
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 from tricycle.unary import (
     UnaryAdd,
     UnaryCos,
@@ -19,7 +19,7 @@ from tricycle.unary import (
 
 
 def test_can_add():
-    in_tensor = to_tensor([0, 1, 2, 3])
+    in_tensor = Tensor([0, 1, 2, 3])
     out_tensor = UnaryAdd()(in_tensor, 1)
 
     correct = np.array([1, 2, 3, 4])
@@ -34,7 +34,7 @@ def test_can_add():
 
 
 def test_can_umul():
-    in_tensor = to_tensor([0, 1, 2, 3])
+    in_tensor = Tensor([0, 1, 2, 3])
     out_tensor = UnaryMultiply()(in_tensor, 2)
 
     assert out_tensor.shape == (4,)
@@ -47,7 +47,7 @@ def test_can_umul():
 
 
 def test_can_usub():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
 
     # subtract 1 from each element
     out_tensor = UnarySubtract()(in_tensor, 1)
@@ -63,7 +63,7 @@ def test_can_usub():
 
 
 def test_can_upow():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnaryPower()(in_tensor, 3)
 
     assert out_tensor.shape == (4,)
@@ -78,7 +78,7 @@ def test_can_upow():
 
 def test_can_udiv():
     # 2 divided by each element
-    in_tensor = to_tensor(np.arange(12, dtype=float).reshape(3, 4))
+    in_tensor = Tensor(np.arange(12, dtype=float).reshape(3, 4))
     with np.errstate(divide="ignore"):
         out_tensor = UnaryDivide()(2, in_tensor)
 
@@ -100,7 +100,7 @@ def test_can_udiv():
 
 
 def test_can_umax():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnaryMax()(in_tensor, 2)
 
     assert out_tensor.shape == (4,)
@@ -115,7 +115,7 @@ def test_can_umax():
 
 
 def test_can_umin():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnaryMin()(in_tensor, 3)
 
     assert out_tensor.shape == (4,)
@@ -130,7 +130,7 @@ def test_can_umin():
 
 
 def test_can_uexp():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnaryExp()(in_tensor)
 
     assert out_tensor.shape == (4,)
@@ -147,7 +147,7 @@ def test_can_uexp():
 
 
 def test_can_ulog():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnaryLog()(in_tensor)
 
     assert out_tensor.shape == (4,)
@@ -162,7 +162,7 @@ def test_can_ulog():
 
 
 def test_can_usin():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnarySin()(in_tensor)
 
     assert out_tensor.shape == (4,)
@@ -179,7 +179,7 @@ def test_can_usin():
 
 
 def test_can_ucos():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnaryCos()(in_tensor)
 
     assert out_tensor.shape == (4,)
@@ -196,7 +196,7 @@ def test_can_ucos():
 
 
 def test_can_usqrt():
-    in_tensor = to_tensor([1, 2, 3, 4])
+    in_tensor = Tensor([1, 2, 3, 4])
     out_tensor = UnarySquareRoot()(in_tensor)
 
     assert out_tensor.shape == (4,)
@@ -213,8 +213,8 @@ def test_can_usqrt():
 
 
 def test_can_bmask():
-    in_tensor = to_tensor(np.arange(12).reshape(3, 4), is_batched=True)
-    mask = to_tensor(
+    in_tensor = Tensor(np.arange(12).reshape(3, 4), is_batched=True)
+    mask = Tensor(
         [[0, 0, 0, 0], [1, 0, 1, 0], [1, 1, 1, 1]],
         is_batched=True,
         requires_grad=False,

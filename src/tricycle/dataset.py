@@ -42,8 +42,8 @@ class Dataset:
         return self
 
     def to_tensor(self):
-        self.inputs = [to_tensor(x) for x in self.inputs]
-        self.outputs = [to_tensor(x) for x in self.outputs]
+        self.inputs = [Tensor(x) for x in self.inputs]
+        self.outputs = [Tensor(x) for x in self.outputs]
         return self
 
     def reset(self):

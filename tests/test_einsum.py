@@ -1,11 +1,11 @@
 import numpy as np
 
 from tricycle.einsum import Einsum, Subscript
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 
 
 def test_batched_reduce():
-    x = to_tensor(np.arange(5))
+    x = Tensor(np.arange(5))
     op = Einsum("a->")
     result = op(x)
     assert result.close_to(10)
@@ -16,7 +16,7 @@ def test_batched_reduce():
 
 
 def test_matrix_reduce():
-    x = to_tensor(np.arange(20).reshape(4, 5))
+    x = Tensor(np.arange(20).reshape(4, 5))
     op = Einsum("ab->")
     assert op(x) == 190
 
@@ -26,7 +26,7 @@ def test_matrix_reduce():
 
 
 def test_matrix_partial_reduce():
-    x = to_tensor(np.arange(20).reshape(4, 5))
+    x = Tensor(np.arange(20).reshape(4, 5))
     op = Einsum("ab->b")
     assert op(x).close_to([30, 34, 38, 42, 46])
 
@@ -36,7 +36,7 @@ def test_matrix_partial_reduce():
 
 
 def test_transpose():
-    x = to_tensor(np.arange(20).reshape(4, 5))
+    x = Tensor(np.arange(20).reshape(4, 5))
     op = Einsum("ij->ji")
     assert op(x).close_to(x.array.T)
 

@@ -1,6 +1,6 @@
 from tricycle.einsum import Einsum, Subscript
 from tricycle.ops import Op
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 class ReduceMax(Op):
@@ -29,7 +29,7 @@ class ReduceMax(Op):
         indicator = tensor.array == tensor.xp.max(
             tensor.array, axis=tuple(reduce_along_axes), keepdims=True
         )
-        indicator = to_tensor(
+        indicator = Tensor(
             indicator, requires_grad=False, is_batched=tensor.is_batched
         )
         indicator.array = indicator.array.astype(tensor.xp.int8)
@@ -68,7 +68,7 @@ class ReduceMin(Op):
         indicator = tensor.array == tensor.xp.min(
             tensor.array, axis=tuple(reduce_along_axes), keepdims=True
         )
-        indicator = to_tensor(
+        indicator = Tensor(
             indicator, requires_grad=False, is_batched=tensor.is_batched
         )
         indicator.array = indicator.array.astype(tensor.xp.int8)
