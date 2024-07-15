@@ -23,6 +23,7 @@ All Tricycle code can run on either a CUDA-capable GPU or a CPU.
 - [Tricycle](#tricycle)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
+  - [Features](#features)
   - [Training a GPT on Shakespeare](#training-a-gpt-on-shakespeare)
   - [Training GPT-2 (124M)](#training-gpt-2-124m)
   - [How it works](#how-it-works)
@@ -142,10 +143,10 @@ print(attention(d)) # Tensor([[[ 0.15086384 -0.08797299]
                     #   [ 0.9660988  -0.77281135]]], name=dense)
 ```
 
-If you try to search for the implementation of a layer in pytorch, you'll 
-often find it buried under 20 different files of CUDA code. This is done in 
-the pursuit of raw performance, which, to be clear, is great. However, it 
-makes learning about how things actually work quite difficult. 
+If you try to search for the implementation of a layer in pytorch, you'll
+often find it buried under 20 different files of CUDA code. This is done in
+the pursuit of raw performance, which, to be clear, is great. However, it
+makes learning about how things actually work quite difficult.
 
 In Tricycle, you can jump straight to the implementation. For example, here is
 the forward pass for `LayerNorm`:
@@ -360,9 +361,8 @@ Given the prompt "Here is my favourite limerick: there once was a man from nantu
 > Like that character.
 > All of our stories go out of our mouths.
 
-There is still more to do (16 bit training, multi-gpu support, training for
-longer etc), but for a language model built completely from scratch, I'd
-argue that this is not bad!
+There is still more to do (see below), but for a language model built
+completely from scratch, I'd argue that this is not bad!
 
 ## How it works
 
@@ -372,20 +372,22 @@ a modern deep learning framework. If you'd like to know how, check out the
 
 ## What's Next?
 
- - Documentation
-    - [ ] Explain how to train a language model
-    - [X] Explain the tokeniser
+- Documentation
+  - [X] Explain how to train a language model
+  - [X] Explain the tokeniser
 
- - Code
-    [ ] Rotary Embeddings
-    [ ] Test RMS Norm
-    [ ] Multi-GPU support
-    [ ] Optimise and use the tokeniser
+- Code
+  - [ ] Rotary Embeddings
+  - [X] Test RMS Norm
+  - [ ] Multi-GPU support
+  - [ ] ZeRO parallelism
+  - [ ] Optimise and use the tokeniser
+  - [ ] 16 bit operations
 
- - Experiments
-    [X] Try a language dataset rather than pure code
-    [ ] Build a LLama style model
-    [X] Build a bigger langauge model (GPT-2 sized?)
+- Experiments
+  - [X] Try a language dataset rather than pure code
+  - [X] Build a bigger langauge model (GPT-2 (124M))
+  - [ ] Build a LLama style model
 
 <!-- ### Training a Language model -->
 <!---->
