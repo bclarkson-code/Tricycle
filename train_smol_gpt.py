@@ -1,11 +1,11 @@
 """
-Training script for SmolGPT a very small coding assistant.
+Training script for SmolGPT a replication of GPT-2
 
 The training script is pretty generic. You can tune the parameters in by
 modifying the config.
 
-Currently, we train the model on codeparrot, a supposedly cleaned and
-deduped dataset of python files from github
+Currently, we train the model on fineweb, a cleaned dump of ~10B tokens of web
+data
 """
 
 import os
@@ -40,7 +40,7 @@ xp.random.seed(0)
 config = SmolGPTConfig()
 
 
-def load_datasets(n_tokens: int, config: SmolGPTConfig):
+def load_datasets( config: SmolGPTConfig):
     """
     Load tokens, batch and shuffle them.
     """
@@ -51,7 +51,9 @@ def load_datasets(n_tokens: int, config: SmolGPTConfig):
     print("Loading dataset")
     train_dataset = FineWeb(config.vocab_size, split="train")
 
-    # we cant fit more than 3B indices in memory
+    # we cant fit more than 3B indices in memory on my computer which is more
+    # than we need anyway.
+    # TODO: figure out how to shuffle without using much memory
     train_dataset.tokens = train_dataset.tokens[: int(3e9)]
     valid_dataset = FineWeb(config.vocab_size, split="valid")
 
@@ -91,6 +93,9 @@ def estimate_loss(
     config: SmolGPTConfig,
     loss_fn: Op,
 ) -> float:
+    """
+    Run the model on the validation dataset to estimate its loss
+    """
     batch_loss = 0
     for valid_step, (inputs, outputs) in tqdm(
         enumerate(valid_dataloader), total=config.eval_steps, desc="Validation"
@@ -119,6 +124,13 @@ def validate(
     loss_fn: Op,
     best_loss: float,
 ):
+    """
+    Check the performance of the model on validation data. Both in terms of
+    loss and by generating some sample text and storing it in MLFlow.
+
+    If the new validation loss is better than the previous validation loss,
+    save the model to disk
+    """
     # generate some text
     predicted = get_sample(
         model=model,
@@ -145,6 +157,7 @@ def validate(
     return best_loss
 
 
+# Create our model from the config
 model = GPT(config)
 model.display()
 
@@ -159,13 +172,6 @@ scheduler = CosineSchedule(
     warmup_steps=config.warmup_steps,
     total_steps=n_steps,
 )
-loss_fn = CrossEntropy()
-scheduler = CosineSchedule(
-    max_learning_rate=config.max_learning_rate,
-    min_learning_rate=config.min_learning_rate,
-    warmup_steps=config.warmup_steps,
-    total_steps=n_steps,
-)
 optimiser = AdamW(
     learning_rate=scheduler(0),
     weight_decay=config.weight_decay,
@@ -173,13 +179,14 @@ optimiser = AdamW(
 )
 
 train_dataset, valid_dataset, train_dataloader, valid_dataloader = (
-    load_datasets(n_tokens, config)
+    load_datasets(config)
 )
 
 if GPU_ENABLED:
     model.to_gpu(config.device_idx)
 
 
+# start tracking the experiment in mlflow
 mlflow.set_tracking_uri(config.mlflow_tracking_uri)
 mlflow.set_experiment("SmolGPT:fineweb:base")
 os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
@@ -220,6 +227,7 @@ with mlflow.start_run() as run:
         # step the learning rate
         optimiser.learning_rate = scheduler(step)
 
+        # run validation every eval_intervals
         if step % config.eval_interval == 0:
             best_loss = validate(
                 model=model,
@@ -228,6 +236,8 @@ with mlflow.start_run() as run:
                 loss_fn=loss_fn,
                 best_loss=best_loss,
             )
+
+# run a final validation at the end of training
 validate(
     model=model,
     valid_dataset=valid_dataset,
