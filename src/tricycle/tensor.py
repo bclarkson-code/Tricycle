@@ -226,7 +226,7 @@ class Tensor:
         if isinstance(other, self.xp.ndarray) and not isinstance(
             other, Tensor
         ):
-            other = to_tensor(other)
+            other = Tensor(other)
         if self.xp.isscalar(other):
             from tricycle.unary import UnarySubtract
 
@@ -251,7 +251,7 @@ class Tensor:
         if isinstance(other, self.xp.ndarray) and not isinstance(
             other, Tensor
         ):
-            other = to_tensor(other)
+            other = Tensor(other)
         if self.xp.isscalar(other) or other.shape == ():
             from tricycle.unary import UnaryMultiply
 
@@ -308,7 +308,7 @@ class Tensor:
         if isinstance(other, self.xp.ndarray) and not isinstance(
             other, Tensor
         ):
-            other = to_tensor(other)
+            other = Tensor(other)
         if self.xp.isscalar(other):
             from tricycle.unary import UnaryPower
 
@@ -366,7 +366,7 @@ class Tensor:
         return f"Tensor({self.array.__str__()}{name})"
 
     def __getitem__(self, idx):
-        return to_tensor(self.array[idx], requires_grad=self.requires_grad)
+        return Tensor(self.array[idx], requires_grad=self.requires_grad)
 
     def __setitem__(self, idx, value):
         self.array[idx] = value
@@ -514,46 +514,6 @@ class Tensor:
         import cupy
 
         return cupy.asnumpy(self.array) if self.on_gpu else self.array
-
-
-def to_tensor(
-    tensor_like: ArrayLike,
-    name: Optional[str] = None,
-    requires_grad: bool = True,
-    is_batched: bool = False,
-    _id: int | None = None,
-    dtype: np.typing.DTypeLike | None = None,
-    **kwargs,
-) -> Tensor:
-    """
-    Create a new Tensor instance. If the input is not a numpy or cupy
-    array, try to convert it to one.
-    """
-    if GPU_ENABLED:
-        import cupy
-
-        if isinstance(tensor_like, Tensor):
-            array = tensor_like.array
-        elif isinstance(tensor_like, (np.ndarray, cupy.ndarray)):
-            array = tensor_like
-            if dtype is not None:
-                array = array.astype(dtype)
-        else:
-            array = np.asarray(tensor_like, dtype=dtype, **kwargs)
-
-    elif isinstance(tensor_like, Tensor):
-        array = tensor_like.array
-    else:
-        array = np.asarray(tensor_like, dtype=dtype, **kwargs)
-
-    return Tensor(
-        array,
-        name=name,
-        requires_grad=requires_grad,
-        is_batched=is_batched,
-        dtype=dtype,
-        _id=_id,
-    )
 
 
 def select_backend(*tensors: Tensor | np.ndarray | ArrayLike):

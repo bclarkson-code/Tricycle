@@ -8,7 +8,7 @@ an arrow.
 
 For example, you can define the transpose of a 2d tensor as follows:
 
->>> a = to_tensor([[1,2],[3,4]])
+>>> a = Tensor([[1,2],[3,4]])
 >>> Einsum("ij->ji")(a)
 Tensor([[1. 3.]
  [2. 4.]], name=einsum ij->ji)
@@ -25,7 +25,7 @@ There are only two rules to remember with einsum:
  - If an index appears in more than one input, the tensors will be multiplied
    along that axis
 
-   >>> b = to_tensor([[5,6],[7,8])
+   >>> b = Tensor([[5,6],[7,8])
    >>> Einsum("ij,jk->ik")(a,b)
     Tensor([[19. 22.]
      [43. 50.]], name=einsum ij,jk->ik)
@@ -39,7 +39,7 @@ import itertools
 import re
 from typing import Sequence
 
-from tricycle.tensor import Tensor, select_backend, to_tensor
+from tricycle.tensor import Tensor, select_backend
 
 
 class Subscript:
@@ -197,7 +197,7 @@ class Einsum:
             return subscript, tensors
 
         [tensor] = tensors
-        ones = to_tensor(
+        ones = Tensor(
             xp.ones(tensor.shape),
             is_batched=tensor.is_batched,
             requires_grad=False,
@@ -251,7 +251,7 @@ class Einsum:
                 processed.append(tensor)
                 continue
 
-            new_tensor = to_tensor(
+            new_tensor = Tensor(
                 xp.nan_to_num(tensor.array),
                 is_batched=tensor.is_batched,
             )
@@ -269,7 +269,7 @@ class Einsum:
         )
         subscript, tensors = self._handle_single_tensor(subscript, tensors)
         tensor_data = [t.array for t in tensors]
-        result = to_tensor(xp.einsum(str(subscript), *tensor_data))
+        result = Tensor(xp.einsum(str(subscript), *tensor_data))
         if batch_output:
             result.is_batched = True
 

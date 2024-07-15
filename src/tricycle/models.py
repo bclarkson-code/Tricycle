@@ -12,7 +12,7 @@ from tricycle.layers import (
     RMSNorm,
 )
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 class GPT(Layer):
@@ -82,7 +82,7 @@ class GPT(Layer):
             f"Found {n_tokens=} and {self.context_window=}",
         )
 
-        position = to_tensor(
+        position = Tensor(
             xp.arange(self.context_window),
             requires_grad=False,
             dtype=int,

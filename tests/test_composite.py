@@ -1,11 +1,11 @@
 import numpy as np
 
 from tricycle.ops import Split
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 
 
 def test_split_first_axis():
-    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
+    in_tensor = Tensor([1, 2, 3, 4, 5, 6])
 
     out_tensors = Split()(in_tensor, 3)
 
@@ -33,7 +33,7 @@ def test_split_first_axis():
 
 
 def test_split_middle_axis():
-    in_tensor = to_tensor(np.ones((2, 3, 4)))
+    in_tensor = Tensor(np.ones((2, 3, 4)))
 
     out_tensors = Split()(in_tensor, n_splits=2, axis=-1)
 
@@ -51,7 +51,7 @@ def test_split_middle_axis():
 
 
 def test_reshape():
-    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
+    in_tensor = Tensor([1, 2, 3, 4, 5, 6])
 
     out_tensor = in_tensor.reshape((2, 3))
 
@@ -65,7 +65,7 @@ def test_reshape():
 
 
 def test_mean():
-    in_tensor = to_tensor([1, 2, 3, 4, 5, 6])
+    in_tensor = Tensor([1, 2, 3, 4, 5, 6])
 
     out_tensor = in_tensor.mean()
 

@@ -17,7 +17,7 @@ from tricycle import GPU_ENABLED
 from tricycle.functions import Softmax
 from tricycle.layers import Dense, Embedding, RMSNorm
 from tricycle.loss import CrossEntropy
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 @st.composite
@@ -57,7 +57,7 @@ def tokens(draw):
             elements=st.integers(min_value=1, max_value=64),
         )
     )
-    return to_tensor(
+    return Tensor(
         tokens_,
         is_batched=len(shape) == 2,
         dtype=np.int64,
@@ -105,7 +105,7 @@ def tensor(draw):
         warn("GPU_ENABLED = False so GPU tests have been disabled")
         on_gpu = False
 
-    tensor = to_tensor(
+    tensor = Tensor(
         data,
         is_batched=is_batched,
         requires_grad=requires_grad,
@@ -147,7 +147,7 @@ def build_tensor(shape_, is_batched):
             is_batched = True
     requires_grad = True
 
-    return to_tensor(
+    return Tensor(
         data,
         is_batched=is_batched,
         requires_grad=requires_grad,
@@ -170,7 +170,7 @@ def small_tensor(draw):
         warn("GPU_ENABLED = False so GPU tests have been disabled")
         on_gpu = False
 
-    tensor = to_tensor(
+    tensor = Tensor(
         data,
         is_batched=is_batched,
         requires_grad=requires_grad,
@@ -197,7 +197,7 @@ def tensor_pair_same_shape(draw):
         if draw(st.booleans()):
             data = data[1:]
 
-        tensor = to_tensor(data, is_batched=is_batched)
+        tensor = Tensor(data, is_batched=is_batched)
         tensors.append(tensor)
 
     return tensors
@@ -215,7 +215,7 @@ def test_tricycle_dense_matches_pytorch(in_shape, out_shape, is_batched):
         in_features=from_size, out_features=out_shape, bias=False
     )
     tr_layer = Dense(from_size=from_size, to_size=out_shape)
-    tr_layer.weights = to_tensor(pt_layer.weight.detach().numpy().T)
+    tr_layer.weights = Tensor(pt_layer.weight.detach().numpy().T)
 
     pt_out = pt_layer(torch.tensor(tensor.array).to(torch.float32)).to(
         torch.float16
@@ -302,7 +302,7 @@ def test_tricycle_softmax_matches_pytorch(in_shape, is_batched):
 def test_crossentropy_matches(in_shape, is_batched):
     y_pred = build_tensor(in_shape, is_batched)
     y_true = np.random.randint(0, in_shape[-1], size=in_shape[:-1])
-    y_true = to_tensor(y_true, is_batched=is_batched, dtype=int)
+    y_true = Tensor(y_true, is_batched=is_batched, dtype=int)
     assume(np.isfinite(y_pred.array).all())
 
     tr_out = CrossEntropy()(y_true, y_pred).from_batched()
@@ -332,43 +332,6 @@ def test_crossentropy_matches(in_shape, is_batched):
     if len(in_shape) == 3:
         p_grad = p_grad.transpose(0, -1, 1)
     assert y_pred.grad.close_to(p_grad, rtol=1e-2)
-
-
-# @given(tensor_shape(), st.booleans())
-# @example(in_shape=[2, 2, 4], is_batched=False)
-# def test_rotary_encodings_match(in_shape, is_batched):
-#     y_pred = build_tensor(in_shape, is_batched)
-#     y_true = np.random.randint(0, in_shape[-1], size=in_shape[:-1])
-#     y_true = to_tensor(y_true, is_batched=is_batched, dtype=int)
-#     assume(np.isfinite(y_pred.array).all())
-#
-# tr_out = CrossEntropy()(y_true, y_pred).from_batched()
-# if len(in_shape) > 1:
-#     tr_out = tr_out.mean()
-#
-# if len(in_shape) == 1:
-#     p_y_pred = copy(y_pred.array)
-# if len(in_shape) == 2:
-#     p_y_pred = copy(y_pred.array)
-# if len(in_shape) == 3:
-#     p_y_pred = copy(y_pred.array).transpose(0, -1, 1)
-# p_y_pred = torch.tensor(p_y_pred, requires_grad=True)
-# p_y_true = torch.tensor(y_true.array, dtype=torch.long)
-#
-# p_out = torch.nn.CrossEntropyLoss()(
-#     input=p_y_pred,
-#     target=p_y_true,
-# )
-#
-# assert tr_out.close_to(p_out.detach().numpy().item())
-#
-# tr_out.backward()
-# p_out.backward()
-#
-# p_grad = p_y_pred.grad.detach().numpy()
-# if len(in_shape) == 3:
-#     p_grad = p_grad.transpose(0, -1, 1)
-# assert y_pred.grad.close_to(p_grad)
 
 
 # reference implementation of rmsnorm: https://github.com/meta-llama/llama/blob/be327c427cc5e89cc1d3ab3d3fec4484df771245/llama/model.py#L34

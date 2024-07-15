@@ -5,7 +5,7 @@ from tricycle.einsum import Einsum
 from tricycle.functions import Softmax
 from tricycle.layers import Dense, Sequential
 from tricycle.loss import MeanSquaredError
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 from tricycle.unary import Batch, Unbatch
 
 
@@ -16,15 +16,15 @@ def test_can_batch_single_einsum():
 
     op = Einsum("a->")
 
-    output_1 = op(to_tensor(input_1))
-    output_2 = op(to_tensor(input_2))
-    output_3 = op(to_tensor(input_3))
+    output_1 = op(Tensor(input_1))
+    output_2 = op(Tensor(input_2))
+    output_3 = op(Tensor(input_3))
 
     assert output_1 == 6
     assert output_2 == 9
     assert output_3 == 12
 
-    input_batch = to_tensor([input_1, input_2, input_3])
+    input_batch = Tensor([input_1, input_2, input_3])
     input_batch = Batch()(input_batch)
     op = Einsum("a->")
     output_batch = op(input_batch)
@@ -44,14 +44,12 @@ def test_can_batch_entire_model():
     input_2 = np.arange(2, 6)
     input_3 = np.arange(3, 7)
 
-    output_1 = model(to_tensor(input_1))
-    output_2 = model(to_tensor(input_2))
-    output_3 = model(to_tensor(input_3))
+    output_1 = model(Tensor(input_1))
+    output_2 = model(Tensor(input_2))
+    output_3 = model(Tensor(input_3))
 
-    input_batch = to_tensor([input_1, input_2, input_3])
-    correct_output = to_tensor(
-        [output_1.array, output_2.array, output_3.array]
-    )
+    input_batch = Tensor([input_1, input_2, input_3])
+    correct_output = Tensor([output_1.array, output_2.array, output_3.array])
 
     input_batch = Batch()(input_batch)
     correct_output = Batch()(correct_output)
@@ -62,21 +60,21 @@ def test_can_batch_entire_model():
 
 
 def test_can_batch_mse():
-    y_true = to_tensor([0, 0, 1, 0])
+    y_true = Tensor([0, 0, 1, 0])
 
-    input_1 = to_tensor(np.arange(1, 5))
-    input_2 = to_tensor(np.arange(2, 6))
-    input_3 = to_tensor(np.arange(3, 7))
+    input_1 = Tensor(np.arange(1, 5))
+    input_2 = Tensor(np.arange(2, 6))
+    input_3 = Tensor(np.arange(3, 7))
 
     output_1 = MeanSquaredError()(y_true, input_1)
     output_2 = MeanSquaredError()(y_true, input_2)
     output_3 = MeanSquaredError()(y_true, input_3)
 
-    input_y_true = to_tensor(np.array([y_true.array] * 3))
-    input_batch = to_tensor(
+    input_y_true = Tensor(np.array([y_true.array] * 3))
+    input_batch = Tensor(
         np.array([input_1.array, input_2.array, input_3.array])
     )
-    correct_output = to_tensor(
+    correct_output = Tensor(
         np.array([output_1.array, output_2.array, output_3.array]).sum()
     )
 
@@ -89,18 +87,18 @@ def test_can_batch_mse():
 
 
 def test_can_batch_softmax():
-    input_1 = to_tensor(np.arange(1, 5))
-    input_2 = to_tensor(np.arange(2, 6))
-    input_3 = to_tensor(np.arange(3, 7))
+    input_1 = Tensor(np.arange(1, 5))
+    input_2 = Tensor(np.arange(2, 6))
+    input_3 = Tensor(np.arange(3, 7))
 
     output_1 = Softmax()(input_1)
     output_2 = Softmax()(input_2)
     output_3 = Softmax()(input_3)
 
-    input_batch = to_tensor(
+    input_batch = Tensor(
         np.array([input_1.array, input_2.array, input_3.array])
     )
-    correct_output = to_tensor(
+    correct_output = Tensor(
         np.array([output_1.array, output_2.array, output_3.array])
     )
 
@@ -112,7 +110,7 @@ def test_can_batch_softmax():
 
 
 def test_can_batch_split():
-    in_tensor = to_tensor(
+    in_tensor = Tensor(
         [[1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6]], name="in_tensor"
     )
 

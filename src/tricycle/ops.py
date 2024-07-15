@@ -5,7 +5,7 @@ from numpy.typing import ArrayLike
 
 from tricycle import TRICYCLE_CONTEXT
 from tricycle.einsum import Einsum, Subscript
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 class Op:
@@ -34,7 +34,7 @@ class Repeat(Op):
         xp = tensor.xp
         subscript = Subscript("...,...a->...a")
         new_shape = tensor.shape + (repeats,)
-        ones = to_tensor(
+        ones = Tensor(
             xp.ones(new_shape),
             is_batched=tensor.is_batched,
             requires_grad=False,
@@ -60,7 +60,7 @@ class Split(Op):
         >>> result
         [tensor([1, 2]), tensor([3, 4])]
         # set an arbitrary derivative for first split
-        >>> result[0].grad = to_tensor([1,1])
+        >>> result[0].grad = Tensor([1,1])
         >>> undo_split(result[0].grad)
         [1, 1, 0, 0]
         """
@@ -79,7 +79,7 @@ class Split(Op):
                 indices.append(slice(None))
         self._grad[idx][tuple(indices)] = grad.array
 
-        result = to_tensor(self._grad[idx])
+        result = Tensor(self._grad[idx])
         result.is_batched = grad.is_batched
         return result
 
@@ -107,7 +107,7 @@ class Split(Op):
             def back_fn(grad, idx=idx):
                 return self.back_fn(grad, idx=idx)
 
-            result = to_tensor(result)
+            result = Tensor(result)
             result.back_fns = (back_fn,)
             result.args = (tensor,)
             result.is_batched = tensor.is_batched

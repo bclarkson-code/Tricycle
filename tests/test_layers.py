@@ -1,18 +1,15 @@
 from copy import copy
 
 import numpy as np
-import pytest
 
-from tricycle.einsum import Einsum
 from tricycle.layers import (  # noqa: E501
     Dense,
     Dropout,
     Embedding,
     LayerNorm,
-    RMSNorm,
     Sequential,
 )
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 def test_dense_layer():
@@ -20,7 +17,7 @@ def test_dense_layer():
 
     assert layer.weights.shape == (10, 8)
 
-    x_in = to_tensor(np.ones(10))
+    x_in = Tensor(np.ones(10))
 
     x_out = layer(x_in)
     assert x_out.shape == (8,)
@@ -35,7 +32,7 @@ def test_sequential_layer():
     assert model.layers[0].weights.shape == (10, 8)
     assert model.layers[1].weights.shape == (8, 4)
 
-    x_in = to_tensor(np.ones(10))
+    x_in = Tensor(np.ones(10))
 
     x_out = model(x_in)
     assert x_out.shape == (4,)
@@ -47,9 +44,7 @@ def test_dropout():  # sourcery skip: square-identity
     dropout_prob = 0.3
 
     # non-batched
-    in_tensor = to_tensor(
-        np.random.normal(size=(size, size)), name="in_tensor"
-    )
+    in_tensor = Tensor(np.random.normal(size=(size, size)), name="in_tensor")
     dropout = Dropout(dropout_prob)
 
     out_tensor = dropout(in_tensor.to_batched())
@@ -75,7 +70,7 @@ def test_dropout():  # sourcery skip: square-identity
 
 def test_layer_norm():
     np.random.seed(0)
-    in_tensor = to_tensor(np.random.normal(size=(100, 100)), name="in_tensor")
+    in_tensor = Tensor(np.random.normal(size=(100, 100)), name="in_tensor")
     layer_norm = LayerNorm(100)
     out_tensor = layer_norm(in_tensor.to_batched())
 
@@ -96,7 +91,7 @@ def test_embedding():
     np.random.seed(0)
     vocab_size = 3
     out_shape = 5
-    in_tensor = to_tensor(
+    in_tensor = Tensor(
         [0, 1, 2, 0],
         requires_grad=False,
         dtype=int,
@@ -106,7 +101,7 @@ def test_embedding():
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )
-    embedding_layer.weights = to_tensor(weights)
+    embedding_layer.weights = Tensor(weights)
 
     result = embedding_layer(in_tensor)
 
@@ -139,7 +134,7 @@ def test_embedding_batched():
     weights = np.indices((vocab_size * out_shape,)).reshape(
         vocab_size, out_shape
     )
-    embedding_layer.weights = to_tensor(weights)
+    embedding_layer.weights = Tensor(weights)
 
     result = embedding_layer(in_tensor)
 

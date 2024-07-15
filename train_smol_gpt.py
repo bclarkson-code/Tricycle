@@ -40,7 +40,7 @@ xp.random.seed(0)
 config = SmolGPTConfig()
 
 
-def load_datasets( config: SmolGPTConfig):
+def load_datasets(config: SmolGPTConfig):
     """
     Load tokens, batch and shuffle them.
     """

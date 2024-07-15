@@ -5,7 +5,7 @@ from tricycle.functions import Sigmoid
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
 from tricycle.optimisers import Optimiser
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 from tricycle.unary import UnaryMax
 
 
@@ -100,7 +100,7 @@ class GeLU(Layer):
 
         self._grad = 0.5 * (1 + left + right) * grad.array
 
-        result = to_tensor(
+        result = Tensor(
             self._grad,
             is_batched=grad.is_batched,
             requires_grad=grad.requires_grad,
@@ -124,7 +124,7 @@ class GeLU(Layer):
             self._input = self._input.astype(xp.float16)
             result = result.astype(xp.float16)
 
-        result = to_tensor(
+        result = Tensor(
             result,
             is_batched=tensor.is_batched,
             requires_grad=tensor.requires_grad,

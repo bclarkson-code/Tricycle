@@ -1,19 +1,19 @@
 import numpy as np
 
 from tricycle.blocks import GPT2TransformerBlock, MLPBlock
-from tricycle.tensor import to_tensor
+from tricycle.tensor import Tensor
 
 
 def test_MLPBlock():
     np.random.seed(0)
-    in_tensor = to_tensor(np.arange(12, dtype=float).reshape(3, 4))
+    in_tensor = Tensor(np.arange(12, dtype=float).reshape(3, 4))
     block = MLPBlock(embedding_dim=4, expansion_ratio=4, dropout_prob=0.5)
 
     assert block.linear_1.weights.shape == (4, 16)
     assert block.linear_2.weights.shape == (16, 4)
 
-    block.linear_1.weights = to_tensor(np.ones(block.linear_1.weights.shape))
-    block.linear_2.weights = to_tensor(np.ones(block.linear_2.weights.shape))
+    block.linear_1.weights = Tensor(np.ones(block.linear_1.weights.shape))
+    block.linear_2.weights = Tensor(np.ones(block.linear_2.weights.shape))
 
     out_tensor = block(in_tensor.to_batched())
 
@@ -31,7 +31,7 @@ def test_MLPBlock():
             [1216.0, 1216.0, 1216.0, 0.0],
         ]
     )
-    correct_output = to_tensor(correct_output)
+    correct_output = Tensor(correct_output)
 
     assert out_tensor.is_batched
     assert out_tensor.close_to(correct_output)
@@ -39,7 +39,7 @@ def test_MLPBlock():
     out_tensor.backward()
 
     assert in_tensor.grad is not None
-    correct_grad = to_tensor(
+    correct_grad = Tensor(
         [
             [64.0, 64.0, 64.0, 64.0],
             [64.0, 64.0, 64.0, 64.0],
@@ -57,7 +57,7 @@ def test_GPT2TransformerBlock():
     n_heads = 3
     embedding_dim = 7 * n_heads
 
-    in_tensor = to_tensor(
+    in_tensor = Tensor(
         np.random.random((batch_size, n_tokens, embedding_dim)),
         is_batched=True,
     )

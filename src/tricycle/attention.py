@@ -4,7 +4,7 @@ import numpy as np
 
 from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
 from tricycle.ops import Op
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 def build_mask(context_window: int, n_heads: int) -> Tensor:
@@ -87,7 +87,7 @@ class Attention(Op):
         self._grad[:, :, self.embedding_dim : self.embedding_dim * 2] = key
         self._grad[:, :, self.embedding_dim * 2 :] = value
 
-        return to_tensor(self._grad)
+        return Tensor(self._grad)
 
     def forward(self, tensor: Tensor):
         xp = tensor.xp
@@ -157,7 +157,7 @@ class Attention(Op):
         attention = xp.einsum("BNTi, BNiH -> BTNH", attention, value)
         attention = attention.reshape(out_shape)
 
-        result = to_tensor(attention, is_batched=True)
+        result = Tensor(attention, is_batched=True)
         result.back_fns = (self.backward,)
         result.args = (self._input,)
         return result

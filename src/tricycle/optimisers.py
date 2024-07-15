@@ -1,5 +1,5 @@
 from tricycle import TRICYCLE_CONTEXT
-from tricycle.tensor import Tensor, to_tensor
+from tricycle.tensor import Tensor
 
 
 class Optimiser:

@@ -1,11 +1,11 @@
 import numpy as np
 
-from tricycle.ops import to_tensor
 from tricycle.reduce import ReduceMax, ReduceMin
+from tricycle.tensor import Tensor
 
 
 def test_can_rmax():
-    in_tensor = to_tensor(np.arange(3 * 4 * 5).reshape(3, 4, 5))
+    in_tensor = Tensor(np.arange(3 * 4 * 5).reshape(3, 4, 5))
 
     out_tensor = ReduceMax()(in_tensor, "ijk->ik")
 
@@ -41,7 +41,7 @@ def test_can_rmax():
 
 
 def test_can_rmin():
-    in_tensor = to_tensor(np.arange(3 * 4 * 5).reshape(3, 4, 5))
+    in_tensor = Tensor(np.arange(3 * 4 * 5).reshape(3, 4, 5))
 
     out_tensor = ReduceMin()(in_tensor, "ijk->ik")
 
