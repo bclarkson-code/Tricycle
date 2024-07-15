@@ -262,8 +262,8 @@ the batch size until everything fits in memory.
 If you don't have a CUDA capable GPU (or your GPU is slow), you can run the
 script on CPU but it will take a while. You'll probably want to try dropping
 the number of steps to something like 1000 and leave this running overnight.
-The model wont be quite as convincing but it should be recognisable. You can
-try different batch sizes to trade off performance against your patience.
+The model wont be quite as convincing but it should be recognisably shakespeare.
+You can try different batch sizes to trade off performance against your patience.
 
 ```python
 import pickle
