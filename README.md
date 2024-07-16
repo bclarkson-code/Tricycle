@@ -420,7 +420,7 @@ completely from scratch, I'd argue that this is not bad!
 - Experiments
   - [X] Try a language dataset rather than pure code
   - [X] Build a bigger langauge model (GPT-2 (124M))
-  - [ ] Build a LLama style model (Rotary Encodings + SwiGLU)
+  - [ ] Build a LLama style model (Rotary Encodings + SwiGLU + RMSNorm)
 
 ## Contact
 
