@@ -140,6 +140,7 @@ if __name__ == "__main__":
         choices=["debug", "smol_gpt", "shakespeare"],
         default="shakespeare",
     )
+    parser.add_argument("-s", "--seed", default=0, type=int)
     parser.add_argument(
         "-d",
         "--dataset",
@@ -169,7 +170,7 @@ if __name__ == "__main__":
         case _:
             raise ValueError(f"Unknown dataset: {args.dataset}")
 
-    np.random.seed(0)
+    np.random.seed(args.seed)
 
     model_path = Path(args.model_path)
     if model_path.exists():
@@ -181,6 +182,8 @@ if __name__ == "__main__":
 
     if args.use_gpu:
         model.to_gpu(0)
+    else:
+        model.from_gpu()
 
     model.zero_grad()
     deactivate_dropout(model)
