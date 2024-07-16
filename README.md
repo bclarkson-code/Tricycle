@@ -217,7 +217,7 @@ class UnaryMultiply(Op):
         Multiply a constant, elementwise, to a tensor. The constant is not
         differentiable.
         """
-        xp = tensor.xp # use the tensor that grad is using
+        xp = tensor.xp # use the backend that grad is using
                        # `xp` is either numpy or cupy (x is unknown)
 
         assert isinstance(tensor, Tensor)
