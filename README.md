@@ -17,7 +17,7 @@ tried to keep things simple without hiding any details so you should be able to
 dive straight into the code and start hacking away.
 
 Tricycle started as a thin wrapper around a numpy array and has developed into
-a modern deep learning framework. If you'd like to know how, check out the
+a full deep learning framework. If you'd like to know how, check out the
 [Tricycle Wiki](https://github.com/bclarkson-code/Tricycle/wiki/How-it-works)
 
 ## Table of Contents
