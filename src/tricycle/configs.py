@@ -107,7 +107,7 @@ class ShakespeareConfig(GPTConfig):
     beta1 = 0.9
     beta2 = 0.99
 
-    steps = 3000
+    steps = 5000
     eval_interval = 250
     eval_steps = 128
     batch_size = 32

@@ -301,7 +301,7 @@ class GPT2TransformerBlock(Layer):
         self.attention_block.from_gpu()
         self.mlp_block.from_gpu()
         self.norm_1.from_gpu()
-        self.norm_1.from_gpu()
+        self.norm_2.from_gpu()
 
 
 class FeedForward(Layer):

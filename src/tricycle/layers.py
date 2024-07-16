@@ -289,7 +289,6 @@ class RMSNorm(Layer):
             x = x.astype(xp.float32)
             self.weights.array = self.weights.array.astype(xp.float32)
 
-        # breakpoint()
         # Compute square mean along the feature dimension
         mean_square = (x**2).mean(axis=-1, keepdims=True)
         self._input = x
