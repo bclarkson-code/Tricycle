@@ -387,7 +387,7 @@ if you have a GPU with more VRAM).
 After training for 68 hours on my RTX 3090 (equivalent to ~2.3B tokens), the
 loss curve looked like this:
 
-![loss_curve](https://github.com/user-attachments/assets/02e6c7e0-1689-47d2-8718-4764fa97ce21)
+![loss_curve](https://github.com/user-attachments/assets/8736c45b-b852-4c0d-b347-4092eaf6e8e8)
 
 The best validation loss was a respectable 3.61 (perplexity of 37.0).
 The resulting model certainly isn't perfect but it can produce (mostly)
