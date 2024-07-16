@@ -359,7 +359,8 @@ For the above prompt, this generated:
 > And let me see thee take ord's shame, to again,
 > If thou art trans'd, or thou stay'st cowars' say,
 > O Thy  at ancivil frantic steeding chamber?
-> It's not perfect, but its pretty good!
+
+It's not perfect, but it is definitely shakespeare!
 
 ## Training GPT-2 (124M)
 
