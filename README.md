@@ -55,7 +55,7 @@ conda activate tricycle
 ```
 
 <details>
-    <summary>Test installation</summary>
+    <summary>Test/Dev installation</summary>
 If you want to install test dependencies with GPU support you can do the following.
 
 ```bash
@@ -71,6 +71,10 @@ git clone https://github.com/bclarkson-code/Tricycle.git
 conda env create -f requirements/environment.cpu.test.yml -n tricycle
 conda activate tricycle
 ```
+
+Note, the test dependencies include pytorch but this is only used
+as a reference to check correctness. I'm not cheating and using
+pytorch for any actual computation.
 
 </details>
 
@@ -268,7 +272,6 @@ If you don't have a CUDA capable GPU (or your GPU is slow), you can run the
 script on CPU but it will take a while. You'll probably want to try dropping
 the number of steps to something like 1000 and leave this running overnight.
 The model wont be quite as convincing but it should be recognisably shakespeare.
-You can try different batch sizes to trade off performance against your patience.
 
 ```python
 import pickle
@@ -284,6 +287,10 @@ from tricycle.optimisers import AdamW
 from tricycle_datasets.shakespeare import Shakespeare
 
 config = ShakespeareConfig()
+
+# drop this down to 1000 for a worse model that trains faster
+config.steps = 5000
+
 model = GPT(config)
 
 tokens = Shakespeare(vocab_size=config.vocab_size)
@@ -325,6 +332,7 @@ for step in loading_bar:
 with open("model.pkl", "wb") as f:
     if GPU_ENABLED:
         model.from_gpu()
+    model = model.zero_grad()
     pickle.dump(model, f)
 ```
 
@@ -334,20 +342,24 @@ Once trained, you can generate infinite shakespeare plays as follows:
 # if you're running on CPU
 python inference.py model.pkl --prompt "JULIET: Romeo, Romeo!"
 
-# if you're runnign on GPU (much faster)
+# if you're running on GPU (much faster)
 python inference.py --use-gpu model.pkl --prompt "JULIET: Romeo, Romeo!"
 ```
 
 For the above prompt, this generated:
 
->  a dozen the city sound.
-> How earth is hast thou go' our such a sighs; tell thy ground
-> Is thispering to thy heart.
-> And, I do begs his jour high a wife, and, my lord,
-> And she's reggor and my husband's life, it will be,
-> Give me my enemy, my ship in Friar John.
-
-It's not perfect, but its pretty good!
+>  brother, his death
+> name, to kill the ow of death he touched
+> Exce,
+> The wakes of saffords and patharing is done:
+> Since this same hang'd my villain.
+>
+> ROMEO:
+> Tybalt's that namest thy father children, stay yead in tears,
+> And let me see thee take ord's shame, to again,
+> If thou art trans'd, or thou stay'st cowars' say,
+> O Thy  at ancivil frantic steeding chamber?
+> It's not perfect, but its pretty good!
 
 ## Training GPT-2 (124M)
 
