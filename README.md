@@ -424,4 +424,4 @@ completely from scratch, I'd argue that this is not bad!
 
 ## Contact
 
-Want to get in contact/work together (Anthropic, HMU)? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
+Want to get in contact/work together? (Anthropic, HMU) You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
