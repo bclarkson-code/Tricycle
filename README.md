@@ -163,13 +163,7 @@ the forward pass for `LayerNorm`:
 ```python
 def forward(self, tensor: Tensor):
     """
-    Performs Layer Normalization on the input tensor x.
-
-    Args:
-        x (numpy.ndarray): Input tensor of shape (batch_size, *).
-
-    Returns:
-        numpy.ndarray: Normalized tensor of the same shape as x.
+    Performs Layer Normalisation on the input tensor x.
     """
     xp = tensor.xp
     x = tensor.array
