@@ -374,6 +374,10 @@ python train_smol_gpt.py
 If you have a CUDA capable GPU, this will download and tokenise the dataset
 and start training.
 
+Note, the dataset will be cached in ~/.cache/huggingface by default. You might want
+to delete this once you're done because it is pretty big. Also, at present, shuffling
+the dataset requires a lot of ram (I'm working on bringing this down).
+
 The parameters for the model can be found at `src/tricycle/configs.py:SmolGPTConfig`.
 If you aren't using an RTX 3090, you'll probably want to play around with the
 parameters a bit to optimise things for your setup (e.g increasing batch size
