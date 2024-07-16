@@ -41,7 +41,7 @@ capable GPU I would strongly recommend installing the gpu version of Tricycle.
 If you have a CUDA capable GPU, you can install Tricycle as follows.
 
 ```bash
-git clone https://github.com/bclarkson-code/Tricycle.git
+git clone https://github.com/bclarkson-code/Tricycle.git && cd Tricycle
 conda env create -f requirements/environment.yml -n tricycle
 conda activate tricycle
 ```
@@ -49,7 +49,7 @@ conda activate tricycle
 Otherwise, you can install the cpu-only version like this:
 
 ```bash
-git clone https://github.com/bclarkson-code/Tricycle.git
+git clone https://github.com/bclarkson-code/Tricycle.git && cd Tricycle
 conda env create -f requirements/environment.cpu.yml -n tricycle
 conda activate tricycle
 ```
@@ -59,7 +59,7 @@ conda activate tricycle
 If you want to install test dependencies with GPU support you can do the following.
 
 ```bash
-git clone https://github.com/bclarkson-code/Tricycle.git
+git clone https://github.com/bclarkson-code/Tricycle.git && cd Tricycle
 conda env create -f requirements/environment.test.yml -n tricycle
 conda activate tricycle
 ```
@@ -67,7 +67,7 @@ conda activate tricycle
 If you want to install test dependencies on CPU you can do the following.
 
 ```bash
-git clone https://github.com/bclarkson-code/Tricycle.git
+git clone https://github.com/bclarkson-code/Tricycle.git && cd Tricycle
 conda env create -f requirements/environment.cpu.test.yml -n tricycle
 conda activate tricycle
 ```
