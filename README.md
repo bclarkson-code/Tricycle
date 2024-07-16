@@ -154,7 +154,7 @@ print(attention(d)) # Tensor([[[ 0.15086384 -0.08797299]
 
 If you try to search for the implementation of a layer in pytorch, you'll
 often find it buried under 20 different files of CUDA code. This is done in
-the pursuit of raw performance, which is great, but makes learning about 
+the pursuit of raw performance, which is great, but makes learning about
 how things actually work quite difficult.
 
 In Tricycle, you can jump straight to the implementation. For example, here is
