@@ -364,7 +364,8 @@ Then you should be able to just run
 python train_smol_gpt.py
 ```
 
-If you have a CUDA capable GPU, training should start immediately.
+If you have a CUDA capable GPU, this will download and tokenise the dataset
+and start training.
 
 The parameters for the model can be found at `src/tricycle/configs.py:SmolGPTConfig`.
 If you aren't using an RTX 3090, you'll probably want to play around with the
