@@ -415,6 +415,7 @@ completely from scratch, I'd argue that this is not bad!
   - [ ] ZeRO (efficient parameter sharing between gpus)
   - [ ] Optimise and use the tokeniser (in progress)
   - [ ] 16 bit operations (in progress)
+  - [ ] Pytorch <-> Tricycle/ONNX model conversions
 
 - Experiments
   - [X] Try a language dataset rather than pure code
