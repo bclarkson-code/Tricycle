@@ -253,9 +253,10 @@ doesn't hide anything is a great place to start.
 ## Training a GPT on Shakespeare
 
 The following toy script will train a small GPT to generate convincing
-Shakespeare. On my RTX 3090, this takes ~9 mins. For a more realistic training
-script with metric tracking, gradient accumulation, a validation dataset etc,
-take a look at `train_smol_gpt.py`
+Shakespeare. On my RTX 3090, this takes ~9 mins (the same script takes 
+7 mins in pytorch. For a more realistic training script with metric 
+tracking, gradient accumulation, a validation dataset etc, take a 
+look at `train_smol_gpt.py`
 
 I've chosen some sensible default values for this model in
 `src/tricycle/configs.py:ShakespeareConfig`. Feel free to play around with
