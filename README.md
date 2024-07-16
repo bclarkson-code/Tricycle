@@ -5,19 +5,19 @@
 </p>
 
 Ever wanted to understand how deep learning *actually* works? Tricycle is a fast,
-minimal, fully functional deep learning library written from scratch in python
-and numpy.
+fully functional deep learning library written from scratch in python and numpy.
 
-While the amount of code is nothing like what you'd find in pytorch, Tricycle is
-not just a toy neural network: the file `train_smol_gpt.py` trains GPT-2 (124M)
-on 2.5B tokens in just under 3 days on my GPU (RTX 3090).
+Tricycle is not just a toy neural network: the file `train_smol_gpt.py` trains 
+GPT-2 (124M) on 2.5B tokens in just under 3 days on my GPU (RTX 3090).
 
-The entire library, from the automatic differentiation engine to a GPT,
-should be understandable to anyone with a bit of python experience and I
-strongly encourage you to have a play around with the codebase to understand
-how everything works.
+The entire library, from the automatic differentiation engine to GPU support to 
+a GPT, should be understandable to anyone with a bit of python experience. I've
+tried to keep things simple without hiding any details so you should be able to
+dive straight into the code and start hacking away.
 
-All Tricycle code can run on either a CUDA-capable GPU or a CPU.
+Tricycle started as a thin wrapper around a numpy array and has developed into
+a modern deep learning framework. If you'd like to know how, check out the
+[Tricycle Wiki](https://github.com/bclarkson-code/Tricycle/wiki/How-it-works)
 
 ## Table of Contents
 - [Tricycle](#tricycle)
@@ -330,8 +330,23 @@ with open("model.pkl", "wb") as f:
 Once trained, you can generate infinite shakespeare plays as follows:
 
 ```bash
-python inference.py model.pkl
+# if you're running on CPU
+python inference.py model.pkl --prompt "JULIET: Romeo, Romeo!"
+
+# if you're runnign on GPU (much faster)
+python inference.py --use-gpu model.pkl --prompt "JULIET: Romeo, Romeo!"
 ```
+
+For the above prompt, this generated:
+
+>  a dozen the city sound.
+> How earth is hast thou go' our such a sighs; tell thy ground
+> Is thispering to thy heart.
+> And, I do begs his jour high a wife, and, my lord,
+> And she's reggor and my husband's life, it will be,
+> Give me my enemy, my ship in Friar John.
+
+It's not perfect, but its pretty good!
 
 ## Training GPT-2 (124M)
 
@@ -373,12 +388,6 @@ Given the prompt "Here is my favourite limerick: there once was a man from nantu
 There is still more to do (see below), but for a language model built
 completely from scratch, I'd argue that this is not bad!
 
-## How it works
-
-Tricycle started as a thin wrapper around a numpy array and has developed into
-a modern deep learning framework. If you'd like to know how, check out the
-[Tricycle Wiki](https://github.com/bclarkson-code/Tricycle/wiki/How-it-works)
-
 ## What's Next?
 
 - Documentation
@@ -386,22 +395,18 @@ a modern deep learning framework. If you'd like to know how, check out the
   - [X] Explain the tokeniser
 
 - Code
-  - [ ] Rotary Embeddings
+  - [ ] Rotary Encodings (in progress)
   - [X] Test RMS Norm
   - [ ] Multi-GPU support
-  - [ ] ZeRO parallelism
-  - [ ] Optimise and use the tokeniser
-  - [ ] 16 bit operations
+  - [ ] ZeRO (efficient parameter sharing between gpus)
+  - [ ] Optimise and use the tokeniser (in progress)
+  - [ ] 16 bit operations (in progress)
 
 - Experiments
   - [X] Try a language dataset rather than pure code
   - [X] Build a bigger langauge model (GPT-2 (124M))
-  - [ ] Build a LLama style model
-
-<!-- ### Training a Language model -->
-<!---->
-<!-- Now we've built our langauge model, we need to actually train it.  -->
+  - [ ] Build a LLama style model (Rotary Encodings + SwiGLU)
 
 ## Contact
 
-Want to work together (I'm looking for a research engineer role)? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
+Want to get in contact/work together (Anthropic, HMU)? You can reach me at: [bclarkson-code@proton.me](mailto:bclarkson-code@proton.me)
