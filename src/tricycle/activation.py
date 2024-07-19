@@ -46,6 +46,7 @@ class Swish(Layer):
         # so we need to switch to 32 bit
         if TRICYCLE_CONTEXT.use_mixed_precision:
             self._input = self._input.astype(xp.float32)
+
         out = tensor.array / (1 + xp.exp(-tensor.array))
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
