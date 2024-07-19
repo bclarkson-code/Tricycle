@@ -42,6 +42,9 @@ class LongBoi(Layer):
 def test_can_train_in_mixed_precision():
     """
     Check that a model can be trained in mixed precision without overflowing
+
+    We're using a very deep model with no nonlinearities that should cause
+    gradient issues if mixed precision is broken
     """
     np.random.seed(0)
     learning_rate = 1e-3
@@ -68,19 +71,19 @@ def test_can_train_in_mixed_precision():
         requires_grad=False,
     )
 
-    # with UseMixedPrecision():
-    first_loop = True
-    for step in range(100):
-        logits = model(inputs)
-        loss = loss_fn(outputs, logits)
-        loss.backward()
-        loss = loss.numpy().item() / TRICYCLE_CONTEXT.loss_scale_factor
-        if first_loop:
-            # make sure we start with a big loss
-            assert loss > 2.5
-            first_loop = False
-        logger.info(f"{loss=}, {TRICYCLE_CONTEXT.loss_scale_factor=}")
-        model.update(optimiser)
+    with UseMixedPrecision():
+        first_loop = True
+        for step in range(100):
+            logits = model(inputs)
+            loss = loss_fn(outputs, logits)
+            loss.backward()
+            loss = loss.numpy().item() / TRICYCLE_CONTEXT.loss_scale_factor
+            if first_loop:
+                # make sure we start with a big loss
+                assert loss > 50
+                first_loop = False
+            logger.info(f"{loss=}, {TRICYCLE_CONTEXT.loss_scale_factor=}")
+            model.update(optimiser)
 
-    # make sure the loss has decreased as expected
-    assert 0.1 < loss < 0.8
+        # make sure the loss has decreased as expected
+        assert 7.5 < loss < 8
