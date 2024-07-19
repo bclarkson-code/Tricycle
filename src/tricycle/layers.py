@@ -70,6 +70,11 @@ class Dense(Layer):
 
     def grad_back_fn(self, grad: Tensor):
         xp = grad.xp
+
+        weights = self.weights.array
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            weights = weights.astype(xp.float16)
+
         result = xp.tensordot(grad.array, self.weights.array, axes=[-1, -1])
         return Tensor(
             result,
@@ -82,7 +87,14 @@ class Dense(Layer):
         xp = tensor.xp
 
         self._input = tensor.array
-        result = xp.tensordot(tensor.array, self.weights.array, axes=[-1, 0])
+        weights = self.weights.array
+
+        # if were using mixed precision, copy the weights into 16 bit for
+        # processing
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            weights = weights.astype(xp.float16)
+
+        result = xp.tensordot(tensor.array, weights, axes=[-1, 0])
 
         return Tensor(
             result,
@@ -406,13 +418,21 @@ class Embedding(Layer):
             tensor.requires_grad is False
         ), "Cannot embed a differentiable tensor"
 
+        xp = tensor.xp
         self.input = tensor
+
+        weights = self.weights.array
+        # if were using mixed precision, copy the weights into 16 bit for
+        # processing
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            weights = weights.astype(xp.float16)
+
         if tensor.is_batched:
-            self._out = self.weights.array[tensor.array.flatten()].reshape(
+            self._out = weights[tensor.array.flatten()].reshape(
                 tensor.array.shape + (-1,)
             )
         else:
-            self._out = self.weights.array[tensor.array]
+            self._out = weights[tensor.array]
         result = Tensor(self._out, is_batched=tensor.is_batched)
 
         result.args = (tensor, self.weights)

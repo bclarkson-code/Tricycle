@@ -38,7 +38,11 @@ class MeanSquaredError(Op):
         out = (self.diff**2).sum() * self.divisor
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
+            out *= TRICYCLE_CONTEXT.loss_scale_factor
             out = out.astype(xp.float16)
+
+        if not xp.isfinite(out):
+            raise ValueError("Loss is infinite")
 
         # only y_pred is differentiable: y_true is a constant
         return Tensor(
@@ -103,7 +107,10 @@ class CrossEntropy(Op):
 
         self._out = loss
         if TRICYCLE_CONTEXT.use_mixed_precision:
-            self._out = self._out.astype(xp.float16)
+            self._out = (
+                self._out.astype(xp.float16)
+                * TRICYCLE_CONTEXT.loss_scale_factor
+            )
 
         return Tensor(
             self._out,

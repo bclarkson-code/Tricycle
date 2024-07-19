@@ -1,3 +1,5 @@
+from warnings import warn
+
 from tricycle import TRICYCLE_CONTEXT
 from tricycle.tensor import Tensor
 
@@ -19,10 +21,12 @@ class StochasticGradientDescent(Optimiser):
         learning_rate: float,
         weight_decay: float | None = None,
         momentum: float | None = None,
+        logger=None,
     ):
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.momentum = momentum
+        self.logger = logger
 
         self.momentum_store = {}
 
@@ -37,7 +41,12 @@ class StochasticGradientDescent(Optimiser):
         # We need to do gradient updates in full precision otherwise we get
         # stability issues
         if TRICYCLE_CONTEXT.use_mixed_precision:
-            tensor.array.grad = tensor.array.grad.astype(xp.float32)
+            tensor.grad.array = (
+                tensor.grad.array.astype(xp.float32)
+                / TRICYCLE_CONTEXT.loss_scale_factor
+            )
+            if not tensor.array.dtype == xp.float32:
+                tensor.array = tensor.array.astype(xp.float32)
 
         if tensor.grad.is_batched:
             tensor.grad = tensor.grad.from_batched().einsum("z...->...")
@@ -57,26 +66,36 @@ class StochasticGradientDescent(Optimiser):
             grad += self.momentum * last_momentum
             self.momentum_store[tensor._id] = grad
 
-        out = tensor.array - grad
+        # make sure our gradients aren't underflowing or overflow
+        if not xp.isfinite(grad).all():
+            warn(
+                "Found nans in gradient, skipping this gradient and"
+                "decreasing loss scaling. If this warning persists, "
+                "check that your learning rate isn't too high"
+            )
+            TRICYCLE_CONTEXT.loss_scale_factor /= 2
+            self.logger.error(
+                f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
+            )
+            return tensor
+
+        if (grad == 0).sum() > grad.size * 0.05:
+            warn(
+                "Found too many 0's in gradient, skipping this gradient and"
+                "increasing loss scaling. If this warning persists, "
+                "check that your learning rate isn't too low"
+            )
+            TRICYCLE_CONTEXT.loss_scale_factor *= 2
+            self.logger.error(
+                f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
+            )
+            return tensor
+
         if TRICYCLE_CONTEXT.use_mixed_precision:
-            out = out.astype(xp.float16)
+            tensor.array -= grad.astype(xp.float32)
 
-        # update the value only, leave everything else
-        result = Tensor(
-            out,
-            requires_grad=tensor.requires_grad,
-            name=tensor.name,
-            is_batched=tensor.is_batched,
-            _id=tensor._id,
-        )
-
-        assert result.shape == tensor.shape
-
-        # TODO: figure out whether these can be safely removed
-        del tensor
-        del grad
-
-        return result
+        tensor.grad.array.fill(0)
+        return tensor
 
     def __call__(self, tensor: Tensor) -> Tensor:
         return self._reset_grad(self.update_weight(tensor))
@@ -94,7 +113,7 @@ class AdamW(Optimiser):
         self.betas = betas
         self.eps = eps
         self.weight_decay = weight_decay
-        self.timestep = 0
+        self.timestep = 1
 
         self.momentum = {}
         self.square_momentum = {}
@@ -112,15 +131,16 @@ class AdamW(Optimiser):
         grad = tensor.grad.array
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
-            grad = grad.astype(xp.float32)
-            tensor.array = tensor.array.astype(xp.float32)
+            grad = grad.astype(xp.float32) / TRICYCLE_CONTEXT.loss_scale_factor
+            if not tensor.array.dtype == xp.float32:
+                tensor.array = tensor.array.astype(xp.float32)
 
         # initialise stores
         if key not in self.momentum:
-            self.momentum[key] = xp.zeros_like(grad, dtype=grad.dtype)
+            self.momentum[key] = xp.zeros_like(grad, dtype=xp.float32)
         if key not in self.square_momentum:
             self.square_momentum[key] = tensor.xp.zeros_like(
-                grad, dtype=grad.dtype
+                grad, dtype=xp.float32
             )
 
         self.momentum[key] = (
@@ -138,16 +158,21 @@ class AdamW(Optimiser):
             1 - self.betas[1] ** self.timestep
         )
 
-        tensor.array -= self.learning_rate * (
+        combined_grad = self.learning_rate * (
             momentum_estimate / (xp.sqrt(square_momentum_estimate) + self.eps)
             + self.weight_decay * tensor.array
         )
 
-        tensor.grad.array.fill(0)
-        if TRICYCLE_CONTEXT.use_mixed_precision:
-            tensor.grad.array = tensor.grad.array.astype(xp.float16)
-            tensor.array = tensor.array.astype(xp.float16)
+        if not xp.isfinite(tensor.array).all():
+            breakpoint()
 
+        if (combined_grad == 0).sum() > combined_grad.size * 0.05:
+            breakpoint()
+
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            tensor.array -= combined_grad.astype(xp.float32)
+
+        tensor.grad.array.fill(0)
         return tensor
 
     def __call__(self, tensor: Tensor) -> Tensor:
