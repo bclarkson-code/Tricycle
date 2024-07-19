@@ -3,7 +3,6 @@ import logging
 import numpy as np
 
 from tricycle import TRICYCLE_CONTEXT
-from tricycle.configs import DebugConfig
 from tricycle.layers import Dense, Layer
 from tricycle.loss import MeanSquaredError
 from tricycle.optimisers import StochasticGradientDescent

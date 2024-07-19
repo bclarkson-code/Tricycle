@@ -166,11 +166,30 @@ class AdamW(Optimiser):
             + self.weight_decay * tensor.array
         )
 
-        if not xp.isfinite(tensor.array).all():
-            breakpoint()
+        # make sure our gradients aren't underflowing or overflow
+        if not xp.isfinite(combined_grad).all():
+            warn(
+                "Found nans in gradient, skipping this gradient and"
+                "decreasing loss scaling. If this warning persists, "
+                "check that your learning rate isn't too high"
+            )
+            TRICYCLE_CONTEXT.loss_scale_factor /= 2
+            self.logger.warn(
+                f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
+            )
+            return tensor
 
         if (combined_grad == 0).sum() > combined_grad.size * 0.05:
-            breakpoint()
+            warn(
+                "Found too many 0's in gradient, skipping this gradient and"
+                "increasing loss scaling. If this warning persists, "
+                "check that your learning rate isn't too low"
+            )
+            TRICYCLE_CONTEXT.loss_scale_factor *= 2
+            self.logger.warn(
+                f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
+            )
+            return tensor
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
             tensor.array -= combined_grad.astype(xp.float32)
