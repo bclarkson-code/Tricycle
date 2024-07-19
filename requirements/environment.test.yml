@@ -2,6 +2,7 @@ name: tricycle
 
 channels:
   - defaults
+  - nvidia
   - conda-forge
   - pytorch
 
@@ -17,12 +18,9 @@ dependencies:
   - tiktoken
   - datasets
   # gpu dependencies
-  - cuda-version==12
-  - cudnn
-  - cutensor
-  - nccl
-  - pynvml
+  - cuda-toolkit
   - cupy
+  - cuda-nvtx
   # test dependencies
   - scikit-learn
   - pytest
