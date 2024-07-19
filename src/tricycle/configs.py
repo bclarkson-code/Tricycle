@@ -100,19 +100,12 @@ class ShakespeareConfig(GPTConfig):
     linear_dropout_prob = 0.2
 
     max_learning_rate = 1e-3
-    min_learning_rate = 1e-4
-    warmup_steps = 100
-    weight_decay = 1e-1
-    momentum = 0
+    weight_decay = 0  # 1e-1
     beta1 = 0.9
     beta2 = 0.99
 
     steps = 5000
-    eval_interval = 250
-    eval_steps = 128
     batch_size = 32
-    gradient_accumulation_steps = 1
-    sample_size = 512
 
     device_idx = 1
 
