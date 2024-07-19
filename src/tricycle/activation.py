@@ -1,6 +1,4 @@
-from numpy.typing import ArrayLike
-
-from tricycle import TRICYCLE_CONTEXT
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.functions import Sigmoid
 from tricycle.initialisers import init_xavier
 from tricycle.layers import Dense, Layer
@@ -10,17 +8,47 @@ from tricycle.unary import UnaryMax
 
 
 class ReLU(Layer):
+    """
+    Rectified Linear Unit (ReLU) activation function.
+
+    This layer applies the ReLU function element-wise to the input tensor.
+    ReLU(x) = max(0, x)
+    """
+
     def forward(self, x: Tensor):
+        """
+        Apply the ReLU function to the input tensor.
+
+        Args:
+            x (Tensor): Input tensor.
+
+        Returns:
+            Tensor: Output tensor after applying ReLU.
+        """
         return UnaryMax()(x, 0)
 
 
 class Swish(Layer):
     """
-    A Swish activation function. Note, because we have omitted the bias, this
-    is equivalent to the Silu activation function
+    Swish activation function.
+
+    This layer applies the Swish function element-wise to the input tensor.
+    Swish(x) = x * sigmoid(x)
+
+    Note: This implementation is equivalent to the SiLU activation function
+    as it omits the bias term.
     """
 
     def backward(self, grad: Tensor):
+        """
+        Compute the gradient of the Swish function.
+
+        Args:
+            grad (Tensor): Upstream gradient.
+
+        Returns:
+            Tensor: Gradient with respect to the input.
+        """
         xp = grad.xp
 
         # Exponents tend to overflow/underflow when using 16 bit precision
@@ -39,6 +67,15 @@ class Swish(Layer):
         return Tensor(grad * coef)
 
     def forward(self, tensor: Tensor):
+        """
+        Apply the Swish function to the input tensor.
+
+        Args:
+            tensor (Tensor): Input tensor.
+
+        Returns:
+            Tensor: Output tensor after applying Swish.
+        """
         xp = tensor.xp
 
         self._input = tensor.array
@@ -46,6 +83,7 @@ class Swish(Layer):
         # so we need to switch to 32 bit
         if TRICYCLE_CONTEXT.use_mixed_precision:
             self._input = self._input.astype(xp.float32)
+
         out = tensor.array / (1 + xp.exp(-tensor.array))
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
@@ -59,20 +97,42 @@ class Swish(Layer):
 
 class GeLU(Layer):
     """
-    A GeLU activation function.
+    Gaussian Error Linear Unit (GELU) activation function.
 
-    Because the 100% accurate version uses erf, which involves an integral,
-    we provide a fast approximation of the function
+    This layer applies the GELU function element-wise to the input tensor.
+    GELU(x) ≈ 0.5x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
+
+    Args:
+        approximate (bool): Whether to use the approximate version of GELU.
+            Defaults to False.
     """
 
     CONST_1 = 0.7978845608028654
     CONST_2 = 0.044715
 
     def __init__(self, *args, approximate: bool = False, **kwargs):
+        """
+        Initialize the GELU layer.
+
+        Args:
+            approximate (bool): Whether to use the approximate version of GELU.
+                Defaults to False.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(*args, **kwargs)
         self.approximate = approximate
 
     def backward(self, grad: Tensor):
+        """
+        Compute the gradient of the GELU function.
+
+        Args:
+            grad (Tensor): Upstream gradient.
+
+        Returns:
+            Tensor: Gradient with respect to the input.
+        """
         xp = grad.xp
 
         # Hyperbolic trig functions (cosh and tanh) use exponents under the
@@ -109,6 +169,15 @@ class GeLU(Layer):
         return result
 
     def forward(self, tensor: Tensor):
+        """
+        Apply the GELU function to the input tensor.
+
+        Args:
+            tensor (Tensor): Input tensor.
+
+        Returns:
+            Tensor: Output tensor after applying GELU.
+        """
         xp = tensor.xp
         self._input = tensor.array
 
@@ -137,30 +206,72 @@ class GeLU(Layer):
 
 class GLU(Layer):
     """
-    A gated linear unit
+    Gated Linear Unit (GLU) activation function.
+
+    This layer applies the GLU function to the input tensor.
+    GLU(x) = x_left * sigmoid(x_right)
+
+    Args:
+        size (int): Size of the input tensor.
+        initialiser (callable): Function to initialize the weights.
+            Defaults to init_xavier.
     """
 
     linear: Dense
 
     def __init__(self, size: int, initialiser=init_xavier, *args, **kwargs):
+        """
+        Initialize the GLU layer.
+
+        Args:
+            size (int): Size of the input tensor.
+            initialiser (callable): Function to initialize the weights.
+                Defaults to init_xavier.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(*args, **kwargs)
         self.linear = Dense(size, 2 * size, initialiser)
         self.layers = [self.linear]
         self.sigmoid = Sigmoid()
 
     def forward(self, x: Tensor):
+        """
+        Apply the GLU function to the input tensor.
+
+        Args:
+            x (Tensor): Input tensor.
+
+        Returns:
+            Tensor: Output tensor after applying GLU.
+        """
         x = self.linear(x)
         left, right = x.split(2)
         return left * self.sigmoid(right)
 
     def update(self, optimiser: Optimiser):
+        """
+        Update the layer parameters using the given optimizer.
+
+        Args:
+            optimiser (Optimiser): The optimizer to use for updating parameters.
+        """
         self.linear.update(optimiser)
 
     def zero_grad(self):
+        """
+        Reset the gradients of the layer parameters to zero.
+        """
         self.linear.zero_grad()
 
     def to_gpu(self):
+        """
+        Move the layer parameters to GPU memory.
+        """
         self.linear.to_gpu()
 
     def from_gpu(self):
+        """
+        Move the layer parameters from GPU to CPU memory.
+        """
         self.linear.from_gpu()
