@@ -1,7 +1,10 @@
+from logging import getLogger
 from warnings import warn
 
 from tricycle import TRICYCLE_CONTEXT
 from tricycle.tensor import Tensor
+
+LOGGER = getLogger(__name__)
 
 
 class Optimiser:
@@ -21,7 +24,7 @@ class StochasticGradientDescent(Optimiser):
         learning_rate: float,
         weight_decay: float | None = None,
         momentum: float | None = None,
-        logger=None,
+        logger=LOGGER,
     ):
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
@@ -74,7 +77,7 @@ class StochasticGradientDescent(Optimiser):
                 "check that your learning rate isn't too high"
             )
             TRICYCLE_CONTEXT.loss_scale_factor /= 2
-            self.logger.error(
+            self.logger.warn(
                 f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
             )
             return tensor
@@ -86,7 +89,7 @@ class StochasticGradientDescent(Optimiser):
                 "check that your learning rate isn't too low"
             )
             TRICYCLE_CONTEXT.loss_scale_factor *= 2
-            self.logger.error(
+            self.logger.warn(
                 f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
             )
             return tensor

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from warnings import warn
 
 try:
@@ -14,11 +15,12 @@ except Exception as e:
     warn(f"Failed to build cupy array: {e}. Disabling GPU features")
 
 
+@dataclass
 class TricycleContext:
     # you can modify this to use mixed precision all the time but the
     # recommended method for mixed precision training is to use the
     # tricycle/utils.py:UseMixedPrecision context manager
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
 
     # If we're using mixed precision, we'll want to scale the loss to help
     # with under and overflowing
