@@ -51,11 +51,11 @@ class GPTConfig:
 
 
 class DebugConfig(GPTConfig):
-    embedding_dim = 768
-    context_window = 1024
-    vocab_size = 1024
-    n_heads = 6
-    n_layers = 6
+    embedding_dim = 14
+    context_window = 13
+    vocab_size = 11
+    n_heads = 2
+    n_layers = 1
     expansion_ratio = 4
     activation_fn = "gelu"
     norm_fn = "layer_norm"
@@ -75,7 +75,7 @@ class DebugConfig(GPTConfig):
     steps = 250
     eval_interval = 1
     eval_steps = 1
-    batch_size = 4
+    batch_size = 5
     gradient_accumulation_steps = 1
     sample_size = 4
 
@@ -99,7 +99,7 @@ class ShakespeareConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    max_learning_rate = 1e-3
+    max_learning_rate = 1e-2
     min_learning_rate = 1e-4
     warmup_steps = 100
     weight_decay = 1e-1
@@ -110,7 +110,7 @@ class ShakespeareConfig(GPTConfig):
     steps = 5000
     eval_interval = 250
     eval_steps = 128
-    batch_size = 32
+    batch_size = 128
     gradient_accumulation_steps = 1
     sample_size = 512
 
