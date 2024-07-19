@@ -57,11 +57,13 @@ class CosineSchedule:
         """
         Cosine decay schedule with warmup
         """
+        # use 1 indexing so our inital LR is nonzero
+        step += 1
 
         if step < self.warmup_steps:
             return (step / self.warmup_steps) * self.max_learning_rate
 
-        if self.warmup_steps <= step < self.total_steps:
+        if self.warmup_steps < step < self.total_steps:
             idx = math.pi * (step - self.warmup_steps) / self.n_steps
 
             return self.min_learning_rate + self.coef * (math.cos(idx) + 1)
