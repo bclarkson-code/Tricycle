@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Sequence
 
 from numpy._typing import ArrayLike
@@ -37,6 +38,72 @@ class Layer(ABC):
 
     def from_gpu(self):
         pass
+
+
+class CudaLayer(Layer):
+    """
+    A Tricycle layer that executes CUDA code directly (as opposed to calling
+    cupy methods)
+    """
+
+    cuda_folder: Path
+    # TODO: Figure this out from the environment rather than hard coding
+    conda_env_folder: Path = Path("/home/ben/mambaforge/envs/tricycle")
+    threads_per_block: 512
+
+    def __init__(self, filename: str, cuda_folder: Path | None = None):
+        import cupy as cp
+
+        if cuda_folder is None:
+            self.cuda_folder = Path(__file__).parent / "cuda"
+        else:
+            self.cuda_folder = cuda_folder
+
+        kernel_path = cuda_folder / filename
+        if not kernel_path.exists():
+            raise FileNotFoundError(f"Could not find file: {kernel_path}")
+
+        kernel_code = kernel_path.read_text()
+
+        include_path = str(cuda_folder)
+
+        # TODO: auto generate this from the environment
+        system_include_paths = [
+            "/usr/lib/gcc/x86_64-linux-gnu/11/include",
+            "/usr/local/include",
+            "/usr/include/x86_64-linux-gnu",
+            "/usr/include",
+            str(
+                (
+                    self.conda_env_folder
+                    / "nsight-compute/2024.1.1/host/target-linux-x64/nvtx/include/"
+                ).absolute()
+            ),
+        ]
+
+        options = [
+            "--include-path={}".format(include_path),
+        ] + ["--include-path={}".format(path) for path in system_include_paths]
+        # Add CUDA-specific options
+        options.extend(
+            [
+                "--use_fast_math",
+                "--restrict",
+                "--std=c++11",
+                "--m64",
+            ]
+        )
+        self.module = cp.RawModule(
+            code=kernel_code,
+            options=tuple(options),
+            backend="nvcc",
+        )
+
+    def _generate_kernel_kwargs(self, input: ArrayLike) -> dict[str, int]:
+        blocks_per_grid = (
+            input.array.size + self.threads_per_block - 1
+        ) // self.threads_per_block
+        return {"block": self.threads_per_block, "grid": blocks_per_grid}
 
 
 class Dense(Layer):
