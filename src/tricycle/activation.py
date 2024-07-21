@@ -3,7 +3,7 @@ from numpy.typing import ArrayLike
 from tricycle import TRICYCLE_CONTEXT
 from tricycle.functions import Sigmoid
 from tricycle.initialisers import init_xavier
-from tricycle.layers import Dense, Layer
+from tricycle.layers import CudaLayer, Dense, Layer
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor
 from tricycle.unary import UnaryMax
@@ -12,6 +12,53 @@ from tricycle.unary import UnaryMax
 class ReLU(Layer):
     def forward(self, x: Tensor):
         return UnaryMax()(x, 0)
+
+
+class CudaReLU(CudaLayer):
+    """
+    Relu layer that uses a handwritten set of CUDA kernels instead of using the
+    CUPY python API
+    """
+
+    def __init__(self, filename: str = "relu.cu"):
+        super().__init__(filename=filename)
+        self.forward_kernel = self.module.get_function("relu_forward")
+        self.backward_kernel = self.module.get_function("relu_backward")
+
+        self.below_zero = None
+
+    def backward(self, grad: Tensor) -> Tensor:
+        import cupy as cp
+
+        output = cp.empty_like(grad.array)
+        cuda_kwargs = self._calculate_cuda_block_size(grad)
+
+        # run kernel
+        self.backward_kernel(
+            **cuda_kwargs,
+            args=(grad.array, output, self.below_zero),
+        )
+        return Tensor(output, is_batched=grad.is_batched)
+
+    def forward(self, x: Tensor):
+        import cupy as cp
+
+        if self.below_zero is None:
+            self.below_zero = cp.empty(x.shape, dtype=cp.bool_)
+
+        output = cp.empty_like(x.array)
+        cuda_kwargs = self._calculate_cuda_block_size(x)
+
+        self.forward_kernel(
+            **cuda_kwargs,
+            args=(x.array, output, self.below_zero),
+        )
+        return Tensor(
+            output,
+            args=(x,),
+            back_fns=(self.backward,),
+            is_batched=x.is_batched,
+        )
 
 
 class Swish(Layer):
@@ -62,7 +109,7 @@ class GeLU(Layer):
     A GeLU activation function.
 
     Because the 100% accurate version uses erf, which involves an integral,
-    we provide a fast approximation of the function
+    we're using a fast approximation of the function from OpenAI
     """
 
     CONST_1 = 0.7978845608028654
@@ -133,6 +180,52 @@ class GeLU(Layer):
         result.args = (tensor,)
         result.back_fns = (self.backward,)
         return result
+
+
+class CudaGeLU(CudaLayer):
+    """
+    Gelu layer that uses a handwritten set of CUDA kernels instead of using the
+    CUPY python API
+    """
+
+    def __init__(self, filename: str = "gelu.cu"):
+        super().__init__(filename=filename)
+        self.forward_kernel = self.module.get_function("gelu_forward")
+        self.backward_kernel = self.module.get_function("gelu_backward")
+
+        # preallcate an output buffer
+        self.output = None
+
+    def backward(self, grad: Tensor) -> Tensor:
+        cuda_kwargs = self._calculate_cuda_block_size(grad)
+
+        # run kernel
+        # note: the gradient update is done inplace
+        self.backward_kernel(
+            **cuda_kwargs,
+            args=(grad.array, self.input),
+        )
+        return Tensor(grad.array, is_batched=grad.is_batched)
+
+    def forward(self, tensor: Tensor):
+        import cupy as cp
+
+        self.input = tensor.array
+
+        output = cp.empty_like(self.input)
+
+        cuda_kwargs = self._calculate_cuda_block_size(tensor)
+
+        self.forward_kernel(
+            **cuda_kwargs,
+            args=(output, self.input),
+        )
+        return Tensor(
+            output,
+            args=(tensor,),
+            back_fns=(self.backward,),
+            is_batched=tensor.is_batched,
+        )
 
 
 class GLU(Layer):

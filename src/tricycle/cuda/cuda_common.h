@@ -75,20 +75,15 @@ inline void cudaFreeCheck(T** ptr, const char *file, int line) {
 enum PrecisionMode {
     PRECISION_FP32,
     PRECISION_FP16,
-    PRECISION_BF16
 };
 
 // Specific configurations based on the enabled precision
-#if defined(ENABLE_FP32)
-typedef float floatX;
-#define PRECISION_MODE PRECISION_FP32
-// use fp16 (note: this may require gradient scaler, currently not implemented!)
-#elif defined(ENABLE_FP16)
+#if defined(ENABLE_FP16)
 typedef half floatX;
 #define PRECISION_MODE PRECISION_FP16
-#else // Default to bfloat16
-typedef __nv_bfloat16 floatX;
-#define PRECISION_MODE PRECISION_BF16
+#else // Default to float32
+typedef float floatX;
+#define PRECISION_MODE PRECISION_FP32
 #endif
 
 // ----------------------------------------------------------------------------
@@ -98,16 +93,16 @@ typedef __nv_bfloat16 floatX;
 // our own versions if none already exist, otherwise the compiler will complain.
 // If not, you easily get "no viable overload" (for sm52) and "function already exists" (sm_80)
 
-#if defined(ENABLE_BF16) && (__CUDACC_VER_MAJOR__ < 12) && !((__CUDA_ARCH__ >= 800) || !defined(__CUDA_ARCH__))
-__device__ floatX __ldcs(const floatX* address) {
-    unsigned short bf = __ldcs(reinterpret_cast<const unsigned short*>(address));
-    return __nv_bfloat16_raw{bf};
-}
-
-__device__ void __stcs(floatX* address, floatX value) {
-    __stcs(reinterpret_cast<unsigned short*>(address), ((__nv_bfloat16_raw)value).x);
-}
-#endif
+// #if defined(ENABLE_BF16) && (__CUDACC_VER_MAJOR__ < 12) && !((__CUDA_ARCH__ >= 800) || !defined(__CUDA_ARCH__))
+// __device__ floatX __ldcs(const floatX* address) {
+//     unsigned short bf = __ldcs(reinterpret_cast<const unsigned short*>(address));
+//     return __nv_bfloat16_raw{bf};
+// }
+//
+// __device__ void __stcs(floatX* address, floatX value) {
+//     __stcs(reinterpret_cast<unsigned short*>(address), ((__nv_bfloat16_raw)value).x);
+// }
+// #endif
 
 // ----------------------------------------------------------------------------
 // Profiler utils

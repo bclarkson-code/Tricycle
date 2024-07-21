@@ -49,9 +49,14 @@ class CudaLayer(Layer):
     cuda_folder: Path
     # TODO: Figure this out from the environment rather than hard coding
     conda_env_folder: Path = Path("/home/ben/mambaforge/envs/tricycle")
-    threads_per_block: 512
+    threads_per_block: int
 
-    def __init__(self, filename: str, cuda_folder: Path | None = None):
+    def __init__(
+        self,
+        filename: str,
+        cuda_folder: Path | None = None,
+        threads_per_block: int = 512,
+    ):
         import cupy as cp
 
         if cuda_folder is None:
@@ -59,13 +64,11 @@ class CudaLayer(Layer):
         else:
             self.cuda_folder = cuda_folder
 
-        kernel_path = cuda_folder / filename
+        kernel_path = self.cuda_folder / filename
         if not kernel_path.exists():
             raise FileNotFoundError(f"Could not find file: {kernel_path}")
-
         kernel_code = kernel_path.read_text()
-
-        include_path = str(cuda_folder)
+        include_path = str(self.cuda_folder.absolute())
 
         # TODO: auto generate this from the environment
         system_include_paths = [
@@ -99,11 +102,13 @@ class CudaLayer(Layer):
             backend="nvcc",
         )
 
-    def _generate_kernel_kwargs(self, input: ArrayLike) -> dict[str, int]:
+        self.threads_per_block = threads_per_block
+
+    def _calculate_cuda_block_size(self, input: Tensor) -> dict[str, int]:
         blocks_per_grid = (
             input.array.size + self.threads_per_block - 1
         ) // self.threads_per_block
-        return {"block": self.threads_per_block, "grid": blocks_per_grid}
+        return {"block": (self.threads_per_block,), "grid": (blocks_per_grid,)}
 
 
 class Dense(Layer):
