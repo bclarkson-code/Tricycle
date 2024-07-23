@@ -82,6 +82,7 @@ class CudaLayer(Layer):
                     / "nsight-compute/2024.1.1/host/target-linux-x64/nvtx/include/"
                 ).absolute()
             ),
+            str(self.conda_env_folder / "include"),
         ]
 
         options = [
@@ -94,6 +95,13 @@ class CudaLayer(Layer):
                 "--restrict",
                 "--std=c++11",
                 "--m64",
+                "-lcublas",
+                "-lcublasLt",
+                "-DENABLE_FP32",
+                "-UENABLE_FP16",
+                "-UENABLE_BF16",
+                "-D__CUDA_NO_HALF_CONVERSIONS__",
+                "--expt-relaxed-constexpr",
             ]
         )
         self.module = cp.RawModule(
@@ -158,6 +166,111 @@ class Dense(Layer):
 
         return Tensor(
             result,
+            name="dense",
+            args=(self.weights, tensor),
+            back_fns=(self.weight_back_fn, self.grad_back_fn),
+            is_batched=tensor.is_batched,
+        )
+
+    def update(self, optimiser: Optimiser):
+        self.weights = optimiser(self.weights)
+
+    def zero_grad(self):
+        self.weights.grad = None
+
+    def to_gpu(self, device: int = 0):
+        self.weights.to_gpu(device)
+        return self
+
+    def from_gpu(self):
+        self.weights.from_gpu()
+        return self
+
+
+class CudaDense(CudaLayer):
+    def __init__(
+        self,
+        from_size: int,
+        to_size: int,
+        initialiser=init_xavier,
+        name=None,
+        filename: str = "kernels.cu",
+    ):
+        super().__init__(filename=filename)
+        self.forward_kernel = self.module.get_function(
+            "launch_matmul_forward_cublaslt"
+        )
+        # self.weight_backwards_kernel = self.module.get_function(
+        #     "dense_weight_backward"
+        # )
+        # self.grad_backwards_kernel = self.module.get_function(
+        #     "dense_grad_backward"
+        # )
+        self.weights = initialiser(
+            (from_size, to_size), name="weights" if name is None else name
+        )
+        self.name = name
+        self.from_size = from_size
+        self.to_size = to_size
+        self.tensors = {"weights": self.weights}
+
+    def weight_back_fn(self, grad: Tensor) -> Tensor:
+        cuda_kwargs = self._calculate_cuda_block_size(grad)
+
+        self.backward_kernel(
+            **cuda_kwargs,
+            args=(grad.array, self.input),
+        )
+        return Tensor(
+            result,
+            requires_grad=grad.requires_grad,
+            name="back_dense_weight",
+            is_batched=False,
+        )
+
+    def grad_back_fn(self, grad: Tensor) -> Tensor:
+        cuda_kwargs = self._calculate_cuda_block_size(grad)
+
+        self.backward_kernel(
+            **cuda_kwargs,
+            args=(grad.array, self.input),
+        )
+        return Tensor(
+            result,
+            requires_grad=grad.requires_grad,
+            name="back_dense_grad",
+            is_batched=True,
+        )
+
+    def forward(self, tensor: Tensor):
+        import cupy as cp
+
+        self.input = tensor.array
+
+        output = cp.empty_like(self.input)
+        bias = cp.zeros_like(self.input)
+
+        cuda_kwargs = self._calculate_cuda_block_size(tensor)
+
+        B, T, C = tensor.shape
+        assert C == self.from_size
+
+        self.forward_kernel(
+            **cuda_kwargs,
+            args=(
+                output,  # output
+                self.input,  # input
+                self.weights.array,  # weights
+                bias,  # bias
+                B,  # batch size
+                T,  # n_tokens
+                self.from_size,  # from_size
+                self.to_size,  # to_size
+                None,  # cuda stream
+            ),
+        )
+        return Tensor(
+            output,
             name="dense",
             args=(self.weights, tensor),
             back_fns=(self.weight_back_fn, self.grad_back_fn),
