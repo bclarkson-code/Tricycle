@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Sequence
 
+import llmc
 from numpy._typing import ArrayLike
 
 from tricycle import TRICYCLE_CONTEXT
@@ -187,25 +188,15 @@ class Dense(Layer):
         return self
 
 
-class CudaDense(CudaLayer):
+class CudaDense(Layer):
+    weights: Tensor
+    from_size: int
+    to_size: int
+    name: str | None
+
     def __init__(
-        self,
-        from_size: int,
-        to_size: int,
-        initialiser=init_xavier,
-        name=None,
-        filename: str = "kernels.cu",
+        self, from_size: int, to_size: int, initialiser=init_xavier, name=None
     ):
-        super().__init__(filename=filename)
-        self.forward_kernel = self.module.get_function(
-            "launch_matmul_forward_cublaslt"
-        )
-        # self.weight_backwards_kernel = self.module.get_function(
-        #     "dense_weight_backward"
-        # )
-        # self.grad_backwards_kernel = self.module.get_function(
-        #     "dense_grad_backward"
-        # )
         self.weights = initialiser(
             (from_size, to_size), name="weights" if name is None else name
         )
@@ -214,13 +205,26 @@ class CudaDense(CudaLayer):
         self.to_size = to_size
         self.tensors = {"weights": self.weights}
 
-    def weight_back_fn(self, grad: Tensor) -> Tensor:
-        cuda_kwargs = self._calculate_cuda_block_size(grad)
+    def weight_back_fn(self, grad: Tensor):
+        import cupy as cp
 
-        self.backward_kernel(
-            **cuda_kwargs,
-            args=(grad.array, self.input),
+        batch_size, n_tokens, _ = self._input.shape
+
+        result = cp.empty((self.from_size, self.to_size)).astype(cp.float32)
+
+        # call the kernel. This doesn't return anything but should fill result
+        # with its output instead
+        llmc.matmul_weight_backward(
+            result,
+            self._input,
+            grad.array,
+            batch_size,
+            n_tokens,
+            self.from_size,
+            self.to_size,
+            None,
         )
+
         return Tensor(
             result,
             requires_grad=grad.requires_grad,
@@ -228,13 +232,28 @@ class CudaDense(CudaLayer):
             is_batched=False,
         )
 
-    def grad_back_fn(self, grad: Tensor) -> Tensor:
-        cuda_kwargs = self._calculate_cuda_block_size(grad)
+    def grad_back_fn(self, grad: Tensor):
+        import cupy as cp
 
-        self.backward_kernel(
-            **cuda_kwargs,
-            args=(grad.array, self.input),
+        batch_size, n_tokens, _ = self._input.shape
+
+        result = cp.empty((batch_size, n_tokens, self.from_size)).astype(
+            cp.float32
         )
+
+        # call the kernel. This doesn't return anything but should fill result
+        # with its output instead
+        llmc.matmul_input_backward(
+            result,
+            self.weights.array,
+            grad.array,
+            batch_size,
+            n_tokens,
+            self.from_size,
+            self.to_size,
+            None,
+        )
+
         return Tensor(
             result,
             requires_grad=grad.requires_grad,
@@ -245,32 +264,36 @@ class CudaDense(CudaLayer):
     def forward(self, tensor: Tensor):
         import cupy as cp
 
-        self.input = tensor.array
+        self._input = tensor.array
+        if self._input.ndim != 3:
+            raise ValueError("Only 3d arrays are supported for CudaDense")
 
-        output = cp.empty_like(self.input)
-        bias = cp.zeros_like(self.input)
+        batch_size, n_tokens, embedding_dim = self._input.shape
 
-        cuda_kwargs = self._calculate_cuda_block_size(tensor)
-
-        B, T, C = tensor.shape
-        assert C == self.from_size
-
-        self.forward_kernel(
-            **cuda_kwargs,
-            args=(
-                output,  # output
-                self.input,  # input
-                self.weights.array,  # weights
-                bias,  # bias
-                B,  # batch size
-                T,  # n_tokens
-                self.from_size,  # from_size
-                self.to_size,  # to_size
-                None,  # cuda stream
-            ),
+        if embedding_dim != self.from_size:
+            raise ValueError(
+                "Expected final dimension of input to equal self.from_size . "
+                f"Found {embedding_dim=} and {self.from_size=}"
+            )
+        result = cp.zeros((batch_size, n_tokens, self.to_size)).astype(
+            cp.float32
         )
+
+        # call the kernel. This doesn't return anything but should fill result
+        # with its output instead
+        llmc.matmul_forward(
+            result,
+            self._input,
+            self.weights.array,
+            batch_size,
+            n_tokens,
+            self.from_size,
+            self.to_size,
+            None,
+        )
+
         return Tensor(
-            output,
+            result,
             name="dense",
             args=(self.weights, tensor),
             back_fns=(self.weight_back_fn, self.grad_back_fn),

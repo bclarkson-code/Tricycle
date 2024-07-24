@@ -51,6 +51,7 @@ class custom_build_ext(build_ext):
                 "-DENABLE_FP32",
                 "-UENABLE_FP16",
                 "-UENABLE_BF16",
+                "-UENABLE_LOGGING",
                 "-D__CUDA_NO_HALF_CONVERSIONS__",
                 "--expt-relaxed-constexpr",
                 "-Xcompiler",

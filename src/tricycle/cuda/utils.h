@@ -223,4 +223,13 @@ extern inline int ends_with_bin(const char* str) {
     return suffix_matches;
 }
 
+// ----------------------------------------------------------------------------
+// Logging
+
+#ifdef ENABLE_LOGGING
+#define LOG(x) std::cout << x << std::endl
+#else
+#define LOG(x)
+#endif
+
 #endif
