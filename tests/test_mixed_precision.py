@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from tricycle import TRICYCLE_CONTEXT
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.layers import Dense, Layer
 from tricycle.loss import MeanSquaredError
 from tricycle.optimisers import StochasticGradientDescent

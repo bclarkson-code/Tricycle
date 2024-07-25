@@ -13,7 +13,8 @@ import pickle
 import uuid
 from pathlib import Path
 
-from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.ops import Op
 from tricycle.tensor import Tensor
 from tricycle.utils import UseMixedPrecision, optimal_n_tokens
