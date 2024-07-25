@@ -1,6 +1,16 @@
+"""Loss functions for neural network training.
+
+This module contains implementations of common loss functions used in neural
+network training, such as Mean Squared Error and Cross Entropy.
+
+Classes:
+    MeanSquaredError: Calculates the Mean Squared Error loss.
+    CrossEntropy: Calculates the Cross Entropy loss.
+"""
+
 import logging
 
-from tricycle import TRICYCLE_CONTEXT
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.ops import Op
 from tricycle.tensor import Tensor
 
@@ -8,11 +18,26 @@ logger = logging.getLogger(__name__)
 
 
 class MeanSquaredError(Op):
-    """
-    Calculate Mean Squared Error loss
+    """Calculates Mean Squared Error loss.
+
+    This class implements the Mean Squared Error (MSE) loss function, which
+    measures the average squared difference between the predicted and true values.
+
+    Attributes:
+        diff: The difference between predicted and true values.
+        divisor: A scaling factor for the loss calculation.
+
     """
 
     def backward(self, grad: Tensor) -> Tensor:
+        """Computes the backward pass for Mean Squared Error loss.
+
+        Args:
+            grad: A Tensor containing the gradient from the previous layer.
+
+        Returns:
+            A Tensor containing the computed gradients.
+        """
         xp = grad.xp
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
@@ -26,6 +51,18 @@ class MeanSquaredError(Op):
         return Tensor(out)
 
     def forward(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
+        """Computes the forward pass for Mean Squared Error loss.
+
+        Args:
+            y_true: A Tensor containing the true values.
+            y_pred: A Tensor containing the predicted values.
+
+        Returns:
+            A Tensor containing the computed MSE loss.
+
+        Raises:
+            ValueError: If the computed loss is infinite.
+        """
         xp = y_pred.xp
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
@@ -54,12 +91,28 @@ class MeanSquaredError(Op):
 
 
 class CrossEntropy(Op):
-    """
-    Calculate cross entropy loss, given logits and target indices (as opposed
-    to one-hot encoded tensors)
+    """Calculates Cross Entropy loss.
+
+    This class implements the Cross Entropy loss function, which is commonly
+    used for classification tasks. It computes the loss given logits and target
+    indices (as opposed to one-hot encoded tensors).
+
+    Attributes:
+        _y_true: The true labels (cached for backward pass).
+        _log_softmax_pred: The log softmax of predictions (cached for backward pass).
+        _out: The computed loss (cached for backward pass).
+        _grad: The computed gradients (cached for backward pass).
     """
 
     def log_softmax(self, tensor: Tensor):
+        """Computes the log softmax of the input tensor.
+
+        Args:
+            tensor: A Tensor containing the input values.
+
+        Returns:
+            The log softmax of the input tensor.
+        """
         xp = tensor.xp
         x_max = xp.max(tensor.array, axis=-1, keepdims=True)
         log_sum_exp = x_max + xp.log(
@@ -68,8 +121,17 @@ class CrossEntropy(Op):
         return tensor.array - log_sum_exp
 
     def forward(self, y_true: Tensor, y_pred: Tensor) -> Tensor:
-        """
-        Calculate the cross entropy loss
+        """Computes the forward pass for Cross Entropy loss.
+
+        Args:
+            y_true: A Tensor containing the true labels.
+            y_pred: A Tensor containing the predicted logits.
+
+        Returns:
+            A Tensor containing the computed Cross Entropy loss.
+
+        Raises:
+            NotImplementedError: If the input tensor has an unsupported number of dimensions.
         """
         xp = y_pred.xp
         # cross entropy reduces a huge matrix to a single number which makes
@@ -121,6 +183,17 @@ class CrossEntropy(Op):
         )
 
     def backward(self, grad: Tensor) -> Tensor:
+        """Computes the backward pass for Cross Entropy loss.
+
+        Args:
+            grad: A Tensor containing the gradient from the previous layer.
+
+        Returns:
+            A Tensor containing the computed gradients.
+
+        Raises:
+            NotImplementedError: If the input tensor has an unsupported number of dimensions.
+        """
         xp = grad.xp
         ndim = self._log_softmax_pred.ndim
 
