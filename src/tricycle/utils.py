@@ -4,12 +4,6 @@ This module contains various utility functions and classes used throughout
 the Tricycle project, including dataset handling, mixed precision training,
 tensor shape matching, and performance logging.
 
-Typical usage example:
-
-  dataset = Dataset()
-  with UseMixedPrecision():
-      # Perform mixed precision training
-  log_memory_and_time("training_complete")
 """
 
 import time
@@ -23,7 +17,7 @@ import numpy as np
 
 from tricycle import GPU_ENABLED
 from tricycle.context import TRICYCLE_CONTEXT
-from tricycle.configs import GPTConfig, SmolGPTConfig
+from tricycle.configs import GPTConfig
 from tricycle.exceptions import GPUDisabledException
 
 if TYPE_CHECKING:

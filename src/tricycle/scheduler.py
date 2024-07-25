@@ -13,7 +13,6 @@ Typical usage example:
 
 import math
 
-from matplotlib import pyplot as plt
 
 
 def linear_schedule(
@@ -135,6 +134,8 @@ class CosineSchedule:
 
 
 if __name__ == "__main__":
+    from matplotlib import pyplot as plt
+
     x = [i for i in range(5000)]
     schedule = CosineSchedule(
         max_learning_rate=6e-4,
