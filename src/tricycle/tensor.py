@@ -1,5 +1,6 @@
 """
 The core of Tricycle is the Tensor object, which is implemented in this file.
+
 A Tensor is a wrapper around a numpy/cupy array that adds automatic
 differentiation.
 
@@ -17,7 +18,8 @@ from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
 from tricycle.weakset import WeakSet
 
@@ -32,18 +34,19 @@ DEFAULT_DTYPE = np.float32
 class Tensor:
     """
     An N-dimensional grid of numbers. This is implemented as a subclass
-    of a standard numpy array
-    """
+    of a standard numpy array.
 
-    _id: int
-    array: ArrayLike
-    args: tuple["Tensor", ...] | None = None
-    back_fns: tuple["Op", ...] | None = None
-    parents: set["Tensor"] | None = None
-    grad: Optional["Tensor"] = None
-    name: Optional[str] = None
-    requires_grad: bool = True
-    is_batched: bool = False
+    Attributes:
+        _id (int): Unique identifier for the tensor.
+        array (ArrayLike): The underlying numpy/cupy array.
+        args (tuple[Tensor, ...] | None): Arguments used to create this tensor.
+        back_fns (tuple[Op, ...] | None): Backward functions for gradient computation.
+        parents (set[Tensor] | None): Parent tensors in the computation graph.
+        grad (Optional[Tensor]): Gradient of this tensor.
+        name (Optional[str]): Name of the tensor.
+        requires_grad (bool): Whether this tensor requires gradient computation.
+        is_batched (bool): Whether this tensor is batched.
+    """
 
     def __init__(
         self,
@@ -56,6 +59,19 @@ class Tensor:
         name: str | None = None,
         _id: int | None = None,
     ):
+        """
+        Initializes a new Tensor object.
+
+        Args:
+            array (ArrayLike): The underlying numpy/cupy array.
+            requires_grad (bool, optional): Whether this tensor requires gradient computation. Defaults to True.
+            is_batched (bool, optional): Whether this tensor is batched. Defaults to False.
+            args (tuple[Tensor, ...] | None, optional): Arguments used to create this tensor. Defaults to None.
+            back_fns (tuple[Op, ...] | None, optional): Backward functions for gradient computation. Defaults to None.
+            dtype (np.typing.DTypeLike, optional): Data type of the tensor. Defaults to None.
+            name (str | None, optional): Name of the tensor. Defaults to None.
+            _id (int | None, optional): Unique identifier for the tensor. Defaults to None.
+        """
         if isinstance(array, Tensor):
             self = array
             return
@@ -86,10 +102,10 @@ class Tensor:
 
     def _attach_parents(self):
         """
-        Traverse through the graph, labelling each tensor with the tensors that
+        Traverses through the graph, labelling each tensor with the tensors that
         are direct parents to it in the graph.
 
-        We're doing this so that we can traverse through the graph later in
+        This is done to enable traversal through the graph later in
         topological order.
         """
         stack: list["Tensor"] = [self]
@@ -118,18 +134,13 @@ class Tensor:
 
     def _calculate_gradients(self, clip: float | None = None):
         """
-        Because every output of an `Op` stores the inputs that were used to
-        make it, we can think of the outputs of `Op`s as a tree of
-        intermediate values where the final output of a network is the root
-        node and the inputs are leaves.
+        Calculates gradients for the computation graph.
 
-        Thanks to the chain rule, we can calculate the derivative of the
-        output wrt an input by moving from the output (root node) to the
-        input, applying each back_fn we go through to get there.
+        This method implements the backpropagation algorithm, traversing the graph
+        from the output to the inputs and applying the chain rule to compute gradients.
 
-        It turns out that we can minimise calculations by only visiting a
-        child node if all of its parents have been visited through every
-        possible path: a topological sort.
+        Args:
+            clip (float | None, optional): Maximum absolute value for gradient clipping. Defaults to None.
         """
         self.grad = Tensor(
             self.xp.ones(self.array.shape, dtype=self.dtype),
@@ -193,8 +204,11 @@ class Tensor:
 
     def backward(self, clip: float | None = None):
         """
-        Perform a backward pass through the graph, calculating the gradient
-        for each parameter
+        Performs a backward pass through the graph, calculating the gradient
+        for each parameter.
+
+        Args:
+            clip (float | None, optional): Maximum absolute value for gradient clipping. Defaults to None.
         """
         self._attach_parents()
         self._calculate_gradients(clip=clip)
@@ -203,6 +217,18 @@ class Tensor:
         return self._id
 
     def __add__(self, other: Union[float, "Tensor"]) -> "Tensor":
+        """
+        Implements addition for Tensor objects.
+
+        Args:
+            other (Union[float, Tensor]): The value to add to this tensor.
+
+        Returns:
+            Tensor: The result of the addition.
+
+        Raises:
+            NotImplementedError: If addition is not supported between the given types.
+        """
         if isinstance(other, numbers.Number):
             from tricycle.unary import UnaryAdd
 
@@ -223,6 +249,18 @@ class Tensor:
         return self + other
 
     def __sub__(self, other):
+        """
+        Implements subtraction for Tensor objects.
+
+        Args:
+            other (Union[float, Tensor]): The value to subtract from this tensor.
+
+        Returns:
+            Tensor: The result of the subtraction.
+
+        Raises:
+            NotImplementedError: If subtraction is not supported between the given types.
+        """
         if isinstance(other, self.xp.ndarray) and not isinstance(
             other, Tensor
         ):
@@ -248,6 +286,18 @@ class Tensor:
         return self.__sub__(other)
 
     def __mul__(self, other):
+        """
+        Implements multiplication for Tensor objects.
+
+        Args:
+            other (Union[float, Tensor]): The value to multiply with this tensor.
+
+        Returns:
+            Tensor: The result of the multiplication.
+
+        Raises:
+            NotImplementedError: If multiplication is not supported between the given types.
+        """
         if isinstance(other, self.xp.ndarray) and not isinstance(
             other, Tensor
         ):
@@ -277,6 +327,18 @@ class Tensor:
         return self * -1
 
     def __truediv__(self, other):
+        """
+        Implements true division for Tensor objects.
+
+        Args:
+            other (Union[float, Tensor]): The value to divide this tensor by.
+
+        Returns:
+            Tensor: The result of the division.
+
+        Raises:
+            NotImplementedError: If division is not supported between the given types.
+        """
         if self.xp.isscalar(other):
             from tricycle.unary import UnaryMultiply
 
@@ -305,6 +367,18 @@ class Tensor:
         return self / other
 
     def __pow__(self, other) -> "Tensor":
+        """
+        Implements exponentiation for Tensor objects.
+
+        Args:
+            other (Union[float, Tensor]): The exponent.
+
+        Returns:
+            Tensor: The result of the exponentiation.
+
+        Raises:
+            NotImplementedError: If exponentiation is not supported between the given types.
+        """
         if isinstance(other, self.xp.ndarray) and not isinstance(
             other, Tensor
         ):
@@ -373,49 +447,119 @@ class Tensor:
 
     @property
     def xp(self):
+        """
+        Returns the appropriate array library (numpy or cupy) for the tensor.
+
+        Returns:
+            module: The array library (numpy or cupy).
+        """
         return select_backend(self.array)
 
     def einsum(self, subscript: str) -> "Tensor":
         """
-        Perform an einsum operation on the tensor
+        Performs an einsum operation on the tensor.
+
+        Args:
+            subscript (str): The einsum subscript string.
+
+        Returns:
+            Tensor: The result of the einsum operation.
         """
         from tricycle.einsum import Einsum
 
         return Einsum(subscript)(self)
 
     def repeat(self, n_repeats: int) -> "Tensor":
+        """
+        Repeats the tensor.
+
+        Args:
+            n_repeats (int): The number of times to repeat the tensor.
+
+        Returns:
+            Tensor: The repeated tensor.
+        """
         from tricycle.ops import Repeat
 
         return Repeat()(self, n_repeats)
 
     @property
     def shape(self) -> Sequence[int]:
+        """
+        Returns the shape of the tensor.
+
+        Returns:
+            Sequence[int]: The shape of the tensor.
+        """
         return self.array.shape
 
     @property
     def ndim(self) -> int:
+        """
+        Returns the number of dimensions of the tensor.
+
+        Returns:
+            int: The number of dimensions.
+        """
         return self.array.ndim
 
     @property
     def dtype(self) -> np.dtype:
+        """
+        Returns the data type of the tensor.
+
+        Returns:
+            np.dtype: The data type of the tensor.
+        """
         return self.array.dtype
 
     def reshape(self, shape: Sequence[int]) -> "Tensor":
+        """
+        Reshapes the tensor to the given shape.
+
+        Args:
+            shape (Sequence[int]): The new shape for the tensor.
+
+        Returns:
+            Tensor: The reshaped tensor.
+        """
         from tricycle.ops import Reshape
 
         return Reshape()(self, shape)
 
     def split(self, n_splits: int, axis: int = -1) -> List["Tensor"]:
+        """
+        Splits the tensor into multiple sub-tensors.
+
+        Args:
+            n_splits (int): The number of splits to perform.
+            axis (int, optional): The axis along which to split. Defaults to -1.
+
+        Returns:
+            List[Tensor]: A list of split tensors.
+        """
         from tricycle.ops import Split
 
         return Split()(self, n_splits=n_splits, axis=axis)
 
     def mean(self) -> "Tensor":
+        """
+        Computes the mean of all elements in the tensor.
+
+        Returns:
+            Tensor: A new tensor containing the mean value.
+        """
         from tricycle.ops import Mean
 
         return Mean()(self)
 
     def sum(self) -> "Tensor":
+        """
+        Computes the sum of all elements in the tensor.
+
+        Returns:
+            Tensor: A new tensor containing the sum.
+        """
         from tricycle.unary import UnarySum
 
         return UnarySum()(self)
@@ -428,8 +572,16 @@ class Tensor:
         **kwargs,
     ) -> bool:
         """
-        Convenience method to check if two tensors are identical
-        to within some tolerance
+        Checks if this tensor is close to another tensor or value within a tolerance.
+
+        Args:
+            other (Union[Tensor, ArrayLike, float, int]): The tensor or value to compare against.
+            equal_nan (bool, optional): Whether to consider NaN values as equal. Defaults to False.
+            rtol (float, optional): The relative tolerance parameter. Defaults to 1e-4.
+            **kwargs: Additional keyword arguments to pass to numpy.allclose or cupy.allclose.
+
+        Returns:
+            bool: True if the tensors are close, False otherwise.
         """
         if not isinstance(other, Tensor):
             return self.xp.allclose(
@@ -445,7 +597,10 @@ class Tensor:
 
     def to_batched(self):
         """
-        Treat this tensor as a batch of tensors
+        Treats this tensor as a batch of tensors.
+
+        Returns:
+            Tensor: A new batched tensor.
         """
         from tricycle.unary import Batch
 
@@ -453,7 +608,10 @@ class Tensor:
 
     def from_batched(self):
         """
-        Treat a batched tensor as a normal, non-batched, tensor
+        Treats a batched tensor as a normal, non-batched, tensor.
+
+        Returns:
+            Tensor: A new non-batched tensor.
         """
         from tricycle.unary import Unbatch
 
@@ -461,6 +619,12 @@ class Tensor:
 
     @property
     def on_gpu(self):
+        """
+        Checks if the tensor is currently on the GPU.
+
+        Returns:
+            bool: True if the tensor is on the GPU, False otherwise.
+        """
         if not GPU_ENABLED:
             return False
         import cupy
@@ -469,7 +633,16 @@ class Tensor:
 
     def to_gpu(self, device: int = 0):
         """
-        Move this tensor to the GPU, if cupy is enabled
+        Moves this tensor to the GPU, if cupy is enabled.
+
+        Args:
+            device (int, optional): The GPU device number. Defaults to 0.
+
+        Returns:
+            Tensor: The tensor moved to the GPU.
+
+        Raises:
+            GPUDisabledException: If CuPY is not enabled.
         """
         if not GPU_ENABLED:
             raise GPUDisabledException(
@@ -483,7 +656,13 @@ class Tensor:
 
     def from_gpu(self):
         """
-        Move this tensor from the GPU to CPU
+        Moves this tensor from the GPU to CPU.
+
+        Returns:
+            Tensor: The tensor moved to the CPU.
+
+        Raises:
+            GPUDisabledException: If CuPY is not enabled.
         """
         if not GPU_ENABLED:
             raise GPUDisabledException(
@@ -496,7 +675,10 @@ class Tensor:
 
     def zero_grad(self):
         """
-        Remove any gradients or references to other tensors
+        Removes any gradients or references to other tensors.
+
+        Returns:
+            Tensor: The tensor with gradients and references cleared.
         """
         self.grad = None
         self.args = None
@@ -506,7 +688,10 @@ class Tensor:
 
     def numpy(self):
         """
-        Return the underlying array as a numpy array
+        Returns the underlying array as a numpy array.
+
+        Returns:
+            np.ndarray: The tensor data as a numpy array.
         """
         if not GPU_ENABLED:
             return self.array
@@ -519,7 +704,13 @@ class Tensor:
 def select_backend(*tensors: Tensor | np.ndarray | ArrayLike):
     """
     Given some tensors, if any of them are on the GPU, return the cupy
-    backend. Otherwise default to the numpy backend
+    backend. Otherwise default to the numpy backend.
+
+    Args:
+        *tensors: Variable number of tensors or arrays to check.
+
+    Returns:
+        module: The appropriate backend module (numpy or cupy).
     """
     if not GPU_ENABLED:
         return np

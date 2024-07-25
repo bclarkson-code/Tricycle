@@ -1,18 +1,34 @@
+"""Attention module for multi-head attention operations.
+
+This module implements the multi-head attention mechanism as described in
+"Attention Is All You Need" (Vaswani et al., 2017). It includes functions for
+building attention masks and the main Attention class for performing
+multi-head attention operations.
+"""
+
 from math import sqrt
 
 import numpy as np
 
-from tricycle import GPU_ENABLED, TRICYCLE_CONTEXT
+from tricycle import GPU_ENABLED
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.ops import Op
 from tricycle.tensor import Tensor
 
 
 def build_mask(context_window: int, n_heads: int) -> Tensor:
-    """
-    Build an attention mask to stop the model from being able to see
-    future tokens.
+    """Build an attention mask to prevent attending to future tokens.
 
-    This is built once on initialisation so we are ok to do it on cpu
+    This function creates a boolean mask that can be used in multi-head attention
+    mechanisms to implement causal (unidirectional) attention.
+
+    Args:
+        context_window: An integer representing the size of the context window.
+        n_heads: An integer representing the number of attention heads.
+
+    Returns:
+        A boolean tensor of shape (n_heads, context_window, context_window)
+        representing the attention mask.
     """
     mask = np.ones((context_window, context_window), dtype=bool)
     idx = np.tril(mask)
@@ -21,12 +37,32 @@ def build_mask(context_window: int, n_heads: int) -> Tensor:
 
 
 class Attention(Op):
+    """Multi-head attention operation.
+
+    This class implements the multi-head attention mechanism as described in
+    "Attention Is All You Need" (Vaswani et al., 2017).
+
+    Attributes:
+        embedding_dim: An integer representing the dimension of the input embeddings.
+        n_heads: An integer representing the number of attention heads.
+        context_window: An integer representing the size of the context window.
+        mask: A tensor representing the attention mask.
+        _grad: A tensor to store gradients during backpropagation.
+    """
+
     def __init__(
         self,
         embedding_dim: int,
         n_heads: int,
         context_window: int,
     ):
+        """Initialize the Attention operation.
+
+        Args:
+            embedding_dim: An integer representing the dimension of the input embeddings.
+            n_heads: An integer representing the number of attention heads.
+            context_window: An integer representing the size of the context window.
+        """
         super().__init__()
         self.embedding_dim = embedding_dim
         self.n_heads = n_heads
@@ -37,6 +73,14 @@ class Attention(Op):
         self._grad = None
 
     def backward(self, grad: Tensor):
+        """Compute the gradient of the attention operation.
+
+        Args:
+            grad: A Tensor representing the upstream gradient.
+
+        Returns:
+            A Tensor representing the gradient with respect to the input.
+        """
         xp = grad.xp
         in_shape = (self.batch_size, self.context_window, self.embedding_dim)
 
@@ -90,6 +134,15 @@ class Attention(Op):
         return Tensor(self._grad)
 
     def forward(self, tensor: Tensor):
+        """Apply the multi-head attention operation to the input tensor.
+
+        Args:
+            tensor: A Tensor of shape (batch_size, seq_len, embedding_dim * 3).
+                The input should contain concatenated query, key, and value projections.
+
+        Returns:
+            A Tensor representing the output after applying multi-head attention.
+        """
         xp = tensor.xp
 
         assert tensor.is_batched
@@ -163,6 +216,11 @@ class Attention(Op):
         return result
 
     def to_gpu(self, device: int):
+        """Move this operation to a GPU.
+
+        Args:
+            device: An integer representing the GPU device number.
+        """
         if GPU_ENABLED:
             import cupy as cp
 
@@ -170,6 +228,7 @@ class Attention(Op):
             self.mask = cp.array(self.mask)
 
     def from_gpu(self):
+        """Move the operation back to CPU."""
         if GPU_ENABLED:
             import cupy as cp
 
