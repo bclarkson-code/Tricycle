@@ -29,10 +29,6 @@ jobs:
         cache-environment: true
         post-cleanup: 'all'
 
-    - name: Install dependencies
-      run: |
-        conda install sphinx furo recommonmark -c conda-forge -y
-
     - name: Build docs
       run: |
         cd docs
