@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="activation" href="activation.html" /><link rel="prev" title="tensor" href="tensor.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>models - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,219 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="models">
-<h1>models<a class="headerlink" href="#models" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.models">
+<span id="models"></span><h1>models<a class="headerlink" href="#module-tricycle.models" title="Link to this heading">¶</a></h1>
+<p>GPT model implementation using the Tricycle framework.</p>
+<p>This module defines the GPT class, which implements a GPT-style transformer model
+using components from the Tricycle framework.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.models.GPT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GPT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/models.html#GPT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.models.GPT" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Generative Pre-trained Transformer (GPT) model implementation.</p>
+<p>This class implements a GPT-style transformer model using components from
+the Tricycle framework. It includes token and position embeddings, multiple
+transformer blocks, and a final output layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="configs.html#tricycle.configs.GPTConfig" title="tricycle.configs.GPTConfig"><em>GPTConfig</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.models.GPT.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>Dimension of the embedding space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><a class="headerlink" href="#tricycle.models.GPT.context_window" title="Link to this definition">¶</a></dt>
+<dd><p>Size of the context window for position embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.token_embedding">
+<span class="sig-name descname"><span class="pre">token_embedding</span></span><a class="headerlink" href="#tricycle.models.GPT.token_embedding" title="Link to this definition">¶</a></dt>
+<dd><p>Embedding layer for input tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Embedding" title="tricycle.layers.Embedding">Embedding</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.position_embedding">
+<span class="sig-name descname"><span class="pre">position_embedding</span></span><a class="headerlink" href="#tricycle.models.GPT.position_embedding" title="Link to this definition">¶</a></dt>
+<dd><p>Embedding layer for positional information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Embedding" title="tricycle.layers.Embedding">Embedding</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.input_dropout">
+<span class="sig-name descname"><span class="pre">input_dropout</span></span><a class="headerlink" href="#tricycle.models.GPT.input_dropout" title="Link to this definition">¶</a></dt>
+<dd><p>Dropout layer applied to the input embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Dropout" title="tricycle.layers.Dropout">Dropout</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.blocks">
+<span class="sig-name descname"><span class="pre">blocks</span></span><a class="headerlink" href="#tricycle.models.GPT.blocks" title="Link to this definition">¶</a></dt>
+<dd><p>List of GPT2TransformerBlock instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.head">
+<span class="sig-name descname"><span class="pre">head</span></span><a class="headerlink" href="#tricycle.models.GPT.head" title="Link to this definition">¶</a></dt>
+<dd><p>Final dense layer for output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense">Dense</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.norm">
+<span class="sig-name descname"><span class="pre">norm</span></span><a class="headerlink" href="#tricycle.models.GPT.norm" title="Link to this definition">¶</a></dt>
+<dd><p>Normalization layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.LayerNorm" title="tricycle.layers.LayerNorm">LayerNorm</a> or <a class="reference internal" href="layers.html#tricycle.layers.RMSNorm" title="tricycle.layers.RMSNorm">RMSNorm</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.models.GPT.layers">
+<span class="sig-name descname"><span class="pre">layers</span></span><a class="headerlink" href="#tricycle.models.GPT.layers" title="Link to this definition">¶</a></dt>
+<dd><p>List of all layers in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.models.GPT.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/models.html#GPT.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.models.GPT.display" title="Link to this definition">¶</a></dt>
+<dd><p>Prints a string representation of the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.models.GPT.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/models.html#GPT.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.models.GPT.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Performs a forward pass through the GPT model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor, expected to be one-hot encoded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output tensor after passing through the model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the input tensor doesn’t match the expected context window size.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.models.GPT.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/models.html#GPT.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.models.GPT.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves all layers of the model from GPU back to CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The current GPT instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.models.GPT" title="tricycle.models.GPT">GPT</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.models.GPT.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/models.html#GPT.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.models.GPT.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves all layers of the model to the specified GPU device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em><em>, </em><em>optional</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The current GPT instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.models.GPT" title="tricycle.models.GPT">GPT</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.models.GPT.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/models.html#GPT.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.models.GPT.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates all layers in the model using the provided optimiser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimiser to use for updating model parameters.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The current GPT instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.models.GPT" title="tricycle.models.GPT">GPT</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.models.GPT.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/models.html#GPT.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.models.GPT.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Zeroes out the gradients of all layers in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The current GPT instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.models.GPT" title="tricycle.models.GPT">GPT</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +521,44 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">models</a><ul>
+<li><a class="reference internal" href="#tricycle.models.GPT"><code class="docutils literal notranslate"><span class="pre">GPT</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.models.GPT.embedding_dim"><code class="docutils literal notranslate"><span class="pre">GPT.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.context_window"><code class="docutils literal notranslate"><span class="pre">GPT.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.token_embedding"><code class="docutils literal notranslate"><span class="pre">GPT.token_embedding</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.position_embedding"><code class="docutils literal notranslate"><span class="pre">GPT.position_embedding</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.input_dropout"><code class="docutils literal notranslate"><span class="pre">GPT.input_dropout</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.blocks"><code class="docutils literal notranslate"><span class="pre">GPT.blocks</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.head"><code class="docutils literal notranslate"><span class="pre">GPT.head</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.norm"><code class="docutils literal notranslate"><span class="pre">GPT.norm</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.layers"><code class="docutils literal notranslate"><span class="pre">GPT.layers</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.display"><code class="docutils literal notranslate"><span class="pre">GPT.display()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.forward"><code class="docutils literal notranslate"><span class="pre">GPT.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.from_gpu"><code class="docutils literal notranslate"><span class="pre">GPT.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.to_gpu"><code class="docutils literal notranslate"><span class="pre">GPT.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.update"><code class="docutils literal notranslate"><span class="pre">GPT.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.models.GPT.zero_grad"><code class="docutils literal notranslate"><span class="pre">GPT.zero_grad()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

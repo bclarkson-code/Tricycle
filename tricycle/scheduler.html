@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="binary" href="binary.html" /><link rel="prev" title="configs" href="configs.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>scheduler - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,122 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="scheduler">
-<h1>scheduler<a class="headerlink" href="#scheduler" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.scheduler">
+<span id="scheduler"></span><h1>scheduler<a class="headerlink" href="#module-tricycle.scheduler" title="Link to this heading">¶</a></h1>
+<p>Provides learning rate scheduling functions and classes.</p>
+<p>This module contains implementations of linear and cosine learning rate
+schedules with optional warmup periods. These can be used to dynamically
+adjust learning rates during training of machine learning models.</p>
+<p>Typical usage example:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>schedule = CosineSchedule(max_learning_rate=6e-4, min_learning_rate=0,</dt><dd><p>total_steps=5000, warmup_steps=100)</p>
+</dd>
+</dl>
+<p>learning_rate = schedule(current_step)</p>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CosineSchedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/scheduler.html#CosineSchedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.scheduler.CosineSchedule" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to implement a cosine decay learning rate schedule with warmup.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_learning_rate</strong> (<em>float</em>)</p></li>
+<li><p><strong>min_learning_rate</strong> (<em>float</em>)</p></li>
+<li><p><strong>total_steps</strong> (<em>int</em>)</p></li>
+<li><p><strong>warmup_steps</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule.max_learning_rate">
+<span class="sig-name descname"><span class="pre">max_learning_rate</span></span><a class="headerlink" href="#tricycle.scheduler.CosineSchedule.max_learning_rate" title="Link to this definition">¶</a></dt>
+<dd><p>Maximum learning rate.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule.min_learning_rate">
+<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><a class="headerlink" href="#tricycle.scheduler.CosineSchedule.min_learning_rate" title="Link to this definition">¶</a></dt>
+<dd><p>Minimum learning rate.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule.total_steps">
+<span class="sig-name descname"><span class="pre">total_steps</span></span><a class="headerlink" href="#tricycle.scheduler.CosineSchedule.total_steps" title="Link to this definition">¶</a></dt>
+<dd><p>Total number of steps in the training process.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule.warmup_steps">
+<span class="sig-name descname"><span class="pre">warmup_steps</span></span><a class="headerlink" href="#tricycle.scheduler.CosineSchedule.warmup_steps" title="Link to this definition">¶</a></dt>
+<dd><p>Number of warmup steps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule.n_steps">
+<span class="sig-name descname"><span class="pre">n_steps</span></span><a class="headerlink" href="#tricycle.scheduler.CosineSchedule.n_steps" title="Link to this definition">¶</a></dt>
+<dd><p>Number of steps after warmup.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule.coef">
+<span class="sig-name descname"><span class="pre">coef</span></span><a class="headerlink" href="#tricycle.scheduler.CosineSchedule.coef" title="Link to this definition">¶</a></dt>
+<dd><p>Coefficient used in the cosine decay calculation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.scheduler.CosineSchedule.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/scheduler.html#CosineSchedule.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.scheduler.CosineSchedule.step" title="Link to this definition">¶</a></dt>
+<dd><p>Calculates the learning rate for a given step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>step</strong> (<em>int</em>) – Current step in the training process.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated learning rate for the current step.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.scheduler.linear_schedule">
+<span class="sig-name descname"><span class="pre">linear_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_steps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/scheduler.html#linear_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.scheduler.linear_schedule" title="Link to this definition">¶</a></dt>
+<dd><p>Calculates the learning rate using a linear decay schedule with warmup.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<em>int</em>) – Current step in the training process.</p></li>
+<li><p><strong>max_learning_rate</strong> (<em>float</em>) – Maximum learning rate.</p></li>
+<li><p><strong>min_learning_rate</strong> (<em>float</em>) – Minimum learning rate.</p></li>
+<li><p><strong>warmup_steps</strong> (<em>int</em>) – Number of warmup steps.</p></li>
+<li><p><strong>total_steps</strong> (<em>int</em>) – Total number of steps in the training process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated learning rate for the current step.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If warmup_steps is greater than total_steps.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +424,37 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">scheduler</a><ul>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule"><code class="docutils literal notranslate"><span class="pre">CosineSchedule</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule.max_learning_rate"><code class="docutils literal notranslate"><span class="pre">CosineSchedule.max_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule.min_learning_rate"><code class="docutils literal notranslate"><span class="pre">CosineSchedule.min_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule.total_steps"><code class="docutils literal notranslate"><span class="pre">CosineSchedule.total_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule.warmup_steps"><code class="docutils literal notranslate"><span class="pre">CosineSchedule.warmup_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule.n_steps"><code class="docutils literal notranslate"><span class="pre">CosineSchedule.n_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule.coef"><code class="docutils literal notranslate"><span class="pre">CosineSchedule.coef</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.scheduler.CosineSchedule.step"><code class="docutils literal notranslate"><span class="pre">CosineSchedule.step()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.scheduler.linear_schedule"><code class="docutils literal notranslate"><span class="pre">linear_schedule()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

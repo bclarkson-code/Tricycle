@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="models" href="models.html" /><link rel="prev" title="initialisers" href="initialisers.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>tensor - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,455 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="tensor">
-<h1>tensor<a class="headerlink" href="#tensor" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.tensor">
+<span id="tensor"></span><h1>tensor<a class="headerlink" href="#module-tricycle.tensor" title="Link to this heading">¶</a></h1>
+<p>The core of Tricycle is the Tensor object, which is implemented in this file.</p>
+<p>A Tensor is a wrapper around a numpy/cupy array that adds automatic
+differentiation.</p>
+<p>The autodiff algorithm itself can be found in <cite>Tensor.backward</cite>.</p>
+<p>This file also contains a few other helpful functions like <cite>batch</cite> which
+converts tensors to batched tensors.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_batched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">back_fns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An N-dimensional grid of numbers. This is implemented as a subclass
+of a standard numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> (<em>_SupportsArray</em><em>[</em><em>dtype</em><em>[</em><em>Any</em><em>]</em><em>] </em><em>| </em><em>_NestedSequence</em><em>[</em><em>_SupportsArray</em><em>[</em><em>dtype</em><em>[</em><em>Any</em><em>]</em><em>]</em><em>] </em><em>| </em><em>bool</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>complex</em><em> | </em><em>str</em><em> | </em><em>bytes</em><em> | </em><em>_NestedSequence</em><em>[</em><em>bool</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>complex</em><em> | </em><em>str</em><em> | </em><em>bytes</em><em>]</em>)</p></li>
+<li><p><strong>requires_grad</strong> (<em>bool</em>)</p></li>
+<li><p><strong>is_batched</strong> (<em>bool</em>)</p></li>
+<li><p><strong>args</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>back_fns</strong> (<em>tuple</em><em>[</em><a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><em>Op</em></a><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>dtype</strong> (<em>dtype</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em><em> | </em><em>type</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>_SupportsDType</em><em>[</em><em>dtype</em><em>[</em><em>Any</em><em>]</em><em>] </em><em>| </em><em>str</em><em> | </em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>int</em><em>] </em><em>| </em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>SupportsIndex</em><em> | </em><em>Sequence</em><em>[</em><em>SupportsIndex</em><em>]</em><em>] </em><em>| </em><em>list</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>_DTypeDict</em><em> | </em><em>tuple</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>_id</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor._id">
+<span class="sig-name descname"><span class="pre">_id</span></span><a class="headerlink" href="#tricycle.tensor.Tensor._id" title="Link to this definition">¶</a></dt>
+<dd><p>Unique identifier for the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor._parents">
+<span class="sig-name descname"><span class="pre">_parents</span></span><a class="headerlink" href="#tricycle.tensor.Tensor._parents" title="Link to this definition">¶</a></dt>
+<dd><p>Parent tensors in the computation graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>set[<a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.array">
+<span class="sig-name descname"><span class="pre">array</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.array" title="Link to this definition">¶</a></dt>
+<dd><p>The underlying numpy/cupy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.args" title="Link to this definition">¶</a></dt>
+<dd><p>Arguments used to create this tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[<a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>, …] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.back_fns">
+<span class="sig-name descname"><span class="pre">back_fns</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.back_fns" title="Link to this definition">¶</a></dt>
+<dd><p>Backward functions for gradient computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[<a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op">Op</a>, …] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.grad">
+<span class="sig-name descname"><span class="pre">grad</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.grad" title="Link to this definition">¶</a></dt>
+<dd><p>Gradient of this tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.name" title="Link to this definition">¶</a></dt>
+<dd><p>Name of the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.requires_grad">
+<span class="sig-name descname"><span class="pre">requires_grad</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.requires_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Whether this tensor requires gradient computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.is_batched">
+<span class="sig-name descname"><span class="pre">is_batched</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.is_batched" title="Link to this definition">¶</a></dt>
+<dd><p>Whether this tensor is batched.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.backward">
+<span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.backward" title="Link to this definition">¶</a></dt>
+<dd><p>Performs a backward pass through the graph, calculating the gradient
+for each parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>clip</strong> (<em>float</em><em> | </em><em>None</em><em>, </em><em>optional</em>) – Maximum absolute value for gradient clipping. Defaults to None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.close_to">
+<span class="sig-name descname"><span class="pre">close_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equal_nan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.close_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.close_to" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if this tensor is close to another tensor or value within a tolerance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> (<em>Union</em><em>[</em><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a><em>, </em><em>ArrayLike</em><em>, </em><em>float</em><em>, </em><em>int</em><em>]</em>) – The tensor or value to compare against.</p></li>
+<li><p><strong>equal_nan</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to consider NaN values as equal. Defaults to False.</p></li>
+<li><p><strong>rtol</strong> (<em>float</em><em>, </em><em>optional</em>) – The relative tolerance parameter. Defaults to 1e-4.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments to pass to numpy.allclose or cupy.allclose.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the tensors are close, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.dtype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dtype</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dtype</span></em><a class="headerlink" href="#tricycle.tensor.Tensor.dtype" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the data type of the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The data type of the tensor.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.dtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.einsum">
+<span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subscript</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.einsum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.einsum" title="Link to this definition">¶</a></dt>
+<dd><p>Performs an einsum operation on the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>subscript</strong> (<em>str</em>) – The einsum subscript string.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result of the einsum operation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.from_batched">
+<span class="sig-name descname"><span class="pre">from_batched</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.from_batched"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.from_batched" title="Link to this definition">¶</a></dt>
+<dd><p>Treats a batched tensor as a normal, non-batched, tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new non-batched tensor.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves this tensor from the GPU to CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The tensor moved to the CPU.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#tricycle.exceptions.GPUDisabledException" title="tricycle.exceptions.GPUDisabledException"><strong>GPUDisabledException</strong></a> – If CuPY is not enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.mean" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the mean of all elements in the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new tensor containing the mean value.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.ndim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#tricycle.tensor.Tensor.ndim" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the number of dimensions of the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of dimensions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.numpy">
+<span class="sig-name descname"><span class="pre">numpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.numpy" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the underlying array as a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The tensor data as a numpy array.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.on_gpu">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">on_gpu</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.on_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if the tensor is currently on the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the tensor is on the GPU, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.repeat">
+<span class="sig-name descname"><span class="pre">repeat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_repeats</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.repeat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.repeat" title="Link to this definition">¶</a></dt>
+<dd><p>Repeats the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_repeats</strong> (<em>int</em>) – The number of times to repeat the tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The repeated tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.reshape">
+<span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.reshape" title="Link to this definition">¶</a></dt>
+<dd><p>Reshapes the tensor to the given shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>) – The new shape for the tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The reshaped tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tricycle.tensor.Tensor.shape" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the shape of the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The shape of the tensor.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sequence[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_splits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.split" title="Link to this definition">¶</a></dt>
+<dd><p>Splits the tensor into multiple sub-tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_splits</strong> (<em>int</em>) – The number of splits to perform.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – The axis along which to split. Defaults to -1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of split tensors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.sum">
+<span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.sum" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the sum of all elements in the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new tensor containing the sum.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.to_batched">
+<span class="sig-name descname"><span class="pre">to_batched</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.to_batched"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.to_batched" title="Link to this definition">¶</a></dt>
+<dd><p>Treats this tensor as a batch of tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new batched tensor.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves this tensor to the GPU, if cupy is enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em><em>, </em><em>optional</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tensor moved to the GPU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#tricycle.exceptions.GPUDisabledException" title="tricycle.exceptions.GPUDisabledException"><strong>GPUDisabledException</strong></a> – If CuPY is not enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.xp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xp</span></span><a class="headerlink" href="#tricycle.tensor.Tensor.xp" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the appropriate array library (numpy or cupy) for the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The array library (numpy or cupy).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tensor.Tensor.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#Tensor.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.Tensor.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Removes any gradients or references to other tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The tensor with gradients and references cleared.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.tensor.select_backend">
+<span class="sig-name descname"><span class="pre">select_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">tensors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tensor.html#select_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tensor.select_backend" title="Link to this definition">¶</a></dt>
+<dd><p>Given some tensors, if any of them are on the GPU, return the cupy
+backend. Otherwise default to the numpy backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*tensors</strong> (<a class="reference internal" href="#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a><em> | </em><em>ndarray</em><em> | </em><em>_SupportsArray</em><em>[</em><em>dtype</em><em>[</em><em>Any</em><em>]</em><em>] </em><em>| </em><em>_NestedSequence</em><em>[</em><em>_SupportsArray</em><em>[</em><em>dtype</em><em>[</em><em>Any</em><em>]</em><em>]</em><em>] </em><em>| </em><em>bool</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>complex</em><em> | </em><em>str</em><em> | </em><em>bytes</em><em> | </em><em>_NestedSequence</em><em>[</em><em>bool</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>complex</em><em> | </em><em>str</em><em> | </em><em>bytes</em><em>]</em>) – Variable number of tensors or arrays to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The appropriate backend module (numpy or cupy).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>module</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +757,58 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">tensor</a><ul>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor"><code class="docutils literal notranslate"><span class="pre">Tensor</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor._id"><code class="docutils literal notranslate"><span class="pre">Tensor._id</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor._parents"><code class="docutils literal notranslate"><span class="pre">Tensor._parents</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.array"><code class="docutils literal notranslate"><span class="pre">Tensor.array</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.args"><code class="docutils literal notranslate"><span class="pre">Tensor.args</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.back_fns"><code class="docutils literal notranslate"><span class="pre">Tensor.back_fns</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.grad"><code class="docutils literal notranslate"><span class="pre">Tensor.grad</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.name"><code class="docutils literal notranslate"><span class="pre">Tensor.name</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.requires_grad"><code class="docutils literal notranslate"><span class="pre">Tensor.requires_grad</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.is_batched"><code class="docutils literal notranslate"><span class="pre">Tensor.is_batched</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.backward"><code class="docutils literal notranslate"><span class="pre">Tensor.backward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.close_to"><code class="docutils literal notranslate"><span class="pre">Tensor.close_to()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.dtype"><code class="docutils literal notranslate"><span class="pre">Tensor.dtype</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.einsum"><code class="docutils literal notranslate"><span class="pre">Tensor.einsum()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.from_batched"><code class="docutils literal notranslate"><span class="pre">Tensor.from_batched()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.from_gpu"><code class="docutils literal notranslate"><span class="pre">Tensor.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.mean"><code class="docutils literal notranslate"><span class="pre">Tensor.mean()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.ndim"><code class="docutils literal notranslate"><span class="pre">Tensor.ndim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.numpy"><code class="docutils literal notranslate"><span class="pre">Tensor.numpy()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.on_gpu"><code class="docutils literal notranslate"><span class="pre">Tensor.on_gpu</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.repeat"><code class="docutils literal notranslate"><span class="pre">Tensor.repeat()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.reshape"><code class="docutils literal notranslate"><span class="pre">Tensor.reshape()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.shape"><code class="docutils literal notranslate"><span class="pre">Tensor.shape</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.split"><code class="docutils literal notranslate"><span class="pre">Tensor.split()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.sum"><code class="docutils literal notranslate"><span class="pre">Tensor.sum()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.to_batched"><code class="docutils literal notranslate"><span class="pre">Tensor.to_batched()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.to_gpu"><code class="docutils literal notranslate"><span class="pre">Tensor.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.xp"><code class="docutils literal notranslate"><span class="pre">Tensor.xp</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tensor.Tensor.zero_grad"><code class="docutils literal notranslate"><span class="pre">Tensor.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.tensor.select_backend"><code class="docutils literal notranslate"><span class="pre">select_backend()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

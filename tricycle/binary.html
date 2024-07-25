@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="context" href="context.html" /><link rel="prev" title="scheduler" href="scheduler.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>binary - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,401 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="binary">
-<h1>binary<a class="headerlink" href="#binary" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.binary">
+<span id="binary"></span><h1>binary<a class="headerlink" href="#module-tricycle.binary" title="Link to this heading">¶</a></h1>
+<p>Binary operations for the Tricycle framework.</p>
+<p>This module contains binary operations that can be applied to tensors of the same shape.
+These operations include element-wise addition, subtraction, multiplication, division,
+and comparison operations like maximum and minimum.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In Tricycle, binary operations are only allowed on matrices of the same shape to
+simplify gradient computations.</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryAdd">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BinaryAdd</span></span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryAdd" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Element-wise addition of two tensors.</p>
+<p>This class implements the forward pass for element-wise addition of two tensors.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryAdd._out">
+<span class="sig-name descname"><span class="pre">_out</span></span><a class="headerlink" href="#tricycle.binary.BinaryAdd._out" title="Link to this definition">¶</a></dt>
+<dd><p>The output of the forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy._typing._array_like._SupportsArray[numpy.dtype[Any]] | numpy._typing._nested_sequence._NestedSequence[numpy._typing._array_like._SupportsArray[numpy.dtype[Any]]] | bool | int | float | complex | str | bytes | numpy._typing._nested_sequence._NestedSequence[bool | int | float | complex | str | bytes] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryAdd.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryAdd.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryAdd.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Add two tensors element-wise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_1</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – First input tensor.</p></li>
+<li><p><strong>tensor_2</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Second input tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the element-wise sum of the input tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the shapes of the input tensors do not match.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryDivide">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BinaryDivide</span></span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryDivide"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryDivide" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Element-wise division of two tensors.</p>
+<p>This class implements the forward pass for element-wise division of two tensors.</p>
+<p>TODO: we should probably fuse these into a single op</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryDivide.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryDivide.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryDivide.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Divide the elements of two tensors together, element-wise.</p>
+<p>The two tensors must have the same shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_1</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – First input tensor (numerator).</p></li>
+<li><p><strong>tensor_2</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Second input tensor (denominator).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the element-wise division of the input tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the shapes of the input tensors do not match.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BinaryMax</span></span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMax" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Element-wise maximum of two tensors.</p>
+<p>This class implements the forward and backward passes for element-wise maximum
+of two tensors.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax._is_bigger_1">
+<span class="sig-name descname"><span class="pre">_is_bigger_1</span></span><a class="headerlink" href="#tricycle.binary.BinaryMax._is_bigger_1" title="Link to this definition">¶</a></dt>
+<dd><p>Boolean array indicating where the first tensor is larger.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax._is_bigger_2">
+<span class="sig-name descname"><span class="pre">_is_bigger_2</span></span><a class="headerlink" href="#tricycle.binary.BinaryMax._is_bigger_2" title="Link to this definition">¶</a></dt>
+<dd><p>Boolean array indicating where the second tensor is larger or equal.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax._out">
+<span class="sig-name descname"><span class="pre">_out</span></span><a class="headerlink" href="#tricycle.binary.BinaryMax._out" title="Link to this definition">¶</a></dt>
+<dd><p>The output of the forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy._typing._array_like._SupportsArray[numpy.dtype[Any]] | numpy._typing._nested_sequence._NestedSequence[numpy._typing._array_like._SupportsArray[numpy.dtype[Any]]] | bool | int | float | complex | str | bytes | numpy._typing._nested_sequence._NestedSequence[bool | int | float | complex | str | bytes] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax._grad_1">
+<span class="sig-name descname"><span class="pre">_grad_1</span></span><a class="headerlink" href="#tricycle.binary.BinaryMax._grad_1" title="Link to this definition">¶</a></dt>
+<dd><p>The gradient for the first tensor.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax._grad_2">
+<span class="sig-name descname"><span class="pre">_grad_2</span></span><a class="headerlink" href="#tricycle.binary.BinaryMax._grad_2" title="Link to this definition">¶</a></dt>
+<dd><p>The gradient for the second tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax.back_fn_1">
+<span class="sig-name descname"><span class="pre">back_fn_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMax.back_fn_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMax.back_fn_1" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the first tensor in the maximum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the gradient for the first tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax.back_fn_2">
+<span class="sig-name descname"><span class="pre">back_fn_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMax.back_fn_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMax.back_fn_2" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the second tensor in the maximum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the gradient for the second tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMax.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMax.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMax.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Compare two tensors element-wise, returning the maximum of each pair of elements.</p>
+<p>The two tensors must have the same shape. If elements are equal, return the first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_1</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – First input tensor.</p></li>
+<li><p><strong>tensor_2</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Second input tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the element-wise maximum of the input tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the shapes of the input tensors do not match.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BinaryMin</span></span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Element-wise minimum of two tensors.</p>
+<p>This class implements the forward and backward passes for element-wise minimum
+of two tensors.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin._is_smaller_1">
+<span class="sig-name descname"><span class="pre">_is_smaller_1</span></span><a class="headerlink" href="#tricycle.binary.BinaryMin._is_smaller_1" title="Link to this definition">¶</a></dt>
+<dd><p>Boolean array indicating where the first tensor is smaller.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin._is_smaller_2">
+<span class="sig-name descname"><span class="pre">_is_smaller_2</span></span><a class="headerlink" href="#tricycle.binary.BinaryMin._is_smaller_2" title="Link to this definition">¶</a></dt>
+<dd><p>Boolean array indicating where the second tensor is smaller or equal.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin._out">
+<span class="sig-name descname"><span class="pre">_out</span></span><a class="headerlink" href="#tricycle.binary.BinaryMin._out" title="Link to this definition">¶</a></dt>
+<dd><p>The output of the forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy._typing._array_like._SupportsArray[numpy.dtype[Any]] | numpy._typing._nested_sequence._NestedSequence[numpy._typing._array_like._SupportsArray[numpy.dtype[Any]]] | bool | int | float | complex | str | bytes | numpy._typing._nested_sequence._NestedSequence[bool | int | float | complex | str | bytes] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin._grad_1">
+<span class="sig-name descname"><span class="pre">_grad_1</span></span><a class="headerlink" href="#tricycle.binary.BinaryMin._grad_1" title="Link to this definition">¶</a></dt>
+<dd><p>The gradient for the first tensor.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin._grad_2">
+<span class="sig-name descname"><span class="pre">_grad_2</span></span><a class="headerlink" href="#tricycle.binary.BinaryMin._grad_2" title="Link to this definition">¶</a></dt>
+<dd><p>The gradient for the second tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin.back_fn_1">
+<span class="sig-name descname"><span class="pre">back_fn_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMin.back_fn_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMin.back_fn_1" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the first tensor in the minimum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the gradient for the first tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin.back_fn_2">
+<span class="sig-name descname"><span class="pre">back_fn_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMin.back_fn_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMin.back_fn_2" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the second tensor in the minimum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the gradient for the second tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMin.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMin.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMin.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Compare two tensors element-wise, returning the minimum of each pair of elements.</p>
+<p>The two tensors must have the same shape. If elements are equal, return the first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_1</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – First input tensor.</p></li>
+<li><p><strong>tensor_2</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Second input tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the element-wise minimum of the input tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the shapes of the input tensors do not match.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMultiply">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BinaryMultiply</span></span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMultiply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMultiply" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Element-wise multiplication of two tensors.</p>
+<p>This class implements the forward pass for element-wise multiplication of two tensors.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinaryMultiply.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinaryMultiply.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinaryMultiply.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Multiply the elements of two tensors together, element-wise.</p>
+<p>The two tensors must have the same shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_1</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – First input tensor.</p></li>
+<li><p><strong>tensor_2</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Second input tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the element-wise product of the input tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the shapes of the input tensors do not match.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.binary.BinarySubtract">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BinarySubtract</span></span><a class="reference internal" href="../_modules/tricycle/binary.html#BinarySubtract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinarySubtract" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Element-wise subtraction of two tensors.</p>
+<p>This class implements the forward and backward passes for element-wise subtraction
+of two tensors.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinarySubtract._grad">
+<span class="sig-name descname"><span class="pre">_grad</span></span><a class="headerlink" href="#tricycle.binary.BinarySubtract._grad" title="Link to this definition">¶</a></dt>
+<dd><p>The gradient of the backward pass for the second tensor.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.binary.BinarySubtract._out">
+<span class="sig-name descname"><span class="pre">_out</span></span><a class="headerlink" href="#tricycle.binary.BinarySubtract._out" title="Link to this definition">¶</a></dt>
+<dd><p>The output of the forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy._typing._array_like._SupportsArray[numpy.dtype[Any]] | numpy._typing._nested_sequence._NestedSequence[numpy._typing._array_like._SupportsArray[numpy.dtype[Any]]] | bool | int | float | complex | str | bytes | numpy._typing._nested_sequence._NestedSequence[bool | int | float | complex | str | bytes] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinarySubtract.back_fn_2">
+<span class="sig-name descname"><span class="pre">back_fn_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinarySubtract.back_fn_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinarySubtract.back_fn_2" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the second tensor in the subtraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the gradient for the second tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.binary.BinarySubtract.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/binary.html#BinarySubtract.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.binary.BinarySubtract.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Subtract one tensor from another element-wise.</p>
+<p>The two tensors must have the same shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_1</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – First input tensor.</p></li>
+<li><p><strong>tensor_2</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Second input tensor to be subtracted from the first.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the element-wise difference of the input tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the shapes of the input tensors do not match.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +703,68 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">binary</a><ul>
+<li><a class="reference internal" href="#tricycle.binary.BinaryAdd"><code class="docutils literal notranslate"><span class="pre">BinaryAdd</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.binary.BinaryAdd._out"><code class="docutils literal notranslate"><span class="pre">BinaryAdd._out</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryAdd.forward"><code class="docutils literal notranslate"><span class="pre">BinaryAdd.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryDivide"><code class="docutils literal notranslate"><span class="pre">BinaryDivide</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.binary.BinaryDivide.forward"><code class="docutils literal notranslate"><span class="pre">BinaryDivide.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax"><code class="docutils literal notranslate"><span class="pre">BinaryMax</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax._is_bigger_1"><code class="docutils literal notranslate"><span class="pre">BinaryMax._is_bigger_1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax._is_bigger_2"><code class="docutils literal notranslate"><span class="pre">BinaryMax._is_bigger_2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax._out"><code class="docutils literal notranslate"><span class="pre">BinaryMax._out</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax._grad_1"><code class="docutils literal notranslate"><span class="pre">BinaryMax._grad_1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax._grad_2"><code class="docutils literal notranslate"><span class="pre">BinaryMax._grad_2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax.back_fn_1"><code class="docutils literal notranslate"><span class="pre">BinaryMax.back_fn_1()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax.back_fn_2"><code class="docutils literal notranslate"><span class="pre">BinaryMax.back_fn_2()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMax.forward"><code class="docutils literal notranslate"><span class="pre">BinaryMax.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin"><code class="docutils literal notranslate"><span class="pre">BinaryMin</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin._is_smaller_1"><code class="docutils literal notranslate"><span class="pre">BinaryMin._is_smaller_1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin._is_smaller_2"><code class="docutils literal notranslate"><span class="pre">BinaryMin._is_smaller_2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin._out"><code class="docutils literal notranslate"><span class="pre">BinaryMin._out</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin._grad_1"><code class="docutils literal notranslate"><span class="pre">BinaryMin._grad_1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin._grad_2"><code class="docutils literal notranslate"><span class="pre">BinaryMin._grad_2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin.back_fn_1"><code class="docutils literal notranslate"><span class="pre">BinaryMin.back_fn_1()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin.back_fn_2"><code class="docutils literal notranslate"><span class="pre">BinaryMin.back_fn_2()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMin.forward"><code class="docutils literal notranslate"><span class="pre">BinaryMin.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMultiply"><code class="docutils literal notranslate"><span class="pre">BinaryMultiply</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.binary.BinaryMultiply.forward"><code class="docutils literal notranslate"><span class="pre">BinaryMultiply.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.binary.BinarySubtract"><code class="docutils literal notranslate"><span class="pre">BinarySubtract</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.binary.BinarySubtract._grad"><code class="docutils literal notranslate"><span class="pre">BinarySubtract._grad</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinarySubtract._out"><code class="docutils literal notranslate"><span class="pre">BinarySubtract._out</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinarySubtract.back_fn_2"><code class="docutils literal notranslate"><span class="pre">BinarySubtract.back_fn_2()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.binary.BinarySubtract.forward"><code class="docutils literal notranslate"><span class="pre">BinarySubtract.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

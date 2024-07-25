@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="utils" href="utils.html" /><link rel="prev" title="weakset" href="weakset.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>unary - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,727 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="unary">
-<h1>unary<a class="headerlink" href="#unary" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.unary">
+<span id="unary"></span><h1>unary<a class="headerlink" href="#module-tricycle.unary" title="Link to this heading">¶</a></h1>
+<p>The Ops that have a single input and output are called Unary Ops.
+Usually this means that an Operation is applied elementwise.</p>
+<p>This file contains all of the unary operations in Tricycle.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.Batch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Batch</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#Batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.Batch" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for batching a tensor.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.Batch.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#Batch.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.Batch.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the batch operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.Batch.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#Batch.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.Batch.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Mark a tensor as batched.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor marked as batched.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.unary.Batch.is_batched">
+<span class="sig-name descname"><span class="pre">is_batched</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#tricycle.unary.Batch.is_batched" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryAdd">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryAdd</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryAdd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryAdd" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for adding a constant to a tensor elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryAdd.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryAdd.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryAdd.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Add a constant, elementwise, to a tensor. The constant is not
+differentiable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p></li>
+<li><p><strong>constant</strong> (<em>float</em>) – The constant to add.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the constant added elementwise.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If tensor is not a Tensor or constant is not a number.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryCos">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryCos</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryCos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryCos" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for computing the cosine of a tensor elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryCos.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryCos.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryCos.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the cosine operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryCos.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryCos.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryCos.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Applies the cosine function, elementwise, to a tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the cosine of each element.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryDivide">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryDivide</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryDivide"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryDivide" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for dividing a constant by a tensor elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryDivide.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryDivide.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryDivide.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Divide a constant by a tensor, elementwise. The constant is not
+differentiable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constant</strong> (<em>float</em><em> | </em><em>int</em>) – The constant numerator.</p></li>
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The tensor denominator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the constant divided by each element of the tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryExp">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryExp</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryExp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryExp" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for computing the exponential of a tensor elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryExp.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryExp.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryExp.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the exponential operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryExp.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryExp.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryExp.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Raise every element of a tensor to the power of e.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the exponential of each element.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryLog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryLog</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryLog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryLog" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for computing the natural logarithm of a tensor elementwise.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryLog.REALLY_SMALL_NUMBER">
+<span class="sig-name descname"><span class="pre">REALLY_SMALL_NUMBER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-06</span></em><a class="headerlink" href="#tricycle.unary.UnaryLog.REALLY_SMALL_NUMBER" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryLog.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryLog.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryLog.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the logarithm operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryLog.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryLog.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryLog.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the natural logarithm of each element in the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the natural logarithm of each element.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryMask</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMask" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for applying a binary mask to a tensor.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMask.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMask.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMask.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the mask operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMask.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMask.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMask.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply a binary mask to a numpy array, setting values to 0 where
+the mask is True.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p></li>
+<li><p><strong>mask</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The binary mask tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the mask applied.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If tensor and mask shapes don’t match or if mask requires grad.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMax">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryMax</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMax" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for computing the elementwise maximum of a tensor and a constant.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMax.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMax.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMax.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the maximum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMax.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMax.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMax.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Return the max of the tensor and the constant,
+elementwise. The constant is not differentiable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p></li>
+<li><p><strong>constant</strong> (<em>float</em>) – The constant to compare against.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the elementwise maximum of the input and the constant.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If tensor is not a Tensor or constant is not a scalar.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryMin</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for computing the elementwise minimum of a tensor and a constant.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMin.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMin.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMin.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the minimum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMin.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMin.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMin.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Return the min of the tensor and the constant,
+elementwise. The constant is not differentiable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p></li>
+<li><p><strong>constant</strong> (<em>float</em>) – The constant to compare against.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the elementwise minimum of the input and the constant.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If tensor is not a Tensor or constant is not a scalar.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMultiply">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryMultiply</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMultiply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMultiply" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for multiplying a tensor by a constant elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMultiply.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMultiply.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMultiply.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the multiplication operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryMultiply.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryMultiply.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryMultiply.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Multiply a constant, elementwise, to a tensor. The constant is not
+differentiable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p></li>
+<li><p><strong>constant</strong> (<em>float</em>) – The constant to multiply.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the constant multiplied elementwise.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If tensor is not a Tensor or constant is not a scalar.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryPower">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnaryPower</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryPower"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryPower" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for raising a tensor to a constant power elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryPower.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryPower.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryPower.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the power operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnaryPower.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnaryPower.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnaryPower.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Raise a tensor to a constant, elementwise. The constant is not
+differentiable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p></li>
+<li><p><strong>constant</strong> (<em>float</em>) – The constant power.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with each element raised to the constant power.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If tensor is not a Tensor or constant is not a scalar.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnarySin</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySin" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for computing the sine of a tensor elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySin.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySin.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySin.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the sine operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySin.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySin.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySin.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Applies the sine function, elementwise, to a tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the sine of each element.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySquareRoot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnarySquareRoot</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySquareRoot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySquareRoot" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for computing the square root of a tensor elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySquareRoot.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySquareRoot.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySquareRoot.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply the square root function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the square root of each element.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySubtract">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnarySubtract</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySubtract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySubtract" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for subtracting a constant from a tensor elementwise.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySubtract.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySubtract.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySubtract.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Subtract a constant, elementwise, from a tensor. The constant is not
+differentiable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p></li>
+<li><p><strong>constant</strong> (<em>float</em>) – The constant to subtract.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the constant subtracted elementwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnarySum</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySum" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for summing all values in a tensor.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySum.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySum.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySum.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the sum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If grad is not a scalar or an empty tensor.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.UnarySum.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#UnarySum.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.UnarySum.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Sums all the values in a tensor.
+Note, this function always produces a non-batched output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor with the sum of all elements.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – If the sum operation fails.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.unary.Unbatch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Unbatch</span></span><a class="reference internal" href="../_modules/tricycle/unary.html#Unbatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.Unbatch" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>A class for unbatching a tensor.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.Unbatch.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#Unbatch.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.Unbatch.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient for the unbatch operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.unary.Unbatch.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#Unbatch.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.Unbatch.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Mark a tensor as unbatched.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor marked as unbatched.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.unary.Unbatch.is_batched">
+<span class="sig-name descname"><span class="pre">is_batched</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#tricycle.unary.Unbatch.is_batched" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.unary.batch">
+<span class="sig-name descname"><span class="pre">batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.batch" title="Link to this definition">¶</a></dt>
+<dd><p>Tell Tricycle to treat this tensor as a batch of tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor marked as batched.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.unary.nothing">
+<span class="sig-name descname"><span class="pre">nothing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#nothing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.nothing" title="Link to this definition">¶</a></dt>
+<dd><p>Do nothing to a tensor.</p>
+<p>Operations like addition have a back_fn of multiplying by 1 which is
+equivalent to doing nothing. Instead of adding a bunch of checks to see
+whether a back_fn exists or not, the logic is much simpler by adding this
+function that does nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The input tensor unchanged.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.unary.unbatch">
+<span class="sig-name descname"><span class="pre">unbatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/unary.html#unbatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.unary.unbatch" title="Link to this definition">¶</a></dt>
+<dd><p>Tell Tricycle to treat this tensor as a single tensor
+(not a batch of tensors).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Tensor marked as unbatched.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +1029,108 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">unary</a><ul>
+<li><a class="reference internal" href="#tricycle.unary.Batch"><code class="docutils literal notranslate"><span class="pre">Batch</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.Batch.back_fn"><code class="docutils literal notranslate"><span class="pre">Batch.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.Batch.forward"><code class="docutils literal notranslate"><span class="pre">Batch.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.Batch.is_batched"><code class="docutils literal notranslate"><span class="pre">Batch.is_batched</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryAdd"><code class="docutils literal notranslate"><span class="pre">UnaryAdd</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryAdd.forward"><code class="docutils literal notranslate"><span class="pre">UnaryAdd.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryCos"><code class="docutils literal notranslate"><span class="pre">UnaryCos</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryCos.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryCos.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryCos.forward"><code class="docutils literal notranslate"><span class="pre">UnaryCos.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryDivide"><code class="docutils literal notranslate"><span class="pre">UnaryDivide</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryDivide.forward"><code class="docutils literal notranslate"><span class="pre">UnaryDivide.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryExp"><code class="docutils literal notranslate"><span class="pre">UnaryExp</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryExp.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryExp.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryExp.forward"><code class="docutils literal notranslate"><span class="pre">UnaryExp.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryLog"><code class="docutils literal notranslate"><span class="pre">UnaryLog</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryLog.REALLY_SMALL_NUMBER"><code class="docutils literal notranslate"><span class="pre">UnaryLog.REALLY_SMALL_NUMBER</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryLog.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryLog.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryLog.forward"><code class="docutils literal notranslate"><span class="pre">UnaryLog.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMask"><code class="docutils literal notranslate"><span class="pre">UnaryMask</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMask.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryMask.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMask.forward"><code class="docutils literal notranslate"><span class="pre">UnaryMask.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMax"><code class="docutils literal notranslate"><span class="pre">UnaryMax</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMax.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryMax.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMax.forward"><code class="docutils literal notranslate"><span class="pre">UnaryMax.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMin"><code class="docutils literal notranslate"><span class="pre">UnaryMin</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMin.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryMin.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMin.forward"><code class="docutils literal notranslate"><span class="pre">UnaryMin.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMultiply"><code class="docutils literal notranslate"><span class="pre">UnaryMultiply</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMultiply.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryMultiply.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryMultiply.forward"><code class="docutils literal notranslate"><span class="pre">UnaryMultiply.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryPower"><code class="docutils literal notranslate"><span class="pre">UnaryPower</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnaryPower.back_fn"><code class="docutils literal notranslate"><span class="pre">UnaryPower.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnaryPower.forward"><code class="docutils literal notranslate"><span class="pre">UnaryPower.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnarySin"><code class="docutils literal notranslate"><span class="pre">UnarySin</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnarySin.back_fn"><code class="docutils literal notranslate"><span class="pre">UnarySin.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnarySin.forward"><code class="docutils literal notranslate"><span class="pre">UnarySin.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnarySquareRoot"><code class="docutils literal notranslate"><span class="pre">UnarySquareRoot</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnarySquareRoot.forward"><code class="docutils literal notranslate"><span class="pre">UnarySquareRoot.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnarySubtract"><code class="docutils literal notranslate"><span class="pre">UnarySubtract</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnarySubtract.forward"><code class="docutils literal notranslate"><span class="pre">UnarySubtract.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.UnarySum"><code class="docutils literal notranslate"><span class="pre">UnarySum</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.UnarySum.back_fn"><code class="docutils literal notranslate"><span class="pre">UnarySum.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.UnarySum.forward"><code class="docutils literal notranslate"><span class="pre">UnarySum.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.Unbatch"><code class="docutils literal notranslate"><span class="pre">Unbatch</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.unary.Unbatch.back_fn"><code class="docutils literal notranslate"><span class="pre">Unbatch.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.Unbatch.forward"><code class="docutils literal notranslate"><span class="pre">Unbatch.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.Unbatch.is_batched"><code class="docutils literal notranslate"><span class="pre">Unbatch.is_batched</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.unary.batch"><code class="docutils literal notranslate"><span class="pre">batch()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.nothing"><code class="docutils literal notranslate"><span class="pre">nothing()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.unary.unbatch"><code class="docutils literal notranslate"><span class="pre">unbatch()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

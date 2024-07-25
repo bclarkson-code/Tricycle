@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="fineweb" href="fineweb.html" /><link rel="prev" title="shakespeare" href="shakespeare.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>codeparrot - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,177 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="codeparrot">
-<h1>codeparrot<a class="headerlink" href="#codeparrot" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle_datasets.codeparrot">
+<span id="codeparrot"></span><h1>codeparrot<a class="headerlink" href="#module-tricycle_datasets.codeparrot" title="Link to this heading">¶</a></h1>
+<p>This module prepares and handles the CodeParrot dataset: a dataset of python
+files scraped from github</p>
+<p>It downloads, tokenizes, and processes the CodeParrot dataset, creating memory-mapped
+files for efficient data handling during training. The module also provides a
+CodeParrot class for easy access to the processed data.</p>
+<p>Typical usage example:</p>
+<blockquote>
+<div><p>dataset = CodeParrot(vocab_size=100000, split=”train”)
+tokens = dataset[0:1000]  # Get the first 1000 tokens</p>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CodeParrot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/codeparrot.html#CodeParrot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<p>A class to handle the CodeParrot dataset.</p>
+<p>This class provides an interface to access the tokenized CodeParrot dataset,
+including methods for encoding and decoding text.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot.url">
+<span class="sig-name descname"><span class="pre">url</span></span><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot.url" title="Link to this definition">¶</a></dt>
+<dd><p>The source URL of the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>The size of the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot.token_path">
+<span class="sig-name descname"><span class="pre">token_path</span></span><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot.token_path" title="Link to this definition">¶</a></dt>
+<dd><p>The path to the tokenized data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot.tokeniser_string">
+<span class="sig-name descname"><span class="pre">tokeniser_string</span></span><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot.tokeniser_string" title="Link to this definition">¶</a></dt>
+<dd><p>The name of the tokenizer to use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot.tokens">
+<span class="sig-name descname"><span class="pre">tokens</span></span><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot.tokens" title="Link to this definition">¶</a></dt>
+<dd><p>The memory-mapped array of tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vocab_size</strong> (<em>int</em>) – The size of the vocabulary to use.</p></li>
+<li><p><strong>split</strong> (<em>Literal</em><em>[</em><em>'train'</em><em>] </em><em>| </em><em>~typing.Literal</em><em>[</em><em>'valid'</em><em>]</em>) – The dataset split to use (“train” or “valid”).</p></li>
+<li><p><strong>token_path</strong> (<em>Path</em>) – Optional custom path to the tokenized data file.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/codeparrot.html#CodeParrot.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes the input tokens into text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*args</strong> – The tokens to decode.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded text as a string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.CodeParrot.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/codeparrot.html#CodeParrot.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.codeparrot.CodeParrot.encode" title="Link to this definition">¶</a></dt>
+<dd><p>Encodes the input text into tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*args</strong> – The text to encode.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of token ids.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">token_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">tokeniser_string</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cl100k_base'</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">tokens</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">url</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt'</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/codeparrot.html#prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.codeparrot.prepare_data" title="Link to this definition">¶</a></dt>
+<dd><p>Downloads and tokenizes the CodeParrot dataset.</p>
+<p>This function splits the dataset into train and validation sets,
+tokenizes the content, and saves the tokenized data as memory-mapped files.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This script is adapted from Andrej Karpathy’s NanoGPT:
+<a class="reference external" href="https://github.com/karpathy/nanoGPT/blob/master/data/openwebtext/prepare.py">https://github.com/karpathy/nanoGPT/blob/master/data/openwebtext/prepare.py</a></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle_datasets.codeparrot.tokenise_document">
+<span class="sig-name descname"><span class="pre">tokenise_document</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">example</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/codeparrot.html#tokenise_document"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.codeparrot.tokenise_document" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenizes a single document from the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>example</strong> – A dictionary containing the document content.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary with tokenized ‘ids’ and ‘len’ fields.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +479,43 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">codeparrot</a><ul>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot"><code class="docutils literal notranslate"><span class="pre">CodeParrot</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot.url"><code class="docutils literal notranslate"><span class="pre">CodeParrot.url</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot.vocab_size"><code class="docutils literal notranslate"><span class="pre">CodeParrot.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot.token_path"><code class="docutils literal notranslate"><span class="pre">CodeParrot.token_path</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot.tokeniser_string"><code class="docutils literal notranslate"><span class="pre">CodeParrot.tokeniser_string</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot.tokens"><code class="docutils literal notranslate"><span class="pre">CodeParrot.tokens</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot.decode"><code class="docutils literal notranslate"><span class="pre">CodeParrot.decode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.CodeParrot.encode"><code class="docutils literal notranslate"><span class="pre">CodeParrot.encode()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">CodeParrot.token_path</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">CodeParrot.tokeniser_string</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">CodeParrot.tokens</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">CodeParrot.url</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">CodeParrot.vocab_size</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.prepare_data"><code class="docutils literal notranslate"><span class="pre">prepare_data()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.codeparrot.tokenise_document"><code class="docutils literal notranslate"><span class="pre">tokenise_document()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

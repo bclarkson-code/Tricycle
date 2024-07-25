@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="functions" href="functions.html" /><link rel="prev" title="einsum" href="einsum.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>dataset - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,317 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="dataset">
-<h1>dataset<a class="headerlink" href="#dataset" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.dataset">
+<span id="dataset"></span><h1>dataset<a class="headerlink" href="#module-tricycle.dataset" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CausalLMDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">should_one_hot_encode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#CausalLMDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.CausalLMDataset" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A dataset for causal language modeling tasks.</p>
+<p>This class provides functionality for creating batches of token sequences
+for training causal language models.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.tokens">
+<span class="sig-name descname"><span class="pre">tokens</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.tokens" title="Link to this definition">¶</a></dt>
+<dd><p>The input token sequence.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>The size of the vocabulary.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.batch_size" title="Link to this definition">¶</a></dt>
+<dd><p>The size of each batch.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.context_window" title="Link to this definition">¶</a></dt>
+<dd><p>The size of the context window.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.is_batch">
+<span class="sig-name descname"><span class="pre">is_batch</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.is_batch" title="Link to this definition">¶</a></dt>
+<dd><p>A boolean indicating if the data is batched.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.as_tensor">
+<span class="sig-name descname"><span class="pre">as_tensor</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.as_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>A boolean indicating if the data should be returned as tensors.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset._idx">
+<span class="sig-name descname"><span class="pre">_idx</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset._idx" title="Link to this definition">¶</a></dt>
+<dd><p>The current index for iteration.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.batch_indices">
+<span class="sig-name descname"><span class="pre">batch_indices</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.batch_indices" title="Link to this definition">¶</a></dt>
+<dd><p>The indices used for batching.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.should_one_hot_encode">
+<span class="sig-name descname"><span class="pre">should_one_hot_encode</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.should_one_hot_encode" title="Link to this definition">¶</a></dt>
+<dd><p>A boolean indicating if outputs should be one-hot encoded.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.device">
+<span class="sig-name descname"><span class="pre">device</span></span><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.device" title="Link to this definition">¶</a></dt>
+<dd><p>The device (GPU) to use for tensors.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokens</strong> (<em>ndarray</em>) – The input token sequence.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em>) – The size of the vocabulary.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – The size of each batch.</p></li>
+<li><p><strong>context_window</strong> (<em>int</em>) – The size of the context window.</p></li>
+<li><p><strong>should_one_hot_encode</strong> (<em>bool</em>) – Whether to one-hot encode the outputs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.batch">
+<span class="sig-name descname"><span class="pre">batch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#CausalLMDataset.batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.batch" title="Link to this definition">¶</a></dt>
+<dd><p>Configures the dataset for batch processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object configured for batch processing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#CausalLMDataset.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Resets the device to CPU processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object configured for CPU processing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.shuffle">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#CausalLMDataset.shuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.shuffle" title="Link to this definition">¶</a></dt>
+<dd><p>Shuffles the batch indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object with shuffled batch indices.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If trying to shuffle a non-batched dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#CausalLMDataset.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Sets the device for GPU processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The dataset object configured for GPU processing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.to_tensor">
+<span class="sig-name descname"><span class="pre">to_tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#CausalLMDataset.to_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.to_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Configures the dataset to return tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object configured to return tensors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.CausalLMDataset.unbatch">
+<span class="sig-name descname"><span class="pre">unbatch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#CausalLMDataset.unbatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.CausalLMDataset.unbatch" title="Link to this definition">¶</a></dt>
+<dd><p>Configures the dataset for non-batch processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object configured for non-batch processing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#Dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.Dataset" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An in-memory dataset: not suitable for large datasets.</p>
+<p>This class represents a basic dataset with inputs and corresponding outputs.
+It supports iteration, indexing, and shuffling of data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><a class="headerlink" href="#tricycle.dataset.Dataset.inputs" title="Link to this definition">¶</a></dt>
+<dd><p>A sequence of input data.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset.outputs">
+<span class="sig-name descname"><span class="pre">outputs</span></span><a class="headerlink" href="#tricycle.dataset.Dataset.outputs" title="Link to this definition">¶</a></dt>
+<dd><p>A sequence of output data corresponding to the inputs.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset._indices">
+<span class="sig-name descname"><span class="pre">_indices</span></span><a class="headerlink" href="#tricycle.dataset.Dataset._indices" title="Link to this definition">¶</a></dt>
+<dd><p>A list of indices for accessing data.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset._index">
+<span class="sig-name descname"><span class="pre">_index</span></span><a class="headerlink" href="#tricycle.dataset.Dataset._index" title="Link to this definition">¶</a></dt>
+<dd><p>The current index for iteration.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Sequence</em>) – A sequence of input data.</p></li>
+<li><p><strong>outputs</strong> (<em>Sequence</em>) – A sequence of output data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the length of inputs and outputs are not equal.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#Dataset.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.Dataset.copy" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a shallow copy of the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new Dataset object with copied inputs and outputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#Dataset.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.Dataset.reset" title="Link to this definition">¶</a></dt>
+<dd><p>Resets the iteration index to 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object with reset index.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset.shuffle">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#Dataset.shuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.Dataset.shuffle" title="Link to this definition">¶</a></dt>
+<dd><p>Shuffles the dataset indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object with shuffled indices.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.Dataset.to_tensor">
+<span class="sig-name descname"><span class="pre">to_tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#Dataset.to_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.Dataset.to_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Converts inputs and outputs to Tensor objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object with inputs and outputs as Tensors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.dataset.InfiniteBatchDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InfiniteBatchDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#InfiniteBatchDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.InfiniteBatchDataset" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.dataset.Dataset" title="tricycle.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></p>
+<p>An infinite batch dataset that generates random batches.</p>
+<p>This class extends the Dataset class to provide infinite batches of data.
+It randomly selects items from the dataset to form batches.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.InfiniteBatchDataset.is_infinite">
+<span class="sig-name descname"><span class="pre">is_infinite</span></span><a class="headerlink" href="#tricycle.dataset.InfiniteBatchDataset.is_infinite" title="Link to this definition">¶</a></dt>
+<dd><p>A boolean indicating if the dataset is infinite.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.InfiniteBatchDataset._to_tensor">
+<span class="sig-name descname"><span class="pre">_to_tensor</span></span><a class="headerlink" href="#tricycle.dataset.InfiniteBatchDataset._to_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>A boolean indicating if the data should be converted to tensors.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.InfiniteBatchDataset.is_batched">
+<span class="sig-name descname"><span class="pre">is_batched</span></span><a class="headerlink" href="#tricycle.dataset.InfiniteBatchDataset.is_batched" title="Link to this definition">¶</a></dt>
+<dd><p>A boolean indicating if the data is batched.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.dataset.InfiniteBatchDataset.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#tricycle.dataset.InfiniteBatchDataset.batch_size" title="Link to this definition">¶</a></dt>
+<dd><p>The size of each batch.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Sequence</em>) – A sequence of input data.</p></li>
+<li><p><strong>outputs</strong> (<em>Sequence</em>) – A sequence of output data.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – The size of each batch.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">is_batched</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">is_infinite</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.dataset.InfiniteBatchDataset.to_tensor">
+<span class="sig-name descname"><span class="pre">to_tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/dataset.html#InfiniteBatchDataset.to_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.dataset.InfiniteBatchDataset.to_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Sets the flag to convert data to tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dataset object with _to_tensor flag set to True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +619,66 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">dataset</a><ul>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.tokens"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.tokens</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.vocab_size"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.batch_size"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.batch_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.context_window"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.is_batch"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.is_batch</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.as_tensor"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.as_tensor</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset._idx"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset._idx</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.batch_indices"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.batch_indices</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.should_one_hot_encode"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.should_one_hot_encode</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.device"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.device</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.batch"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.batch()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.from_gpu"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.shuffle"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.shuffle()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.to_gpu"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.to_tensor"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.to_tensor()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.CausalLMDataset.unbatch"><code class="docutils literal notranslate"><span class="pre">CausalLMDataset.unbatch()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset"><code class="docutils literal notranslate"><span class="pre">Dataset</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset.inputs"><code class="docutils literal notranslate"><span class="pre">Dataset.inputs</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset.outputs"><code class="docutils literal notranslate"><span class="pre">Dataset.outputs</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset._indices"><code class="docutils literal notranslate"><span class="pre">Dataset._indices</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset._index"><code class="docutils literal notranslate"><span class="pre">Dataset._index</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset.copy"><code class="docutils literal notranslate"><span class="pre">Dataset.copy()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset.reset"><code class="docutils literal notranslate"><span class="pre">Dataset.reset()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset.shuffle"><code class="docutils literal notranslate"><span class="pre">Dataset.shuffle()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.Dataset.to_tensor"><code class="docutils literal notranslate"><span class="pre">Dataset.to_tensor()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.dataset.InfiniteBatchDataset"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.dataset.InfiniteBatchDataset.is_infinite"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset.is_infinite</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.InfiniteBatchDataset._to_tensor"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset._to_tensor</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.InfiniteBatchDataset.is_batched"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset.is_batched</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.InfiniteBatchDataset.batch_size"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset.batch_size</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset.is_batched</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset.is_infinite</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.dataset.InfiniteBatchDataset.to_tensor"><code class="docutils literal notranslate"><span class="pre">InfiniteBatchDataset.to_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

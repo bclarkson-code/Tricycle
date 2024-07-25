@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="tokeniser" href="tokeniser.html" /><link rel="prev" title="optimisers" href="optimisers.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>attention - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,136 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="attention">
-<h1>attention<a class="headerlink" href="#attention" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.attention">
+<span id="attention"></span><h1>attention<a class="headerlink" href="#module-tricycle.attention" title="Link to this heading">¶</a></h1>
+<p>Attention module for multi-head attention operations.</p>
+<p>This module implements the multi-head attention mechanism as described in
+“Attention Is All You Need” (Vaswani et al., 2017). It includes functions for
+building attention masks and the main Attention class for performing
+multi-head attention operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.attention.Attention">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Attention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_window</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/attention.html#Attention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.attention.Attention" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Multi-head attention operation.</p>
+<p>This class implements the multi-head attention mechanism as described in
+“Attention Is All You Need” (Vaswani et al., 2017).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embedding_dim</strong> (<em>int</em>)</p></li>
+<li><p><strong>n_heads</strong> (<em>int</em>)</p></li>
+<li><p><strong>context_window</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.attention.Attention.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>An integer representing the dimension of the input embeddings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.n_heads">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><a class="headerlink" href="#tricycle.attention.Attention.n_heads" title="Link to this definition">¶</a></dt>
+<dd><p>An integer representing the number of attention heads.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><a class="headerlink" href="#tricycle.attention.Attention.context_window" title="Link to this definition">¶</a></dt>
+<dd><p>An integer representing the size of the context window.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.mask">
+<span class="sig-name descname"><span class="pre">mask</span></span><a class="headerlink" href="#tricycle.attention.Attention.mask" title="Link to this definition">¶</a></dt>
+<dd><p>A tensor representing the attention mask.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.attention.Attention._grad">
+<span class="sig-name descname"><span class="pre">_grad</span></span><a class="headerlink" href="#tricycle.attention.Attention._grad" title="Link to this definition">¶</a></dt>
+<dd><p>A tensor to store gradients during backpropagation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.backward">
+<span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/attention.html#Attention.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.attention.Attention.backward" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient of the attention operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – A Tensor representing the upstream gradient.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the gradient with respect to the input.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/attention.html#Attention.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.attention.Attention.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply the multi-head attention operation to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – A Tensor of shape (batch_size, seq_len, embedding_dim * 3).
+The input should contain concatenated query, key, and value projections.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor representing the output after applying multi-head attention.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/attention.html#Attention.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.attention.Attention.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the operation back to CPU.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.attention.Attention.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/attention.html#Attention.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.attention.Attention.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move this operation to a GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – An integer representing the GPU device number.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.attention.build_mask">
+<span class="sig-name descname"><span class="pre">build_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_heads</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/attention.html#build_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.attention.build_mask" title="Link to this definition">¶</a></dt>
+<dd><p>Build an attention mask to prevent attending to future tokens.</p>
+<p>This function creates a boolean mask that can be used in multi-head attention
+mechanisms to implement causal (unidirectional) attention.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context_window</strong> (<em>int</em>) – An integer representing the size of the context window.</p></li>
+<li><p><strong>n_heads</strong> (<em>int</em>) – An integer representing the number of attention heads.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean tensor of shape (n_heads, context_window, context_window)
+representing the attention mask.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +438,39 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">attention</a><ul>
+<li><a class="reference internal" href="#tricycle.attention.Attention"><code class="docutils literal notranslate"><span class="pre">Attention</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.attention.Attention.embedding_dim"><code class="docutils literal notranslate"><span class="pre">Attention.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention.n_heads"><code class="docutils literal notranslate"><span class="pre">Attention.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention.context_window"><code class="docutils literal notranslate"><span class="pre">Attention.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention.mask"><code class="docutils literal notranslate"><span class="pre">Attention.mask</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention._grad"><code class="docutils literal notranslate"><span class="pre">Attention._grad</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention.backward"><code class="docutils literal notranslate"><span class="pre">Attention.backward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention.forward"><code class="docutils literal notranslate"><span class="pre">Attention.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention.from_gpu"><code class="docutils literal notranslate"><span class="pre">Attention.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.attention.Attention.to_gpu"><code class="docutils literal notranslate"><span class="pre">Attention.to_gpu()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.attention.build_mask"><code class="docutils literal notranslate"><span class="pre">build_mask()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

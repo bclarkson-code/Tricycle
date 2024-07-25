@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="reduce" href="reduce.html" /><link rel="prev" title="dataset" href="dataset.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>functions - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,132 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="functions">
-<h1>functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.functions">
+<span id="functions"></span><h1>functions<a class="headerlink" href="#module-tricycle.functions" title="Link to this heading">¶</a></h1>
+<p>Functions for neural network activation operations.</p>
+<p>This module provides implementations of common activation functions
+used in neural networks, including Softmax and Sigmoid.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.functions.Sigmoid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Sigmoid</span></span><a class="reference internal" href="../_modules/tricycle/functions.html#Sigmoid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.functions.Sigmoid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Applies the sigmoid function to the input tensor.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.functions.Sigmoid._out">
+<span class="sig-name descname"><span class="pre">_out</span></span><a class="headerlink" href="#tricycle.functions.Sigmoid._out" title="Link to this definition">¶</a></dt>
+<dd><p>The output of the forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy._typing._array_like._SupportsArray[numpy.dtype[Any]] | numpy._typing._nested_sequence._NestedSequence[numpy._typing._array_like._SupportsArray[numpy.dtype[Any]]] | bool | int | float | complex | str | bytes | numpy._typing._nested_sequence._NestedSequence[bool | int | float | complex | str | bytes] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.functions.Sigmoid._grad">
+<span class="sig-name descname"><span class="pre">_grad</span></span><a class="headerlink" href="#tricycle.functions.Sigmoid._grad" title="Link to this definition">¶</a></dt>
+<dd><p>The gradient computed during the backward pass.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.functions.Sigmoid.backward">
+<span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/functions.html#Sigmoid.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.functions.Sigmoid.backward" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the sigmoid function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor from the subsequent layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor containing the computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.functions.Sigmoid.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/functions.html#Sigmoid.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.functions.Sigmoid.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Applies the sigmoid function to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor with the sigmoid function applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.functions.Softmax">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Softmax</span></span><a class="reference internal" href="../_modules/tricycle/functions.html#Softmax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.functions.Softmax" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ops.html#tricycle.ops.Op" title="tricycle.ops.Op"><code class="xref py py-class docutils literal notranslate"><span class="pre">Op</span></code></a></p>
+<p>Applies the softmax function to the input tensor.</p>
+<p>The softmax function is applied only to the final dimension of the tensor.
+The input is normalized for numeric stability.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.functions.Softmax._out">
+<span class="sig-name descname"><span class="pre">_out</span></span><a class="headerlink" href="#tricycle.functions.Softmax._out" title="Link to this definition">¶</a></dt>
+<dd><p>The output of the forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy._typing._array_like._SupportsArray[numpy.dtype[Any]] | numpy._typing._nested_sequence._NestedSequence[numpy._typing._array_like._SupportsArray[numpy.dtype[Any]]] | bool | int | float | complex | str | bytes | numpy._typing._nested_sequence._NestedSequence[bool | int | float | complex | str | bytes] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.functions.Softmax._grad">
+<span class="sig-name descname"><span class="pre">_grad</span></span><a class="headerlink" href="#tricycle.functions.Softmax._grad" title="Link to this definition">¶</a></dt>
+<dd><p>The gradient computed during the backward pass.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.functions.Softmax.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/functions.html#Softmax.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.functions.Softmax.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the softmax function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor from the subsequent layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor containing the computed gradient.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.functions.Softmax.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/functions.html#Softmax.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.functions.Softmax.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Applies the softmax function to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Tensor with the softmax function applied.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +434,40 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">functions</a><ul>
+<li><a class="reference internal" href="#tricycle.functions.Sigmoid"><code class="docutils literal notranslate"><span class="pre">Sigmoid</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.functions.Sigmoid._out"><code class="docutils literal notranslate"><span class="pre">Sigmoid._out</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.functions.Sigmoid._grad"><code class="docutils literal notranslate"><span class="pre">Sigmoid._grad</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.functions.Sigmoid.backward"><code class="docutils literal notranslate"><span class="pre">Sigmoid.backward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.functions.Sigmoid.forward"><code class="docutils literal notranslate"><span class="pre">Sigmoid.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.functions.Softmax"><code class="docutils literal notranslate"><span class="pre">Softmax</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.functions.Softmax._out"><code class="docutils literal notranslate"><span class="pre">Softmax._out</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.functions.Softmax._grad"><code class="docutils literal notranslate"><span class="pre">Softmax._grad</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.functions.Softmax.back_fn"><code class="docutils literal notranslate"><span class="pre">Softmax.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.functions.Softmax.forward"><code class="docutils literal notranslate"><span class="pre">Softmax.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

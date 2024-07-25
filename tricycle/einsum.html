@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="dataset" href="dataset.html" /><link rel="prev" title="tokeniser" href="tokeniser.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>einsum - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,285 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="einsum">
-<h1>einsum<a class="headerlink" href="#einsum" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.einsum">
+<span id="einsum"></span><h1>einsum<a class="headerlink" href="#module-tricycle.einsum" title="Link to this heading">¶</a></h1>
+<p>Einsum implementation for generalized matrix operations.</p>
+<p>This module provides an implementation of the einsum operation, which is a
+generalization of many matrix operations. It allows for flexible manipulation
+of tensors using index notation.</p>
+<dl>
+<dt>Example usage:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Tensor</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Einsum</span><span class="p">(</span><span class="s2">&quot;ij-&gt;ji&quot;</span><span class="p">)(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">Tensor([[1. 3.]</span>
+<span class="go"> [2. 4.]], name=einsum ij-&gt;ji)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>For more details on einsum operations, refer to the class and function
+docstrings.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.einsum.Einsum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subscript</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/einsum.html#Einsum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.einsum.Einsum" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class representing an einsum operation.</p>
+<p>This class encapsulates the logic for performing einsum operations on
+tensors, including handling of batched operations and backward passes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>subscript</strong> (<a class="reference internal" href="#tricycle.einsum.Subscript" title="tricycle.einsum.Subscript"><em>Subscript</em></a>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.Einsum.subscript">
+<span class="sig-name descname"><span class="pre">subscript</span></span><a class="headerlink" href="#tricycle.einsum.Einsum.subscript" title="Link to this definition">¶</a></dt>
+<dd><p>The subscript defining the einsum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.einsum.Subscript" title="tricycle.einsum.Subscript">Subscript</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">subscript</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#tricycle.einsum.Subscript" title="tricycle.einsum.Subscript"><span class="pre">Subscript</span></a></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.einsum.EinsumBackOp">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EinsumBackOp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subscript</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/einsum.html#EinsumBackOp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.einsum.EinsumBackOp" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The backward operation for an einsum operation.</p>
+<p>This class represents the backward pass of an einsum operation, which is
+done by swapping the indices and tensors for an input with the output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idx</strong> (<em>int</em>)</p></li>
+<li><p><strong>tensors</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a><em>]</em>)</p></li>
+<li><p><strong>subscript</strong> (<a class="reference internal" href="#tricycle.einsum.Subscript" title="tricycle.einsum.Subscript"><em>Subscript</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.EinsumBackOp.idx">
+<span class="sig-name descname"><span class="pre">idx</span></span><a class="headerlink" href="#tricycle.einsum.EinsumBackOp.idx" title="Link to this definition">¶</a></dt>
+<dd><p>The index of the input tensor for which this backward
+operation is defined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.EinsumBackOp.tensors">
+<span class="sig-name descname"><span class="pre">tensors</span></span><a class="headerlink" href="#tricycle.einsum.EinsumBackOp.tensors" title="Link to this definition">¶</a></dt>
+<dd><p>The input tensors of the original einsum
+operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.EinsumBackOp.subscript">
+<span class="sig-name descname"><span class="pre">subscript</span></span><a class="headerlink" href="#tricycle.einsum.EinsumBackOp.subscript" title="Link to this definition">¶</a></dt>
+<dd><p>The subscript of the original einsum operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.einsum.Subscript" title="tricycle.einsum.Subscript">Subscript</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.EinsumBackOp.left_tensors">
+<span class="sig-name descname"><span class="pre">left_tensors</span></span><a class="headerlink" href="#tricycle.einsum.EinsumBackOp.left_tensors" title="Link to this definition">¶</a></dt>
+<dd><p>Tensors to the left of the current
+input in the original operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.EinsumBackOp.right_tensors">
+<span class="sig-name descname"><span class="pre">right_tensors</span></span><a class="headerlink" href="#tricycle.einsum.EinsumBackOp.right_tensors" title="Link to this definition">¶</a></dt>
+<dd><p>Tensors to the right of the current
+input in the original operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.EinsumBackOp.combined_subscript">
+<span class="sig-name descname"><span class="pre">combined_subscript</span></span><a class="headerlink" href="#tricycle.einsum.EinsumBackOp.combined_subscript" title="Link to this definition">¶</a></dt>
+<dd><p>The subscript for the backward
+operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.einsum.Subscript" title="tricycle.einsum.Subscript">Subscript</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Subscript</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subscript</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/einsum.html#Subscript"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.einsum.Subscript" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A string that defines an einsum operation.</p>
+<p>This class parses and represents the subscript notation used in einsum
+operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>subscript</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript.subscript">
+<span class="sig-name descname"><span class="pre">subscript</span></span><a class="headerlink" href="#tricycle.einsum.Subscript.subscript" title="Link to this definition">¶</a></dt>
+<dd><p>The original subscript string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><a class="headerlink" href="#tricycle.einsum.Subscript.inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Parsed input indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[list[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript.output">
+<span class="sig-name descname"><span class="pre">output</span></span><a class="headerlink" href="#tricycle.einsum.Subscript.output" title="Link to this definition">¶</a></dt>
+<dd><p>Parsed output indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript.from_split">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/einsum.html#Subscript.from_split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.einsum.Subscript.from_split" title="Link to this definition">¶</a></dt>
+<dd><p>Create a Subscript object from split indices and result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Parsed input indices.</p></li>
+<li><p><strong>result</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Parsed output indices.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Subscript object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.einsum.Subscript" title="tricycle.einsum.Subscript">Subscript</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">inputs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript.join">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/einsum.html#Subscript.join"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.einsum.Subscript.join" title="Link to this definition">¶</a></dt>
+<dd><p>Join parsed indices and result back into a subscript string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> (<em>list</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Parsed input indices.</p></li>
+<li><p><strong>result</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Parsed output indices.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The joined subscript string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">output</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/einsum.html#Subscript.split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.einsum.Subscript.split" title="Link to this definition">¶</a></dt>
+<dd><p>Parse a subscripts string into a list of indices and a result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A tuple containing two elements:</dt><dd><ul class="simple">
+<li><p>list[list[str]]: Parsed input indices.</p></li>
+<li><p>list[str]: Parsed output indices.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">subscript</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tricycle.einsum.Subscript.unique_input_indices">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unique_input_indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tricycle.einsum.Subscript.unique_input_indices" title="Link to this definition">¶</a></dt>
+<dd><p>Get the set of unique input indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Set of unique input indices.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>set[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +587,53 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">einsum</a><ul>
+<li><a class="reference internal" href="#tricycle.einsum.Einsum"><code class="docutils literal notranslate"><span class="pre">Einsum</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.einsum.Einsum.subscript"><code class="docutils literal notranslate"><span class="pre">Einsum.subscript</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Einsum.subscript</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.einsum.EinsumBackOp"><code class="docutils literal notranslate"><span class="pre">EinsumBackOp</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.einsum.EinsumBackOp.idx"><code class="docutils literal notranslate"><span class="pre">EinsumBackOp.idx</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.EinsumBackOp.tensors"><code class="docutils literal notranslate"><span class="pre">EinsumBackOp.tensors</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.EinsumBackOp.subscript"><code class="docutils literal notranslate"><span class="pre">EinsumBackOp.subscript</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.EinsumBackOp.left_tensors"><code class="docutils literal notranslate"><span class="pre">EinsumBackOp.left_tensors</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.EinsumBackOp.right_tensors"><code class="docutils literal notranslate"><span class="pre">EinsumBackOp.right_tensors</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.EinsumBackOp.combined_subscript"><code class="docutils literal notranslate"><span class="pre">EinsumBackOp.combined_subscript</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript"><code class="docutils literal notranslate"><span class="pre">Subscript</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript.subscript"><code class="docutils literal notranslate"><span class="pre">Subscript.subscript</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript.inputs"><code class="docutils literal notranslate"><span class="pre">Subscript.inputs</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript.output"><code class="docutils literal notranslate"><span class="pre">Subscript.output</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript.from_split"><code class="docutils literal notranslate"><span class="pre">Subscript.from_split()</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">Subscript.inputs</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript.join"><code class="docutils literal notranslate"><span class="pre">Subscript.join()</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">Subscript.output</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript.split"><code class="docutils literal notranslate"><span class="pre">Subscript.split()</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">Subscript.subscript</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.einsum.Subscript.unique_input_indices"><code class="docutils literal notranslate"><span class="pre">Subscript.unique_input_indices</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

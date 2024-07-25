@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="einsum" href="einsum.html" /><link rel="prev" title="attention" href="attention.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>tokeniser - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,267 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="tokeniser">
-<h1>tokeniser<a class="headerlink" href="#tokeniser" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.tokeniser">
+<span id="tokeniser"></span><h1>tokeniser<a class="headerlink" href="#module-tricycle.tokeniser" title="Link to this heading">¶</a></h1>
+<p>A module for implementing a Byte Pair Encoding (BPE) tokenizer.</p>
+<p>This module provides functionality for training and using a BPE tokenizer,
+which is a subword tokenization algorithm commonly used in natural language processing.</p>
+<p>The implementation uses Numba for performance optimization of critical functions.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BPETokeniser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A simple byte pair encoding tokeniser.</p>
+<p>This class implements a BPE tokenizer with performance optimizations using Numba.
+It can be trained on text data and used to tokenize and detokenize text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vocab_size</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>The maximum size of the vocabulary.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.merges">
+<span class="sig-name descname"><span class="pre">merges</span></span><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.merges" title="Link to this definition">¶</a></dt>
+<dd><p>A dictionary mapping token pairs to new token IDs.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.pairs">
+<span class="sig-name descname"><span class="pre">pairs</span></span><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.pairs" title="Link to this definition">¶</a></dt>
+<dd><p>A list of token pairs in the order they were merged.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.vocab">
+<span class="sig-name descname"><span class="pre">vocab</span></span><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.vocab" title="Link to this definition">¶</a></dt>
+<dd><p>A list of byte strings representing each token.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.type_">
+<span class="sig-name descname"><span class="pre">type_</span></span><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.type_" title="Link to this definition">¶</a></dt>
+<dd><p>A string indicating the implementation type (always “numba” in this version).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.MIN_TOKENS">
+<span class="sig-name descname"><span class="pre">MIN_TOKENS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">256</span></em><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.MIN_TOKENS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Convert tokens into a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tokens</strong> (<em>ndarray</em><em> | </em><em>int</em>) – A numpy array of token IDs or a single integer token ID.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.encode" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<em>str</em>) – A string to tokenize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of token IDs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.load" title="Link to this definition">¶</a></dt>
+<dd><p>Load a tokeniser from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>) – A string or Path object representing the file path to load the tokeniser from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A BPETokeniser instance loaded from the file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.most_common_pair">
+<span class="sig-name descname"><span class="pre">most_common_pair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.most_common_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.most_common_pair" title="Link to this definition">¶</a></dt>
+<dd><p>Find the most common pair of tokens in the given counts array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>counts</strong> (<em>ndarray</em>) – A numpy array containing the counts of each possible pair.</p></li>
+<li><p><strong>token_id</strong> (<em>int</em>) – The maximum token ID to consider.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of two integers representing the most common pair, or None if no repeated pairs exist.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[int, int] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.replace_pair">
+<span class="sig-name descname"><span class="pre">replace_pair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.replace_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.replace_pair" title="Link to this definition">¶</a></dt>
+<dd><p>Replace occurrences of a pair with a new token ID.</p>
+<p>This method is a wrapper around the <cite>replace_pair</cite> function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>ndarray</em>) – A numpy array of integers representing the input data.</p></li>
+<li><p><strong>pair</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – A tuple of two integers representing the pair to be replaced.</p></li>
+<li><p><strong>token_id</strong> (<em>int</em>) – An integer representing the new token ID to replace the pair.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array with the pair replacements applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.save" title="Link to this definition">¶</a></dt>
+<dd><p>Save the tokeniser to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em> | </em><em>Path</em>) – A string or Path object representing the file path to save the tokeniser.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.tokenise_ints">
+<span class="sig-name descname"><span class="pre">tokenise_ints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">int_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loading_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.tokenise_ints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.tokenise_ints" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize an array of integers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>int_array</strong> (<em>ndarray</em>) – A numpy array of integers to tokenize.</p></li>
+<li><p><strong>loading_bar</strong> – A boolean indicating whether to display a progress bar during tokenization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of tokenized integers.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.train" title="Link to this definition">¶</a></dt>
+<dd><p>Train the tokeniser on a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>text</strong> (<em>str</em>) – A string to train the tokeniser on.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The trained BPETokeniser instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.tokeniser.BPETokeniser.train_ints">
+<span class="sig-name descname"><span class="pre">train_ints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">int_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loading_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#BPETokeniser.train_ints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.BPETokeniser.train_ints" title="Link to this definition">¶</a></dt>
+<dd><p>Train the tokeniser on an array of integers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>int_array</strong> (<em>ndarray</em>) – A numpy array of integers representing the training data.</p></li>
+<li><p><strong>loading_bar</strong> – A boolean indicating whether to display a progress bar during training.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The trained BPETokeniser instance.</p>
+</dd>
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>If the number of pairs after training is less than the specified vocab_size.</strong></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.tokeniser.count_pairs">
+<span class="sig-name descname"><span class="pre">count_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#count_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.count_pairs" title="Link to this definition">¶</a></dt>
+<dd><p>Count the number of occurrences of each pair of integers in an array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>ndarray</em>) – A numpy array of integers representing the input data.</p></li>
+<li><p><strong>token_id</strong> (<em>int</em>) – The maximum token ID to consider when counting pairs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array containing the counts of each possible pair.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Parallel execution was tried but found to be slower than sequential execution.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.tokeniser.replace_pair">
+<span class="sig-name descname"><span class="pre">replace_pair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/tokeniser.html#replace_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.tokeniser.replace_pair" title="Link to this definition">¶</a></dt>
+<dd><p>Replace every occurrence of <cite>pair</cite> with <cite>token_id</cite> in the given data array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>ndarray</em>) – A numpy array of integers representing the input data.</p></li>
+<li><p><strong>pair</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – A tuple of two integers representing the pair to be replaced.</p></li>
+<li><p><strong>token_id</strong> (<em>int</em>) – An integer representing the new token ID to replace the pair.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array with the pair replacements applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +569,46 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">tokeniser</a><ul>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser"><code class="docutils literal notranslate"><span class="pre">BPETokeniser</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.vocab_size"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.merges"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.merges</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.pairs"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.pairs</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.vocab"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.vocab</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.type_"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.type_</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.MIN_TOKENS"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.MIN_TOKENS</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.decode"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.decode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.encode"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.encode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.load"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.load()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.most_common_pair"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.most_common_pair()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.replace_pair"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.replace_pair()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.save"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.save()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.tokenise_ints"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.tokenise_ints()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.train"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.train()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.BPETokeniser.train_ints"><code class="docutils literal notranslate"><span class="pre">BPETokeniser.train_ints()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.tokeniser.count_pairs"><code class="docutils literal notranslate"><span class="pre">count_pairs()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.tokeniser.replace_pair"><code class="docutils literal notranslate"><span class="pre">replace_pair()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

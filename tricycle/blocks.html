@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="initialisers" href="initialisers.html" /><link rel="prev" title="reduce" href="reduce.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>blocks - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,719 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="blocks">
-<h1>blocks<a class="headerlink" href="#blocks" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.blocks">
+<span id="blocks"></span><h1>blocks<a class="headerlink" href="#module-tricycle.blocks" title="Link to this heading">¶</a></h1>
+<p>Several layers can be grouped together into a single layer called a block.</p>
+<p>This module provides various block implementations used in transformer-based
+models, including multi-head self-attention, MLP blocks, and transformer blocks.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FeedForward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_prob</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expansion_ratio=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_fn=&lt;tricycle.activation.GeLU</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#FeedForward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.FeedForward" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A simple llama style feed forward block with 2 linear layers around a swiglu
+function.</p>
+<p>The size of the hidden dimension is expansion_ratio * the size of the
+input.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.blocks.FeedForward.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>The dimension of the input embedding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.dropout_prob">
+<span class="sig-name descname"><span class="pre">dropout_prob</span></span><a class="headerlink" href="#tricycle.blocks.FeedForward.dropout_prob" title="Link to this definition">¶</a></dt>
+<dd><p>The probability of dropout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.expansion_ratio">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><a class="headerlink" href="#tricycle.blocks.FeedForward.expansion_ratio" title="Link to this definition">¶</a></dt>
+<dd><p>The ratio to expand the hidden dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.activation_fn">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><a class="headerlink" href="#tricycle.blocks.FeedForward.activation_fn" title="Link to this definition">¶</a></dt>
+<dd><p>The activation function to use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer">tricycle.layers.Layer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.linear_1">
+<span class="sig-name descname"><span class="pre">linear_1</span></span><a class="headerlink" href="#tricycle.blocks.FeedForward.linear_1" title="Link to this definition">¶</a></dt>
+<dd><p>The first linear layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense">tricycle.layers.Dense</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.linear_2">
+<span class="sig-name descname"><span class="pre">linear_2</span></span><a class="headerlink" href="#tricycle.blocks.FeedForward.linear_2" title="Link to this definition">¶</a></dt>
+<dd><p>The second linear layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense">tricycle.layers.Dense</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embedding_dim</strong> (<em>int</em>) – The dimension of the input embedding.</p></li>
+<li><p><strong>dropout_prob</strong> (<em>float</em>) – The probability of dropout.</p></li>
+<li><p><strong>expansion_ratio</strong> (<em>float</em>) – The ratio to expand the hidden dimension. Defaults to 4.</p></li>
+<li><p><strong>activation_fn</strong> (<a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><em>Layer</em></a>) – The activation function to use. Can be a Layer object or a string.
+Defaults to GeLU().</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><span class="pre">Layer</span></a></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#FeedForward.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.FeedForward.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Forward pass of the FeedForward layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output tensor after passing through the feed-forward block.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#FeedForward.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.FeedForward.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer from the GPU to the CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The FeedForward layer moved to the CPU.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.blocks.FeedForward" title="tricycle.blocks.FeedForward"><em>FeedForward</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">linear_1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense"><span class="pre">Dense</span></a></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">linear_2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense"><span class="pre">Dense</span></a></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#FeedForward.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.FeedForward.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer to the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number to move the layer to. Defaults to 0.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The FeedForward layer moved to the GPU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.blocks.FeedForward" title="tricycle.blocks.FeedForward"><em>FeedForward</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#FeedForward.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.FeedForward.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the parameters of the layer using the given optimiser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimiser to use for updating the parameters.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated FeedForward layer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.blocks.FeedForward" title="tricycle.blocks.FeedForward"><em>FeedForward</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.FeedForward.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#FeedForward.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.FeedForward.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Zero out the gradients of the layer’s parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The FeedForward layer with zeroed gradients.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.blocks.FeedForward" title="tricycle.blocks.FeedForward"><em>FeedForward</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GPT2TransformerBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expansion_ratio=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_fn=&lt;tricycle.activation.GeLU</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_fn='layer_norm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_dropout_prob=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linear_dropout_prob=0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#GPT2TransformerBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A GPT-2 style transformer block.</p>
+<p>This block combines multi-head self-attention with an MLP block and
+includes normalization and residual connections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embedding_dim</strong> (<em>int</em>)</p></li>
+<li><p><strong>n_heads</strong> (<em>int</em>)</p></li>
+<li><p><strong>context_window</strong> (<em>int</em>)</p></li>
+<li><p><strong>expansion_ratio</strong> (<em>float</em>)</p></li>
+<li><p><strong>activation_fn</strong> (<a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><em>Layer</em></a>)</p></li>
+<li><p><strong>norm_fn</strong> (<em>Literal</em><em>[</em><em>'layer_norm'</em><em>] </em><em>| </em><em>~typing.Literal</em><em>[</em><em>'rms_norm'</em><em>]</em>)</p></li>
+<li><p><strong>residual_dropout_prob</strong> (<em>float</em>)</p></li>
+<li><p><strong>linear_dropout_prob</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>The dimension of the input embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.expansion_ratio">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.expansion_ratio" title="Link to this definition">¶</a></dt>
+<dd><p>The ratio for expanding the hidden dimension in the MLP block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.activation_fn">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.activation_fn" title="Link to this definition">¶</a></dt>
+<dd><p>The activation function to use in the MLP block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer">Layer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.residual_dropout_prob">
+<span class="sig-name descname"><span class="pre">residual_dropout_prob</span></span><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.residual_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd><p>The dropout probability for residual connections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.linear_dropout_prob">
+<span class="sig-name descname"><span class="pre">linear_dropout_prob</span></span><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.linear_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd><p>The dropout probability for the MLP block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><span class="pre">Layer</span></a></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#GPT2TransformerBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a forward pass through the GPT-2 transformer block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output tensor after applying the transformer block.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#GPT2TransformerBlock.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer’s parameters from the GPU to the CPU.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">linear_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">residual_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id10" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#GPT2TransformerBlock.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer’s parameters to the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em><em>, </em><em>optional</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#GPT2TransformerBlock.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the layer’s parameters using the given optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimizer to use for updating parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.GPT2TransformerBlock.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#GPT2TransformerBlock.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.GPT2TransformerBlock.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Zero out the gradients of the layer’s parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MLPBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_prob</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expansion_ratio=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_fn=&lt;tricycle.activation.GeLU</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MLPBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MLPBlock" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A simple GPT-2 style MLP block with 2 linear layers around an activation
+function.</p>
+<p>The size of the hidden dimension is expansion_ratio * the size of the
+input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embedding_dim</strong> (<em>int</em>)</p></li>
+<li><p><strong>dropout_prob</strong> (<em>float</em>)</p></li>
+<li><p><strong>expansion_ratio</strong> (<em>float</em>)</p></li>
+<li><p><strong>activation_fn</strong> (<a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><em>Layer</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.blocks.MLPBlock.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>The dimension of the input embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.dropout_prob">
+<span class="sig-name descname"><span class="pre">dropout_prob</span></span><a class="headerlink" href="#tricycle.blocks.MLPBlock.dropout_prob" title="Link to this definition">¶</a></dt>
+<dd><p>The dropout probability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.expansion_ratio">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><a class="headerlink" href="#tricycle.blocks.MLPBlock.expansion_ratio" title="Link to this definition">¶</a></dt>
+<dd><p>The ratio for expanding the hidden dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.activation_fn">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><a class="headerlink" href="#tricycle.blocks.MLPBlock.activation_fn" title="Link to this definition">¶</a></dt>
+<dd><p>The activation function to use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer">Layer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.linear_1">
+<span class="sig-name descname"><span class="pre">linear_1</span></span><a class="headerlink" href="#tricycle.blocks.MLPBlock.linear_1" title="Link to this definition">¶</a></dt>
+<dd><p>The first linear layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense">Dense</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.linear_2">
+<span class="sig-name descname"><span class="pre">linear_2</span></span><a class="headerlink" href="#tricycle.blocks.MLPBlock.linear_2" title="Link to this definition">¶</a></dt>
+<dd><p>The second linear layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense">Dense</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id11">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><span class="pre">Layer</span></a></em><a class="headerlink" href="#id11" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id12">
+<span class="sig-name descname"><span class="pre">dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id12" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id13">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id13" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id14">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id14" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MLPBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MLPBlock.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a forward pass through the MLP block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output tensor after applying the MLP block.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MLPBlock.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MLPBlock.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer’s parameters from the GPU to the CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The MLPBlock instance with parameters moved to CPU.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.blocks.MLPBlock" title="tricycle.blocks.MLPBlock">MLPBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id15">
+<span class="sig-name descname"><span class="pre">linear_1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense"><span class="pre">Dense</span></a></em><a class="headerlink" href="#id15" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id16">
+<span class="sig-name descname"><span class="pre">linear_2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense"><span class="pre">Dense</span></a></em><a class="headerlink" href="#id16" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MLPBlock.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MLPBlock.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer’s parameters to the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em><em>, </em><em>optional</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The MLPBlock instance with parameters moved to GPU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.blocks.MLPBlock" title="tricycle.blocks.MLPBlock">MLPBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MLPBlock.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MLPBlock.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the layer’s parameters using the given optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimizer to use for updating parameters.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated MLPBlock instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.blocks.MLPBlock" title="tricycle.blocks.MLPBlock">MLPBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MLPBlock.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MLPBlock.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MLPBlock.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Zero out the gradients of the layer’s parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The MLPBlock instance with zeroed gradients.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.blocks.MLPBlock" title="tricycle.blocks.MLPBlock">MLPBlock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultiHeadSelfAttention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_dropout_prob=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialiser=&lt;function</span> <span class="pre">init_xavier&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MultiHeadSelfAttention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Multi-head self-attention layer.</p>
+<p>This layer implements the multi-head self-attention mechanism used in
+transformer models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embedding_dim</strong> (<em>int</em>)</p></li>
+<li><p><strong>n_heads</strong> (<em>int</em>)</p></li>
+<li><p><strong>context_window</strong> (<em>int</em>)</p></li>
+<li><p><strong>residual_dropout_prob</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>The dimension of the input embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.n_heads">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.n_heads" title="Link to this definition">¶</a></dt>
+<dd><p>The number of attention heads.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.context_window" title="Link to this definition">¶</a></dt>
+<dd><p>The size of the context window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id17">
+<span class="sig-name descname"><span class="pre">context_window</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id17" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id18">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id18" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MultiHeadSelfAttention.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a forward pass through the multi-head self-attention layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output tensor after applying multi-head self-attention.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MultiHeadSelfAttention.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer’s parameters from the GPU to the CPU.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id19">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id19" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MultiHeadSelfAttention.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer’s parameters to the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em><em>, </em><em>optional</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MultiHeadSelfAttention.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the layer’s parameters using the given optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimizer to use for updating parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.blocks.MultiHeadSelfAttention.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#MultiHeadSelfAttention.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.MultiHeadSelfAttention.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Zero out the gradients of the layer’s parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.blocks.build_mask">
+<span class="sig-name descname"><span class="pre">build_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_window</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#build_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.build_mask" title="Link to this definition">¶</a></dt>
+<dd><p>Build an attention mask to stop the model from being able to see
+future tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context_window</strong> (<em>int</em>) – The size of the context window.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A mask tensor with shape (context_window, context_window).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.blocks.masked_fill">
+<span class="sig-name descname"><span class="pre">masked_fill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/blocks.html#masked_fill"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.blocks.masked_fill" title="Link to this definition">¶</a></dt>
+<dd><p>Apply an attention_mask to a tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor to be masked.</p></li>
+<li><p><strong>mask_shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – The shape of the mask to be applied.</p></li>
+<li><p><strong>full_mask</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The full mask tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The masked tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +1021,100 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">blocks</a><ul>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward"><code class="docutils literal notranslate"><span class="pre">FeedForward</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.embedding_dim"><code class="docutils literal notranslate"><span class="pre">FeedForward.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.dropout_prob"><code class="docutils literal notranslate"><span class="pre">FeedForward.dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">FeedForward.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.activation_fn"><code class="docutils literal notranslate"><span class="pre">FeedForward.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.linear_1"><code class="docutils literal notranslate"><span class="pre">FeedForward.linear_1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.linear_2"><code class="docutils literal notranslate"><span class="pre">FeedForward.linear_2</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">FeedForward.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">FeedForward.dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">FeedForward.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">FeedForward.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.forward"><code class="docutils literal notranslate"><span class="pre">FeedForward.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.from_gpu"><code class="docutils literal notranslate"><span class="pre">FeedForward.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">FeedForward.linear_1</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">FeedForward.linear_2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.to_gpu"><code class="docutils literal notranslate"><span class="pre">FeedForward.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.update"><code class="docutils literal notranslate"><span class="pre">FeedForward.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.FeedForward.zero_grad"><code class="docutils literal notranslate"><span class="pre">FeedForward.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.embedding_dim"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.activation_fn"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.residual_dropout_prob"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.residual_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.linear_dropout_prob"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.linear_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.forward"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.from_gpu"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.linear_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.residual_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.to_gpu"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.update"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.GPT2TransformerBlock.zero_grad"><code class="docutils literal notranslate"><span class="pre">GPT2TransformerBlock.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock"><code class="docutils literal notranslate"><span class="pre">MLPBlock</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.embedding_dim"><code class="docutils literal notranslate"><span class="pre">MLPBlock.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.dropout_prob"><code class="docutils literal notranslate"><span class="pre">MLPBlock.dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">MLPBlock.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.activation_fn"><code class="docutils literal notranslate"><span class="pre">MLPBlock.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.linear_1"><code class="docutils literal notranslate"><span class="pre">MLPBlock.linear_1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.linear_2"><code class="docutils literal notranslate"><span class="pre">MLPBlock.linear_2</span></code></a></li>
+<li><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">MLPBlock.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#id12"><code class="docutils literal notranslate"><span class="pre">MLPBlock.dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#id13"><code class="docutils literal notranslate"><span class="pre">MLPBlock.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#id14"><code class="docutils literal notranslate"><span class="pre">MLPBlock.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.forward"><code class="docutils literal notranslate"><span class="pre">MLPBlock.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.from_gpu"><code class="docutils literal notranslate"><span class="pre">MLPBlock.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#id15"><code class="docutils literal notranslate"><span class="pre">MLPBlock.linear_1</span></code></a></li>
+<li><a class="reference internal" href="#id16"><code class="docutils literal notranslate"><span class="pre">MLPBlock.linear_2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.to_gpu"><code class="docutils literal notranslate"><span class="pre">MLPBlock.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.update"><code class="docutils literal notranslate"><span class="pre">MLPBlock.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MLPBlock.zero_grad"><code class="docutils literal notranslate"><span class="pre">MLPBlock.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.embedding_dim"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.n_heads"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.context_window"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.context_window</span></code></a></li>
+<li><a class="reference internal" href="#id17"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.context_window</span></code></a></li>
+<li><a class="reference internal" href="#id18"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.forward"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.from_gpu"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#id19"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.to_gpu"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.update"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.MultiHeadSelfAttention.zero_grad"><code class="docutils literal notranslate"><span class="pre">MultiHeadSelfAttention.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.blocks.build_mask"><code class="docutils literal notranslate"><span class="pre">build_mask()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.blocks.masked_fill"><code class="docutils literal notranslate"><span class="pre">masked_fill()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

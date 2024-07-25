@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="scheduler" href="scheduler.html" /><link rel="prev" title="loss" href="loss.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>configs - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,880 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="configs">
-<h1>configs<a class="headerlink" href="#configs" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.configs">
+<span id="configs"></span><h1>configs<a class="headerlink" href="#module-tricycle.configs" title="Link to this heading">¶</a></h1>
+<p>Configurations for different GPT models.</p>
+<p>This module contains configuration classes for various GPT models, including
+a base configuration class and specific configurations for debugging,
+Shakespeare-based models, and a small GPT model.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>GPTConfig: Base configuration class for GPT models.
+DebugConfig: Configuration for debugging purposes.
+ShakespeareConfig: Configuration for Shakespeare-based models.
+SmolGPTConfig: Configuration for a small GPT model.</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DebugConfig</span></span><a class="reference internal" href="../_modules/tricycle/configs.html#DebugConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.configs.DebugConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.configs.GPTConfig" title="tricycle.configs.GPTConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">GPTConfig</span></code></a></p>
+<p>Configuration for debugging purposes.</p>
+<p>This class inherits from GPTConfig and sets specific values for debugging.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.activation_fn">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'gelu'</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.activation_fn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.batch_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.beta1">
+<span class="sig-name descname"><span class="pre">beta1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.9</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.beta1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.beta2">
+<span class="sig-name descname"><span class="pre">beta2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.99</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.beta2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">13</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.context_window" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.device_idx">
+<span class="sig-name descname"><span class="pre">device_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.device_idx" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">14</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.eval_interval">
+<span class="sig-name descname"><span class="pre">eval_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.eval_interval" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.eval_steps">
+<span class="sig-name descname"><span class="pre">eval_steps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.eval_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.expansion_ratio">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.expansion_ratio" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.gradient_accumulation_steps">
+<span class="sig-name descname"><span class="pre">gradient_accumulation_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.gradient_accumulation_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.input_dropout_prob">
+<span class="sig-name descname"><span class="pre">input_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.2</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.input_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.linear_dropout_prob">
+<span class="sig-name descname"><span class="pre">linear_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.2</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.linear_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.max_learning_rate">
+<span class="sig-name descname"><span class="pre">max_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.max_learning_rate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.min_learning_rate">
+<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0001</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.min_learning_rate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.mlflow_enabled">
+<span class="sig-name descname"><span class="pre">mlflow_enabled</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.mlflow_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.mlflow_tracking_uri">
+<span class="sig-name descname"><span class="pre">mlflow_tracking_uri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.mlflow_tracking_uri" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.momentum">
+<span class="sig-name descname"><span class="pre">momentum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.momentum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.n_heads">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.n_heads" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.n_layers">
+<span class="sig-name descname"><span class="pre">n_layers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.n_layers" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.norm_fn">
+<span class="sig-name descname"><span class="pre">norm_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'layer_norm'</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.norm_fn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.residual_dropout_prob">
+<span class="sig-name descname"><span class="pre">residual_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.2</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.residual_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.sample_size">
+<span class="sig-name descname"><span class="pre">sample_size</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.sample_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'chinchilla_optimal'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">250</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.vocab_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.warmup_steps">
+<span class="sig-name descname"><span class="pre">warmup_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.warmup_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.DebugConfig.weight_decay">
+<span class="sig-name descname"><span class="pre">weight_decay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#tricycle.configs.DebugConfig.weight_decay" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GPTConfig</span></span><a class="reference internal" href="../_modules/tricycle/configs.html#GPTConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.configs.GPTConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base configuration class for GPT models.</p>
+<p>This class defines the common parameters and hyperparameters used in
+GPT model training and evaluation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>Dimension of the embedding layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.context_window" title="Link to this definition">¶</a></dt>
+<dd><p>Size of the context window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>Size of the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.n_heads">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.n_heads" title="Link to this definition">¶</a></dt>
+<dd><p>Number of attention heads.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.n_layers">
+<span class="sig-name descname"><span class="pre">n_layers</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.n_layers" title="Link to this definition">¶</a></dt>
+<dd><p>Number of transformer layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.expansion_ratio">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.expansion_ratio" title="Link to this definition">¶</a></dt>
+<dd><p>Expansion ratio for feed-forward layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.activation_fn">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.activation_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Activation function used in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.norm_fn">
+<span class="sig-name descname"><span class="pre">norm_fn</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.norm_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Normalization function used in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.input_dropout_prob">
+<span class="sig-name descname"><span class="pre">input_dropout_prob</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.input_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd><p>Dropout probability for input embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.residual_dropout_prob">
+<span class="sig-name descname"><span class="pre">residual_dropout_prob</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.residual_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd><p>Dropout probability for residual connections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.linear_dropout_prob">
+<span class="sig-name descname"><span class="pre">linear_dropout_prob</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.linear_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd><p>Dropout probability for linear layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.max_learning_rate">
+<span class="sig-name descname"><span class="pre">max_learning_rate</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.max_learning_rate" title="Link to this definition">¶</a></dt>
+<dd><p>Maximum learning rate for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.min_learning_rate">
+<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.min_learning_rate" title="Link to this definition">¶</a></dt>
+<dd><p>Minimum learning rate for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.warmup_steps">
+<span class="sig-name descname"><span class="pre">warmup_steps</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.warmup_steps" title="Link to this definition">¶</a></dt>
+<dd><p>Number of warmup steps for learning rate scheduling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.weight_decay">
+<span class="sig-name descname"><span class="pre">weight_decay</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.weight_decay" title="Link to this definition">¶</a></dt>
+<dd><p>Weight decay factor for regularization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.momentum">
+<span class="sig-name descname"><span class="pre">momentum</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.momentum" title="Link to this definition">¶</a></dt>
+<dd><p>Momentum factor for optimization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.beta1">
+<span class="sig-name descname"><span class="pre">beta1</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.beta1" title="Link to this definition">¶</a></dt>
+<dd><p>Beta1 parameter for Adam optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.beta2">
+<span class="sig-name descname"><span class="pre">beta2</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.beta2" title="Link to this definition">¶</a></dt>
+<dd><p>Beta2 parameter for Adam optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.steps" title="Link to this definition">¶</a></dt>
+<dd><p>Number of training steps or “chinchilla_optimal”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | Literal[“chinchilla_optimal”]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.eval_interval">
+<span class="sig-name descname"><span class="pre">eval_interval</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.eval_interval" title="Link to this definition">¶</a></dt>
+<dd><p>Interval between evaluations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.batch_size" title="Link to this definition">¶</a></dt>
+<dd><p>Batch size for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.gradient_accumulation_steps">
+<span class="sig-name descname"><span class="pre">gradient_accumulation_steps</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.gradient_accumulation_steps" title="Link to this definition">¶</a></dt>
+<dd><p>Number of steps for gradient accumulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.device_idx">
+<span class="sig-name descname"><span class="pre">device_idx</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.device_idx" title="Link to this definition">¶</a></dt>
+<dd><p>Index of the device to use for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.mlflow_tracking_uri">
+<span class="sig-name descname"><span class="pre">mlflow_tracking_uri</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.mlflow_tracking_uri" title="Link to this definition">¶</a></dt>
+<dd><p>URI for MLflow tracking server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.mlflow_experiment_name">
+<span class="sig-name descname"><span class="pre">mlflow_experiment_name</span></span><a class="headerlink" href="#tricycle.configs.GPTConfig.mlflow_experiment_name" title="Link to this definition">¶</a></dt>
+<dd><p>Name of the MLflow experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">beta1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">beta2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">context_window</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">device_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.configs.GPTConfig.dict">
+<span class="sig-name descname"><span class="pre">dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/configs.html#GPTConfig.dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.configs.GPTConfig.dict" title="Link to this definition">¶</a></dt>
+<dd><p>Convert the configuration to a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary representation of the configuration.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, int | float | str | bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">eval_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">gradient_accumulation_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">input_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id10" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id11">
+<span class="sig-name descname"><span class="pre">linear_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id11" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id12">
+<span class="sig-name descname"><span class="pre">max_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id12" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id13">
+<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id13" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id14">
+<span class="sig-name descname"><span class="pre">mlflow_experiment_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id14" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id15">
+<span class="sig-name descname"><span class="pre">mlflow_tracking_uri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id15" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id16">
+<span class="sig-name descname"><span class="pre">momentum</span></span><a class="headerlink" href="#id16" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id17">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id17" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id18">
+<span class="sig-name descname"><span class="pre">n_layers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id18" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id19">
+<span class="sig-name descname"><span class="pre">norm_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id19" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id20">
+<span class="sig-name descname"><span class="pre">residual_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id20" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id21">
+<span class="sig-name descname"><span class="pre">steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'chinchilla_optimal'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id21" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id22">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id22" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id23">
+<span class="sig-name descname"><span class="pre">warmup_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id23" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id24">
+<span class="sig-name descname"><span class="pre">weight_decay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id24" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShakespeareConfig</span></span><a class="reference internal" href="../_modules/tricycle/configs.html#ShakespeareConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.configs.ShakespeareConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.configs.GPTConfig" title="tricycle.configs.GPTConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">GPTConfig</span></code></a></p>
+<p>Configuration for Shakespeare-based models.</p>
+<p>This class inherits from GPTConfig and sets specific values for
+Shakespeare-based language models.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.activation_fn">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'gelu'</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.activation_fn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.batch_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.beta1">
+<span class="sig-name descname"><span class="pre">beta1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.9</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.beta1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.beta2">
+<span class="sig-name descname"><span class="pre">beta2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.99</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.beta2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">256</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.context_window" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.device_idx">
+<span class="sig-name descname"><span class="pre">device_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.device_idx" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">384</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.eval_interval">
+<span class="sig-name descname"><span class="pre">eval_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">250</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.eval_interval" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.eval_steps">
+<span class="sig-name descname"><span class="pre">eval_steps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.eval_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.expansion_ratio">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.expansion_ratio" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.gradient_accumulation_steps">
+<span class="sig-name descname"><span class="pre">gradient_accumulation_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.gradient_accumulation_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.input_dropout_prob">
+<span class="sig-name descname"><span class="pre">input_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.2</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.input_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.linear_dropout_prob">
+<span class="sig-name descname"><span class="pre">linear_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.2</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.linear_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.max_learning_rate">
+<span class="sig-name descname"><span class="pre">max_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.01</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.max_learning_rate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.min_learning_rate">
+<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0001</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.min_learning_rate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.mlflow_enabled">
+<span class="sig-name descname"><span class="pre">mlflow_enabled</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.mlflow_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.mlflow_tracking_uri">
+<span class="sig-name descname"><span class="pre">mlflow_tracking_uri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'http://localhost:5000'</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.mlflow_tracking_uri" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.momentum">
+<span class="sig-name descname"><span class="pre">momentum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.momentum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.n_heads">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.n_heads" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.n_layers">
+<span class="sig-name descname"><span class="pre">n_layers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.n_layers" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.norm_fn">
+<span class="sig-name descname"><span class="pre">norm_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'layer_norm'</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.norm_fn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.residual_dropout_prob">
+<span class="sig-name descname"><span class="pre">residual_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.2</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.residual_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.sample_size">
+<span class="sig-name descname"><span class="pre">sample_size</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">512</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.sample_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'chinchilla_optimal'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5000</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1024</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.vocab_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.warmup_steps">
+<span class="sig-name descname"><span class="pre">warmup_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.warmup_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.ShakespeareConfig.weight_decay">
+<span class="sig-name descname"><span class="pre">weight_decay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#tricycle.configs.ShakespeareConfig.weight_decay" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SmolGPTConfig</span></span><a class="reference internal" href="../_modules/tricycle/configs.html#SmolGPTConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.configs.SmolGPTConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.configs.GPTConfig" title="tricycle.configs.GPTConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">GPTConfig</span></code></a></p>
+<p>Configuration for a small GPT model.</p>
+<p>This class inherits from GPTConfig and sets specific values for
+a small-scale GPT model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.activation_fn">
+<span class="sig-name descname"><span class="pre">activation_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'gelu'</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.activation_fn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.batch_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.beta1">
+<span class="sig-name descname"><span class="pre">beta1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.9</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.beta1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.beta2">
+<span class="sig-name descname"><span class="pre">beta2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.95</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.beta2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1024</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.context_window" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.device_idx">
+<span class="sig-name descname"><span class="pre">device_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.device_idx" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">768</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.eval_interval">
+<span class="sig-name descname"><span class="pre">eval_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">100</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.eval_interval" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.eval_steps">
+<span class="sig-name descname"><span class="pre">eval_steps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.eval_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.expansion_ratio">
+<span class="sig-name descname"><span class="pre">expansion_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.expansion_ratio" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.gradient_accumulation_steps">
+<span class="sig-name descname"><span class="pre">gradient_accumulation_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.gradient_accumulation_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.input_dropout_prob">
+<span class="sig-name descname"><span class="pre">input_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.input_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.linear_dropout_prob">
+<span class="sig-name descname"><span class="pre">linear_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.linear_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.max_learning_rate">
+<span class="sig-name descname"><span class="pre">max_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0006</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.max_learning_rate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.min_learning_rate">
+<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.min_learning_rate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.mlflow_enabled">
+<span class="sig-name descname"><span class="pre">mlflow_enabled</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.mlflow_enabled" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.mlflow_tracking_uri">
+<span class="sig-name descname"><span class="pre">mlflow_tracking_uri</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'http://localhost:5000'</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.mlflow_tracking_uri" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.momentum">
+<span class="sig-name descname"><span class="pre">momentum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.momentum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.n_heads">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.n_heads" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.n_layers">
+<span class="sig-name descname"><span class="pre">n_layers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.n_layers" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.n_tokens_to_generate">
+<span class="sig-name descname"><span class="pre">n_tokens_to_generate</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">512</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.n_tokens_to_generate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.norm_fn">
+<span class="sig-name descname"><span class="pre">norm_fn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'layer_norm'</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.norm_fn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.residual_dropout_prob">
+<span class="sig-name descname"><span class="pre">residual_dropout_prob</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.residual_dropout_prob" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.steps">
+<span class="sig-name descname"><span class="pre">steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'chinchilla_optimal'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'chinchilla_optimal'</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">50256</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.vocab_size" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.warmup_steps">
+<span class="sig-name descname"><span class="pre">warmup_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">150</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.warmup_steps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.configs.SmolGPTConfig.weight_decay">
+<span class="sig-name descname"><span class="pre">weight_decay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#tricycle.configs.SmolGPTConfig.weight_decay" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +1182,170 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">configs</a><ul>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig"><code class="docutils literal notranslate"><span class="pre">DebugConfig</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.activation_fn"><code class="docutils literal notranslate"><span class="pre">DebugConfig.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.batch_size"><code class="docutils literal notranslate"><span class="pre">DebugConfig.batch_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.beta1"><code class="docutils literal notranslate"><span class="pre">DebugConfig.beta1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.beta2"><code class="docutils literal notranslate"><span class="pre">DebugConfig.beta2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.context_window"><code class="docutils literal notranslate"><span class="pre">DebugConfig.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.device_idx"><code class="docutils literal notranslate"><span class="pre">DebugConfig.device_idx</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.embedding_dim"><code class="docutils literal notranslate"><span class="pre">DebugConfig.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.eval_interval"><code class="docutils literal notranslate"><span class="pre">DebugConfig.eval_interval</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.eval_steps"><code class="docutils literal notranslate"><span class="pre">DebugConfig.eval_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">DebugConfig.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.gradient_accumulation_steps"><code class="docutils literal notranslate"><span class="pre">DebugConfig.gradient_accumulation_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.input_dropout_prob"><code class="docutils literal notranslate"><span class="pre">DebugConfig.input_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.linear_dropout_prob"><code class="docutils literal notranslate"><span class="pre">DebugConfig.linear_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.max_learning_rate"><code class="docutils literal notranslate"><span class="pre">DebugConfig.max_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.min_learning_rate"><code class="docutils literal notranslate"><span class="pre">DebugConfig.min_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.mlflow_enabled"><code class="docutils literal notranslate"><span class="pre">DebugConfig.mlflow_enabled</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.mlflow_tracking_uri"><code class="docutils literal notranslate"><span class="pre">DebugConfig.mlflow_tracking_uri</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.momentum"><code class="docutils literal notranslate"><span class="pre">DebugConfig.momentum</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.n_heads"><code class="docutils literal notranslate"><span class="pre">DebugConfig.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.n_layers"><code class="docutils literal notranslate"><span class="pre">DebugConfig.n_layers</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.norm_fn"><code class="docutils literal notranslate"><span class="pre">DebugConfig.norm_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.residual_dropout_prob"><code class="docutils literal notranslate"><span class="pre">DebugConfig.residual_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.sample_size"><code class="docutils literal notranslate"><span class="pre">DebugConfig.sample_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.steps"><code class="docutils literal notranslate"><span class="pre">DebugConfig.steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.vocab_size"><code class="docutils literal notranslate"><span class="pre">DebugConfig.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.warmup_steps"><code class="docutils literal notranslate"><span class="pre">DebugConfig.warmup_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.DebugConfig.weight_decay"><code class="docutils literal notranslate"><span class="pre">DebugConfig.weight_decay</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig"><code class="docutils literal notranslate"><span class="pre">GPTConfig</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.embedding_dim"><code class="docutils literal notranslate"><span class="pre">GPTConfig.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.context_window"><code class="docutils literal notranslate"><span class="pre">GPTConfig.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.vocab_size"><code class="docutils literal notranslate"><span class="pre">GPTConfig.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.n_heads"><code class="docutils literal notranslate"><span class="pre">GPTConfig.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.n_layers"><code class="docutils literal notranslate"><span class="pre">GPTConfig.n_layers</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">GPTConfig.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.activation_fn"><code class="docutils literal notranslate"><span class="pre">GPTConfig.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.norm_fn"><code class="docutils literal notranslate"><span class="pre">GPTConfig.norm_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.input_dropout_prob"><code class="docutils literal notranslate"><span class="pre">GPTConfig.input_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.residual_dropout_prob"><code class="docutils literal notranslate"><span class="pre">GPTConfig.residual_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.linear_dropout_prob"><code class="docutils literal notranslate"><span class="pre">GPTConfig.linear_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.max_learning_rate"><code class="docutils literal notranslate"><span class="pre">GPTConfig.max_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.min_learning_rate"><code class="docutils literal notranslate"><span class="pre">GPTConfig.min_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.warmup_steps"><code class="docutils literal notranslate"><span class="pre">GPTConfig.warmup_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.weight_decay"><code class="docutils literal notranslate"><span class="pre">GPTConfig.weight_decay</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.momentum"><code class="docutils literal notranslate"><span class="pre">GPTConfig.momentum</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.beta1"><code class="docutils literal notranslate"><span class="pre">GPTConfig.beta1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.beta2"><code class="docutils literal notranslate"><span class="pre">GPTConfig.beta2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.steps"><code class="docutils literal notranslate"><span class="pre">GPTConfig.steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.eval_interval"><code class="docutils literal notranslate"><span class="pre">GPTConfig.eval_interval</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.batch_size"><code class="docutils literal notranslate"><span class="pre">GPTConfig.batch_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.gradient_accumulation_steps"><code class="docutils literal notranslate"><span class="pre">GPTConfig.gradient_accumulation_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.device_idx"><code class="docutils literal notranslate"><span class="pre">GPTConfig.device_idx</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.mlflow_tracking_uri"><code class="docutils literal notranslate"><span class="pre">GPTConfig.mlflow_tracking_uri</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.mlflow_experiment_name"><code class="docutils literal notranslate"><span class="pre">GPTConfig.mlflow_experiment_name</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">GPTConfig.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">GPTConfig.batch_size</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">GPTConfig.beta1</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">GPTConfig.beta2</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">GPTConfig.context_window</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">GPTConfig.device_idx</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.GPTConfig.dict"><code class="docutils literal notranslate"><span class="pre">GPTConfig.dict()</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">GPTConfig.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">GPTConfig.eval_interval</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">GPTConfig.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">GPTConfig.gradient_accumulation_steps</span></code></a></li>
+<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">GPTConfig.input_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">GPTConfig.linear_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#id12"><code class="docutils literal notranslate"><span class="pre">GPTConfig.max_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#id13"><code class="docutils literal notranslate"><span class="pre">GPTConfig.min_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#id14"><code class="docutils literal notranslate"><span class="pre">GPTConfig.mlflow_experiment_name</span></code></a></li>
+<li><a class="reference internal" href="#id15"><code class="docutils literal notranslate"><span class="pre">GPTConfig.mlflow_tracking_uri</span></code></a></li>
+<li><a class="reference internal" href="#id16"><code class="docutils literal notranslate"><span class="pre">GPTConfig.momentum</span></code></a></li>
+<li><a class="reference internal" href="#id17"><code class="docutils literal notranslate"><span class="pre">GPTConfig.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#id18"><code class="docutils literal notranslate"><span class="pre">GPTConfig.n_layers</span></code></a></li>
+<li><a class="reference internal" href="#id19"><code class="docutils literal notranslate"><span class="pre">GPTConfig.norm_fn</span></code></a></li>
+<li><a class="reference internal" href="#id20"><code class="docutils literal notranslate"><span class="pre">GPTConfig.residual_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#id21"><code class="docutils literal notranslate"><span class="pre">GPTConfig.steps</span></code></a></li>
+<li><a class="reference internal" href="#id22"><code class="docutils literal notranslate"><span class="pre">GPTConfig.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#id23"><code class="docutils literal notranslate"><span class="pre">GPTConfig.warmup_steps</span></code></a></li>
+<li><a class="reference internal" href="#id24"><code class="docutils literal notranslate"><span class="pre">GPTConfig.weight_decay</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.activation_fn"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.batch_size"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.batch_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.beta1"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.beta1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.beta2"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.beta2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.context_window"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.device_idx"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.device_idx</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.embedding_dim"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.eval_interval"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.eval_interval</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.eval_steps"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.eval_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.gradient_accumulation_steps"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.gradient_accumulation_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.input_dropout_prob"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.input_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.linear_dropout_prob"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.linear_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.max_learning_rate"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.max_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.min_learning_rate"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.min_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.mlflow_enabled"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.mlflow_enabled</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.mlflow_tracking_uri"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.mlflow_tracking_uri</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.momentum"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.momentum</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.n_heads"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.n_layers"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.n_layers</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.norm_fn"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.norm_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.residual_dropout_prob"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.residual_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.sample_size"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.sample_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.steps"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.vocab_size"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.warmup_steps"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.warmup_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.ShakespeareConfig.weight_decay"><code class="docutils literal notranslate"><span class="pre">ShakespeareConfig.weight_decay</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.activation_fn"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.activation_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.batch_size"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.batch_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.beta1"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.beta1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.beta2"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.beta2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.context_window"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.device_idx"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.device_idx</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.embedding_dim"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.eval_interval"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.eval_interval</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.eval_steps"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.eval_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.expansion_ratio"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.expansion_ratio</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.gradient_accumulation_steps"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.gradient_accumulation_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.input_dropout_prob"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.input_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.linear_dropout_prob"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.linear_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.max_learning_rate"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.max_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.min_learning_rate"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.min_learning_rate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.mlflow_enabled"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.mlflow_enabled</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.mlflow_tracking_uri"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.mlflow_tracking_uri</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.momentum"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.momentum</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.n_heads"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.n_layers"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.n_layers</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.n_tokens_to_generate"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.n_tokens_to_generate</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.norm_fn"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.norm_fn</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.residual_dropout_prob"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.residual_dropout_prob</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.steps"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.vocab_size"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.warmup_steps"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.warmup_steps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.configs.SmolGPTConfig.weight_decay"><code class="docutils literal notranslate"><span class="pre">SmolGPTConfig.weight_decay</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="codeparrot" href="codeparrot.html" /><link rel="prev" title="exceptions" href="../tricycle/exceptions.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>shakespeare - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,306 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="shakespeare">
-<h1>shakespeare<a class="headerlink" href="#shakespeare" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle_datasets.shakespeare">
+<span id="shakespeare"></span><h1>shakespeare<a class="headerlink" href="#module-tricycle_datasets.shakespeare" title="Link to this heading">¶</a></h1>
+<p>Provides classes for handling Shakespeare datasets.</p>
+<p>This module contains two main classes:
+1. Shakespeare: For handling tokenized Shakespeare text using BPE tokenization.
+2. ShakespeareChar: For handling character-level Shakespeare text.</p>
+<p>Both classes provide methods for downloading, tokenizing, encoding, and decoding
+Shakespeare’s text.</p>
+<p>Typical usage example:</p>
+<blockquote>
+<div><p>shakespeare = Shakespeare(1024)
+char_shakespeare = ShakespeareChar()</p>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Shakespeare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('datasets/shakespeare/raw_data.txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokeniser_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('datasets/shakespeare/tokeniser.pkl')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#Shakespeare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<p>A class for handling tokenized Shakespeare text using BPE tokenization.</p>
+<p>This class downloads the Shakespeare dataset, tokenizes it using BPE,
+and provides methods for encoding and decoding text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vocab_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>token_path</strong> (<em>Path</em>)</p></li>
+<li><p><strong>raw_data_path</strong> (<em>Path</em>)</p></li>
+<li><p><strong>tokeniser_path</strong> (<em>Path</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.url">
+<span class="sig-name descname"><span class="pre">url</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.url" title="Link to this definition">¶</a></dt>
+<dd><p>A string containing the URL for the Shakespeare dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>An integer representing the size of the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.token_path">
+<span class="sig-name descname"><span class="pre">token_path</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.token_path" title="Link to this definition">¶</a></dt>
+<dd><p>A Path object for the tokenized data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.raw_data_path">
+<span class="sig-name descname"><span class="pre">raw_data_path</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.raw_data_path" title="Link to this definition">¶</a></dt>
+<dd><p>A Path object for the raw data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.tokens">
+<span class="sig-name descname"><span class="pre">tokens</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.tokens" title="Link to this definition">¶</a></dt>
+<dd><p>A numpy array containing the tokenized data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.tokeniser">
+<span class="sig-name descname"><span class="pre">tokeniser</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.tokeniser" title="Link to this definition">¶</a></dt>
+<dd><p>A BPETokeniser object for tokenization.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#Shakespeare.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes the input using the BPE tokenizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*args</strong> – Arguments to pass to the tokenizer’s decode method.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decoded input.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#Shakespeare.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.download" title="Link to this definition">¶</a></dt>
+<dd><p>Downloads the Shakespeare dataset.</p>
+<p>The downloaded data is saved to the path specified by raw_data_path.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#Shakespeare.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.encode" title="Link to this definition">¶</a></dt>
+<dd><p>Encodes the input using the BPE tokenizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*args</strong> – Arguments to pass to the tokenizer’s encode method.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The encoded input.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.Shakespeare.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#Shakespeare.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.Shakespeare.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Downloads and tokenizes the Shakespeare dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A BPETokeniser object trained on the Shakespeare dataset.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../tricycle/tokeniser.html#tricycle.tokeniser.BPETokeniser" title="tricycle.tokeniser.BPETokeniser"><em>BPETokeniser</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">raw_data_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">token_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">tokens</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">url</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt'</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShakespeareChar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('datasets/shakespeare/raw_data.txt')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#ShakespeareChar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<p>A class for handling character-level Shakespeare text.</p>
+<p>This class downloads the Shakespeare dataset and provides methods for
+encoding and decoding text at the character level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw_data_path</strong> (<em>Path</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.url">
+<span class="sig-name descname"><span class="pre">url</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.url" title="Link to this definition">¶</a></dt>
+<dd><p>A string containing the URL for the Shakespeare dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>An integer representing the size of the vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.raw_data_path">
+<span class="sig-name descname"><span class="pre">raw_data_path</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.raw_data_path" title="Link to this definition">¶</a></dt>
+<dd><p>A Path object for the raw data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.chars">
+<span class="sig-name descname"><span class="pre">chars</span></span><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.chars" title="Link to this definition">¶</a></dt>
+<dd><p>A list of integers representing the characters in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">chars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">char_ids</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#ShakespeareChar.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes the input character IDs into characters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>char_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – A list of integer character IDs to decode.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of decoded characters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#ShakespeareChar.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.download" title="Link to this definition">¶</a></dt>
+<dd><p>Downloads the Shakespeare dataset.</p>
+<p>The downloaded data is saved to the path specified by raw_data_path.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chars</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#ShakespeareChar.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.encode" title="Link to this definition">¶</a></dt>
+<dd><p>Encodes the input characters into character IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>chars</strong> (<em>list</em><em>[</em><em>int</em><em>] </em><em>| </em><em>str</em>) – A list of integers or a string to encode.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of integer character IDs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.shakespeare.ShakespeareChar.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/shakespeare.html#ShakespeareChar.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.shakespeare.ShakespeareChar.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Downloads and processes the Shakespeare dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of integers representing the characters in the dataset.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">raw_data_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">url</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt'</span></em><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +608,59 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">shakespeare</a><ul>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare"><code class="docutils literal notranslate"><span class="pre">Shakespeare</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.url"><code class="docutils literal notranslate"><span class="pre">Shakespeare.url</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.vocab_size"><code class="docutils literal notranslate"><span class="pre">Shakespeare.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.token_path"><code class="docutils literal notranslate"><span class="pre">Shakespeare.token_path</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.raw_data_path"><code class="docutils literal notranslate"><span class="pre">Shakespeare.raw_data_path</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.tokens"><code class="docutils literal notranslate"><span class="pre">Shakespeare.tokens</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.tokeniser"><code class="docutils literal notranslate"><span class="pre">Shakespeare.tokeniser</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.decode"><code class="docutils literal notranslate"><span class="pre">Shakespeare.decode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.download"><code class="docutils literal notranslate"><span class="pre">Shakespeare.download()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.encode"><code class="docutils literal notranslate"><span class="pre">Shakespeare.encode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.Shakespeare.generate"><code class="docutils literal notranslate"><span class="pre">Shakespeare.generate()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Shakespeare.raw_data_path</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">Shakespeare.token_path</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">Shakespeare.tokens</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">Shakespeare.url</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">Shakespeare.vocab_size</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.url"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.url</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.vocab_size"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.raw_data_path"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.raw_data_path</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.chars"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.chars</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.chars</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.decode"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.decode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.download"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.download()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.encode"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.encode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.shakespeare.ShakespeareChar.generate"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.generate()</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.raw_data_path</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.url</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">ShakespeareChar.vocab_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

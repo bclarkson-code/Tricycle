@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="layers" href="layers.html" /><link rel="prev" title="models" href="models.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>activation - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,213 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="activation">
-<h1>activation<a class="headerlink" href="#activation" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.activation">
+<span id="activation"></span><h1>activation<a class="headerlink" href="#module-tricycle.activation" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.activation.GLU">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GLU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialiser=&lt;function</span> <span class="pre">init_xavier&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GLU"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GLU" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Gated Linear Unit (GLU) activation function.</p>
+<p>This layer applies the GLU function to the input tensor.
+GLU(x) = x_left * sigmoid(x_right)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>size</strong> (<em>int</em>) – Size of the input tensor.</p></li>
+<li><p><strong>initialiser</strong> (<em>callable</em>) – Function to initialize the weights.
+Defaults to init_xavier.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.GLU.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GLU.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GLU.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply the GLU function to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output tensor after applying GLU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.GLU.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GLU.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GLU.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer parameters from GPU to CPU memory.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.activation.GLU.linear">
+<span class="sig-name descname"><span class="pre">linear</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="layers.html#tricycle.layers.Dense" title="tricycle.layers.Dense"><span class="pre">Dense</span></a></em><a class="headerlink" href="#tricycle.activation.GLU.linear" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.GLU.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GLU.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GLU.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer parameters to GPU memory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.GLU.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GLU.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GLU.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the layer parameters using the given optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimizer to use for updating parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.GLU.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GLU.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GLU.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Reset the gradients of the layer parameters to zero.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.activation.GeLU">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GeLU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approximate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GeLU"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GeLU" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Gaussian Error Linear Unit (GELU) activation function.</p>
+<p>This layer applies the GELU function element-wise to the input tensor.
+GELU(x) ≈ 0.5x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>approximate</strong> (<em>bool</em>) – Whether to use the approximate version of GELU.
+Defaults to False.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.activation.GeLU.CONST_1">
+<span class="sig-name descname"><span class="pre">CONST_1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.7978845608028654</span></em><a class="headerlink" href="#tricycle.activation.GeLU.CONST_1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.activation.GeLU.CONST_2">
+<span class="sig-name descname"><span class="pre">CONST_2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.044715</span></em><a class="headerlink" href="#tricycle.activation.GeLU.CONST_2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.GeLU.backward">
+<span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GeLU.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GeLU.backward" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient of the GELU function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Upstream gradient.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient with respect to the input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.GeLU.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#GeLU.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.GeLU.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply the GELU function to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output tensor after applying GELU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.activation.ReLU">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ReLU</span></span><a class="reference internal" href="../_modules/tricycle/activation.html#ReLU"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.ReLU" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Rectified Linear Unit (ReLU) activation function.</p>
+<p>This layer applies the ReLU function element-wise to the input tensor.
+ReLU(x) = max(0, x)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.ReLU.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#ReLU.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.ReLU.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply the ReLU function to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output tensor after applying ReLU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.activation.Swish">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Swish</span></span><a class="reference internal" href="../_modules/tricycle/activation.html#Swish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.Swish" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="layers.html#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Swish activation function.</p>
+<p>This layer applies the Swish function element-wise to the input tensor.
+Swish(x) = x * sigmoid(x)</p>
+<p>Note: This implementation is equivalent to the SiLU activation function
+as it omits the bias term.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.Swish.backward">
+<span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#Swish.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.Swish.backward" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the gradient of the Swish function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Upstream gradient.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient with respect to the input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.activation.Swish.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/activation.html#Swish.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.activation.Swish.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply the Swish function to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output tensor after applying Swish.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +515,51 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">activation</a><ul>
+<li><a class="reference internal" href="#tricycle.activation.GLU"><code class="docutils literal notranslate"><span class="pre">GLU</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.activation.GLU.forward"><code class="docutils literal notranslate"><span class="pre">GLU.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GLU.from_gpu"><code class="docutils literal notranslate"><span class="pre">GLU.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GLU.linear"><code class="docutils literal notranslate"><span class="pre">GLU.linear</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GLU.to_gpu"><code class="docutils literal notranslate"><span class="pre">GLU.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GLU.update"><code class="docutils literal notranslate"><span class="pre">GLU.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GLU.zero_grad"><code class="docutils literal notranslate"><span class="pre">GLU.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.activation.GeLU"><code class="docutils literal notranslate"><span class="pre">GeLU</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.activation.GeLU.CONST_1"><code class="docutils literal notranslate"><span class="pre">GeLU.CONST_1</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GeLU.CONST_2"><code class="docutils literal notranslate"><span class="pre">GeLU.CONST_2</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GeLU.backward"><code class="docutils literal notranslate"><span class="pre">GeLU.backward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.GeLU.forward"><code class="docutils literal notranslate"><span class="pre">GeLU.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.activation.ReLU"><code class="docutils literal notranslate"><span class="pre">ReLU</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.activation.ReLU.forward"><code class="docutils literal notranslate"><span class="pre">ReLU.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.activation.Swish"><code class="docutils literal notranslate"><span class="pre">Swish</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.activation.Swish.backward"><code class="docutils literal notranslate"><span class="pre">Swish.backward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.activation.Swish.forward"><code class="docutils literal notranslate"><span class="pre">Swish.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="shakespeare" href="../tricycle_datasets/shakespeare.html" /><link rel="prev" title="ops" href="ops.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>exceptions - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,36 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="exceptions">
-<h1>exceptions<a class="headerlink" href="#exceptions" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.exceptions">
+<span id="exceptions"></span><h1>exceptions<a class="headerlink" href="#module-tricycle.exceptions" title="Link to this heading">¶</a></h1>
+<dl class="py exception">
+<dt class="sig sig-object py" id="tricycle.exceptions.GPUDisabledException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GPUDisabledException</span></span><a class="reference internal" href="../_modules/tricycle/exceptions.html#GPUDisabledException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.exceptions.GPUDisabledException" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when a GPU operation is attempted while GPU computation is disabled.</p>
+<p>This exception is thrown when a function or method tries to perform
+a GPU-based operation, but GPU computation has been explicitly disabled
+or is unavailable in the current environment.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.exceptions.GPUDisabledException.None">
+<span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#tricycle.exceptions.GPUDisabledException.None" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">perform_gpu_operation</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">GPUDisabledException</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GPU operations are currently disabled.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +338,30 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">exceptions</a><ul>
+<li><a class="reference internal" href="#tricycle.exceptions.GPUDisabledException"><code class="docutils literal notranslate"><span class="pre">GPUDisabledException</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.exceptions.GPUDisabledException.None"><code class="docutils literal notranslate"><span class="pre">GPUDisabledException.None</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

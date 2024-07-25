@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="ops" href="ops.html" /><link rel="prev" title="unary" href="unary.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>utils - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,143 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="utils">
-<h1>utils<a class="headerlink" href="#utils" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.utils">
+<span id="utils"></span><h1>utils<a class="headerlink" href="#module-tricycle.utils" title="Link to this heading">¶</a></h1>
+<p>Utility functions and classes for the Tricycle project.</p>
+<p>This module contains various utility functions and classes used throughout
+the Tricycle project, including dataset handling, mixed precision training,
+tensor shape matching, and performance logging.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.utils.Dataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dataset</span></span><a class="reference internal" href="../_modules/tricycle/utils.html#Dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.utils.Dataset" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Abstract base class for datasets.</p>
+<p>This class defines the interface for dataset objects used in the project.
+Subclasses should implement the __len__ and __getitem__ methods.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.utils.UseMixedPrecision">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UseMixedPrecision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_loss_scale_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/utils.html#UseMixedPrecision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.utils.UseMixedPrecision" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Context manager for enabling mixed precision training.</p>
+<p>This class provides a context manager that enables mixed precision training
+when entered and disables it when exited.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>initial_loss_scale_factor</strong> (<em>int</em>) – The initial loss scale factor for mixed
+precision training. Defaults to 128.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.utils.log_memory_and_time">
+<span class="sig-name descname"><span class="pre">log_memory_and_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('memory.log')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/utils.html#log_memory_and_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.utils.log_memory_and_time" title="Link to this definition">¶</a></dt>
+<dd><p>Logs the current GPU memory usage and timestamp to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stage</strong> (<em>str</em>) – A string describing the current stage of execution.</p></li>
+<li><p><strong>path</strong> (<em>Path</em>) – The path to the log file. Defaults to “memory.log”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#tricycle.exceptions.GPUDisabledException" title="tricycle.exceptions.GPUDisabledException"><strong>GPUDisabledException</strong></a> – If GPU is not enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.utils.optimal_n_tokens">
+<span class="sig-name descname"><span class="pre">optimal_n_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/utils.html#optimal_n_tokens"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.utils.optimal_n_tokens" title="Link to this definition">¶</a></dt>
+<dd><p>Estimates the compute-optimal number of tokens to train on using Chinchilla scaling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="models.html#tricycle.models.GPT" title="tricycle.models.GPT"><em>GPT</em></a>) – The GPT model.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="configs.html#tricycle.configs.GPTConfig" title="tricycle.configs.GPTConfig"><em>GPTConfig</em></a>) – The GPT configuration.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the optimal number of tokens and steps.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Reference:</dt><dd><p><a class="reference external" href="https://arxiv.org/abs/2404.10102">https://arxiv.org/abs/2404.10102</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.utils.r_squared">
+<span class="sig-name descname"><span class="pre">r_squared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/utils.html#r_squared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.utils.r_squared" title="Link to this definition">¶</a></dt>
+<dd><p>Calculates the R-squared metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actual_values</strong> – The actual values.</p></li>
+<li><p><strong>predicted_values</strong> – The predicted values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The R-squared value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.utils.shapes_match">
+<span class="sig-name descname"><span class="pre">shapes_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/utils.html#shapes_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.utils.shapes_match" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if the shapes of two tensors match for binary operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_1</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The first tensor to compare.</p></li>
+<li><p><strong>tensor_2</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The second tensor to compare.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the shapes match, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the shapes do not match.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle.utils.smooth">
+<span class="sig-name descname"><span class="pre">smooth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/utils.html#smooth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.utils.smooth" title="Link to this definition">¶</a></dt>
+<dd><p>Applies exponential smoothing to an iterable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – The input iterable to smooth.</p></li>
+<li><p><strong>factor</strong> (<em>float</em>) – The smoothing factor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>float</em> – The smoothed values.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +445,33 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">utils</a><ul>
+<li><a class="reference internal" href="#tricycle.utils.Dataset"><code class="docutils literal notranslate"><span class="pre">Dataset</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.utils.UseMixedPrecision"><code class="docutils literal notranslate"><span class="pre">UseMixedPrecision</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.utils.log_memory_and_time"><code class="docutils literal notranslate"><span class="pre">log_memory_and_time()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.utils.optimal_n_tokens"><code class="docutils literal notranslate"><span class="pre">optimal_n_tokens()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.utils.r_squared"><code class="docutils literal notranslate"><span class="pre">r_squared()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.utils.shapes_match"><code class="docutils literal notranslate"><span class="pre">shapes_match()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.utils.smooth"><code class="docutils literal notranslate"><span class="pre">smooth()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

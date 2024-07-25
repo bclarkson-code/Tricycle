@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="loss" href="loss.html" /><link rel="prev" title="activation" href="activation.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>layers - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,989 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="layers">
-<h1>layers<a class="headerlink" href="#layers" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.layers">
+<span id="layers"></span><h1>layers<a class="headerlink" href="#module-tricycle.layers" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.Dense">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dense</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialiser=&lt;function</span> <span class="pre">init_xavier&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A dense (fully connected) layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>to_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.weights">
+<span class="sig-name descname"><span class="pre">weights</span></span><a class="headerlink" href="#tricycle.layers.Dense.weights" title="Link to this definition">¶</a></dt>
+<dd><p>The weight matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.from_size">
+<span class="sig-name descname"><span class="pre">from_size</span></span><a class="headerlink" href="#tricycle.layers.Dense.from_size" title="Link to this definition">¶</a></dt>
+<dd><p>Input size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.to_size">
+<span class="sig-name descname"><span class="pre">to_size</span></span><a class="headerlink" href="#tricycle.layers.Dense.to_size" title="Link to this definition">¶</a></dt>
+<dd><p>Output size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#tricycle.layers.Dense.name" title="Link to this definition">¶</a></dt>
+<dd><p>Optional name for the layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the forward pass of the dense layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output of the dense layer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer from GPU to CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The layer itself.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.layers.Dense" title="tricycle.layers.Dense">Dense</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">from_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.grad_back_fn">
+<span class="sig-name descname"><span class="pre">grad_back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense.grad_back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense.grad_back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute gradients with respect to input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Gradient from the next layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient with respect to input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="exceptions.html#tricycle.exceptions.GPUDisabledException.None" title="tricycle.exceptions.GPUDisabledException.None"><span class="pre">None</span></a></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer to GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The layer itself.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.layers.Dense" title="tricycle.layers.Dense">Dense</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">to_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the weights using the given optimiser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimiser to use for updating weights.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.weight_back_fn">
+<span class="sig-name descname"><span class="pre">weight_back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense.weight_back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense.weight_back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute gradients with respect to weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Gradient from the next layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient with respect to weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">weights</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dense.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dense.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dense.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Reset gradients to zero.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.Dropout">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dropout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probability</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dropout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dropout" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A dropout layer for regularization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probability</strong> (<em>float</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Dropout.probability">
+<span class="sig-name descname"><span class="pre">probability</span></span><a class="headerlink" href="#tricycle.layers.Dropout.probability" title="Link to this definition">¶</a></dt>
+<dd><p>The probability of dropping out a unit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Dropout.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Dropout.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Dropout.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the forward pass of the dropout layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Output tensor with dropout applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialiser=&lt;function</span> <span class="pre">init_xavier&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Embedding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Embedding" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Embedding layer that converts indices to dense vectors.</p>
+<p>This layer implements a lookup-based embedding, converting input indices
+to dense vector representations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>to_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.weights">
+<span class="sig-name descname"><span class="pre">weights</span></span><a class="headerlink" href="#tricycle.layers.Embedding.weights" title="Link to this definition">¶</a></dt>
+<dd><p>The embedding matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle.layers.Embedding.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>Size of the vocabulary (number of embeddings).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Embedding.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Embedding.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the gradient with respect to the embedding weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The gradient with respect to the embedding weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Embedding.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Embedding.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Performs the embedding lookup.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor containing indices to be embedded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The embedded representation of the input indices.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Embedding.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Embedding.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves the embedding weights from GPU to CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The embedding layer with weights moved to CPU.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.layers.Embedding" title="tricycle.layers.Embedding">Embedding</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Embedding.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Embedding.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves the embedding weights to the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The embedding layer with weights moved to GPU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.layers.Embedding" title="tricycle.layers.Embedding">Embedding</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Embedding.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Embedding.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the embedding weights using the given optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimizer to use for updating weights.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Embedding.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Embedding.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Embedding.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Resets the gradient of the weights to None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.Layer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Layer</span></span><a class="reference internal" href="../_modules/tricycle/layers.html#Layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Layer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>A generic Layer object, representing a single operation in a neural network.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Layer.tensors">
+<span class="sig-name descname"><span class="pre">tensors</span></span><a class="headerlink" href="#tricycle.layers.Layer.tensors" title="Link to this definition">¶</a></dt>
+<dd><p>Dictionary of tensors used in the layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, <a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Layer.layers">
+<span class="sig-name descname"><span class="pre">layers</span></span><a class="headerlink" href="#tricycle.layers.Layer.layers" title="Link to this definition">¶</a></dt>
+<dd><p>Sequence of sub-layers, if any.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[<a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer">Layer</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Layer.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Layer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Layer.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the forward pass of the layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – This method should be implemented by subclasses.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Layer.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Layer.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Layer.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer from GPU to CPU.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">layers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><span class="pre">Layer</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">tensors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><span class="pre">Tensor</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Layer.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Layer.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Layer.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer to GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Layer.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Layer.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Layer.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the layer’s parameters using the given optimiser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimiser to use for updating parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Layer.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Layer.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Layer.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Reset gradients to zero.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LayerNorm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A Layer Normalization layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>embedding_dim</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.eps">
+<span class="sig-name descname"><span class="pre">eps</span></span><a class="headerlink" href="#tricycle.layers.LayerNorm.eps" title="Link to this definition">¶</a></dt>
+<dd><p>A small value added for numerical stability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.gamma">
+<span class="sig-name descname"><span class="pre">gamma</span></span><a class="headerlink" href="#tricycle.layers.LayerNorm.gamma" title="Link to this definition">¶</a></dt>
+<dd><p>Scale parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.beta">
+<span class="sig-name descname"><span class="pre">beta</span></span><a class="headerlink" href="#tricycle.layers.LayerNorm.beta" title="Link to this definition">¶</a></dt>
+<dd><p>Shift parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute gradients with respect to input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Gradient from the next layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient with respect to input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.beta_back_fn">
+<span class="sig-name descname"><span class="pre">beta_back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.beta_back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.beta_back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute gradients with respect to beta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Gradient from the next layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient with respect to beta.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the forward pass of the layer normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor of shape (batch_size, <a href="#id6"><span class="problematic" id="id7">*</span></a>).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized tensor of the same shape as input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer from GPU to CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The layer itself.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.layers.LayerNorm" title="tricycle.layers.LayerNorm">LayerNorm</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.gamma_back_fn">
+<span class="sig-name descname"><span class="pre">gamma_back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.gamma_back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.gamma_back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Compute gradients with respect to gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Gradient from the next layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient with respect to gamma.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Move the layer to GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number. Defaults to 0.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The layer itself.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.layers.LayerNorm" title="tricycle.layers.LayerNorm">LayerNorm</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.update" title="Link to this definition">¶</a></dt>
+<dd><p>Update the layer’s parameters using the given optimiser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimiser to use for updating parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.LayerNorm.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#LayerNorm.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.LayerNorm.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Reset gradients to zero.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RMSNorm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">REALLY_SMALL_NUMBER</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Root Mean Square Layer Normalization.</p>
+<p>This class implements RMSNorm, a normalization technique that normalizes
+the inputs using the root mean square.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>embedding_dim</strong> (<em>int</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.layers.RMSNorm.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>The size of the input’s last dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.REALLY_SMALL_NUMBER">
+<span class="sig-name descname"><span class="pre">REALLY_SMALL_NUMBER</span></span><a class="headerlink" href="#tricycle.layers.RMSNorm.REALLY_SMALL_NUMBER" title="Link to this definition">¶</a></dt>
+<dd><p>A small constant to avoid division by zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.weights">
+<span class="sig-name descname"><span class="pre">weights</span></span><a class="headerlink" href="#tricycle.layers.RMSNorm.weights" title="Link to this definition">¶</a></dt>
+<dd><p>Learnable scale parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.back_fn">
+<span class="sig-name descname"><span class="pre">back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm.back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm.back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the gradient with respect to the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The gradient with respect to the input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Applies RMS normalization to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – Input tensor to be normalized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The normalized output tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves the layer’s parameters from GPU to CPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The layer with parameters moved to CPU.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#tricycle.layers.RMSNorm" title="tricycle.layers.RMSNorm">RMSNorm</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves the layer’s parameters to the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The layer with parameters moved to GPU.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tricycle.layers.RMSNorm" title="tricycle.layers.RMSNorm">RMSNorm</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the layer’s parameters using the given optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimizer to use for updating parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.weight_back_fn">
+<span class="sig-name descname"><span class="pre">weight_back_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm.weight_back_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm.weight_back_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the gradient with respect to the weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The gradient with respect to the weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RMSNorm.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RMSNorm.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RMSNorm.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Resets the gradient of the weights to None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RotaryEncode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_heads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RotaryEncode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RotaryEncode" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>Applies rotary positional encoding to a key and query.</p>
+<p>This layer implements the Rotary Position Embedding (RoPE) technique
+for transformer models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embedding_dim</strong> (<em>int</em>)</p></li>
+<li><p><strong>n_heads</strong> (<em>int</em>)</p></li>
+<li><p><strong>context_window</strong> (<em>int</em>)</p></li>
+<li><p><strong>theta</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.embedding_dim">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><a class="headerlink" href="#tricycle.layers.RotaryEncode.embedding_dim" title="Link to this definition">¶</a></dt>
+<dd><p>The size of the embedding dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.n_heads">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><a class="headerlink" href="#tricycle.layers.RotaryEncode.n_heads" title="Link to this definition">¶</a></dt>
+<dd><p>The number of attention heads.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.context_window">
+<span class="sig-name descname"><span class="pre">context_window</span></span><a class="headerlink" href="#tricycle.layers.RotaryEncode.context_window" title="Link to this definition">¶</a></dt>
+<dd><p>The size of the context window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.theta">
+<span class="sig-name descname"><span class="pre">theta</span></span><a class="headerlink" href="#tricycle.layers.RotaryEncode.theta" title="Link to this definition">¶</a></dt>
+<dd><p>The base value for frequency calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.head_size">
+<span class="sig-name descname"><span class="pre">head_size</span></span><a class="headerlink" href="#tricycle.layers.RotaryEncode.head_size" title="Link to this definition">¶</a></dt>
+<dd><p>The size of each attention head.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.freqs_cos">
+<span class="sig-name descname"><span class="pre">freqs_cos</span></span><a class="headerlink" href="#tricycle.layers.RotaryEncode.freqs_cos" title="Link to this definition">¶</a></dt>
+<dd><p>Precomputed cosine of frequencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.freqs_sin">
+<span class="sig-name descname"><span class="pre">freqs_sin</span></span><a class="headerlink" href="#tricycle.layers.RotaryEncode.freqs_sin" title="Link to this definition">¶</a></dt>
+<dd><p>Precomputed sine of frequencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.backward">
+<span class="sig-name descname"><span class="pre">backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RotaryEncode.backward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RotaryEncode.backward" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the gradient for the rotary encoding operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grad</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The gradient tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The gradient with respect to the input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">context_window</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">embedding_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RotaryEncode.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RotaryEncode.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Applies rotary positional encoding to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tensor with rotary positional encoding applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">n_heads</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id10" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.RotaryEncode.precompute_constants">
+<span class="sig-name descname"><span class="pre">precompute_constants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#RotaryEncode.precompute_constants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.RotaryEncode.precompute_constants" title="Link to this definition">¶</a></dt>
+<dd><p>Precomputes the cosine and sine of frequencies for rotary encoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Precomputed cosine and sine values.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[ArrayLike, ArrayLike]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id11">
+<span class="sig-name descname"><span class="pre">theta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10000.0</span></em><a class="headerlink" href="#id11" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.layers.Sequential">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Sequential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">layers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Sequential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Sequential" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a></p>
+<p>A sequential container of layers.</p>
+<p>This class allows for the creation of a sequential chain of layers,
+where the output of each layer is fed as input to the next layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>layers</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="#tricycle.layers.Layer" title="tricycle.layers.Layer"><em>Layer</em></a><em>]</em>)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.layers.Sequential.layers">
+<span class="sig-name descname"><span class="pre">layers</span></span><a class="headerlink" href="#tricycle.layers.Sequential.layers" title="Link to this definition">¶</a></dt>
+<dd><p>A tuple of Layer objects in the sequential chain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Sequential.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Sequential.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Sequential.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Performs a forward pass through all layers in the sequential chain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> (<a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor"><em>Tensor</em></a>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output tensor after passing through all layers.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="tensor.html#tricycle.tensor.Tensor" title="tricycle.tensor.Tensor">Tensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Sequential.from_gpu">
+<span class="sig-name descname"><span class="pre">from_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Sequential.from_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Sequential.from_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves all layers from GPU to CPU.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Sequential.to_gpu">
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Sequential.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Sequential.to_gpu" title="Link to this definition">¶</a></dt>
+<dd><p>Moves all layers to the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>int</em>) – The GPU device number.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Sequential.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimiser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Sequential.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Sequential.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates all layers using the given optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optimiser</strong> (<a class="reference internal" href="optimisers.html#tricycle.optimisers.Optimiser" title="tricycle.optimisers.Optimiser"><em>Optimiser</em></a>) – The optimizer to use for updating layers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.layers.Sequential.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/layers.html#Sequential.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.layers.Sequential.zero_grad" title="Link to this definition">¶</a></dt>
+<dd><p>Resets the gradients of all layers to None.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +1291,125 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">layers</a><ul>
+<li><a class="reference internal" href="#tricycle.layers.Dense"><code class="docutils literal notranslate"><span class="pre">Dense</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.Dense.weights"><code class="docutils literal notranslate"><span class="pre">Dense.weights</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.from_size"><code class="docutils literal notranslate"><span class="pre">Dense.from_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.to_size"><code class="docutils literal notranslate"><span class="pre">Dense.to_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.name"><code class="docutils literal notranslate"><span class="pre">Dense.name</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.forward"><code class="docutils literal notranslate"><span class="pre">Dense.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.from_gpu"><code class="docutils literal notranslate"><span class="pre">Dense.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Dense.from_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.grad_back_fn"><code class="docutils literal notranslate"><span class="pre">Dense.grad_back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">Dense.name</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.to_gpu"><code class="docutils literal notranslate"><span class="pre">Dense.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">Dense.to_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.update"><code class="docutils literal notranslate"><span class="pre">Dense.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.weight_back_fn"><code class="docutils literal notranslate"><span class="pre">Dense.weight_back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">Dense.weights</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dense.zero_grad"><code class="docutils literal notranslate"><span class="pre">Dense.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.layers.Dropout"><code class="docutils literal notranslate"><span class="pre">Dropout</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.Dropout.probability"><code class="docutils literal notranslate"><span class="pre">Dropout.probability</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Dropout.forward"><code class="docutils literal notranslate"><span class="pre">Dropout.forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding"><code class="docutils literal notranslate"><span class="pre">Embedding</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.weights"><code class="docutils literal notranslate"><span class="pre">Embedding.weights</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.vocab_size"><code class="docutils literal notranslate"><span class="pre">Embedding.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.back_fn"><code class="docutils literal notranslate"><span class="pre">Embedding.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.forward"><code class="docutils literal notranslate"><span class="pre">Embedding.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.from_gpu"><code class="docutils literal notranslate"><span class="pre">Embedding.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.to_gpu"><code class="docutils literal notranslate"><span class="pre">Embedding.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.update"><code class="docutils literal notranslate"><span class="pre">Embedding.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Embedding.zero_grad"><code class="docutils literal notranslate"><span class="pre">Embedding.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.layers.Layer"><code class="docutils literal notranslate"><span class="pre">Layer</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.Layer.tensors"><code class="docutils literal notranslate"><span class="pre">Layer.tensors</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Layer.layers"><code class="docutils literal notranslate"><span class="pre">Layer.layers</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Layer.forward"><code class="docutils literal notranslate"><span class="pre">Layer.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Layer.from_gpu"><code class="docutils literal notranslate"><span class="pre">Layer.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">Layer.layers</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">Layer.tensors</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Layer.to_gpu"><code class="docutils literal notranslate"><span class="pre">Layer.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Layer.update"><code class="docutils literal notranslate"><span class="pre">Layer.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Layer.zero_grad"><code class="docutils literal notranslate"><span class="pre">Layer.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm"><code class="docutils literal notranslate"><span class="pre">LayerNorm</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.eps"><code class="docutils literal notranslate"><span class="pre">LayerNorm.eps</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.gamma"><code class="docutils literal notranslate"><span class="pre">LayerNorm.gamma</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.beta"><code class="docutils literal notranslate"><span class="pre">LayerNorm.beta</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.back_fn"><code class="docutils literal notranslate"><span class="pre">LayerNorm.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.beta_back_fn"><code class="docutils literal notranslate"><span class="pre">LayerNorm.beta_back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.forward"><code class="docutils literal notranslate"><span class="pre">LayerNorm.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.from_gpu"><code class="docutils literal notranslate"><span class="pre">LayerNorm.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.gamma_back_fn"><code class="docutils literal notranslate"><span class="pre">LayerNorm.gamma_back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.to_gpu"><code class="docutils literal notranslate"><span class="pre">LayerNorm.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.update"><code class="docutils literal notranslate"><span class="pre">LayerNorm.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.LayerNorm.zero_grad"><code class="docutils literal notranslate"><span class="pre">LayerNorm.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm"><code class="docutils literal notranslate"><span class="pre">RMSNorm</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.embedding_dim"><code class="docutils literal notranslate"><span class="pre">RMSNorm.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.REALLY_SMALL_NUMBER"><code class="docutils literal notranslate"><span class="pre">RMSNorm.REALLY_SMALL_NUMBER</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.weights"><code class="docutils literal notranslate"><span class="pre">RMSNorm.weights</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.back_fn"><code class="docutils literal notranslate"><span class="pre">RMSNorm.back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.forward"><code class="docutils literal notranslate"><span class="pre">RMSNorm.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.from_gpu"><code class="docutils literal notranslate"><span class="pre">RMSNorm.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.to_gpu"><code class="docutils literal notranslate"><span class="pre">RMSNorm.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.update"><code class="docutils literal notranslate"><span class="pre">RMSNorm.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.weight_back_fn"><code class="docutils literal notranslate"><span class="pre">RMSNorm.weight_back_fn()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RMSNorm.zero_grad"><code class="docutils literal notranslate"><span class="pre">RMSNorm.zero_grad()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode"><code class="docutils literal notranslate"><span class="pre">RotaryEncode</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.embedding_dim"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.n_heads"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.context_window"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.context_window</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.theta"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.theta</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.head_size"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.head_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.freqs_cos"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.freqs_cos</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.freqs_sin"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.freqs_sin</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.backward"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.backward()</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.context_window</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.embedding_dim</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.forward"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.forward()</span></code></a></li>
+<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.n_heads</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.RotaryEncode.precompute_constants"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.precompute_constants()</span></code></a></li>
+<li><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">RotaryEncode.theta</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle.layers.Sequential"><code class="docutils literal notranslate"><span class="pre">Sequential</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.layers.Sequential.layers"><code class="docutils literal notranslate"><span class="pre">Sequential.layers</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Sequential.forward"><code class="docutils literal notranslate"><span class="pre">Sequential.forward()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Sequential.from_gpu"><code class="docutils literal notranslate"><span class="pre">Sequential.from_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Sequential.to_gpu"><code class="docutils literal notranslate"><span class="pre">Sequential.to_gpu()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Sequential.update"><code class="docutils literal notranslate"><span class="pre">Sequential.update()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.layers.Sequential.zero_grad"><code class="docutils literal notranslate"><span class="pre">Sequential.zero_grad()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

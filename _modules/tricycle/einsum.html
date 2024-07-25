@@ -1,0 +1,742 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
+        <title>tricycle.einsum - Tricycle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=362ab14a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=613ab9ff" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">Tricycle 0.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  
+  <span class="sidebar-brand-text">Tricycle 0.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../modules.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/optimisers.html">optimisers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/attention.html">attention</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/tokeniser.html">tokeniser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/einsum.html">einsum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/dataset.html">dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/functions.html">functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/reduce.html">reduce</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/blocks.html">blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/initialisers.html">initialisers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/tensor.html">tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/models.html">models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/activation.html">activation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/layers.html">layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/loss.html">loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/configs.html">configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/scheduler.html">scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/binary.html">binary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/context.html">context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/weakset.html">weakset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/unary.html">unary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/utils.html">utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/ops.html">ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle/exceptions.html">exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle_datasets/shakespeare.html">shakespeare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle_datasets/codeparrot.html">codeparrot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tricycle_datasets/fineweb.html">fineweb</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for tricycle.einsum</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Einsum implementation for generalized matrix operations.</span>
+
+<span class="sd">This module provides an implementation of the einsum operation, which is a</span>
+<span class="sd">generalization of many matrix operations. It allows for flexible manipulation</span>
+<span class="sd">of tensors using index notation.</span>
+
+<span class="sd">Example usage:</span>
+<span class="sd">    &gt;&gt;&gt; a = Tensor([[1,2],[3,4]])</span>
+<span class="sd">    &gt;&gt;&gt; Einsum(&quot;ij-&gt;ji&quot;)(a)</span>
+<span class="sd">    Tensor([[1. 3.]</span>
+<span class="sd">     [2. 4.]], name=einsum ij-&gt;ji)</span>
+
+<span class="sd">For more details on einsum operations, refer to the class and function</span>
+<span class="sd">docstrings.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span> <span class="nn">tricycle.tensor</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">select_backend</span>
+
+
+<div class="viewcode-block" id="Subscript">
+<a class="viewcode-back" href="../../tricycle/einsum.html#tricycle.einsum.Subscript">[docs]</a>
+<span class="k">class</span> <span class="nc">Subscript</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A string that defines an einsum operation.</span>
+
+<span class="sd">    This class parses and represents the subscript notation used in einsum</span>
+<span class="sd">    operations.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        subscript (str): The original subscript string.</span>
+<span class="sd">        inputs (list[list[str]]): Parsed input indices.</span>
+<span class="sd">        output (list[str]): Parsed output indices.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">subscript</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+    <span class="n">output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">_index_pattern</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:[A-Za-z]|(?:\.</span><span class="si">{3}</span><span class="s2">))&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subscript</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a Subscript object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subscript (str): The einsum subscript string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span> <span class="o">=</span> <span class="n">subscript</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Subscript.split">
+<a class="viewcode-back" href="../../tricycle/einsum.html#tricycle.einsum.Subscript.split">[docs]</a>
+    <span class="k">def</span> <span class="nf">split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a subscripts string into a list of indices and a result.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing two elements:</span>
+<span class="sd">                - list[list[str]]: Parsed input indices.</span>
+<span class="sd">                - list[str]: Parsed output indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_pattern</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_pattern</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">indices</span><span class="p">,</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Subscript.join">
+<a class="viewcode-back" href="../../tricycle/einsum.html#tricycle.einsum.Subscript.join">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Join parsed indices and result back into a subscript string.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            indices (list[list[str]]): Parsed input indices.</span>
+<span class="sd">            result (list[str]): Parsed output indices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The joined subscript string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inputs_string</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="n">outputs_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">inputs_string</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">outputs_string</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<div class="viewcode-block" id="Subscript.from_split">
+<a class="viewcode-back" href="../../tricycle/einsum.html#tricycle.einsum.Subscript.from_split">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_split</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a Subscript object from split indices and result.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            indices (list[list[str]]): Parsed input indices.</span>
+<span class="sd">            result (list[str]): Parsed output indices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Subscript: A new Subscript object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">unique_input_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the set of unique input indices.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            set[str]: Set of unique input indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_inputs</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">all_inputs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a string representation of the Subscript object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The subscript string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a string representation of the Subscript object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The subscript string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span></div>
+
+
+
+<div class="viewcode-block" id="EinsumBackOp">
+<a class="viewcode-back" href="../../tricycle/einsum.html#tricycle.einsum.EinsumBackOp">[docs]</a>
+<span class="k">class</span> <span class="nc">EinsumBackOp</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The backward operation for an einsum operation.</span>
+
+<span class="sd">    This class represents the backward pass of an einsum operation, which is</span>
+<span class="sd">    done by swapping the indices and tensors for an input with the output.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        idx (int): The index of the input tensor for which this backward</span>
+<span class="sd">            operation is defined.</span>
+<span class="sd">        tensors (Sequence[Tensor]): The input tensors of the original einsum</span>
+<span class="sd">            operation.</span>
+<span class="sd">        subscript (Subscript): The subscript of the original einsum operation.</span>
+<span class="sd">        left_tensors (Sequence[Tensor]): Tensors to the left of the current</span>
+<span class="sd">            input in the original operation.</span>
+<span class="sd">        right_tensors (Sequence[Tensor]): Tensors to the right of the current</span>
+<span class="sd">            input in the original operation.</span>
+<span class="sd">        combined_subscript (Subscript): The subscript for the backward</span>
+<span class="sd">            operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">subscript</span><span class="p">:</span> <span class="n">Subscript</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize an EinsumBackOp object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            idx (int): The index of the input tensor for which this backward</span>
+<span class="sd">                operation is defined.</span>
+<span class="sd">            tensors (Sequence[Tensor]): The input tensors of the original</span>
+<span class="sd">                einsum operation.</span>
+<span class="sd">            subscript (Subscript): The subscript of the original einsum</span>
+<span class="sd">                operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tensors</span> <span class="o">=</span> <span class="n">tensors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span> <span class="o">=</span> <span class="n">subscript</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">left_tensors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_tensors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_inputs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combined_subscript</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_subscript</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_build_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the left and right tensor sequences for the backward operation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing two elements:</span>
+<span class="sd">                - Sequence[Tensor]: Left tensors.</span>
+<span class="sd">                - Sequence[Tensor]: Right tensors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">left_tensors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensors</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># Special case for the last index</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensors</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">right_tensors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensors</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">right_tensors</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="n">left_tensors</span><span class="p">,</span> <span class="n">right_tensors</span>
+
+    <span class="k">def</span> <span class="nf">_build_subscript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the subscript for the backward operation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Subscript: The subscript for the backward operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">left_subscript</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span><span class="o">.</span><span class="n">inputs</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="c1"># Special case for the last index</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tensors</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">right_subscript</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">right_subscript</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">combined_indices</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="o">*</span><span class="n">left_subscript</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span><span class="o">.</span><span class="n">output</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">right_subscript</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">Subscript</span><span class="o">.</span><span class="n">from_split</span><span class="p">(</span>
+            <span class="n">combined_indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">idx</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the backward function for einsum.</span>
+
+<span class="sd">        This is done by swapping the indices and tensors for an input with</span>
+<span class="sd">        the output. E.g &quot;ij,jk-&gt;ik&quot; with idx = 0 would become &quot;ik,jk-&gt;ij&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor (Tensor): The gradient tensor from the previous layer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor: The result of the backward einsum operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">combined_tensors</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">left_tensors</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">right_tensors</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Einsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_subscript</span><span class="p">)(</span><span class="o">*</span><span class="n">combined_tensors</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a string representation of the EinsumBackOp object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A string representation of the object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;EinsumBackOp(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">combined_subscript</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Einsum">
+<a class="viewcode-back" href="../../tricycle/einsum.html#tricycle.einsum.Einsum">[docs]</a>
+<span class="k">class</span> <span class="nc">Einsum</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class representing an einsum operation.</span>
+
+<span class="sd">    This class encapsulates the logic for performing einsum operations on</span>
+<span class="sd">    tensors, including handling of batched operations and backward passes.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        subscript (Subscript): The subscript defining the einsum operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">subscript</span><span class="p">:</span> <span class="n">Subscript</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subscript</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Subscript</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize an Einsum object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subscript (str | Subscript): The subscript defining the einsum</span>
+<span class="sd">                operation. Can be a string or a Subscript object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">subscript</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">subscript</span> <span class="o">=</span> <span class="n">Subscript</span><span class="p">(</span><span class="n">subscript</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span> <span class="o">=</span> <span class="n">subscript</span>
+
+    <span class="k">def</span> <span class="nf">_build_back_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">subscript</span><span class="p">:</span> <span class="n">Subscript</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Figure out the backward operation for each input.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensors (Sequence[Tensor]): The input tensors.</span>
+<span class="sd">            subscript (Subscript): The subscript for the operation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: A list of EinsumBackOp objects, one for each input tensor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensors</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">subscript</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="c1"># To avoid adding a bunch of special cases for batched</span>
+        <span class="c1"># operations, we replace any batched operations with</span>
+        <span class="c1"># their non-batched counterparts</span>
+        <span class="n">subscript</span> <span class="o">=</span> <span class="n">Subscript</span><span class="p">(</span><span class="n">subscript</span><span class="o">.</span><span class="n">subscript</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+        <span class="n">back_functions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tensors</span><span class="p">)):</span>
+            <span class="n">back_op</span> <span class="o">=</span> <span class="n">EinsumBackOp</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">tensors</span><span class="p">,</span> <span class="n">subscript</span><span class="p">)</span>
+            <span class="n">back_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">back_op</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">back_functions</span>
+
+    <span class="k">def</span> <span class="nf">_handle_single_tensor</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">subscript</span><span class="p">:</span> <span class="n">Subscript</span><span class="p">,</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Subscript</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle the case of a single input tensor.</span>
+
+<span class="sd">        If there is only one tensor, we need to insert a matrix of ones</span>
+<span class="sd">        to allow for expansion operations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subscript (Subscript): The original subscript.</span>
+<span class="sd">            tensors (Sequence[Tensor]): The input tensors.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing two elements:</span>
+<span class="sd">                - Subscript: The modified subscript.</span>
+<span class="sd">                - Sequence[Tensor]: The modified list of tensors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="n">select_backend</span><span class="p">(</span><span class="o">*</span><span class="n">tensors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensors</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">subscript</span><span class="p">,</span> <span class="n">tensors</span>
+
+        <span class="p">[</span><span class="n">tensor</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensors</span>
+        <span class="n">ones</span> <span class="o">=</span> <span class="n">Tensor</span><span class="p">(</span>
+            <span class="n">xp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+            <span class="n">is_batched</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">is_batched</span><span class="p">,</span>
+            <span class="n">requires_grad</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tensors</span> <span class="o">=</span> <span class="p">[</span><span class="n">tensor</span><span class="p">,</span> <span class="n">ones</span><span class="p">]</span>
+
+        <span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">subscript</span><span class="o">.</span><span class="n">inputs</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">subscript</span><span class="o">.</span><span class="n">output</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">]</span>
+        <span class="n">subscript</span> <span class="o">=</span> <span class="n">Subscript</span><span class="o">.</span><span class="n">from_split</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">subscript</span><span class="p">,</span> <span class="n">tensors</span>
+
+    <span class="k">def</span> <span class="nf">_handle_batched</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">subscript</span><span class="p">:</span> <span class="n">Subscript</span><span class="p">,</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Subscript</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle batched tensors in the einsum operation.</span>
+
+<span class="sd">        If a tensor is labelled as being batched, add an extra dimension</span>
+<span class="sd">        to its indices.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subscript (Subscript): The original subscript.</span>
+<span class="sd">            tensors (Sequence[Tensor]): The input tensors.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing three elements:</span>
+<span class="sd">                - Subscript: The modified subscript.</span>
+<span class="sd">                - Sequence[Tensor]: The input tensors (unchanged).</span>
+<span class="sd">                - bool: Whether the output should be batched.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If &#39;z&#39; is used in the subscript for non-batched tensors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">batch_output</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subscript</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">tensors</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">tensor</span><span class="o">.</span><span class="n">is_batched</span><span class="p">:</span>
+                <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;z&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">idx</span><span class="p">)</span>
+                <span class="n">batch_output</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">subscript</span><span class="o">.</span><span class="n">output</span>
+        <span class="k">if</span> <span class="n">batch_output</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;z&quot;</span> <span class="ow">in</span> <span class="n">subscript</span><span class="o">.</span><span class="n">subscript</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;`z` cannot be used in an einsum subscript on &quot;</span>
+                    <span class="s2">&quot;non-batched tensors because &quot;</span>
+                    <span class="s2">&quot;it is reserved for batched indices.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">output</span>
+
+        <span class="n">subscript</span> <span class="o">=</span> <span class="n">Subscript</span><span class="o">.</span><span class="n">from_split</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">subscript</span><span class="p">,</span> <span class="n">tensors</span><span class="p">,</span> <span class="n">batch_output</span>
+
+    <span class="k">def</span> <span class="nf">_replace_infinity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replace infinity values in tensors with the max value for that datatype.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensors (Sequence[Tensor]): The input tensors.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: A list of processed tensors with infinity values replaced.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="n">select_backend</span><span class="p">(</span><span class="o">*</span><span class="n">tensors</span><span class="p">)</span>
+        <span class="n">processed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">tensors</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">xp</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">processed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">new_tensor</span> <span class="o">=</span> <span class="n">Tensor</span><span class="p">(</span>
+                <span class="n">xp</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">array</span><span class="p">),</span>
+                <span class="n">is_batched</span><span class="o">=</span><span class="n">tensor</span><span class="o">.</span><span class="n">is_batched</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">new_tensor</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">new_tensor</span><span class="o">.</span><span class="n">back_fns</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">back_fns</span>
+            <span class="n">new_tensor</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">processed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_tensor</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">processed</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">tensors</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform the einsum operation on the input tensors.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *tensors (Tensor): The input tensors for the einsum operation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor: The result of the einsum operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="n">select_backend</span><span class="p">(</span><span class="o">*</span><span class="n">tensors</span><span class="p">)</span>
+        <span class="n">subscript</span><span class="p">,</span> <span class="n">tensors</span><span class="p">,</span> <span class="n">batch_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_batched</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subscript</span><span class="p">,</span> <span class="n">tensors</span>
+        <span class="p">)</span>
+        <span class="n">subscript</span><span class="p">,</span> <span class="n">tensors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_single_tensor</span><span class="p">(</span><span class="n">subscript</span><span class="p">,</span> <span class="n">tensors</span><span class="p">)</span>
+        <span class="n">tensor_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">array</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tensors</span><span class="p">]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">Tensor</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">subscript</span><span class="p">),</span> <span class="o">*</span><span class="n">tensor_data</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">batch_output</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">is_batched</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tensors</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">back_fns</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_build_back_ops</span><span class="p">(</span><span class="n">tensors</span><span class="p">,</span> <span class="n">subscript</span><span class="p">))</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;einsum </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subscript</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Ben Clarkson
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=01f34227"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

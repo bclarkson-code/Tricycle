@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="unary" href="unary.html" /><link rel="prev" title="context" href="context.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>weakset - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,56 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="weakset">
-<h1>weakset<a class="headerlink" href="#weakset" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle.weakset">
+<span id="weakset"></span><h1>weakset<a class="headerlink" href="#module-tricycle.weakset" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle.weakset.WeakSet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WeakSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/weakset.html#WeakSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.weakset.WeakSet" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MutableSet</span></code></p>
+<p>A Set that uses weak references and does not check for equality.</p>
+<p>Normal sets check that two elements are equal by comparing __hash__
+and __eq__. For tensors, __eq__ is slow so this class only checks
+__hash__. This is a bad idea normally but because we control the hash
+for Tensors, we can (hopefully) use it for gradient calculation</p>
+<p>To avoid circular dependencies, we implement this as a weak set so that
+the garbage collector can clean up objects that are referred to by this
+class</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle.weakset.WeakSet._dict">
+<span class="sig-name descname"><span class="pre">_dict</span></span><a class="headerlink" href="#tricycle.weakset.WeakSet._dict" title="Link to this definition">¶</a></dt>
+<dd><p>A WeakValueDictionary to store the weak references.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.weakset.WeakSet.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/weakset.html#WeakSet.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.weakset.WeakSet.add" title="Link to this definition">¶</a></dt>
+<dd><p>Adds an element to the set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>Any</em>) – The element to add to the set.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle.weakset.WeakSet.discard">
+<span class="sig-name descname"><span class="pre">discard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle/weakset.html#WeakSet.discard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle.weakset.WeakSet.discard" title="Link to this definition">¶</a></dt>
+<dd><p>Removes an element from the set if it is present.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>Any</em>) – The element to remove from the set.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -316,8 +358,32 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">weakset</a><ul>
+<li><a class="reference internal" href="#tricycle.weakset.WeakSet"><code class="docutils literal notranslate"><span class="pre">WeakSet</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle.weakset.WeakSet._dict"><code class="docutils literal notranslate"><span class="pre">WeakSet._dict</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.weakset.WeakSet.add"><code class="docutils literal notranslate"><span class="pre">WeakSet.add()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle.weakset.WeakSet.discard"><code class="docutils literal notranslate"><span class="pre">WeakSet.discard()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

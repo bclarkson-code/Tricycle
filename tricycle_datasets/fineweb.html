@@ -2,12 +2,12 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="codeparrot" href="codeparrot.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.07.18 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.07.18 -->
         <title>fineweb - Tricycle 0.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=362ab14a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=613ab9ff" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -178,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -263,14 +263,169 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="fineweb">
-<h1>fineweb<a class="headerlink" href="#fineweb" title="Link to this heading">¶</a></h1>
+          <section id="module-tricycle_datasets.fineweb">
+<span id="fineweb"></span><h1>fineweb<a class="headerlink" href="#module-tricycle_datasets.fineweb" title="Link to this heading">¶</a></h1>
+<p>Prepares and manages web text data from Fineweb.</p>
+<p>This module provides functionality to download, tokenize, and manage the
+fineweb dataset. It includes utilities for data preparation and a custom
+dataset class for efficient data loading.</p>
+<p>Typical usage example:</p>
+<blockquote>
+<div><p>dataset = FineWeb(vocab_size=50257, split=’train’)
+tokens = dataset[0:1000]  # Get the first 1000 tokens</p>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.FineWeb">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FineWeb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/fineweb.html#FineWeb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.fineweb.FineWeb" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<p>A custom dataset class for efficient loading of tokenized fineweb data.</p>
+<p>This class provides an interface to access tokenized fineweb data,
+supporting indexing and length operations. It also includes methods
+for encoding and decoding tokens.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.FineWeb.vocab_size">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><a class="headerlink" href="#tricycle_datasets.fineweb.FineWeb.vocab_size" title="Link to this definition">¶</a></dt>
+<dd><p>An integer representing the vocabulary size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.FineWeb.token_path">
+<span class="sig-name descname"><span class="pre">token_path</span></span><a class="headerlink" href="#tricycle_datasets.fineweb.FineWeb.token_path" title="Link to this definition">¶</a></dt>
+<dd><p>A Path object pointing to the tokenized data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.FineWeb.tokeniser_string">
+<span class="sig-name descname"><span class="pre">tokeniser_string</span></span><a class="headerlink" href="#tricycle_datasets.fineweb.FineWeb.tokeniser_string" title="Link to this definition">¶</a></dt>
+<dd><p>A string specifying the tokenizer to use (default: “gpt2”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.FineWeb.tokens">
+<span class="sig-name descname"><span class="pre">tokens</span></span><a class="headerlink" href="#tricycle_datasets.fineweb.FineWeb.tokens" title="Link to this definition">¶</a></dt>
+<dd><p>A numpy memmap of the tokenized data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vocab_size</strong> (<em>int</em>) – An integer specifying the vocabulary size.</p></li>
+<li><p><strong>split</strong> (<em>Literal</em><em>[</em><em>'train'</em><em>] </em><em>| </em><em>~typing.Literal</em><em>[</em><em>'valid'</em><em>]</em>) – A string literal, either “train” or “valid”, specifying the dataset split.</p></li>
+<li><p><strong>token_path</strong> (<em>Path</em>) – An optional Path object for the tokenized data file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the tokenizer’s max token value doesn’t match the specified vocab size.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.FineWeb.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/fineweb.html#FineWeb.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.fineweb.FineWeb.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes the input tokens into text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*args</strong> – Variable length argument list to be passed to the tokenizer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A string of decoded text.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.FineWeb.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/fineweb.html#FineWeb.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.fineweb.FineWeb.encode" title="Link to this definition">¶</a></dt>
+<dd><p>Encodes the input text into tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*args</strong> – Variable length argument list to be passed to the tokenizer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of integer token IDs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">token_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">tokeniser_string</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'gpt2'</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">tokens</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">vocab_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.prepare_data">
+<span class="sig-name descname"><span class="pre">prepare_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/fineweb.html#prepare_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.fineweb.prepare_data" title="Link to this definition">¶</a></dt>
+<dd><p>Downloads and tokenizes the coreparrot dataset.</p>
+<p>This function is adapted from Andrej Karpathy’s NanoGPT:
+<a class="reference external" href="https://github.com/karpathy/nanoGPT/blob/master/data/openwebtext/prepare.py">https://github.com/karpathy/nanoGPT/blob/master/data/openwebtext/prepare.py</a></p>
+<p>The function performs the following steps:
+1. Loads the dataset
+2. Splits it into train and validation sets
+3. Tokenizes the dataset
+4. Saves the tokenized data to binary files</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function uses OpenAI’s tiktoken for tokenization due to
+performance considerations.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tricycle_datasets.fineweb.tokenise_document">
+<span class="sig-name descname"><span class="pre">tokenise_document</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">example</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tricycle_datasets/fineweb.html#tokenise_document"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tricycle_datasets.fineweb.tokenise_document" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenizes a single document from the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>example</strong> – A dictionary containing the ‘text’ field to be tokenized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary with ‘ids’ (tokenized text) and ‘len’ (number of tokens).</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -308,8 +463,41 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">fineweb</a><ul>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.FineWeb"><code class="docutils literal notranslate"><span class="pre">FineWeb</span></code></a><ul>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.FineWeb.vocab_size"><code class="docutils literal notranslate"><span class="pre">FineWeb.vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.FineWeb.token_path"><code class="docutils literal notranslate"><span class="pre">FineWeb.token_path</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.FineWeb.tokeniser_string"><code class="docutils literal notranslate"><span class="pre">FineWeb.tokeniser_string</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.FineWeb.tokens"><code class="docutils literal notranslate"><span class="pre">FineWeb.tokens</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.FineWeb.decode"><code class="docutils literal notranslate"><span class="pre">FineWeb.decode()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.FineWeb.encode"><code class="docutils literal notranslate"><span class="pre">FineWeb.encode()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">FineWeb.token_path</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">FineWeb.tokeniser_string</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">FineWeb.tokens</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">FineWeb.vocab_size</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.prepare_data"><code class="docutils literal notranslate"><span class="pre">prepare_data()</span></code></a></li>
+<li><a class="reference internal" href="#tricycle_datasets.fineweb.tokenise_document"><code class="docutils literal notranslate"><span class="pre">tokenise_document()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
