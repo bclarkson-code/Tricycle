@@ -14,7 +14,6 @@ Typical usage example:
 import math
 
 
-
 def linear_schedule(
     step: int,
     max_learning_rate: float,

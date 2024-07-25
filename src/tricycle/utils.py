@@ -16,8 +16,8 @@ import humanize
 import numpy as np
 
 from tricycle import GPU_ENABLED
-from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.configs import GPTConfig
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
 
 if TYPE_CHECKING:

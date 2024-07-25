@@ -558,7 +558,6 @@ class UnarySum(Op):
 
         return Tensor(array=self._grad, is_batched=grad.is_batched)
 
-
     def forward(self, tensor: Tensor) -> Tensor:
         """
         Sums all the values in a tensor.

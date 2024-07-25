@@ -568,7 +568,7 @@ class FeedForward(Layer):
         x = self.dropout(x)
         return x
 
-    def update(self, optimiser: Optimiser) -> 'FeedForward':
+    def update(self, optimiser: Optimiser) -> "FeedForward":
         """Update the parameters of the layer using the given optimiser.
 
         Args:
@@ -581,7 +581,7 @@ class FeedForward(Layer):
         self.linear_2.update(optimiser)
         return self
 
-    def zero_grad(self) -> 'FeedForward':
+    def zero_grad(self) -> "FeedForward":
         """Zero out the gradients of the layer's parameters.
 
         Returns:
@@ -591,7 +591,7 @@ class FeedForward(Layer):
         self.linear_2.zero_grad()
         return self
 
-    def to_gpu(self, device: int = 0) -> 'FeedForward':
+    def to_gpu(self, device: int = 0) -> "FeedForward":
         """Move the layer to the GPU.
 
         Args:
@@ -604,7 +604,7 @@ class FeedForward(Layer):
         self.linear_2.to_gpu(device)
         return self
 
-    def from_gpu(self) -> 'FeedForward':
+    def from_gpu(self) -> "FeedForward":
         """Move the layer from the GPU to the CPU.
 
         Returns:

@@ -3,8 +3,8 @@ from typing import Sequence
 
 from numpy._typing import ArrayLike
 
-from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.binary import BinaryMultiply
+from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.initialisers import init_xavier
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor

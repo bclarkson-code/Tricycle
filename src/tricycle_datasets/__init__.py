@@ -1,3 +1,3 @@
-from . import fineweb, codeparrot, shakespeare
+from . import codeparrot, fineweb, shakespeare
 
 __all__ = ["fineweb", "codeparrot", "shakespeare"]
