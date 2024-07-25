@@ -31,7 +31,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        mamba install sphinx furo recommonmark -c conda-forge
+        conda install sphinx furo recommonmark -c conda-forge
 
     - name: Build docs
       run: |
