@@ -1,10 +1,51 @@
-from dataclasses import asdict, dataclass
+"""Configurations for different GPT models.
+
+This module contains configuration classes for various GPT models, including
+a base configuration class and specific configurations for debugging,
+Shakespeare-based models, and a small GPT model.
+
+Classes:
+    GPTConfig: Base configuration class for GPT models.
+    DebugConfig: Configuration for debugging purposes.
+    ShakespeareConfig: Configuration for Shakespeare-based models.
+    SmolGPTConfig: Configuration for a small GPT model.
+"""
+
 from typing import Literal
 
 
 class GPTConfig:
-    """
-    Base config for GPT models
+    """Base configuration class for GPT models.
+
+    This class defines the common parameters and hyperparameters used in
+    GPT model training and evaluation.
+
+    Attributes:
+        embedding_dim (int): Dimension of the embedding layer.
+        context_window (int): Size of the context window.
+        vocab_size (int): Size of the vocabulary.
+        n_heads (int): Number of attention heads.
+        n_layers (int): Number of transformer layers.
+        expansion_ratio (float): Expansion ratio for feed-forward layers.
+        activation_fn (str): Activation function used in the model.
+        norm_fn (str): Normalization function used in the model.
+        input_dropout_prob (float): Dropout probability for input embeddings.
+        residual_dropout_prob (float): Dropout probability for residual connections.
+        linear_dropout_prob (float): Dropout probability for linear layers.
+        max_learning_rate (float): Maximum learning rate for training.
+        min_learning_rate (float): Minimum learning rate for training.
+        warmup_steps (int): Number of warmup steps for learning rate scheduling.
+        weight_decay (float): Weight decay factor for regularization.
+        momentum (float): Momentum factor for optimization.
+        beta1 (float): Beta1 parameter for Adam optimizer.
+        beta2 (float): Beta2 parameter for Adam optimizer.
+        steps (int | Literal["chinchilla_optimal"]): Number of training steps or "chinchilla_optimal".
+        eval_interval (int): Interval between evaluations.
+        batch_size (int): Batch size for training.
+        gradient_accumulation_steps (int): Number of steps for gradient accumulation.
+        device_idx (int): Index of the device to use for training.
+        mlflow_tracking_uri (str): URI for MLflow tracking server.
+        mlflow_experiment_name (str): Name of the MLflow experiment.
     """
 
     embedding_dim: int
@@ -39,6 +80,11 @@ class GPTConfig:
     mlflow_experiment_name: str
 
     def dict(self) -> dict[str, int | float | str | bool]:
+        """Convert the configuration to a dictionary.
+
+        Returns:
+            dict[str, int | float | str | bool]: A dictionary representation of the configuration.
+        """
         out = {}
         for k, v in self.__class__.__dict__.items():
             if k.startswith("__"):
@@ -51,6 +97,11 @@ class GPTConfig:
 
 
 class DebugConfig(GPTConfig):
+    """Configuration for debugging purposes.
+
+    This class inherits from GPTConfig and sets specific values for debugging.
+    """
+
     embedding_dim = 14
     context_window = 13
     vocab_size = 11
@@ -86,6 +137,12 @@ class DebugConfig(GPTConfig):
 
 
 class ShakespeareConfig(GPTConfig):
+    """Configuration for Shakespeare-based models.
+
+    This class inherits from GPTConfig and sets specific values for
+    Shakespeare-based language models.
+    """
+
     embedding_dim = 384
     context_window = 256
     vocab_size = 1024
@@ -121,6 +178,12 @@ class ShakespeareConfig(GPTConfig):
 
 
 class SmolGPTConfig(GPTConfig):
+    """Configuration for a small GPT model.
+
+    This class inherits from GPTConfig and sets specific values for
+    a small-scale GPT model.
+    """
+
     embedding_dim = 768
     context_window = 1024
     vocab_size = 50256

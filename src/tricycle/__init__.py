@@ -1,4 +1,16 @@
-from dataclasses import dataclass
+"""
+Tricycle: A deep learning framework.
+
+This module initializes the Tricycle framework and imports its various components.
+It also checks for GPU support using CuPY.
+
+Attributes:
+    GPU_ENABLED (bool): Indicates whether GPU support is available.
+
+Imports:
+    Various submodules of the Tricycle framework.
+"""
+
 from warnings import warn
 
 try:
@@ -14,17 +26,54 @@ except Exception as e:
     GPU_ENABLED = False
     warn(f"Failed to build cupy array: {e}. Disabling GPU features")
 
+from . import (
+    activation,
+    attention,
+    binary,
+    blocks,
+    configs,
+    context,
+    dataset,
+    einsum,
+    exceptions,
+    functions,
+    initialisers,
+    layers,
+    loss,
+    models,
+    ops,
+    optimisers,
+    reduce,
+    scheduler,
+    tensor,
+    tokeniser,
+    unary,
+    utils,
+    weakset,
+)
 
-@dataclass
-class TricycleContext:
-    # you can modify this to use mixed precision all the time but the
-    # recommended method for mixed precision training is to use the
-    # tricycle/utils.py:UseMixedPrecision context manager
-    use_mixed_precision: bool = False
-
-    # If we're using mixed precision, we'll want to scale the loss to help
-    # with under and overflowing
-    loss_scale_factor: int = 128
-
-
-TRICYCLE_CONTEXT = TricycleContext()
+__all__ = [
+    "activation",
+    "attention",
+    "binary",
+    "blocks",
+    "configs",
+    "context",
+    "dataset",
+    "einsum",
+    "exceptions",
+    "functions",
+    "initialisers",
+    "layers",
+    "loss",
+    "models",
+    "ops",
+    "optimisers",
+    "reduce",
+    "scheduler",
+    "tensor",
+    "tokeniser",
+    "unary",
+    "utils",
+    "weakset",
+]
