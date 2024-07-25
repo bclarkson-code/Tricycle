@@ -38,10 +38,10 @@ class Tensor:
 
     Attributes:
         _id (int): Unique identifier for the tensor.
+        _parents (set[Tensor] | None): Parent tensors in the computation graph.
         array (ArrayLike): The underlying numpy/cupy array.
         args (tuple[Tensor, ...] | None): Arguments used to create this tensor.
         back_fns (tuple[Op, ...] | None): Backward functions for gradient computation.
-        parents (set[Tensor] | None): Parent tensors in the computation graph.
         grad (Optional[Tensor]): Gradient of this tensor.
         name (Optional[str]): Name of the tensor.
         requires_grad (bool): Whether this tensor requires gradient computation.
@@ -76,6 +76,7 @@ class Tensor:
             self = array
             return
         self._id = _id or uuid.uuid4().int
+        self._parents = None
         if GPU_ENABLED:
             import cupy
 
@@ -93,6 +94,7 @@ class Tensor:
                 dtype = DEFAULT_DTYPE
 
         self.array = self.array.astype(dtype)
+        self.grad = None
 
         self.requires_grad = requires_grad
         self.is_batched = is_batched
@@ -120,17 +122,17 @@ class Tensor:
                 if not arg.requires_grad:
                     continue
 
-                if arg.parents is None:
+                if arg._parents is None:
                     # if we use a set, we get a circular reference
                     # which can't be garbage collected, leading to a memory
                     # leak so we need to do a weakref to avoid the circular
                     # reference
-                    arg.parents = WeakSet()
+                    arg._parents = WeakSet()
 
                 # if a node has a parent we haven't visited yet, store it
-                if node not in arg.parents:
+                if node not in arg._parents:
                     stack.append(arg)
-                    arg.parents.add(node)
+                    arg._parents.add(node)
 
     def _calculate_gradients(self, clip: float | None = None):
         """
@@ -163,7 +165,7 @@ class Tensor:
                 if not arg.requires_grad:
                     continue
 
-                if arg.parents is None:
+                if arg._parents is None:
                     raise ValueError(
                         "arg.parents is None. Parents must be attached",
                         "before calculating gradients. Did you forget to ",
@@ -171,10 +173,10 @@ class Tensor:
                     )
 
                 # already visited along this edge, dont do it again
-                if node not in arg.parents:
+                if node not in arg._parents:
                     continue
 
-                arg.parents.remove(node)
+                arg._parents.remove(node)
 
                 try:
                     # actuall calculate gradient for this node
@@ -196,10 +198,10 @@ class Tensor:
                     raise e
 
                 # only move to a new node if we have been to all of its parents
-                if len(arg.parents) == 0:
+                if len(arg._parents) == 0:
                     # get rid of the weakref once we're done with a node so we
                     # can pickle the model. Weakrefs can't be pickled
-                    arg.parents = None
+                    arg._parents = None
                     stack.append(arg)
 
     def backward(self, clip: float | None = None):
