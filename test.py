@@ -348,30 +348,42 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
 attention = TritonAttentionRef.apply
 
 
-@pytest.mark.parametrize("Z, H, N_CTX, HEAD_DIM", [(1, 2, 1024, 64)])
-@pytest.mark.parametrize("causal", [True])
-def test_op(Z, H, N_CTX, HEAD_DIM, causal, dtype=torch.float16):
+def test_op(
+    batch_size, n_heads, n_tokens, head_size, causal, dtype=torch.float16
+):
     torch.manual_seed(20)
     DEVICE = torch.device("cuda:0")
     q = (
-        torch.empty((Z, H, N_CTX, HEAD_DIM), dtype=dtype, device=DEVICE)
+        torch.empty(
+            (batch_size, n_heads, n_tokens, head_size),
+            dtype=dtype,
+            device=DEVICE,
+        )
         .normal_(mean=0.0, std=0.5)
         .requires_grad_()
     )
     k = (
-        torch.empty((Z, H, N_CTX, HEAD_DIM), dtype=dtype, device=DEVICE)
+        torch.empty(
+            (batch_size, n_heads, n_tokens, head_size),
+            dtype=dtype,
+            device=DEVICE,
+        )
         .normal_(mean=0.0, std=0.5)
         .requires_grad_()
     )
     v = (
-        torch.empty((Z, H, N_CTX, HEAD_DIM), dtype=dtype, device=DEVICE)
+        torch.empty(
+            (batch_size, n_heads, n_tokens, head_size),
+            dtype=dtype,
+            device=DEVICE,
+        )
         .normal_(mean=0.0, std=0.5)
         .requires_grad_()
     )
     sm_scale = 0.5
     dout = torch.randn_like(q)
     # reference implementation
-    M = torch.tril(torch.ones((N_CTX, N_CTX), device=DEVICE))
+    M = torch.tril(torch.ones((n_tokens, n_tokens), device=DEVICE))
     p = torch.matmul(q, k.transpose(2, 3)) * sm_scale
     if causal:
         p[:, :, M == 0] = float("-inf")
@@ -399,6 +411,7 @@ def test_op(Z, H, N_CTX, HEAD_DIM, causal, dtype=torch.float16):
 
 if __name__ == "__main__":
     test_op(4, 12, 1024, 64, True)
+    compare_outputs(1024)
     # Test with default tolerances
     # results = test_all_sizes()
 
