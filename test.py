@@ -169,8 +169,8 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
     # tricycle_tensor = Tensor(
     #     deepcopy(tensor).cpu(), is_batched=True, dtype=np.float16
     # ).to_gpu()
-    # sm_scale = 1 / math.sqrt(head_size)
-    sm_scale = 0.5
+    sm_scale = 1 / math.sqrt(head_size)
+    # sm_scale = 0.5
 
     # Get torch output
     # tensor.requires_grad = True
@@ -232,7 +232,7 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
     tri_dk, k.grad = k.grad.clone(), None
     tri_dq, q.grad = q.grad.clone(), None
 
-    assert torch.allclose(triton_output, ref_out, rtol=1e-2, atol=0)
+    assert torch.allclose(triton_output, ref_out, rtol=0, atol=1e-2)
 
     # dq, dk, dv, _, _ = triton_ref.backward(grad)
 
