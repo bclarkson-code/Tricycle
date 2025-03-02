@@ -204,21 +204,22 @@ def compare_outputs(n_tokens):
         .requires_grad_()
     )
     grad = torch.rand_like(q)
-    # torch_out = andrej_attention(
-    #     q,
-    #     k,
-    #     v,
-    #     batch_size,
-    #     n_tokens,
-    #     head_size * n_heads,
-    #     n_head=n_heads,
-    #     block_size=n_tokens,
-    #     sm_scale=sm_scale,
-    M = torch.tril(torch.ones((n_tokens, n_tokens), device=DEVICE))
-    p = torch.matmul(q, k.transpose(2, 3)) * sm_scale
-    p[:, :, M == 0] = float("-inf")
-    p = torch.softmax(p.float(), dim=-1).half()
-    ref_out = torch.matmul(p, v)
+    ref_out = andrej_attention(
+        q,
+        k,
+        v,
+        batch_size,
+        n_tokens,
+        head_size * n_heads,
+        n_head=n_heads,
+        block_size=n_tokens,
+        sm_scale=sm_scale,
+    )
+    # M = torch.tril(torch.ones((n_tokens, n_tokens), device=DEVICE))
+    # p = torch.matmul(q, k.transpose(2, 3)) * sm_scale
+    # p[:, :, M == 0] = float("-inf")
+    # p = torch.softmax(p.float(), dim=-1).half()
+    # ref_out = torch.matmul(p, v)
     ref_out.backward(grad)
     ref_dv, v.grad = v.grad.clone(), None
     ref_dk, k.grad = k.grad.clone(), None
