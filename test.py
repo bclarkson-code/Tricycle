@@ -348,11 +348,11 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
 attention = TritonAttentionRef.apply
 
 
-def test_op(
-    batch_size, n_heads, n_tokens, head_size, causal, dtype=torch.float16
-):
+def test_op(n_tokens, dtype=torch.float16):
     torch.manual_seed(20)
     DEVICE = torch.device("cuda:0")
+    batch_size, n_heads, head_size = 4, 12, 64
+    causal = True
     q = (
         torch.empty(
             (batch_size, n_heads, n_tokens, head_size),
@@ -410,7 +410,7 @@ def test_op(
 
 
 if __name__ == "__main__":
-    test_op(4, 12, 1024, 64, True)
+    test_op(1024)
     compare_outputs(1024)
     # Test with default tolerances
     # results = test_all_sizes()
