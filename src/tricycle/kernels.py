@@ -623,130 +623,43 @@ class TritonAttentionRef(torch.autograd.Function):
             device=q.device,
             dtype=torch.float32,
         )
-        if (
-            USE_TMA
-            and supports_tma()
-            and not (
-                torch.cuda.get_device_capability()[0] == 9
-                and q.dtype == torch.float8_e5m2
-            )
-        ):
-            # Note that on Hopper we cannot perform a FP8 dot with a non-transposed second tensor
-            y_dim = q.shape[0] * q.shape[1] * q.shape[2]
 
-            desc_helper = TmaAutoTuneHelper()
-            desc_helper.init_tma_descriptor("q")
-            desc_helper.init_tma_descriptor("v")
-            desc_helper.init_tma_descriptor("k")
-            desc_helper.init_tma_descriptor("o")
-
-            def grid(META):
-                nonlocal desc_helper
-
-                desc_helper.fill_2d_tma_descriptor(
-                    "q",
-                    q.data_ptr(),
-                    y_dim,
-                    HEAD_DIM_K,
-                    META["BLOCK_M"],
-                    HEAD_DIM_K,
-                    q.element_size(),
-                )
-
-                desc_helper.fill_2d_tma_descriptor(
-                    "v",
-                    v.data_ptr(),
-                    y_dim,
-                    HEAD_DIM_K,
-                    META["BLOCK_N"],
-                    HEAD_DIM_K,
-                    v.element_size(),
-                )
-
-                desc_helper.fill_2d_tma_descriptor(
-                    "k",
-                    k.data_ptr(),
-                    y_dim,
-                    HEAD_DIM_K,
-                    META["BLOCK_N"],
-                    HEAD_DIM_K,
-                    k.element_size(),
-                )
-
-                desc_helper.fill_2d_tma_descriptor(
-                    "o",
-                    o.data_ptr(),
-                    y_dim,
-                    HEAD_DIM_K,
-                    META["BLOCK_M"],
-                    HEAD_DIM_K,
-                    o.element_size(),
-                )
-
-                return (
-                    triton.cdiv(q.shape[2], META["BLOCK_M"]),
-                    q.shape[0] * q.shape[1],
-                    1,
-                )
-
-            desc_q = desc_helper.get_tma_descriptor_kernel_param("q")
-            desc_v = desc_helper.get_tma_descriptor_kernel_param("v")
-            desc_k = desc_helper.get_tma_descriptor_kernel_param("k")
-            desc_o = desc_helper.get_tma_descriptor_kernel_param("o")
-
-            ctx.grid = grid
-            _attn_fwd_tma[grid](
-                sm_scale,
-                M,  #
-                q.shape[0],
-                q.shape[1],  #
-                desc_q,
-                desc_k,
-                desc_v,
-                desc_o,  #
-                N_CTX=q.shape[2],  #
-                HEAD_DIM=HEAD_DIM_K,  #
-                FP8_OUTPUT=q.dtype == torch.float8_e5m2,  #
-                STAGE=stage,  #
-                **extra_kern_args
-            )
-        else:
-            grid = lambda args: (
-                triton.cdiv(q.shape[2], args["BLOCK_M"]),
-                q.shape[0] * q.shape[1],
-                1,
-            )
-            ctx.grid = grid
-            _attn_fwd[grid](
-                q,
-                k,
-                v,
-                sm_scale,
-                M,
-                o,  #
-                q.stride(0),
-                q.stride(1),
-                q.stride(2),
-                q.stride(3),  #
-                k.stride(0),
-                k.stride(1),
-                k.stride(2),
-                k.stride(3),  #
-                v.stride(0),
-                v.stride(1),
-                v.stride(2),
-                v.stride(3),  #
-                o.stride(0),
-                o.stride(1),
-                o.stride(2),
-                o.stride(3),  #
-                q.shape[0],
-                q.shape[1],  #
-                N_CTX=q.shape[2],  #
-                HEAD_DIM=HEAD_DIM_K,  #
-                STAGE=stage,  #
-                **extra_kern_args
-            )
+        grid = lambda args: (
+            triton.cdiv(q.shape[2], args["BLOCK_M"]),
+            q.shape[0] * q.shape[1],
+            1,
+        )
+        ctx.grid = grid
+        _attn_fwd[grid](
+            q,
+            k,
+            v,
+            sm_scale,
+            M,
+            o,  #
+            q.stride(0),
+            q.stride(1),
+            q.stride(2),
+            q.stride(3),  #
+            k.stride(0),
+            k.stride(1),
+            k.stride(2),
+            k.stride(3),  #
+            v.stride(0),
+            v.stride(1),
+            v.stride(2),
+            v.stride(3),  #
+            o.stride(0),
+            o.stride(1),
+            o.stride(2),
+            o.stride(3),  #
+            q.shape[0],
+            q.shape[1],  #
+            N_CTX=q.shape[2],  #
+            HEAD_DIM=HEAD_DIM_K,  #
+            STAGE=stage,  #
+            **extra_kern_args
+        )
 
         ctx.save_for_backward(q, k, v, o, M)
         ctx.sm_scale = sm_scale
