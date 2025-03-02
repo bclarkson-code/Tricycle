@@ -585,10 +585,9 @@ def _attn_bwd(
     tl.store(dq_ptrs, dq)
 
 
-class TritonAttentionRef(torch.autograd.Function):
+class TritonAttentionRef:
 
-    @staticmethod
-    def forward(ctx, q, k, v, causal, sm_scale, USE_TMA=False):
+    def forward(self, q, k, v, causal, sm_scale):
         # shape constraints
         HEAD_DIM_Q, HEAD_DIM_K = q.shape[-1], k.shape[-1]
         # when v is in float8_e5m2 it is transposed.
@@ -610,7 +609,7 @@ class TritonAttentionRef(torch.autograd.Function):
             q.shape[0] * q.shape[1],
             1,
         )
-        ctx.grid = grid
+        self.grid = grid
         _attn_fwd[grid](
             q,
             k,
@@ -642,15 +641,14 @@ class TritonAttentionRef(torch.autograd.Function):
             **extra_kern_args
         )
 
-        ctx.save_for_backward(q, k, v, o, M)
-        ctx.sm_scale = sm_scale
-        ctx.HEAD_DIM = HEAD_DIM_K
-        ctx.causal = causal
+        self.saved_tensors = (q, k, v, o, M)
+        self.sm_scale = sm_scale
+        self.HEAD_DIM = HEAD_DIM_K
+        self.causal = causal
         return o
 
-    @staticmethod
-    def backward(ctx, do):
-        q, k, v, o, M = ctx.saved_tensors
+    def backward(self, do):
+        q, k, v, o, M = self.saved_tensors
         assert do.is_contiguous()
         assert (
             q.stride() == k.stride() == v.stride() == o.stride() == do.stride()
@@ -665,7 +663,7 @@ class TritonAttentionRef(torch.autograd.Function):
         BLK_SLICE_FACTOR = 2
         RCP_LN2 = 1.4426950408889634  # = 1.0 / ln(2)
         arg_k = k
-        arg_k = arg_k * (ctx.sm_scale * RCP_LN2)
+        arg_k = arg_k * (self.sm_scale * RCP_LN2)
         PRE_BLOCK = 128
         assert N_CTX % PRE_BLOCK == 0
         pre_grid = (N_CTX // PRE_BLOCK, BATCH * N_HEAD)
@@ -678,14 +676,14 @@ class TritonAttentionRef(torch.autograd.Function):
             N_HEAD,
             N_CTX,  #
             BLOCK_M=PRE_BLOCK,
-            HEAD_DIM=ctx.HEAD_DIM,  #
+            HEAD_DIM=self.HEAD_DIM,  #
         )
         grid = (N_CTX // BLOCK_N1, 1, BATCH * N_HEAD)
         _attn_bwd[grid](
             q,
             arg_k,
             v,
-            ctx.sm_scale,
+            self.sm_scale,
             do,
             dq,
             dk,
@@ -703,7 +701,7 @@ class TritonAttentionRef(torch.autograd.Function):
             BLOCK_M2=BLOCK_M2,
             BLOCK_N2=BLOCK_N2,  #
             BLK_SLICE_FACTOR=BLK_SLICE_FACTOR,  #
-            HEAD_DIM=ctx.HEAD_DIM,  #
+            HEAD_DIM=self.HEAD_DIM,  #
             num_warps=NUM_WARPS,  #
             num_stages=NUM_STAGES,  #
         )

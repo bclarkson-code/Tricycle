@@ -215,103 +215,92 @@ def compare_outputs(n_tokens):
         block_size=n_tokens,
         sm_scale=sm_scale,
     )
-    # M = torch.tril(torch.ones((n_tokens, n_tokens), device=DEVICE))
-    # p = torch.matmul(q, k.transpose(2, 3)) * sm_scale
-    # p[:, :, M == 0] = float("-inf")
-    # p = torch.softmax(p.float(), dim=-1).half()
-    # ref_out = torch.matmul(p, v)
+
     ref_out.backward(grad)
     ref_dv, v.grad = v.grad.clone(), None
     ref_dk, k.grad = k.grad.clone(), None
     ref_dq, q.grad = q.grad.clone(), None
 
     # get triton output
-    triton_ref = TritonAttentionRef.apply
-    triton_output = triton_ref(q, k, v, True, sm_scale).half()
-    triton_output.backward(grad)
-    tri_dv, v.grad = v.grad.clone(), None
-    tri_dk, k.grad = k.grad.clone(), None
-    tri_dq, q.grad = q.grad.clone(), None
+    triton_ref = TritonAttentionRef()
+    triton_output = triton_ref.forward(q, k, v, True, sm_scale).half()
+    tri_dq, tri_dk, tri_dv, _, _ = triton_ref.backward(grad)
 
     assert torch.allclose(triton_output, ref_out, rtol=0, atol=1e-2)
-
-    # dq, dk, dv, _, _ = triton_ref.backward(grad)
 
     # dk = dk.contiguous().transpose(1, 2).reshape(k.shape)
     q_diff = abs(ref_dq - tri_dq)
     k_diff = abs(ref_dk - tri_dk)
     v_diff = abs(ref_dv - tri_dv)
-    v_matches = torch.allclose(ref_dv, tri_dv, atol=1e-2, rtol=0)  # True
-    q_matches = torch.allclose(ref_dq, tri_dq, atol=1e-2, rtol=0)  # True
-    k_matches = torch.allclose(ref_dk, tri_dk, atol=1e-2, rtol=0)  # False
+    v_matches = torch.allclose(ref_dv, tri_dv, atol=1e-2, rtol=0)
+    q_matches = torch.allclose(ref_dq, tri_dq, atol=1e-2, rtol=0)
+    k_matches = torch.allclose(ref_dk, tri_dk, atol=1e-2, rtol=0)
 
     print(f"{q_diff.mean().cpu().numpy()=}, {'✅'  if q_matches else '❌'}")
     print(f"{v_diff.mean().cpu().numpy()=}, {'✅'  if v_matches else '❌'}")
     print(f"{k_diff.mean().cpu().numpy()=}, {'✅'  if k_matches else '❌'}")
-    raise Exception("Done")
 
-    # why do q and v match but not k?
-    assert torch.allclose(v.grad, dv, atol=1e-2, rtol=0)  # works
-    assert torch.allclose(q.grad, dq, atol=1e-2, rtol=0)  # works
-    assert torch.allclose(k.grad, dk, atol=1e-2, rtol=0)  # Does not work
+    assert v_matches
+    assert q_matches
+    assert k_matches
 
     # assert torch.allclose(triton_grad, tensor.grad)
 
     # Get Tricycle output
-    tricycle_layer = TritonAttention(
-        batch_size=batch_size,
-        n_tokens=n_tokens,
-        embedding_dim=n_heads * head_size,
-        n_heads=n_heads,
-    )
-    tricycle_layer.sm_scale = sm_scale
-    tricycle_layer.to_gpu()
-    TRICYCLE_CONTEXT.use_mixed_precision = True
-    tricycle_output_raw = tricycle_layer.forward(tricycle_tensor)
+    # tricycle_layer = TritonAttention(
+    #     batch_size=batch_size,
+    #     n_tokens=n_tokens,
+    #     embedding_dim=n_heads * head_size,
+    #     n_heads=n_heads,
+    # )
+    # tricycle_layer.sm_scale = sm_scale
+    # tricycle_layer.to_gpu()
+    # TRICYCLE_CONTEXT.use_mixed_precision = True
+    # tricycle_output_raw = tricycle_layer.forward(tricycle_tensor)
 
-    # Convert Tricycle output to PyTorch tensor for comparison
-    # Assuming Tricycle output can be converted this way - adjust if needed
-    tricycle_output = torch.tensor(
-        tricycle_output_raw.cpu().numpy(), dtype=dtype, device=DEVICE
-    )
+    # # Convert Tricycle output to PyTorch tensor for comparison
+    # # Assuming Tricycle output can be converted this way - adjust if needed
+    # tricycle_output = torch.tensor(
+    #     tricycle_output_raw.cpu().numpy(), dtype=dtype, device=DEVICE
+    # )
 
-    # Check shapes first
-    shape_match = ref_out.shape == tricycle_output.shape
+    # # Check shapes first
+    # shape_match = ref_out.shape == tricycle_output.shape
 
-    if not shape_match:
-        return False, {
-            "shape_match": False,
-            "triton_shape": ref_out.shape,
-            "tricycle_shape": tricycle_output.shape,
-        }
+    # if not shape_match:
+    #     return False, {
+    #         "shape_match": False,
+    #         "triton_shape": ref_out.shape,
+    #         "tricycle_shape": tricycle_output.shape,
+    #     }
 
-    # Calculate differences
-    abs_diff = torch.abs(ref_out - tricycle_output)
-    max_abs_diff = torch.max(abs_diff).item()
-    mean_abs_diff = torch.mean(abs_diff).item()
+    # # Calculate differences
+    # abs_diff = torch.abs(ref_out - tricycle_output)
+    # max_abs_diff = torch.max(abs_diff).item()
+    # mean_abs_diff = torch.mean(abs_diff).item()
 
-    # Relative differences (avoiding division by zero)
-    eps = 1e-8
-    rel_diff = abs_diff / (torch.abs(ref_out) + eps)
-    max_rel_diff = torch.max(rel_diff).item()
-    mean_rel_diff = torch.mean(rel_diff).item()
+    # # Relative differences (avoiding division by zero)
+    # eps = 1e-8
+    # rel_diff = abs_diff / (torch.abs(ref_out) + eps)
+    # max_rel_diff = torch.max(rel_diff).item()
+    # mean_rel_diff = torch.mean(rel_diff).item()
 
-    # Check if within tolerance
-    is_close = torch.allclose(ref_out, tricycle_output, atol=atol, rtol=rtol)
+    # # Check if within tolerance
+    # is_close = torch.allclose(ref_out, tricycle_output, atol=atol, rtol=rtol)
 
-    # Return results
-    stats = {
-        "shape_match": shape_match,
-        "max_absolute_diff": max_abs_diff,
-        "mean_absolute_diff": mean_abs_diff,
-        "max_relative_diff": max_rel_diff,
-        "mean_relative_diff": mean_rel_diff,
-        "within_tolerance": is_close,
-        "atol_used": atol,
-        "rtol_used": rtol,
-    }
+    # # Return results
+    # stats = {
+    #     "shape_match": shape_match,
+    #     "max_absolute_diff": max_abs_diff,
+    #     "mean_absolute_diff": mean_abs_diff,
+    #     "max_relative_diff": max_rel_diff,
+    #     "mean_relative_diff": mean_rel_diff,
+    #     "within_tolerance": is_close,
+    #     "atol_used": atol,
+    #     "rtol_used": rtol,
+    # }
 
-    return is_close, stats
+    # return is_close, stats
 
 
 # def test_all_sizes(atol=1e-3, rtol=1e-3):
@@ -345,74 +334,7 @@ def compare_outputs(n_tokens):
 
 #     return results
 
-
-attention = TritonAttentionRef.apply
-
-
-def test_op(n_tokens):
-    torch.manual_seed(20)
-    DEVICE = torch.device("cuda:0")
-    batch_size, n_heads, head_size = 4, 12, 64
-    dtype = torch.float16
-    causal = True
-    q = (
-        torch.empty(
-            (batch_size, n_heads, n_tokens, head_size),
-            dtype=dtype,
-            device=DEVICE,
-        )
-        .normal_(mean=0.0, std=0.5)
-        .requires_grad_()
-    )
-    k = (
-        torch.empty(
-            (batch_size, n_heads, n_tokens, head_size),
-            dtype=dtype,
-            device=DEVICE,
-        )
-        .normal_(mean=0.0, std=0.5)
-        .requires_grad_()
-    )
-    v = (
-        torch.empty(
-            (batch_size, n_heads, n_tokens, head_size),
-            dtype=dtype,
-            device=DEVICE,
-        )
-        .normal_(mean=0.0, std=0.5)
-        .requires_grad_()
-    )
-    sm_scale = 0.5
-    dout = torch.randn_like(q)
-    # reference implementation
-    M = torch.tril(torch.ones((n_tokens, n_tokens), device=DEVICE))
-    p = torch.matmul(q, k.transpose(2, 3)) * sm_scale
-    if causal:
-        p[:, :, M == 0] = float("-inf")
-    p = torch.softmax(p.float(), dim=-1).half()
-    # p = torch.exp(p)
-    ref_out = torch.matmul(p, v)
-    ref_out.backward(dout)
-    ref_dv, v.grad = v.grad.clone(), None
-    ref_dk, k.grad = k.grad.clone(), None
-    ref_dq, q.grad = q.grad.clone(), None
-    # triton implementation
-    tri_out = attention(q, k, v, causal, sm_scale).half()
-    tri_out.backward(dout)
-    tri_dv, v.grad = v.grad.clone(), None
-    tri_dk, k.grad = k.grad.clone(), None
-    tri_dq, q.grad = q.grad.clone(), None
-    # compare
-    assert torch.allclose(ref_out, tri_out, atol=1e-2, rtol=0)
-    rtol = 0.0
-
-    assert torch.allclose(ref_dv, tri_dv, atol=1e-2, rtol=rtol)
-    assert torch.allclose(ref_dk, tri_dk, atol=1e-2, rtol=rtol)
-    assert torch.allclose(ref_dq, tri_dq, atol=1e-2, rtol=rtol)
-
-
 if __name__ == "__main__":
-    test_op(1024)
     compare_outputs(1024)
     # Test with default tolerances
     # results = test_all_sizes()
