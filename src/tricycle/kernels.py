@@ -862,18 +862,22 @@ class TritonAttentionRef:
 
         q, k, v, o, M = self.saved_tensors
 
-        batch_size, n_heads, n_tokens, head_size = q.shape
+        batch_size, n_heads, n_tokens, _ = q.shape
 
         # do = do.reshape(batch_size, n_tokens, n_heads, head_size)
         # do = do.permute(0, 2, 1, 3)
 
         do = do.contiguous()
+        # k = k.contiguous()
+        # q = q.contiguous()
+        # v = v.contiguous()
 
         assert (
             q.stride() == k.stride() == v.stride() == o.stride() == do.stride()
         )
 
         dq = torch.empty_like(q)
+        # dk = torch.empty(k.shape, dtype=k.dtype, device=k.device)
         dk = torch.empty_like(k)
         dv = torch.empty_like(v)
 
@@ -883,8 +887,8 @@ class TritonAttentionRef:
         block_slice_factor = 2
         inv_log_2 = 1.4426950408889634  # = 1 / ln(2)
 
-        arg_k = k
-        arg_k = arg_k * self.sm_scale * inv_log_2
+        arg_k = k * self.sm_scale * inv_log_2
+        # arg_k = arg_k * 0.125 * inv_log_2
         pre_block = 128
         assert n_tokens % pre_block == 0
         pre_grid = (n_tokens // pre_block, batch_size * n_heads)

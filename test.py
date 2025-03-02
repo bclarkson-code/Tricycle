@@ -162,14 +162,14 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
     torch.manual_seed(0)
 
     # Create input tensor
-    tensor = torch.empty(
-        (batch_size, n_tokens, n_heads * head_size * 3),
-        dtype=dtype,
-        device=DEVICE,
-    ).normal_(mean=0.0, std=0.5)
-    tricycle_tensor = Tensor(
-        deepcopy(tensor).cpu(), is_batched=True, dtype=np.float16
-    ).to_gpu()
+    # tensor = torch.empty(
+    #     (batch_size, n_tokens, n_heads * head_size * 3),
+    #     dtype=dtype,
+    #     device=DEVICE,
+    # ).normal_(mean=0.0, std=0.5)
+    # tricycle_tensor = Tensor(
+    #     deepcopy(tensor).cpu(), is_batched=True, dtype=np.float16
+    # ).to_gpu()
     sm_scale = 1 / math.sqrt(head_size)
 
     # Get torch output
@@ -206,31 +206,41 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
         sm_scale=sm_scale,
     )
 
-    grad = torch.ones_like(torch_out)
+    grad = torch.rand_like(torch_out)
     torch_out.backward(grad)
+
+    ref_dv, v.grad = v.grad.clone(), None
+    ref_dk, k.grad = k.grad.clone(), None
+    ref_dq, q.grad = q.grad.clone(), None
 
     # get triton output
     triton_ref = TritonAttentionRef()
     triton_output = triton_ref.forward(
-        deepcopy(q), deepcopy(k), deepcopy(v), True, sm_scale
+        q.clone(), k.clone(), v.clone(), True, sm_scale
     )
 
     assert torch.allclose(triton_output, torch_out, rtol=1e-3, atol=1e-3)
     triton_grad, dq, dk, dv = triton_ref.backward(grad)
 
-    q_diff = abs(q.grad - dq)
-    k_diff = abs(k.grad - dk)
-    v_diff = abs(v.grad - dv)
+    # dk = dk.contiguous().transpose(1, 2).reshape(k.shape)
+    q_diff = abs(ref_dq - dq)
+    k_diff = abs(ref_dk - dk)
+    v_diff = abs(ref_dv - dv)
+    v_matches = torch.allclose(ref_dv, dv, atol=1e-2, rtol=0)  # True
+    q_matches = torch.allclose(ref_dq, dq, atol=1e-2, rtol=0)  # True
+    k_matches = torch.allclose(ref_dk, dk, atol=1e-2, rtol=0)  # False
 
-    breakpoint()
+    print(f"{q_diff.mean().cpu().numpy()=}, {'✅'  if q_matches else '❌'}")
+    print(f"{v_diff.mean().cpu().numpy()=}, {'✅'  if v_matches else '❌'}")
+    print(f"{k_diff.mean().cpu().numpy()=}, {'✅'  if k_matches else '❌'}")
+    raise Exception("Done")
 
     # why do q and v match but not k?
     assert torch.allclose(v.grad, dv, atol=1e-2, rtol=0)  # works
     assert torch.allclose(q.grad, dq, atol=1e-2, rtol=0)  # works
-    assert torch.allclose(k.grad, dk, atol=1e-2, rtol=0)  # works
+    assert torch.allclose(k.grad, dk, atol=1e-2, rtol=0)  # Does not work
 
     # assert torch.allclose(triton_grad, tensor.grad)
-    raise Exception("Done")
 
     # Get Tricycle output
     tricycle_layer = TritonAttention(
