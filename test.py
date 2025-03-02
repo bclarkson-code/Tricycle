@@ -348,10 +348,11 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
 attention = TritonAttentionRef.apply
 
 
-def test_op(n_tokens, dtype=torch.float16):
+def test_op(n_tokens):
     torch.manual_seed(20)
     DEVICE = torch.device("cuda:0")
     batch_size, n_heads, head_size = 4, 12, 64
+    dtype = torch.float16
     causal = True
     q = (
         torch.empty(
