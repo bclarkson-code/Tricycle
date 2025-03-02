@@ -138,7 +138,7 @@ def andrej_attention(
     # return y.transpose(1, 2).contiguous().view(B, T, C)
 
 
-def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
+def compare_outputs(n_tokens):
     """
     Compares the outputs of Triton and Tricycle attention implementations
     to ensure they produce the same results within specified tolerance.

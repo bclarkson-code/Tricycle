@@ -11,18 +11,6 @@ import triton.language as tl
 DEVICE = torch.device("cuda:0")
 
 
-def is_hip():
-    return triton.runtime.driver.active.get_current_target().backend == "hip"
-
-
-def is_cuda():
-    return triton.runtime.driver.active.get_current_target().backend == "cuda"
-
-
-def supports_tma():
-    return is_cuda() and torch.cuda.get_device_capability()[0] >= 9
-
-
 @triton.jit
 def _attn_fwd_inner(
     acc,
@@ -95,7 +83,7 @@ configs = [
     triton.Config({"BLOCK_M": BM, "BLOCK_N": BN}, num_stages=s, num_warps=w)
     for BM in [64, 128]
     for BN in [32, 64]
-    for s in ([1] if is_hip() else [3, 4, 7])
+    for s in ([3, 4, 7])
     for w in [4, 8]
 ]
 
@@ -610,13 +598,6 @@ class TritonAttentionRef(torch.autograd.Function):
         o = torch.empty_like(q)
         stage = 3 if causal else 1
         extra_kern_args = {}
-        # Tuning for AMD target
-        if is_hip():
-            waves_per_eu = 3 if HEAD_DIM_K <= 64 else 2
-            extra_kern_args = {
-                "waves_per_eu": waves_per_eu,
-                "allow_flush_denorm": True,
-            }
 
         M = torch.empty(
             (q.shape[0], q.shape[1], q.shape[2]),
