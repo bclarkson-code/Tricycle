@@ -5,6 +5,7 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
+import pytest
 import torch
 import triton
 from matplotlib import pyplot as plt
@@ -19,10 +20,8 @@ from tricycle.activation import (
 )
 from tricycle.attention import Attention, TritonAttention
 from tricycle.context import TRICYCLE_CONTEXT
-from tricycle.kernels import (
+from tricycle.kernels import (  # single_batched_matmul_kernel_1,; single_batched_matmul_kernel_2,
     TritonAttentionRef,
-    single_batched_matmul_kernel_1,
-    single_batched_matmul_kernel_2,
 )
 from tricycle.layers import Dense, TritonDense
 from tricycle.tensor import Tensor
@@ -159,7 +158,7 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
     DEVICE = torch.device("cuda:0")
     dtype = torch.float16
 
-    torch.manual_seed(0)
+    torch.manual_seed(20)
 
     # Create input tensor
     # tensor = torch.empty(
@@ -170,65 +169,80 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
     # tricycle_tensor = Tensor(
     #     deepcopy(tensor).cpu(), is_batched=True, dtype=np.float16
     # ).to_gpu()
-    sm_scale = 1 / math.sqrt(head_size)
+    # sm_scale = 1 / math.sqrt(head_size)
+    sm_scale = 0.5
 
     # Get torch output
     # tensor.requires_grad = True
     # q, k, v = tensor.split(head_size * n_heads, dim=-1)
-    shape = (batch_size, n_heads, n_tokens, head_size)
+    # shape = (batch_size, n_heads, n_tokens, head_size)
     q = (
-        torch.empty((shape), dtype=dtype)
-        .cuda()
+        torch.empty(
+            (batch_size, n_heads, n_tokens, head_size),
+            dtype=dtype,
+            device=DEVICE,
+        )
         .normal_(mean=0.0, std=0.5)
         .requires_grad_()
     )
     k = (
-        torch.empty((shape), dtype=dtype)
-        .cuda()
+        torch.empty(
+            (batch_size, n_heads, n_tokens, head_size),
+            dtype=dtype,
+            device=DEVICE,
+        )
         .normal_(mean=0.0, std=0.5)
         .requires_grad_()
     )
     v = (
-        torch.empty((shape), dtype=dtype)
-        .cuda()
+        torch.empty(
+            (batch_size, n_heads, n_tokens, head_size),
+            dtype=dtype,
+            device=DEVICE,
+        )
         .normal_(mean=0.0, std=0.5)
         .requires_grad_()
     )
-    torch_out = andrej_attention(
-        q,
-        k,
-        v,
-        batch_size,
-        n_tokens,
-        head_size * n_heads,
-        n_head=n_heads,
-        block_size=n_tokens,
-        sm_scale=sm_scale,
-    )
-
-    grad = torch.rand_like(torch_out)
-    torch_out.backward(grad)
-
+    grad = torch.rand_like(q)
+    # torch_out = andrej_attention(
+    #     q,
+    #     k,
+    #     v,
+    #     batch_size,
+    #     n_tokens,
+    #     head_size * n_heads,
+    #     n_head=n_heads,
+    #     block_size=n_tokens,
+    #     sm_scale=sm_scale,
+    M = torch.tril(torch.ones((n_tokens, n_tokens), device=DEVICE))
+    p = torch.matmul(q, k.transpose(2, 3)) * sm_scale
+    p[:, :, M == 0] = float("-inf")
+    p = torch.softmax(p.float(), dim=-1).half()
+    ref_out = torch.matmul(p, v)
+    ref_out.backward(grad)
     ref_dv, v.grad = v.grad.clone(), None
     ref_dk, k.grad = k.grad.clone(), None
     ref_dq, q.grad = q.grad.clone(), None
 
     # get triton output
-    triton_ref = TritonAttentionRef()
-    triton_output = triton_ref.forward(
-        q.clone(), k.clone(), v.clone(), True, sm_scale
-    )
+    triton_ref = TritonAttentionRef.apply
+    triton_output = triton_ref(q, k, v, True, sm_scale).half()
+    triton_output.backward(grad)
+    tri_dv, v.grad = v.grad.clone(), None
+    tri_dk, k.grad = k.grad.clone(), None
+    tri_dq, q.grad = q.grad.clone(), None
 
-    assert torch.allclose(triton_output, torch_out, rtol=1e-3, atol=1e-3)
-    triton_grad, dq, dk, dv = triton_ref.backward(grad)
+    assert torch.allclose(triton_output, ref_out, rtol=1e-2, atol=0)
+
+    # dq, dk, dv, _, _ = triton_ref.backward(grad)
 
     # dk = dk.contiguous().transpose(1, 2).reshape(k.shape)
-    q_diff = abs(ref_dq - dq)
-    k_diff = abs(ref_dk - dk)
-    v_diff = abs(ref_dv - dv)
-    v_matches = torch.allclose(ref_dv, dv, atol=1e-2, rtol=0)  # True
-    q_matches = torch.allclose(ref_dq, dq, atol=1e-2, rtol=0)  # True
-    k_matches = torch.allclose(ref_dk, dk, atol=1e-2, rtol=0)  # False
+    q_diff = abs(ref_dq - tri_dq)
+    k_diff = abs(ref_dk - tri_dk)
+    v_diff = abs(ref_dv - tri_dv)
+    v_matches = torch.allclose(ref_dv, tri_dv, atol=1e-2, rtol=0)  # True
+    q_matches = torch.allclose(ref_dq, tri_dq, atol=1e-2, rtol=0)  # True
+    k_matches = torch.allclose(ref_dk, tri_dk, atol=1e-2, rtol=0)  # False
 
     print(f"{q_diff.mean().cpu().numpy()=}, {'✅'  if q_matches else '❌'}")
     print(f"{v_diff.mean().cpu().numpy()=}, {'✅'  if v_matches else '❌'}")
@@ -261,28 +275,28 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
     )
 
     # Check shapes first
-    shape_match = torch_out.shape == tricycle_output.shape
+    shape_match = ref_out.shape == tricycle_output.shape
 
     if not shape_match:
         return False, {
             "shape_match": False,
-            "triton_shape": torch_out.shape,
+            "triton_shape": ref_out.shape,
             "tricycle_shape": tricycle_output.shape,
         }
 
     # Calculate differences
-    abs_diff = torch.abs(torch_out - tricycle_output)
+    abs_diff = torch.abs(ref_out - tricycle_output)
     max_abs_diff = torch.max(abs_diff).item()
     mean_abs_diff = torch.mean(abs_diff).item()
 
     # Relative differences (avoiding division by zero)
     eps = 1e-8
-    rel_diff = abs_diff / (torch.abs(torch_out) + eps)
+    rel_diff = abs_diff / (torch.abs(ref_out) + eps)
     max_rel_diff = torch.max(rel_diff).item()
     mean_rel_diff = torch.mean(rel_diff).item()
 
     # Check if within tolerance
-    is_close = torch.allclose(torch_out, tricycle_output, atol=atol, rtol=rtol)
+    is_close = torch.allclose(ref_out, tricycle_output, atol=atol, rtol=rtol)
 
     # Return results
     stats = {
@@ -299,49 +313,102 @@ def compare_outputs(n_tokens, atol=1e-3, rtol=1e-3):
     return is_close, stats
 
 
-def test_all_sizes(atol=1e-3, rtol=1e-3):
-    """
-    Tests output comparison for all sizes used in the benchmark.
+# def test_all_sizes(atol=1e-3, rtol=1e-3):
+#     """
+#     Tests output comparison for all sizes used in the benchmark.
 
-    Args:
-        atol: Absolute tolerance for comparison
-        rtol: Relative tolerance for comparison
+#     Args:
+#         atol: Absolute tolerance for comparison
+#         rtol: Relative tolerance for comparison
 
-    Returns:
-        dict: Results for each tested size
-    """
-    # Same token sizes as in the benchmark
+#     Returns:
+#         dict: Results for each tested size
+#     """
+#     # Same token sizes as in the benchmark
 
-    results = {}
-    for n_tokens in [256, 512, 1024]:
+#     results = {}
+#     for n_tokens in [256, 512, 1024]:
 
-        print(f"Testing with n_tokens = {n_tokens}")
-        is_match, stats = compare_outputs(n_tokens, atol, rtol)
-        results[n_tokens] = {"match": is_match, "stats": stats}
+#         print(f"Testing with n_tokens = {n_tokens}")
+#         is_match, stats = compare_outputs(n_tokens, atol, rtol)
+#         results[n_tokens] = {"match": is_match, "stats": stats}
 
-        if not is_match:
-            print(f"❌ Outputs do not match for n_tokens = {n_tokens}")
-            print(f"Max absolute difference: {stats['max_absolute_diff']}")
-            print(f"Max relative difference: {stats['max_relative_diff']}")
-        else:
-            print(
-                f"✓ Outputs match within tolerance for n_tokens = {n_tokens}"
-            )
+#         if not is_match:
+#             print(f"❌ Outputs do not match for n_tokens = {n_tokens}")
+#             print(f"Max absolute difference: {stats['max_absolute_diff']}")
+#             print(f"Max relative difference: {stats['max_relative_diff']}")
+#         else:
+#             print(
+#                 f"✓ Outputs match within tolerance for n_tokens = {n_tokens}"
+#             )
 
-    return results
+#     return results
+
+
+attention = TritonAttentionRef.apply
+
+
+@pytest.mark.parametrize("Z, H, N_CTX, HEAD_DIM", [(1, 2, 1024, 64)])
+@pytest.mark.parametrize("causal", [True])
+def test_op(Z, H, N_CTX, HEAD_DIM, causal, dtype=torch.float16):
+    torch.manual_seed(20)
+    DEVICE = torch.device("cuda:0")
+    q = (
+        torch.empty((Z, H, N_CTX, HEAD_DIM), dtype=dtype, device=DEVICE)
+        .normal_(mean=0.0, std=0.5)
+        .requires_grad_()
+    )
+    k = (
+        torch.empty((Z, H, N_CTX, HEAD_DIM), dtype=dtype, device=DEVICE)
+        .normal_(mean=0.0, std=0.5)
+        .requires_grad_()
+    )
+    v = (
+        torch.empty((Z, H, N_CTX, HEAD_DIM), dtype=dtype, device=DEVICE)
+        .normal_(mean=0.0, std=0.5)
+        .requires_grad_()
+    )
+    sm_scale = 0.5
+    dout = torch.randn_like(q)
+    # reference implementation
+    M = torch.tril(torch.ones((N_CTX, N_CTX), device=DEVICE))
+    p = torch.matmul(q, k.transpose(2, 3)) * sm_scale
+    if causal:
+        p[:, :, M == 0] = float("-inf")
+    p = torch.softmax(p.float(), dim=-1).half()
+    # p = torch.exp(p)
+    ref_out = torch.matmul(p, v)
+    ref_out.backward(dout)
+    ref_dv, v.grad = v.grad.clone(), None
+    ref_dk, k.grad = k.grad.clone(), None
+    ref_dq, q.grad = q.grad.clone(), None
+    # triton implementation
+    tri_out = attention(q, k, v, causal, sm_scale).half()
+    tri_out.backward(dout)
+    tri_dv, v.grad = v.grad.clone(), None
+    tri_dk, k.grad = k.grad.clone(), None
+    tri_dq, q.grad = q.grad.clone(), None
+    # compare
+    assert torch.allclose(ref_out, tri_out, atol=1e-2, rtol=0)
+    rtol = 0.0
+
+    assert torch.allclose(ref_dv, tri_dv, atol=1e-2, rtol=rtol)
+    assert torch.allclose(ref_dk, tri_dk, atol=1e-2, rtol=rtol)
+    assert torch.allclose(ref_dq, tri_dq, atol=1e-2, rtol=rtol)
 
 
 if __name__ == "__main__":
+    test_op(4, 12, 1024, 64, True)
     # Test with default tolerances
-    results = test_all_sizes()
+    # results = test_all_sizes()
 
-    # Print summary
-    all_match = all(result["match"] for result in results.values())
+    # # Print summary
+    # all_match = all(result["match"] for result in results.values())
 
-    if all_match:
-        print("\n✓ All tests passed! Outputs match within tolerance.")
-    else:
-        print("\n❌ Some tests failed. Check individual results.")
+    # if all_match:
+    #     print("\n✓ All tests passed! Outputs match within tolerance.")
+    # else:
+    #     print("\n❌ Some tests failed. Check individual results.")
 
     # benchmark.run(print_data=True, show_plots=True)
     # plt.savefig("fig.png")

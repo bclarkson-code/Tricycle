@@ -10,10 +10,11 @@ from numpy._typing import ArrayLike
 from tricycle.binary import BinaryMultiply
 from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.initialisers import init_xavier
-from tricycle.kernels import (
-    single_batched_matmul_kernel_1,
-    single_batched_matmul_kernel_2,
-)
+
+# from tricycle.kernels import (
+#     single_batched_matmul_kernel_1,
+#     single_batched_matmul_kernel_2,
+# )
 from tricycle.optimisers import Optimiser
 from tricycle.tensor import Tensor
 from tricycle.unary import nothing
