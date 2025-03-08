@@ -675,8 +675,15 @@ class TritonAttentionRef:
             STAGE=stage,  #
             **extra_kern_args
         )
-
         self.saved_tensors = (q, k, v, result, mask)
+        result = (
+            result.transpose(1, 2)
+            .contiguous()
+            .view(
+                self.batch_size, self.n_tokens, self.head_size * self.n_heads
+            )
+        ).contiguous()
+
         self.sm_scale = sm_scale
         self.causal = causal
         return result
@@ -684,6 +691,18 @@ class TritonAttentionRef:
     def backward(self, do):
         q, k, v, result, mask = self.saved_tensors
         assert do.is_contiguous()
+        do = (
+            do.view(
+                self.batch_size, self.n_tokens, self.n_heads, self.head_size
+            )
+            .transpose(1, 2)
+            .contiguous()
+        )
+
+        q = q.contiguous()
+        k = k.contiguous()
+        v = v.contiguous()
+
         assert (
             q.stride()
             == k.stride()

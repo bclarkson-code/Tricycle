@@ -516,9 +516,6 @@ class TritonAttention(Op):
         k = tensor.array[:, :, embedding_dim : 2 * embedding_dim]
         v = tensor.array[:, :, 2 * embedding_dim :]
 
-        q = xp.ascontiguousarray(q)
-        k = xp.ascontiguousarray(k)
-        v = xp.ascontiguousarray(v)
         # Reshaping and transposing
         head_shape = (
             self.batch_size,
@@ -529,6 +526,10 @@ class TritonAttention(Op):
         k = k.reshape(*head_shape).transpose(0, 2, 1, 3)
         q = q.reshape(*head_shape).transpose(0, 2, 1, 3)
         v = v.reshape(*head_shape).transpose(0, 2, 1, 3)
+
+        q = xp.ascontiguousarray(q)
+        k = xp.ascontiguousarray(k)
+        v = xp.ascontiguousarray(v)
 
         self.k = Tensor(k, dtype=k.dtype)
         self.q = Tensor(q, dtype=k.dtype)

@@ -136,8 +136,7 @@ def andrej_attention(
     att[:, :, mask == 0] = float("-inf")
     att = F.softmax(att.to(torch.float32), dim=-1).half()
     y = att @ v
-    return y
-    # return y.transpose(1, 2).contiguous().view(B, T, C)
+    return y.transpose(1, 2).contiguous().view(B, T, C)
 
 
 def compare_outputs(n_tokens):
