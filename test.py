@@ -87,9 +87,8 @@ def benchmark(n_tokens, provider):
 
     def fn():
         with UseMixedPrecision():
-            layer(tensor)
-
-        # layer.backward(y)
+            y = layer(tensor)
+            y.backward()
 
     ms, min_ms, max_ms = triton.testing.do_bench(
         lambda: fn(), quantiles=quantiles

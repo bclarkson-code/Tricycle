@@ -59,6 +59,7 @@ numba = ">=0.60.0,<0.61"
 clang-format = "*"
 triton = ">=3.1.0,<4"
 matplotlib = ">=3.10.0,<4"
+py-spy = ">=0.4.0,<0.5"
 
 [project.optional-dependencies]
 test = ["pytest"]

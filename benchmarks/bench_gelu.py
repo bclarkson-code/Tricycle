@@ -279,11 +279,11 @@ __benchmarks__ = [
     # (bench_vanilla_gelu, bench_triton_gelu, "handcraft kernel for gelu"),
     # (bench_vanilla_relu, bench_triton_relu, "handcraft kernel for relu"),
     # (bench_vanilla_dense, bench_cuda_dense, "vanilla vs cublas matmul"),
-    (
-        bench_triton_attention,
-        bench_triton_attention,
-        "vanilla vs triton attention",
-    ),
+    # (
+    #     bench_triton_attention,
+    #     bench_triton_attention,
+    #     "vanilla vs triton attention",
+    # ),
     # (bench_vanilla_dense, bench_cuda_dense, "vanilla vs cublas matmul"),
     # (bench_cuda_dense, bench_cuda_dense, "cuda vs cuda matmul"),
     # (bench_vanilla_dense, bench_vanilla_dense, "vanilla vs vanilla matmul"),
