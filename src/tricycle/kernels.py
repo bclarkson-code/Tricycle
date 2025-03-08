@@ -713,6 +713,7 @@ class TritonAttentionRef:
         dq = torch.empty_like(q)
         dk = torch.empty_like(k)
         dv = torch.empty_like(v)
+
         BATCH, N_HEAD, N_CTX = q.shape[:3]
         PRE_BLOCK = 128
         NUM_WARPS, NUM_STAGES = 4, 5
@@ -724,6 +725,7 @@ class TritonAttentionRef:
         assert N_CTX % PRE_BLOCK == 0
         pre_grid = (N_CTX // PRE_BLOCK, BATCH * N_HEAD)
         delta = torch.empty_like(mask)
+
         _attn_bwd_preprocess[pre_grid](
             result,
             do,  #
@@ -734,6 +736,7 @@ class TritonAttentionRef:
             BLOCK_M=PRE_BLOCK,
             HEAD_DIM=self.head_size,  #
         )
+
         grid = (N_CTX // BLOCK_N1, 1, BATCH * N_HEAD)
         _attn_bwd[grid](
             q,

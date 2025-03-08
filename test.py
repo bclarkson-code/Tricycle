@@ -171,9 +171,9 @@ def compare_outputs(n_tokens):
         .normal_(mean=0.0, std=0.5)
         .requires_grad_()
     )
-    # tricycle_tensor = Tensor(
-    #     deepcopy(tensor).cpu(), is_batched=True, dtype=np.float16
-    # ).to_gpu()
+    tricycle_tensor = Tensor(
+        tensor.clone().detach().cpu(), is_batched=True, dtype=np.float16
+    ).to_gpu()
     sm_scale = 1 / math.sqrt(head_size)
 
     ref_out = andrej_attention(
@@ -201,110 +201,73 @@ def compare_outputs(n_tokens):
         head_size=head_size,
         n_tokens=n_tokens,
     ).half()
-    assert torch.allclose(triton_output, ref_out, rtol=0, atol=1e-2)
-
     tri_tensor_grad = triton_ref.backward(grad.contiguous())
 
-    diff = abs(tri_tensor_grad - ref_tensor_grad)
+    # compare outputs
+    assert torch.allclose(triton_output, ref_out, rtol=0, atol=1e-2)
+
     grad_matches = torch.allclose(
         tri_tensor_grad, ref_tensor_grad, rtol=0, atol=1e-2
     )
-    avg_diff = float(diff.mean().cpu().numpy())
-    print(f"{avg_diff=}, {'✅'  if grad_matches else '❌'}")
     assert grad_matches
 
     # Get Tricycle output
-    # tricycle_layer = TritonAttention(
-    #     batch_size=batch_size,
-    #     n_tokens=n_tokens,
-    #     embedding_dim=n_heads * head_size,
-    #     n_heads=n_heads,
-    # )
-    # tricycle_layer.sm_scale = sm_scale
-    # tricycle_layer.to_gpu()
-    # TRICYCLE_CONTEXT.use_mixed_precision = True
-    # tricycle_output_raw = tricycle_layer.forward(tricycle_tensor)
+    tricycle_layer = TritonAttention(
+        batch_size=batch_size,
+        n_tokens=n_tokens,
+        embedding_dim=n_heads * head_size,
+        n_heads=n_heads,
+    )
+    tricycle_layer.sm_scale = sm_scale
+    tricycle_layer.to_gpu()
+    TRICYCLE_CONTEXT.use_mixed_precision = True
+    tricycle_output = tricycle_layer.forward(tricycle_tensor)
+    tricycle_output.backward(Tensor(grad.clone().cpu().numpy()).to_gpu())
+    tricycle_tensor_grad = tricycle_tensor.grad
 
-    # # Convert Tricycle output to PyTorch tensor for comparison
-    # # Assuming Tricycle output can be converted this way - adjust if needed
-    # tricycle_output = torch.tensor(
-    #     tricycle_output_raw.cpu().numpy(), dtype=dtype, device=DEVICE
-    # )
+    assert tricycle_output.close_to(triton_output, rtol=0, atol=1e-2)
 
-    # # Check shapes first
-    # shape_match = ref_out.shape == tricycle_output.shape
+    # compare with triton reference
+    grad_matches = tricycle_tensor_grad.close_to(
+        tri_tensor_grad, rtol=0, atol=1e-2
+    )
+    assert grad_matches
 
-    # if not shape_match:
-    #     return False, {
-    #         "shape_match": False,
-    #         "triton_shape": ref_out.shape,
-    #         "tricycle_shape": tricycle_output.shape,
-    #     }
-
-    # # Calculate differences
-    # abs_diff = torch.abs(ref_out - tricycle_output)
-    # max_abs_diff = torch.max(abs_diff).item()
-    # mean_abs_diff = torch.mean(abs_diff).item()
-
-    # # Relative differences (avoiding division by zero)
-    # eps = 1e-8
-    # rel_diff = abs_diff / (torch.abs(ref_out) + eps)
-    # max_rel_diff = torch.max(rel_diff).item()
-    # mean_rel_diff = torch.mean(rel_diff).item()
-
-    # # Check if within tolerance
-    # is_close = torch.allclose(ref_out, tricycle_output, atol=atol, rtol=rtol)
-
-    # # Return results
-    # stats = {
-    #     "shape_match": shape_match,
-    #     "max_absolute_diff": max_abs_diff,
-    #     "mean_absolute_diff": mean_abs_diff,
-    #     "max_relative_diff": max_rel_diff,
-    #     "mean_relative_diff": mean_rel_diff,
-    #     "within_tolerance": is_close,
-    #     "atol_used": atol,
-    #     "rtol_used": rtol,
-    # }
-
-    # return is_close, stats
+    return True
 
 
-# def test_all_sizes(atol=1e-3, rtol=1e-3):
-#     """
-#     Tests output comparison for all sizes used in the benchmark.
+def test_all_sizes():
+    """
+    Tests output comparison for all sizes used in the benchmark.
 
-#     Args:
-#         atol: Absolute tolerance for comparison
-#         rtol: Relative tolerance for comparison
+    Args:
+        atol: Absolute tolerance for comparison
+        rtol: Relative tolerance for comparison
 
-#     Returns:
-#         dict: Results for each tested size
-#     """
-#     # Same token sizes as in the benchmark
+    Returns:
+        dict: Results for each tested size
+    """
+    # Same token sizes as in the benchmark
 
-#     results = {}
-#     for n_tokens in [256, 512, 1024]:
+    results = {}
+    for n_tokens in [256, 512, 1024]:
 
-#         print(f"Testing with n_tokens = {n_tokens}")
-#         is_match, stats = compare_outputs(n_tokens, atol, rtol)
-#         results[n_tokens] = {"match": is_match, "stats": stats}
+        is_match = compare_outputs(n_tokens)
+        results[n_tokens] = {"match": is_match}
 
-#         if not is_match:
-#             print(f"❌ Outputs do not match for n_tokens = {n_tokens}")
-#             print(f"Max absolute difference: {stats['max_absolute_diff']}")
-#             print(f"Max relative difference: {stats['max_relative_diff']}")
-#         else:
-#             print(
-#                 f"✓ Outputs match within tolerance for n_tokens = {n_tokens}"
-#             )
+        if not is_match:
+            print(f"❌ Outputs do not match for n_tokens = {n_tokens}")
+        else:
+            print(
+                f"✅ Outputs match within tolerance for n_tokens = {n_tokens}"
+            )
 
-#     return results
+    return results
+
 
 if __name__ == "__main__":
-    compare_outputs(1024)
     # Test with default tolerances
-    # results = test_all_sizes()
+    results = test_all_sizes()
 
     # # Print summary
     # all_match = all(result["match"] for result in results.values())

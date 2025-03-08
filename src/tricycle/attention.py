@@ -17,7 +17,7 @@ import numpy as np
 from tricycle import GPU_ENABLED
 from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.exceptions import GPUDisabledException
-from tricycle.kernels import _attn_bwd, _attn_fwd
+from tricycle.kernels import _attn_bwd, _attn_bwd_preprocess, _attn_fwd
 from tricycle.ops import Op
 from tricycle.tensor import Tensor
 
@@ -483,9 +483,13 @@ class TritonAttention(Op):
 
         self.result = None
         self.mask = None
+        self.delta = None
         self.q = None
         self.k = None
         self.v = None
+        self.dq = None
+        self.dk = None
+        self.dv = None
 
     def _fwd_grid(self, args):
         import triton
@@ -608,17 +612,133 @@ class TritonAttention(Op):
         """
         Attention with a custom cuda kernel
         """
+        xp = grad.xp
         if grad.xp is not cp:
             raise ValueError("Cannot use numpy arrays with Triton")
         self.output_grad = grad
 
+        # Reshaping and transposing
+        shape = (self.batch_size, self.n_tokens, self.n_heads, self.head_size)
+        self.output_grad.array = self.output_grad.array.reshape(
+            shape
+        ).transpose(0, 2, 1, 3)
+        self.output_grad.array = xp.ascontiguousarray(self.output_grad.array)
+
+        self.q.array = xp.ascontiguousarray(self.q.array)
+        self.k.array = xp.ascontiguousarray(self.k.array)
+        self.v.array = xp.ascontiguousarray(self.v.array)
+
         assert (
-            self.q.stride()
-            == self.k.stride()
-            == self.v.stride()
-            == self.result.stride()
-            == grad.stride()
+            self.q.strides
+            == self.k.strides
+            == self.v.strides
+            == self.result.strides
+            == self.output_grad.strides
         )
+
+        if self.dq is None:
+            self.dq = Tensor(
+                xp.zeros(
+                    self.q.shape,
+                ),
+                dtype=self.q.dtype,
+            ).to_gpu()
+        if self.dk is None:
+            self.dk = Tensor(
+                xp.zeros(
+                    self.k.shape,
+                ),
+                dtype=self.k.dtype,
+            ).to_gpu()
+        if self.dv is None:
+            self.dv = Tensor(
+                xp.zeros(
+                    self.v.shape,
+                ),
+                dtype=self.v.dtype,
+            ).to_gpu()
+        if self.delta is None:
+            self.delta = Tensor(
+                xp.zeros(
+                    self.mask.shape,
+                ),
+                dtype=self.mask.dtype,
+            ).to_gpu()
+
+        # TODO: move these constants somewhere more sensible
+        PRE_BLOCK = 128
+        NUM_WARPS, NUM_STAGES = 4, 5
+        BLOCK_M1, BLOCK_N1, BLOCK_M2, BLOCK_N2 = 32, 128, 128, 32
+        BLK_SLICE_FACTOR = 2
+        RCP_LN2 = 1.4426950408889634  # = 1.0 / ln(2)
+        assert self.n_tokens % PRE_BLOCK == 0
+        pre_grid = (self.n_tokens // PRE_BLOCK, self.batch_size * self.n_heads)
+
+        arg_k = Tensor(
+            self.k.array * (self.sm_scale * RCP_LN2),
+            dtype=self.k.dtype,
+            requires_grad=False,
+        )
+
+        # preprocess
+        _attn_bwd_preprocess[pre_grid](
+            self.result,
+            self.output_grad,  #
+            self.delta,  #
+            self.batch_size,
+            self.n_heads,
+            self.n_tokens,  #
+            BLOCK_M=PRE_BLOCK,
+            HEAD_DIM=self.head_size,  #
+        )
+
+        grid = (self.n_tokens // BLOCK_N1, 1, self.batch_size * self.n_heads)
+
+        _attn_bwd[grid](
+            self.q,
+            arg_k,
+            self.v,
+            self.sm_scale,
+            self.output_grad,
+            self.dq,
+            self.dk,
+            self.dv,
+            self.mask,
+            self.delta,
+            self.q.strides[0],
+            self.q.strides[1],
+            self.q.strides[2],
+            self.q.strides[3],
+            self.n_heads,
+            self.n_tokens,
+            BLOCK_M1=BLOCK_M1,
+            BLOCK_N1=BLOCK_N1,
+            BLOCK_M2=BLOCK_M2,
+            BLOCK_N2=BLOCK_N2,
+            BLK_SLICE_FACTOR=BLK_SLICE_FACTOR,
+            HEAD_DIM=self.head_size,
+            num_warps=NUM_WARPS,
+            num_stages=NUM_STAGES,
+        )
+
+        self.dq.array = self.dq.array.transpose(0, 2, 1, 3)
+        self.dk.array = self.dk.array.transpose(0, 2, 1, 3)
+        self.dv.array = self.dv.array.transpose(0, 2, 1, 3)
+
+        self.dq.array = xp.ascontiguousarray(self.dq.array).reshape(
+            self.batch_size, self.n_tokens, self.n_heads * self.head_size
+        )
+        self.dk.array = xp.ascontiguousarray(self.dk.array).reshape(
+            self.batch_size, self.n_tokens, self.n_heads * self.head_size
+        )
+        self.dv.array = xp.ascontiguousarray(self.dv.array).reshape(
+            self.batch_size, self.n_tokens, self.n_heads * self.head_size
+        )
+
+        input_grad = xp.concatenate(
+            [self.dq.array, self.dk.array, self.dv.array], axis=-1
+        )
+        return Tensor(input_grad, is_batched=True, dtype=grad.dtype)
 
     def to_gpu(self, *_):
         pass

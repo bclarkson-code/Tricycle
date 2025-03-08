@@ -136,7 +136,9 @@ class Tensor:
                     stack.append(arg)
                     arg._parents.add(node)
 
-    def _calculate_gradients(self, clip: float | None = None):
+    def _calculate_gradients(
+        self, grad: "Tensor | None" = None, clip: float | None = None
+    ):
         """
         Calculates gradients for the computation graph.
 
@@ -146,8 +148,13 @@ class Tensor:
         Args:
             clip (float | None, optional): Maximum absolute value for gradient clipping. Defaults to None.
         """
+        if grad is None:
+            _grad = self.xp.ones(self.array.shape, dtype=self.dtype)
+        else:
+            _grad = grad.array
+
         self.grad = Tensor(
-            self.xp.ones(self.array.shape, dtype=self.dtype),
+            _grad,
             requires_grad=False,
             is_batched=self.is_batched,
         )
@@ -206,7 +213,9 @@ class Tensor:
                     arg._parents = None
                     stack.append(arg)
 
-    def backward(self, clip: float | None = None):
+    def backward(
+        self, grad: "Tensor | None" = None, clip: float | None = None
+    ):
         """
         Performs a backward pass through the graph, calculating the gradient
         for each parameter.
@@ -215,7 +224,7 @@ class Tensor:
             clip (float | None, optional): Maximum absolute value for gradient clipping. Defaults to None.
         """
         self._attach_parents()
-        self._calculate_gradients(clip=clip)
+        self._calculate_gradients(grad=grad, clip=clip)
 
     def __hash__(self) -> int:
         return self._id
