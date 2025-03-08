@@ -587,18 +587,53 @@ def _attn_bwd(
 
 class TritonAttentionRef:
 
-    def forward(self, q, k, v, causal, sm_scale):
+    def forward(
+        self,
+        tensor,
+        causal,
+        sm_scale,
+        n_tokens,
+        batch_size,
+        n_heads,
+        head_size,
+    ):
+
+        self.n_tokens = n_tokens
+        self.batch_size = batch_size
+        self.n_heads = n_heads
+        self.head_size = head_size
+
+        q, k, v = tensor.split(self.head_size * self.n_heads, dim=-1)
+        k = k.view(
+            self.batch_size, self.n_tokens, self.n_heads, self.head_size
+        ).transpose(
+            1, 2
+        )  # (B, nh, T, hs)
+        q = q.view(
+            self.batch_size, self.n_tokens, self.n_heads, self.head_size
+        ).transpose(
+            1, 2
+        )  # (B, nh, T, hs)
+        v = v.view(
+            self.batch_size, self.n_tokens, self.n_heads, self.head_size
+        ).transpose(
+            1, 2
+        )  # (B, nh, T, hs)
+        k = k.contiguous()
+        q = q.contiguous()
+        v = v.contiguous()
+
         # shape constraints
         HEAD_DIM_Q, HEAD_DIM_K = q.shape[-1], k.shape[-1]
         # when v is in float8_e5m2 it is transposed.
         HEAD_DIM_V = v.shape[-1]
         assert HEAD_DIM_Q == HEAD_DIM_K and HEAD_DIM_K == HEAD_DIM_V
         assert HEAD_DIM_K in {16, 32, 64, 128, 256}
-        o = torch.empty_like(q)
+        result = torch.empty_like(q)
         stage = 3 if causal else 1
         extra_kern_args = {}
 
-        M = torch.empty(
+        mask = torch.empty(
             (q.shape[0], q.shape[1], q.shape[2]),
             device=q.device,
             dtype=torch.float32,
@@ -615,8 +650,8 @@ class TritonAttentionRef:
             k,
             v,
             sm_scale,
-            M,
-            o,  #
+            mask,
+            result,  #
             q.stride(0),
             q.stride(1),
             q.stride(2),
@@ -629,29 +664,32 @@ class TritonAttentionRef:
             v.stride(1),
             v.stride(2),
             v.stride(3),  #
-            o.stride(0),
-            o.stride(1),
-            o.stride(2),
-            o.stride(3),  #
+            result.stride(0),
+            result.stride(1),
+            result.stride(2),
+            result.stride(3),  #
             q.shape[0],
             q.shape[1],  #
             N_CTX=q.shape[2],  #
-            HEAD_DIM=HEAD_DIM_K,  #
+            HEAD_DIM=self.head_size,  #
             STAGE=stage,  #
             **extra_kern_args
         )
 
-        self.saved_tensors = (q, k, v, o, M)
+        self.saved_tensors = (q, k, v, result, mask)
         self.sm_scale = sm_scale
-        self.HEAD_DIM = HEAD_DIM_K
         self.causal = causal
-        return o
+        return result
 
     def backward(self, do):
-        q, k, v, o, M = self.saved_tensors
+        q, k, v, result, mask = self.saved_tensors
         assert do.is_contiguous()
         assert (
-            q.stride() == k.stride() == v.stride() == o.stride() == do.stride()
+            q.stride()
+            == k.stride()
+            == v.stride()
+            == result.stride()
+            == do.stride()
         )
         dq = torch.empty_like(q)
         dk = torch.empty_like(k)
@@ -664,19 +702,18 @@ class TritonAttentionRef:
         RCP_LN2 = 1.4426950408889634  # = 1.0 / ln(2)
         arg_k = k
         arg_k = arg_k * (self.sm_scale * RCP_LN2)
-        PRE_BLOCK = 128
         assert N_CTX % PRE_BLOCK == 0
         pre_grid = (N_CTX // PRE_BLOCK, BATCH * N_HEAD)
-        delta = torch.empty_like(M)
+        delta = torch.empty_like(mask)
         _attn_bwd_preprocess[pre_grid](
-            o,
+            result,
             do,  #
             delta,  #
             BATCH,
             N_HEAD,
             N_CTX,  #
             BLOCK_M=PRE_BLOCK,
-            HEAD_DIM=self.HEAD_DIM,  #
+            HEAD_DIM=self.head_size,  #
         )
         grid = (N_CTX // BLOCK_N1, 1, BATCH * N_HEAD)
         _attn_bwd[grid](
@@ -687,26 +724,42 @@ class TritonAttentionRef:
             do,
             dq,
             dk,
-            dv,  #
-            M,
-            delta,  #
+            dv,
+            mask,
+            delta,
             q.stride(0),
             q.stride(1),
             q.stride(2),
-            q.stride(3),  #
+            q.stride(3),
             N_HEAD,
-            N_CTX,  #
+            N_CTX,
             BLOCK_M1=BLOCK_M1,
-            BLOCK_N1=BLOCK_N1,  #
+            BLOCK_N1=BLOCK_N1,
             BLOCK_M2=BLOCK_M2,
-            BLOCK_N2=BLOCK_N2,  #
-            BLK_SLICE_FACTOR=BLK_SLICE_FACTOR,  #
-            HEAD_DIM=self.HEAD_DIM,  #
-            num_warps=NUM_WARPS,  #
-            num_stages=NUM_STAGES,  #
+            BLOCK_N2=BLOCK_N2,
+            BLK_SLICE_FACTOR=BLK_SLICE_FACTOR,
+            HEAD_DIM=self.head_size,
+            num_warps=NUM_WARPS,
+            num_stages=NUM_STAGES,
         )
 
-        return dq, dk, dv, None, None
+        dq = dq.transpose(1, 2)  # (B, T, nh, hs)
+        dk = dk.transpose(1, 2)  # (B, T, nh, hs)
+        dv = dv.transpose(1, 2)  # (B, T, nh, hs)
+
+        dq = dq.contiguous().view(
+            self.batch_size, self.n_tokens, self.n_heads * self.head_size
+        )
+        dk = dk.contiguous().view(
+            self.batch_size, self.n_tokens, self.n_heads * self.head_size
+        )
+        dv = dv.contiguous().view(
+            self.batch_size, self.n_tokens, self.n_heads * self.head_size
+        )
+
+        tensor_grad = torch.cat([dq, dk, dv], dim=-1)
+
+        return tensor_grad
 
 
 # class TritonAttentionRef:

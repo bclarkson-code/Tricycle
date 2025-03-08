@@ -109,7 +109,7 @@ def benchmark(n_tokens, provider):
 
 
 def andrej_attention(
-    q, k, v, B, T, C, n_head, block_size=32, sm_scale=0.5, bias=None
+    tensor, B, T, C, n_head, block_size=32, sm_scale=0.5, bias=None
 ):
     """
     Andrej Karpathy's implementation of attention from nanogpt
@@ -122,11 +122,13 @@ def andrej_attention(
         bias = (
             torch.tril(torch.ones(block_size, block_size))
             .view(1, 1, block_size, block_size)
-            .to(q.device)
+            .to(tensor.device)
         )
-    # k = k.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
-    # q = q.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
-    # v = v.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
+
+    q, k, v = tensor.split(C, dim=-1)
+    k = k.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
+    q = q.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
+    v = v.view(B, T, n_head, C // n_head).transpose(1, 2)  # (B, nh, T, hs)
 
     att = q @ k.transpose(-2, -1)
     att *= sm_scale
@@ -161,90 +163,56 @@ def compare_outputs(n_tokens):
     torch.manual_seed(20)
 
     # Create input tensor
-    # tensor = torch.empty(
-    #     (batch_size, n_tokens, n_heads * head_size * 3),
-    #     dtype=dtype,
-    #     device=DEVICE,
-    # ).normal_(mean=0.0, std=0.5)
+    tensor = (
+        torch.empty(
+            (batch_size, n_tokens, n_heads * head_size * 3),
+            dtype=dtype,
+            device=DEVICE,
+        )
+        .normal_(mean=0.0, std=0.5)
+        .requires_grad_()
+    )
     # tricycle_tensor = Tensor(
     #     deepcopy(tensor).cpu(), is_batched=True, dtype=np.float16
     # ).to_gpu()
     sm_scale = 1 / math.sqrt(head_size)
-    # sm_scale = 0.5
 
-    # Get torch output
-    # tensor.requires_grad = True
-    # q, k, v = tensor.split(head_size * n_heads, dim=-1)
-    # shape = (batch_size, n_heads, n_tokens, head_size)
-    q = (
-        torch.empty(
-            (batch_size, n_heads, n_tokens, head_size),
-            dtype=dtype,
-            device=DEVICE,
-        )
-        .normal_(mean=0.0, std=0.5)
-        .requires_grad_()
-    )
-    k = (
-        torch.empty(
-            (batch_size, n_heads, n_tokens, head_size),
-            dtype=dtype,
-            device=DEVICE,
-        )
-        .normal_(mean=0.0, std=0.5)
-        .requires_grad_()
-    )
-    v = (
-        torch.empty(
-            (batch_size, n_heads, n_tokens, head_size),
-            dtype=dtype,
-            device=DEVICE,
-        )
-        .normal_(mean=0.0, std=0.5)
-        .requires_grad_()
-    )
-    grad = torch.rand_like(q)
     ref_out = andrej_attention(
-        q,
-        k,
-        v,
-        batch_size,
-        n_tokens,
-        head_size * n_heads,
+        tensor,
+        B=batch_size,
+        T=n_tokens,
+        C=head_size * n_heads,
         n_head=n_heads,
         block_size=n_tokens,
         sm_scale=sm_scale,
     )
+    grad = torch.rand_like(ref_out)
 
     ref_out.backward(grad)
-    ref_dv, v.grad = v.grad.clone(), None
-    ref_dk, k.grad = k.grad.clone(), None
-    ref_dq, q.grad = q.grad.clone(), None
+    ref_tensor_grad, tensor.grad = tensor.grad.clone(), None
 
     # get triton output
     triton_ref = TritonAttentionRef()
-    triton_output = triton_ref.forward(q, k, v, True, sm_scale).half()
-    tri_dq, tri_dk, tri_dv, _, _ = triton_ref.backward(grad)
-
+    triton_output = triton_ref.forward(
+        tensor=tensor.clone(),
+        causal=True,
+        sm_scale=sm_scale,
+        batch_size=batch_size,
+        n_heads=n_heads,
+        head_size=head_size,
+        n_tokens=n_tokens,
+    ).half()
     assert torch.allclose(triton_output, ref_out, rtol=0, atol=1e-2)
 
-    # dk = dk.contiguous().transpose(1, 2).reshape(k.shape)
-    q_diff = abs(ref_dq - tri_dq)
-    k_diff = abs(ref_dk - tri_dk)
-    v_diff = abs(ref_dv - tri_dv)
-    v_matches = torch.allclose(ref_dv, tri_dv, atol=1e-2, rtol=0)
-    q_matches = torch.allclose(ref_dq, tri_dq, atol=1e-2, rtol=0)
-    k_matches = torch.allclose(ref_dk, tri_dk, atol=1e-2, rtol=0)
+    tri_tensor_grad = triton_ref.backward(grad.contiguous())
 
-    print(f"{q_diff.mean().cpu().numpy()=}, {'✅'  if q_matches else '❌'}")
-    print(f"{v_diff.mean().cpu().numpy()=}, {'✅'  if v_matches else '❌'}")
-    print(f"{k_diff.mean().cpu().numpy()=}, {'✅'  if k_matches else '❌'}")
-
-    assert v_matches
-    assert q_matches
-    assert k_matches
-
-    # assert torch.allclose(triton_grad, tensor.grad)
+    diff = abs(tri_tensor_grad - ref_tensor_grad)
+    grad_matches = torch.allclose(
+        tri_tensor_grad, ref_tensor_grad, rtol=0, atol=1e-2
+    )
+    avg_diff = float(diff.mean().cpu().numpy())
+    print(f"{avg_diff=}, {'✅'  if grad_matches else '❌'}")
+    assert grad_matches
 
     # Get Tricycle output
     # tricycle_layer = TritonAttention(
