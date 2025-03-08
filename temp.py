@@ -9,11 +9,12 @@ from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
 from tricycle.tricycle_datasets.shakespeare import Shakespeare
+from tricycle.utils import UseMixedPrecision
 
 config = ShakespeareConfig()
 
 # drop this down to 1000 for a worse model that trains faster
-config.steps = 5000
+# config.steps = 5000
 
 model = GPT(config)
 
@@ -40,21 +41,21 @@ if GPU_ENABLED:
     dataset = dataset.to_gpu()
     model.to_gpu()
 
-loading_bar = tqdm(range(config.steps))
-for step in loading_bar:
-    optimiser.step()
-    inputs, outputs = next(dataset)
+with UseMixedPrecision():
+    loading_bar = tqdm(range(config.steps))
+    for step in loading_bar:
+        optimiser.step()
+        inputs, outputs = next(dataset)
 
-    logits = model(inputs)
-    loss = loss_fn(outputs, logits)
-    loss.backward()
+        logits = model(inputs)
+        loss = loss_fn(outputs, logits)
+        loss.backward()
 
-    loading_bar.set_description(f"loss: {loss.numpy().item():.3f}")
-    model.update(optimiser)
+        model.update(optimiser)
 
-# save results
-with open("model.pkl", "wb") as f:
-    if GPU_ENABLED:
-        model.from_gpu()
-    model = model.zero_grad()
-    pickle.dump(model, f)
+# # save results
+# with open("model.pkl", "wb") as f:
+#     if GPU_ENABLED:
+#         model.from_gpu()
+#     model = model.zero_grad()
+#     pickle.dump(model, f)

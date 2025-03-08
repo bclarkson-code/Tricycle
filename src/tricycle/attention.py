@@ -769,3 +769,6 @@ class TritonAttention(Op):
 
     def to_gpu(self, *_):
         return self
+
+    def from_gpu(self, *_):
+        return self
