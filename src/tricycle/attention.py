@@ -483,13 +483,9 @@ class TritonAttention(Op):
 
         self.result = None
         self.mask = None
-        self.delta = None
         self.q = None
         self.k = None
         self.v = None
-        self.dq = None
-        self.dk = None
-        self.dv = None
 
     def _fwd_grid(self, args):
         import triton
@@ -515,10 +511,9 @@ class TritonAttention(Op):
 
         # q,k and v start in the same array so we need to extract them out to contiguous arrays
         # for separate processing
-        embedding_dim = tensor.array.shape[-1] // 3
-        q = tensor.array[:, :, :embedding_dim]
-        k = tensor.array[:, :, embedding_dim : 2 * embedding_dim]
-        v = tensor.array[:, :, 2 * embedding_dim :]
+        q = tensor.array[:, :, : self.embedding_dim]
+        k = tensor.array[:, :, self.embedding_dim : 2 * self.embedding_dim]
+        v = tensor.array[:, :, 2 * self.embedding_dim :]
 
         # Reshaping and transposing
         head_shape = (
@@ -636,34 +631,30 @@ class TritonAttention(Op):
             == self.output_grad.strides
         )
 
-        if self.dq is None:
-            self.dq = Tensor(
-                xp.zeros(
-                    self.q.shape,
-                ),
-                dtype=self.q.dtype,
-            ).to_gpu()
-        if self.dk is None:
-            self.dk = Tensor(
-                xp.zeros(
-                    self.k.shape,
-                ),
-                dtype=self.k.dtype,
-            ).to_gpu()
-        if self.dv is None:
-            self.dv = Tensor(
-                xp.zeros(
-                    self.v.shape,
-                ),
-                dtype=self.v.dtype,
-            ).to_gpu()
-        if self.delta is None:
-            self.delta = Tensor(
-                xp.zeros(
-                    self.mask.shape,
-                ),
-                dtype=self.mask.dtype,
-            ).to_gpu()
+        dq = Tensor(
+            xp.zeros(
+                self.q.shape,
+            ),
+            dtype=self.q.dtype,
+        ).to_gpu()
+        dk = Tensor(
+            xp.zeros(
+                self.k.shape,
+            ),
+            dtype=self.k.dtype,
+        ).to_gpu()
+        dv = Tensor(
+            xp.zeros(
+                self.v.shape,
+            ),
+            dtype=self.v.dtype,
+        ).to_gpu()
+        delta = Tensor(
+            xp.zeros(
+                self.mask.shape,
+            ),
+            dtype=self.mask.dtype,
+        ).to_gpu()
 
         # TODO: move these constants somewhere more sensible
         PRE_BLOCK = 128
@@ -684,7 +675,7 @@ class TritonAttention(Op):
         _attn_bwd_preprocess[pre_grid](
             self.result,
             self.output_grad,  #
-            self.delta,  #
+            delta,  #
             self.batch_size,
             self.n_heads,
             self.n_tokens,  #
@@ -700,11 +691,11 @@ class TritonAttention(Op):
             self.v,
             self.sm_scale,
             self.output_grad,
-            self.dq,
-            self.dk,
-            self.dv,
+            dq,
+            dk,
+            dv,
             self.mask,
-            self.delta,
+            delta,
             self.q.strides[0],
             self.q.strides[1],
             self.q.strides[2],
@@ -721,23 +712,21 @@ class TritonAttention(Op):
             num_stages=NUM_STAGES,
         )
 
-        self.dq.array = self.dq.array.transpose(0, 2, 1, 3)
-        self.dk.array = self.dk.array.transpose(0, 2, 1, 3)
-        self.dv.array = self.dv.array.transpose(0, 2, 1, 3)
+        dq.array = dq.array.transpose(0, 2, 1, 3)
+        dk.array = dk.array.transpose(0, 2, 1, 3)
+        dv.array = dv.array.transpose(0, 2, 1, 3)
 
-        self.dq.array = xp.ascontiguousarray(self.dq.array).reshape(
+        dq.array = xp.ascontiguousarray(dq.array).reshape(
             self.batch_size, self.n_tokens, self.n_heads * self.head_size
         )
-        self.dk.array = xp.ascontiguousarray(self.dk.array).reshape(
+        dk.array = xp.ascontiguousarray(dk.array).reshape(
             self.batch_size, self.n_tokens, self.n_heads * self.head_size
         )
-        self.dv.array = xp.ascontiguousarray(self.dv.array).reshape(
+        dv.array = xp.ascontiguousarray(dv.array).reshape(
             self.batch_size, self.n_tokens, self.n_heads * self.head_size
         )
 
-        input_grad = xp.concatenate(
-            [self.dq.array, self.dk.array, self.dv.array], axis=-1
-        )
+        input_grad = xp.concatenate([dq.array, dk.array, dv.array], axis=-1)
         return Tensor(input_grad, is_batched=True, dtype=grad.dtype)
 
     def to_gpu(self, *_):

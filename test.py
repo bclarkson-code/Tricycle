@@ -277,5 +277,5 @@ if __name__ == "__main__":
     # else:
     #     print("\n❌ Some tests failed. Check individual results.")
 
-    # benchmark.run(print_data=True, show_plots=True)
-    # plt.savefig("fig.png")
+    benchmark.run(print_data=True, show_plots=True)
+    plt.savefig("fig.png")

@@ -8,19 +8,19 @@ from tricycle.activation import (
     TritonGeLU,
     TritonRelu,
 )
-from tricycle.attention import Attention
+from tricycle.attention import Attention, TritonAttention
 from tricycle.layers import CudaDense, Dense
 from tricycle.tensor import Tensor
 from tricycle.utils import UseMixedPrecision
 
-N_LOOPS = 1000
+N_LOOPS = 2
 # INPUT_SHAPE = (2, 64, 16)
 OUTPUT_SHAPE = 8
-N_HEADS = 2
+# N_HEADS = 2
 
 INPUT_SHAPE = (16, 1024, 768)
 # OUTPUT_SHAPE = 768
-# N_HEADS = 12
+N_HEADS = 12
 
 
 def bench_vanilla_relu():
@@ -124,7 +124,7 @@ def bench_vanilla_attention():
             output.backward()
 
 
-def bench_cudnn_attention():
+def bench_triton_attention():
     with UseMixedPrecision():
         np.random.seed(0)
         B, T, C = INPUT_SHAPE
@@ -133,15 +133,14 @@ def bench_cudnn_attention():
             (np.random.random(shape).astype(np.float16) * 2 - 1),
             is_batched=True,
         )
-        layer = CudnnAttention(
+        layer = TritonAttention(
             batch_size=B,
             embedding_dim=C,
             n_heads=N_HEADS,
-            context_window=T,
-            shared={},
+            n_tokens=T,
         )
         tensor.to_gpu()
-        # layer.to_gpu()
+        layer.to_gpu()
         for _ in range(N_LOOPS):
             output = layer(tensor)
             output.backward()
@@ -277,14 +276,14 @@ def test_cudnn_attention_vs_pytorch():
 
 
 __benchmarks__ = [
-    (bench_vanilla_gelu, bench_triton_gelu, "handcraft kernel for gelu"),
+    # (bench_vanilla_gelu, bench_triton_gelu, "handcraft kernel for gelu"),
     # (bench_vanilla_relu, bench_triton_relu, "handcraft kernel for relu"),
     # (bench_vanilla_dense, bench_cuda_dense, "vanilla vs cublas matmul"),
-    # (
-    #     bench_vanilla_attention,
-    #     bench_cudnn_attention,
-    #     "vanilla vs cublas attention",
-    # ),
+    (
+        bench_triton_attention,
+        bench_triton_attention,
+        "vanilla vs triton attention",
+    ),
     # (bench_vanilla_dense, bench_cuda_dense, "vanilla vs cublas matmul"),
     # (bench_cuda_dense, bench_cuda_dense, "cuda vs cuda matmul"),
     # (bench_vanilla_dense, bench_vanilla_dense, "vanilla vs vanilla matmul"),
