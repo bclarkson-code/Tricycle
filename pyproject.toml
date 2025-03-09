@@ -7,6 +7,7 @@ authors = [
 ]
 license = { text = "MIT" }
 readme = "README.md"
+dependencies = ["austin-dist>=3.7.0,<4", "austin-tui>=1.2.3,<2"]
 
 
 [tool.isort]

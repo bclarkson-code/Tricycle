@@ -26,6 +26,7 @@ results
 models
 benchmarks/.profiles
 tests/.profiles
+fig.png
 
 richbench*.json
 python*.json
