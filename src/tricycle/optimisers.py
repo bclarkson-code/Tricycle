@@ -243,9 +243,9 @@ class AdamW(Optimiser):
         grad = tensor.grad.array
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
-            grad = grad.astype(xp.float32) / TRICYCLE_CONTEXT.loss_scale_factor
-            if not tensor.array.dtype == xp.float32:
-                tensor.array = tensor.array.astype(xp.float32)
+            grad = grad / TRICYCLE_CONTEXT.loss_scale_factor
+            # if not tensor.array.dtype == xp.float32:
+            #     tensor.array = tensor.array.astype(xp.float32)
 
         # initialise stores
         if key not in self.momentum:
@@ -275,33 +275,33 @@ class AdamW(Optimiser):
             + self.weight_decay * tensor.array
         )
 
-        # make sure our gradients aren't underflowing or overflow
-        if not xp.isfinite(combined_grad).all():
-            warn(
-                "Found nans in gradient, skipping this gradient and"
-                "decreasing loss scaling. If this warning persists, "
-                "check that your learning rate isn't too high"
-            )
-            TRICYCLE_CONTEXT.loss_scale_factor /= 2
-            self.logger.warn(
-                f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
-            )
-            return tensor
+        # # make sure our gradients aren't underflowing or overflow
+        # if not xp.isfinite(combined_grad).all():
+        #     warn(
+        #         "Found nans in gradient, skipping this gradient and"
+        #         "decreasing loss scaling. If this warning persists, "
+        #         "check that your learning rate isn't too high"
+        #     )
+        #     TRICYCLE_CONTEXT.loss_scale_factor /= 2
+        #     self.logger.warn(
+        #         f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
+        #     )
+        #     return tensor
 
-        if (combined_grad == 0).sum() > combined_grad.size * 0.05:
-            warn(
-                "Found too many 0's in gradient, skipping this gradient and"
-                "increasing loss scaling. If this warning persists, "
-                "check that your learning rate isn't too low"
-            )
-            TRICYCLE_CONTEXT.loss_scale_factor *= 2
-            self.logger.warn(
-                f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
-            )
-            return tensor
+        # if (combined_grad == 0).sum() > combined_grad.size * 0.05:
+        #     warn(
+        #         "Found too many 0's in gradient, skipping this gradient and"
+        #         "increasing loss scaling. If this warning persists, "
+        #         "check that your learning rate isn't too low"
+        #     )
+        #     TRICYCLE_CONTEXT.loss_scale_factor *= 2
+        #     self.logger.warn(
+        #         f"New scaling factor: {TRICYCLE_CONTEXT.loss_scale_factor}"
+        #     )
+        #     return tensor
 
         if TRICYCLE_CONTEXT.use_mixed_precision:
-            tensor.array -= combined_grad.astype(xp.float32)
+            tensor.array -= combined_grad
 
         tensor.grad.array.fill(0)
         return tensor
