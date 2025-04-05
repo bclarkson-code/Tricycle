@@ -5,13 +5,22 @@ This module contains various optimiser classes that can be used for
 gradient-based optimisation of tensors.
 """
 
+from dataclasses import dataclass
 from logging import getLogger
+from typing import Any
 from warnings import warn
 
 from tricycle.context import TRICYCLE_CONTEXT
 from tricycle.tensor import Tensor
 
 LOGGER = getLogger(__name__)
+
+
+@dataclass
+class WeightPointer:
+    offset: int
+    size: int
+    weight: Tensor
 
 
 class Optimiser:
@@ -191,6 +200,7 @@ class AdamW(Optimiser):
 
     def __init__(
         self,
+        model,
         learning_rate=1e-3,
         betas=(0.9, 0.999),
         eps=1e-6,
@@ -213,8 +223,40 @@ class AdamW(Optimiser):
         self.timestep = 1
         self.logger = logger
 
-        self.momentum = {}
-        self.square_momentum = {}
+        self.weights = self.init_weights(model)
+
+        self.tensor = None
+        self.momentum = None
+        self.square_momentum = None
+        self.grads = None
+
+    def _find_weights(
+        self, layer: "Layer", weights: list["Layer"] | None = None
+    ) -> list["Layer"]:
+        if weights is None:
+            weights = []
+
+        if hasattr(layer, "weights"):
+            weights.append(layer.weights)
+
+        if hasattr(layer, "layers"):
+            for sub_layer in layer.layers:
+                weights = self._find_weights(sub_layer, weights)
+        return weights
+
+    def init_weights(self, layer: "Layer"):
+        weights = self._find_weights(layer)
+
+        self.weights = []
+        self.total_parameters = 0
+        idx = 0
+        for weight in weights:
+            n_elements = weight.array.size
+            self.total_parameters += n_elements
+            self.weights.append(
+                WeightPointer(offset=idx, size=n_elements, weight=weight)
+            )
+            idx += n_elements
 
     def step(self):
         """
@@ -222,9 +264,53 @@ class AdamW(Optimiser):
 
         This method should be called after each optimisation step.
         """
-        # we compute the updates dynamically so we'll need to remember to
-        # call this
-        self.timestep += 1
+        if not self.weights:
+            raise ValueError("Weights must be initialised before optimising")
+
+        xp = self.weights[0].weight.xp
+        if self.grads is None:
+            self.tensors = xp.zeros(self.total_parameters)
+            self.grads = xp.zeros(self.total_parameters, dtype=xp.float32)
+            self.momentum = xp.zeros(self.total_parameters, dtype=xp.float32)
+            self.square_momentum = xp.zeros(
+                self.total_parameters, dtype=xp.float32
+            )
+
+        # copy grads into a grad array
+        for weight in self.weights:
+            start, end = weight.offset, weight.offset + weight.size
+            self.tensors[start:end] = weight.weight.array.ravel()
+            self.grads[start:end] = weight.weight.grad.array.ravel()
+
+        # do the algorithm
+        self.momentum = (
+            self.betas[0] * self.momentum + (1 - self.betas[0]) * self.grads
+        )
+
+        self.square_momentum = self.betas[1] * self.square_momentum + (
+            1 - self.betas[1]
+        ) * (self.grads * self.grads)
+
+        momentum_estimate = self.momentum / (
+            1 - self.betas[0] ** self.timestep
+        )
+        square_momentum_estimate = self.square_momentum / (
+            1 - self.betas[1] ** self.timestep
+        )
+
+        combined_grad = self.learning_rate * (
+            momentum_estimate / (xp.sqrt(square_momentum_estimate) + self.eps)
+            + self.weight_decay * self.tensors
+        )
+
+        self.tensors -= combined_grad
+
+        # copy weights back into layers
+        for weight in self.weights:
+            start, end = weight.offset, weight.offset + weight.size
+            weight.weight.array[:] = self.tensors[start:end].reshape(
+                weight.weight.array.shape
+            )
 
     def update_weight(self, tensor: Tensor) -> Tensor:
         """

@@ -35,7 +35,9 @@ optimiser = AdamW(
     learning_rate=config.max_learning_rate,
     weight_decay=config.weight_decay,
     betas=(config.beta1, config.beta2),
+    model=model,
 )
+# weights = optimiser.init_weights(model)
 
 if GPU_ENABLED:
     dataset = dataset.to_gpu()
@@ -44,14 +46,15 @@ if GPU_ENABLED:
 with UseMixedPrecision():
     loading_bar = tqdm(range(config.steps))
     for step in loading_bar:
-        optimiser.step()
         inputs, outputs = next(dataset)
 
         logits = model(inputs)
         loss = loss_fn(outputs, logits)
         loss.backward()
 
-        model.update(optimiser)
+        optimiser.step()
+
+        # model.update(optimiser)
 
 # # save results
 # with open("model.pkl", "wb") as f:
