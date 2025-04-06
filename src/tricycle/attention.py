@@ -509,6 +509,7 @@ class TritonAttention(Op):
         """
         if tensor.xp is not cp:
             raise ValueError("Cannot use numpy arrays with Triton")
+        breakpoint()
         xp = tensor.xp
 
         self._input = tensor
@@ -537,6 +538,7 @@ class TritonAttention(Op):
         k = xp.ascontiguousarray(k)
         v = xp.ascontiguousarray(v)
 
+        breakpoint()
         if self.k is None:
             self.k = Tensor(k, dtype=k.dtype)
         else:
@@ -580,6 +582,8 @@ class TritonAttention(Op):
         stage = 3 if self.causal else 1
         extra_kern_args = {}
 
+        breakpoint()
+
         _attn_fwd[self._fwd_grid](
             self.q,
             self.k,
@@ -610,6 +614,7 @@ class TritonAttention(Op):
             STAGE=stage,
             **extra_kern_args,
         )
+        breakpoint()
 
         # recombine into (batch_size, n_tokens, embedding_dim)
         return Tensor(

@@ -37,7 +37,7 @@ optimiser = AdamW(
     betas=(config.beta1, config.beta2),
     model=model,
 )
-# weights = optimiser.init_weights(model)
+weights = optimiser.init_weights(model)
 
 if GPU_ENABLED:
     dataset = dataset.to_gpu()

@@ -70,6 +70,7 @@ class GPT(Layer):
                 context_window=self.context_window,
                 expansion_ratio=config.expansion_ratio,
                 activation_fn=config.activation_fn,
+                batch_size=config.batch_size,
                 norm_fn=config.norm_fn,
             )
             for _ in range(config.n_layers)

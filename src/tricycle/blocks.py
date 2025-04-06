@@ -87,6 +87,7 @@ class MultiHeadSelfAttention(Layer):
         embedding_dim: int,
         n_heads: int,
         context_window: int,
+        batch_size: int,
         residual_dropout_prob: float = 0.0,
         initialiser=init_xavier,
         use_triton=True,
@@ -105,6 +106,7 @@ class MultiHeadSelfAttention(Layer):
         self.embedding_dim = embedding_dim
         self.n_heads = n_heads
         self.context_window = context_window
+        self.batch_size = batch_size
 
         # Project the embedding into 3 embeddings. One for each of key, query
         # and value
@@ -132,8 +134,7 @@ class MultiHeadSelfAttention(Layer):
 
         if use_triton:
             self.attention = TritonAttention(
-                # batch_size=self.batch_size,
-                batch_size=128,
+                batch_size=self.batch_size,
                 embedding_dim=embedding_dim,
                 n_heads=n_heads,
                 n_tokens=context_window,
@@ -371,6 +372,7 @@ class GPT2TransformerBlock(Layer):
         embedding_dim: int,
         n_heads: int,
         context_window: int,
+        batch_size: int,
         expansion_ratio: float = 4,
         activation_fn: Layer | str = GeLU(),
         norm_fn: Literal["layer_norm"] | Literal["rms_norm"] = "layer_norm",
@@ -396,6 +398,7 @@ class GPT2TransformerBlock(Layer):
             context_window=context_window,
             residual_dropout_prob=residual_dropout_prob,
             initialiser=init_xavier,
+            batch_size=batch_size,
         )
         self.mlp_block = MLPBlock(
             embedding_dim,
