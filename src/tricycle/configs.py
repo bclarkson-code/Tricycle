@@ -143,10 +143,10 @@ class ShakespeareConfig(GPTConfig):
     Shakespeare-based language models.
     """
 
-    embedding_dim = 384
+    embedding_dim = 512
     context_window = 256
     vocab_size = 1024
-    n_heads = 6
+    n_heads = 8
     n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
@@ -171,7 +171,7 @@ class ShakespeareConfig(GPTConfig):
     gradient_accumulation_steps = 1
     sample_size = 512
 
-    device_idx = 1
+    device_idx = 0
 
     mlflow_enabled = True
     mlflow_tracking_uri = "http://localhost:5000"

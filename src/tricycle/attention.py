@@ -580,7 +580,43 @@ class TritonAttention(Op):
         stage = 3 if self.causal else 1
         extra_kern_args = {}
 
+        self.q.array = self.q.xp.ascontiguousarray(self.q.array)
+        self.k.array = self.k.xp.ascontiguousarray(self.k.array)
+        self.v.array = self.v.xp.ascontiguousarray(self.v.array)
+        self.mask.array = self.mask.xp.ascontiguousarray(self.mask.array)
+        self.result.array = self.result.xp.ascontiguousarray(self.result.array)
+
+        print(f"{self.q.dtype=}")
+        print(f"{self.k.dtype=}")
+        print(f"{self.v.dtype=}")
+        print(f"{self.sm_scale=}")
+        print(f"{self.mask.dtype=}")
+        print(f"{self.result.dtype=}")
+        print(f"{self.q.strides[0]=}")
+        print(f"{self.q.strides[1]=}")
+        print(f"{self.q.strides[2]=}")
+        print(f"{self.q.strides[3]=}")
+        print(f"{self.k.strides[0]=}")
+        print(f"{self.k.strides[1]=}")
+        print(f"{self.k.strides[2]=}")
+        print(f"{self.k.strides[3]=}")
+        print(f"{self.v.strides[0]=}")
+        print(f"{self.v.strides[1]=}")
+        print(f"{self.v.strides[2]=}")
+        print(f"{self.v.strides[3]=}")
+        print(f"{self.result.strides[0]=}")
+        print(f"{self.result.strides[1]=}")
+        print(f"{self.result.strides[2]=}")
+        print(f"{self.result.strides[3]=}")
+        print(f"{self.batch_size=}")
+        print(f"{self.n_heads=}")
+        print(f"{self.n_tokens=}")
+        print(f"{self.head_size=}")
+        print(f"{stage=}")
+        print(f"{extra_kern_args=}")
+        print(f"{self.q.shape=}")
         breakpoint()
+
         _attn_fwd[self._fwd_grid](
             self.q,
             self.k,

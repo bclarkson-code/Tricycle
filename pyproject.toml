@@ -51,7 +51,7 @@ pytest = "*"
 
 [tool.pixi.dependencies]
 python = ">=3.10"
-cuda-toolkit = "12.4.*"
+cuda-toolkit = "12.6.*"
 cudnn = "8.9.*"
 python-cudnn-frontend = "*"
 cmake = "*"
@@ -59,7 +59,7 @@ ninja = "*"
 cupy = "*"
 meson = "*"
 ccache = "*"
-# numba = "0.59.*"
+numba = "*"
 clang-format = "*"
 triton = { version = "*", channel = "conda-forge" }
 matplotlib = ">=3.10.0,<4"

@@ -233,19 +233,9 @@ def _attn_fwd(
     # epilogue
     m_i += tl.math.log2(l_i)
     acc = acc / l_i[:, None]
-
-    # M tensor base pointer offset calculation for storing m_i
-    m_base_ptr = M + off_hz * N_CTX  # Calculate base pointer for M slice
-    m_ptrs = m_base_ptr + offs_m
-
-    # Create a mask to ensure indices are within the sequence length bounds
-    m_mask = offs_m < N_CTX
-
-    # Store m_i using the explicit mask
-    tl.store(m_ptrs, m_i, mask=m_mask)  # Apply mask here
-
-    # Store output (O_block_ptr handles masking internally via make_block_ptr)
-    # tl.store(O_block_ptr, acc.to(Out.type.element_ty))
+    m_ptrs = M + off_hz * N_CTX + offs_m
+    tl.store(m_ptrs, m_i)
+    tl.store(O_block_ptr, acc.to(Out.type.element_ty))
 
 
 @triton.jit
