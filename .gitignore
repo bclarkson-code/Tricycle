@@ -9,6 +9,10 @@ poetry.lock
 # macos
 *.DS_Store
 
+# wandb
+*.log
+*wandb*
+
 # datasets
 datasets/shakespeare/tokens_*.pkl
 datasets/shakespeare/raw_data.txt

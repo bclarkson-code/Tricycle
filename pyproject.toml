@@ -35,6 +35,8 @@ tiktoken = "*"
 datasets = "*"
 pytest = "*"
 triton = "*"
+wandb = "*"
+urllib3 = "*"
 
 [tool.pixi.tasks]
 ruff = "ruff"

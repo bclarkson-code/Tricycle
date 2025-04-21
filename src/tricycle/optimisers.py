@@ -282,6 +282,9 @@ class AdamW(Optimiser):
             self.tensors[start:end] = weight.weight.array.ravel()
             self.grads[start:end] = weight.weight.grad.array.ravel()
 
+        if TRICYCLE_CONTEXT.use_mixed_precision:
+            self.grads /= TRICYCLE_CONTEXT.loss_scale_factor
+
         # do the algorithm
         self.momentum = (
             self.betas[0] * self.momentum + (1 - self.betas[0]) * self.grads

@@ -115,8 +115,8 @@ class DebugConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    max_learning_rate = 1e-3
-    min_learning_rate = 1e-4
+    max_learning_rate = 1e-4
+    min_learning_rate = 1e-5
     warmup_steps = 100
     weight_decay = 1e-1
     momentum = 0
@@ -143,10 +143,10 @@ class ShakespeareConfig(GPTConfig):
     Shakespeare-based language models.
     """
 
-    embedding_dim = 512
+    embedding_dim = 384
     context_window = 256
     vocab_size = 1024
-    n_heads = 8
+    n_heads = 6
     n_layers = 6
     expansion_ratio = 4
     activation_fn = "gelu"
@@ -156,15 +156,15 @@ class ShakespeareConfig(GPTConfig):
     residual_dropout_prob = 0.2
     linear_dropout_prob = 0.2
 
-    max_learning_rate = 1e-3
-    min_learning_rate = 1e-4
+    max_learning_rate = 1e-4
+    min_learning_rate = 1e-5
     warmup_steps = 100
     weight_decay = 1e-1
     momentum = 0
     beta1 = 0.9
     beta2 = 0.99
 
-    steps = 100
+    steps = 5000
     eval_interval = 250
     eval_steps = 128
     batch_size = 128
