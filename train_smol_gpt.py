@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 from inference import get_sample
 from tricycle.configs import SmolGPTConfig
-from tricycle.dataset import CausalLMDataset
+from tricycle.dataset import MmappedCausalLMDataset
 from tricycle.loss import CrossEntropy
 from tricycle.models import GPT
 from tricycle.optimisers import AdamW
@@ -51,16 +51,11 @@ def load_datasets(config: SmolGPTConfig):
     # might want to clean up once you are done with the dataset
     print("Loading dataset")
     train_dataset = FineWeb(config.vocab_size, split="train")
-
-    # we cant fit more than 3B indices in memory on my computer which is more
-    # than we need anyway.
-    # TODO: figure out how to shuffle without using much memory
-    train_dataset.tokens = train_dataset.tokens[: int(3e9)]
     valid_dataset = FineWeb(config.vocab_size, split="valid")
 
     print("Loading dataloaders")
     train_dataloader = (
-        CausalLMDataset(
+        MmappedCausalLMDataset(
             tokens=train_dataset.tokens,
             vocab_size=train_dataset.vocab_size,
             batch_size=config.batch_size,
@@ -71,7 +66,7 @@ def load_datasets(config: SmolGPTConfig):
         .to_tensor()
     )
     valid_dataloader = (
-        CausalLMDataset(
+        MmappedCausalLMDataset(
             tokens=valid_dataset.tokens,
             vocab_size=valid_dataset.vocab_size,
             batch_size=config.batch_size,
@@ -90,7 +85,7 @@ def load_datasets(config: SmolGPTConfig):
 
 def estimate_loss(
     model: GPT,
-    valid_dataloader: CausalLMDataset,
+    valid_dataloader: MmappedCausalLMDataset,
     config: SmolGPTConfig,
     loss_fn: Op,
 ) -> float:
@@ -120,7 +115,7 @@ def estimate_loss(
 
 def validate(
     model: GPT,
-    valid_dataset: CausalLMDataset,
+    valid_dataset: MmappedCausalLMDataset,
     config: SmolGPTConfig,
     loss_fn: Op,
     best_loss: float,

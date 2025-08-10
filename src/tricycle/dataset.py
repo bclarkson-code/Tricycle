@@ -1,7 +1,12 @@
+import inspect
 import random
+import tempfile
+from pathlib import Path
 from typing import Sequence
 
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
+from tqdm.auto import tqdm
 
 from tricycle.tensor import Tensor
 
@@ -387,5 +392,187 @@ class CausalLMDataset:
             The dataset object configured to return tensors.
         """
         print("converting to tensor")
+        self.as_tensor = True
+        return self
+
+
+class MmappedCausalLMDataset:
+    def __init__(
+        self,
+        tokens: Sequence[int],
+        vocab_size: int,
+        batch_size: int,
+        context_window: int,
+        block_size: int = 2048,
+        filename: Path | None = None,
+    ):
+        self.tokens = tokens
+        self.n_tokens = len(tokens)
+        self.vocab_size = vocab_size
+        self.batch_size = batch_size
+        self.context_window = context_window
+        self.block_size = block_size
+        self.is_batch = False
+        self.as_tensor = False
+        self.shuffled = False
+        self._idx = 0
+        self.batch_indices = None
+        self.device = None
+        if filename is None:
+            self.filename = Path(tempfile.mkdtemp()) / "tokens.bin"
+            self._prepare()
+
+    def _prepare(self):
+        fp = self._file_pointer("write")
+        block = np.zeros(self.block_size)
+        block_idx = 0
+        token_idx = -1
+        for token_idx, token in tqdm(enumerate(self.tokens), desc="preparing"):
+            if block_idx < self.block_size:
+                block[block_idx] = token
+                block_idx += 1
+                continue
+            fp[token_idx - self.block_size : token_idx] = block
+            block[0] = token
+            block_idx = 1
+        if token_idx and block_idx:
+            fp[token_idx - block_idx + 1 : token_idx + 1] = block[:block_idx]
+        del fp
+
+    def _file_pointer(self, mode: str) -> np.memmap:
+        return np.memmap(
+            self.filename, dtype=np.uint16, mode=mode, shape=self.n_tokens
+        )
+
+    def _move_to_device(
+        self, arr: np.ndarray, name: str
+    ) -> Tensor | np.ndarray:
+        if not self.as_tensor:
+            return arr
+        tensor = Tensor(
+            arr,
+            requires_grad=False,
+            name=name,
+            is_batched=self.is_batch,
+            dtype=arr.dtype,
+        )
+        if self.device is not None:
+            tensor.to_gpu(self.device)
+        return tensor
+
+    def _get_single_item(
+        self, idx: int
+    ) -> tuple[Tensor | np.ndarray, Tensor | np.ndarray]:
+        if idx not in range(len(self)):
+            raise KeyError(f"{idx=} is not in range [0, {len(self)}]")
+
+        fp = self._file_pointer(mode="r")
+
+        item = fp[idx : idx + self.context_window + 1]
+        inputs, outputs = item[:-1], item[1:]
+
+        return self._move_to_device(inputs, "inputs"), self._move_to_device(
+            outputs, "outputs"
+        )
+
+    def _get_batch(
+        self, idx: int
+    ) -> tuple[Tensor | np.ndarray, Tensor | np.ndarray]:
+        if self.shuffled:
+            return self._get_shuffled_batch(idx)
+        return self._get_ordered_batch(idx)
+
+    def _get_ordered_batch(
+        self, idx: int
+    ) -> tuple[Tensor | np.ndarray, Tensor | np.ndarray]:
+        if idx not in range(len(self) - self.batch_size):
+            raise KeyError(
+                f"{idx=} is not in range [0, {len(self)-self.batch_size}]"
+            )
+
+        fp = self._file_pointer(mode="r")
+
+        item = fp[idx : idx + self.context_window + self.batch_size]
+        windows = sliding_window_view(item, window_shape=self.context_window)
+        inputs, outputs = windows[:-1], windows[1:]
+        return self._move_to_device(inputs, "inputs"), self._move_to_device(
+            outputs, "outputs"
+        )
+
+    def _get_shuffled_batch(
+        self, idx: int
+    ) -> tuple[Tensor | np.ndarray, Tensor | np.ndarray]:
+        if idx not in range(len(self) - self.batch_size):
+            raise KeyError(
+                f"{idx=} is not in range [0, {len(self)-self.batch_size}]"
+            )
+
+        fp = self._file_pointer(mode="r")
+
+        items = [
+            fp[idx : idx + self.context_window + 1]
+            for idx in np.random.randint(0, len(self), size=self.batch_size)
+        ]
+        inputs = np.vstack([item[:-1] for item in items])
+        outputs = np.vstack([item[1:] for item in items])
+
+        return self._move_to_device(inputs, "inputs"), self._move_to_device(
+            outputs, "outputs"
+        )
+
+    def __len__(self):
+        return self.n_tokens - self.context_window - 1
+
+    def __getitem__(self, idx: int):
+        if self.is_batch:
+            return self._get_batch(idx)
+        return self._get_single_item(idx)
+
+    def __iter__(self):
+        """Returns the dataset object as an iterator."""
+        self._idx = 0
+        return self
+
+    def __next__(self):
+        """
+        Returns the next item or batch in the dataset.
+
+        Raises:
+            StopIteration: If all items have been iterated over.
+        """
+        if self._idx >= len(self):
+            raise StopIteration
+
+        result = self[self._idx]
+        self._idx += 1
+        return result
+
+    def __del__(self):
+        if self.filename.exists():
+            self.filename.unlink()
+        if self.filename.parent.exists():
+            self.filename.parent.rmdir()
+
+    def batch(self):
+        self.is_batch = True
+        return self
+
+    def unbatch(self):
+        self.is_batch = False
+        return self
+
+    def shuffle(self):
+        self.shuffled = True
+        return self
+
+    def to_gpu(self, device: int = 0):
+        self.device = device
+        return self
+
+    def from_gpu(self):
+        self.device = None
+        return self
+
+    def to_tensor(self):
         self.as_tensor = True
         return self
